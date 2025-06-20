@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.project.ttokttok.domain.admin.controller.dto.request.AdminLoginRequest;
 import org.project.ttokttok.domain.admin.controller.dto.response.AdminLoginResponse;
 import org.project.ttokttok.domain.admin.service.AdminService;
+import org.project.ttokttok.global.jwt.TokenProperties;
 import org.project.ttokttok.global.jwt.dto.TokenResponse;
 import org.project.ttokttok.global.util.CookieUtil;
 import org.springframework.http.HttpHeaders;
@@ -15,6 +16,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import static org.project.ttokttok.global.jwt.TokenProperties.AUTH_HEADER;
 
 @RestController
 @RequiredArgsConstructor
@@ -30,7 +33,7 @@ public class AdminApiController {
         ResponseCookie refreshCookie = CookieUtil.createRefreshTokenCookie(response.refreshToken());
 
         return ResponseEntity.ok()
-                .header("Authorization", response.accessToken())
+                .header(AUTH_HEADER.getValue(), response.accessToken())
                 .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
                 .build();
     }
