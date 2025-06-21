@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import java.security.Key;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.UUID;
 
 import static org.project.ttokttok.global.jwt.TokenExpiry.ACCESS_TOKEN_EXPIRY_TIME;
 import static org.project.ttokttok.global.jwt.TokenExpiry.REFRESH_TOKEN_EXPIRY_TIME;
@@ -68,7 +69,7 @@ public class TokenProvider {
     // 토큰 생성
     public TokenResponse generateToken(String id, String username) {
         String accessToken = generateAccessToken(id, username);
-        String refreshToken = generateRefreshToken(id);
+        String refreshToken = generateRefreshToken();
 
         return TokenResponse.builder()
                 .accessToken(accessToken)
@@ -76,6 +77,7 @@ public class TokenProvider {
                 .build();
     }
 
+    //todo: Role 추가 필요
     private String generateAccessToken(String userId, String username) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + ACCESS_TOKEN_EXPIRY_TIME.getExpiry());
@@ -90,16 +92,8 @@ public class TokenProvider {
                 .compact();
     }
 
-    private String generateRefreshToken(String id) {
-        Date now = new Date();
-        Date expiry = new Date(now.getTime() + REFRESH_TOKEN_EXPIRY_TIME.getExpiry());
-
-        return Jwts.builder()
-                .setIssuer(issuer)
-                .setExpiration(expiry)
-                .claim("id", id)
-                .signWith(key, SignatureAlgorithm.HS256)
-                .compact();
+    private String generateRefreshToken() {
+        return UUID.randomUUID().toString();
     }
 
     // 클레임 추출
