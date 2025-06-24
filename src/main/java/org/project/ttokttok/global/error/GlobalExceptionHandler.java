@@ -17,11 +17,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({CustomException.class})
     public ResponseEntity<ErrorResponse> handleCustomException(CustomException e) {
         ErrorResponse response = ErrorResponse.builder()
-                .statusCode(HttpStatus.BAD_REQUEST.value())
+                .statusCode(e.getStatus().value())
                 .details(e.getMessage())
                 .build();
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        return ResponseEntity.status(e.getStatus())
                 .body(response);
     }
 
