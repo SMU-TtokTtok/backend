@@ -12,7 +12,7 @@ public enum SecurityWhiteList {
     }),
 
     SWAGGER_URLS(new String[]{
-            ""
+            "/swagger-ui.html",
     });
 
     final String[] endPoints;
