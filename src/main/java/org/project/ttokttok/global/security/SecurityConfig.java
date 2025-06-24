@@ -70,6 +70,7 @@ public class SecurityConfig {
                                 .requestMatchers(ALLOW_URLS.getEndPoints()).permitAll()
                                 .requestMatchers(SWAGGER_URLS.getEndPoints()).permitAll()
                                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                                // 일단 admin 제외, 다 열어둠
                                 .anyRequest().permitAll()
                 )
                 //.exceptionHandling()

@@ -72,6 +72,8 @@ public class AdminAuthApiController {
 
 
     // 관리자 계정 생성용 api, 프론트 측 구현 필요 X
+    // todo: 추후에 삭제 등의 조치 취할 것
+    @PostMapping("/join")
     public ResponseEntity<Void> join() {
         return null;
     }
