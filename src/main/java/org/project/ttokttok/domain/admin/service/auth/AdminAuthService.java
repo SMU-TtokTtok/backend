@@ -12,7 +12,7 @@ import org.project.ttokttok.global.jwt.dto.request.TokenRequest;
 import org.project.ttokttok.global.jwt.dto.response.TokenResponse;
 import org.project.ttokttok.global.jwt.exception.InvalidRefreshTokenException;
 import org.project.ttokttok.global.jwt.exception.InvalidTokenFromCookieException;
-import org.project.ttokttok.global.jwt.service.RefreshTokenRedisService;
+import org.project.ttokttok.infrastructure.redis.service.RefreshTokenRedisService;
 import org.project.ttokttok.global.jwt.service.TokenProvider;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;

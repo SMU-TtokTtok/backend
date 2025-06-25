@@ -1,7 +1,7 @@
 package org.project.ttokttok.global.jwt.exception;
 
-import org.project.ttokttok.global.error.ErrorMessage;
-import org.project.ttokttok.global.error.exception.CustomException;
+import org.project.ttokttok.global.exception.ErrorMessage;
+import org.project.ttokttok.global.exception.exception.CustomException;
 
 public class RefreshTokenNotFoundException extends CustomException {
     public RefreshTokenNotFoundException() {

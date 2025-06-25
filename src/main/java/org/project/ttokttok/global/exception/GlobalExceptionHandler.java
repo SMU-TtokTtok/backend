@@ -1,8 +1,8 @@
-package org.project.ttokttok.global.error;
+package org.project.ttokttok.global.exception;
 
-import org.project.ttokttok.global.error.dto.ErrorResponse;
-import org.project.ttokttok.global.error.dto.ValidErrorDetails;
-import org.project.ttokttok.global.error.exception.CustomException;
+import org.project.ttokttok.global.exception.dto.ErrorResponse;
+import org.project.ttokttok.global.exception.dto.ValidErrorDetails;
+import org.project.ttokttok.global.exception.exception.CustomException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;

@@ -1,4 +1,4 @@
-package org.project.ttokttok.global.error.dto;
+package org.project.ttokttok.global.exception.dto;
 
 import lombok.Builder;
 

@@ -1,7 +1,7 @@
-package org.project.ttokttok.global.error.exception;
+package org.project.ttokttok.global.exception.exception;
 
 import lombok.Getter;
-import org.project.ttokttok.global.error.ErrorMessage;
+import org.project.ttokttok.global.exception.ErrorMessage;
 import org.springframework.http.HttpStatus;
 
 @Getter

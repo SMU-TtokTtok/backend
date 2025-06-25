@@ -1,14 +1,9 @@
 package org.project.ttokttok.domain.admin.service.auth;
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.project.ttokttok.domain.admin.domain.Admin;
 import org.project.ttokttok.domain.admin.repository.AdminRepository;
-import org.project.ttokttok.domain.admin.service.dto.request.AdminLoginServiceRequest;
-import org.project.ttokttok.domain.admin.service.dto.response.AdminLoginServiceResponse;
-import org.project.ttokttok.global.jwt.service.RefreshTokenRedisService;
+import org.project.ttokttok.infrastructure.redis.service.RefreshTokenRedisService;
 import org.project.ttokttok.global.jwt.service.TokenProvider;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;

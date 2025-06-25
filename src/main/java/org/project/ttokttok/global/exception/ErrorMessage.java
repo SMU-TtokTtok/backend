@@ -1,4 +1,4 @@
-package org.project.ttokttok.global.error;
+package org.project.ttokttok.global.exception;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

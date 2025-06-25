@@ -1,4 +1,4 @@
-package org.project.ttokttok.global.jwt.service;
+package org.project.ttokttok.infrastructure.redis.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
