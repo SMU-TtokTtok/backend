@@ -1,4 +1,4 @@
-package org.project.ttokttok.global.jwt;
+package org.project.ttokttok.global.auth.jwt;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

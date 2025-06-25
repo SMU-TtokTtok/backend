@@ -1,9 +1,9 @@
-package org.project.ttokttok.global.jwt.filter;
+package org.project.ttokttok.global.auth.jwt.filter;
 
 import lombok.RequiredArgsConstructor;
 import org.project.ttokttok.domain.admin.exception.AdminNotFoundException;
 import org.project.ttokttok.domain.admin.repository.AdminRepository;
-import org.project.ttokttok.global.jwt.exception.InvalidRoleException;
+import org.project.ttokttok.global.auth.jwt.exception.InvalidRoleException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;

@@ -1,4 +1,4 @@
-package org.project.ttokttok.global.security;
+package org.project.ttokttok.global.auth.security;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

@@ -4,7 +4,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.project.ttokttok.domain.admin.repository.AdminRepository;
 import org.project.ttokttok.infrastructure.redis.service.RefreshTokenRedisService;
-import org.project.ttokttok.global.jwt.service.TokenProvider;
+import org.project.ttokttok.global.auth.jwt.service.TokenProvider;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;

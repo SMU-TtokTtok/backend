@@ -1,4 +1,4 @@
-package org.project.ttokttok.global.jwt.dto.request;
+package org.project.ttokttok.global.auth.jwt.dto.request;
 
 import lombok.Builder;
 import org.project.ttokttok.global.entity.Role;

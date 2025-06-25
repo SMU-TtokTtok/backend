@@ -1,9 +1,9 @@
-package org.project.ttokttok.global.security;
+package org.project.ttokttok.global.auth.security;
 
 import lombok.RequiredArgsConstructor;
-import org.project.ttokttok.global.jwt.filter.JwtAuthenticationManager;
-import org.project.ttokttok.global.jwt.filter.TokenAuthenticationFilter;
-import org.project.ttokttok.global.jwt.service.TokenProvider;
+import org.project.ttokttok.global.auth.jwt.filter.JwtAuthenticationManager;
+import org.project.ttokttok.global.auth.jwt.filter.TokenAuthenticationFilter;
+import org.project.ttokttok.global.auth.jwt.service.TokenProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,8 +22,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
-import static org.project.ttokttok.global.security.SecurityWhiteList.ALLOW_URLS;
-import static org.project.ttokttok.global.security.SecurityWhiteList.SWAGGER_URLS;
+import static org.project.ttokttok.global.auth.security.SecurityWhiteList.ALLOW_URLS;
+import static org.project.ttokttok.global.auth.security.SecurityWhiteList.SWAGGER_URLS;
 import static org.springframework.boot.autoconfigure.security.servlet.PathRequest.toH2Console;
 
 @Configuration

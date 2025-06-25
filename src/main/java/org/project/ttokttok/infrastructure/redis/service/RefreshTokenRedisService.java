@@ -2,10 +2,10 @@ package org.project.ttokttok.infrastructure.redis.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.project.ttokttok.global.jwt.exception.AlreadyLogoutException;
-import org.project.ttokttok.global.jwt.exception.RefreshTokenAlreadyExistsException;
-import org.project.ttokttok.global.jwt.exception.RefreshTokenExpiredException;
-import org.project.ttokttok.global.jwt.exception.RefreshTokenNotFoundException;
+import org.project.ttokttok.global.auth.jwt.exception.AlreadyLogoutException;
+import org.project.ttokttok.global.auth.jwt.exception.RefreshTokenAlreadyExistsException;
+import org.project.ttokttok.global.auth.jwt.exception.RefreshTokenExpiredException;
+import org.project.ttokttok.global.auth.jwt.exception.RefreshTokenNotFoundException;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -13,7 +13,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.concurrent.TimeUnit;
 
-import static org.project.ttokttok.global.jwt.TokenExpiry.REFRESH_TOKEN_EXPIRY_TIME;
+import static org.project.ttokttok.global.auth.jwt.TokenExpiry.REFRESH_TOKEN_EXPIRY_TIME;
 
 @Slf4j
 @Service

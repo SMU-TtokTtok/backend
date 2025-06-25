@@ -1,14 +1,14 @@
-package org.project.ttokttok.global.jwt.service;
+package org.project.ttokttok.global.auth.jwt.service;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.project.ttokttok.global.entity.Role;
-import org.project.ttokttok.global.jwt.dto.request.TokenRequest;
-import org.project.ttokttok.global.jwt.dto.response.TokenResponse;
-import org.project.ttokttok.global.jwt.dto.response.UserProfileResponse;
-import org.project.ttokttok.global.jwt.exception.InvalidIssuerException;
+import org.project.ttokttok.global.auth.jwt.dto.request.TokenRequest;
+import org.project.ttokttok.global.auth.jwt.dto.response.TokenResponse;
+import org.project.ttokttok.global.auth.jwt.dto.response.UserProfileResponse;
+import org.project.ttokttok.global.auth.jwt.exception.InvalidIssuerException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -17,7 +17,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.UUID;
 
-import static org.project.ttokttok.global.jwt.TokenExpiry.ACCESS_TOKEN_EXPIRY_TIME;
+import static org.project.ttokttok.global.auth.jwt.TokenExpiry.ACCESS_TOKEN_EXPIRY_TIME;
 
 @Slf4j
 @Service

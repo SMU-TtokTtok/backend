@@ -1,4 +1,4 @@
-package org.project.ttokttok.global.jwt.dto.response;
+package org.project.ttokttok.global.auth.jwt.dto.response;
 
 import lombok.Builder;
 

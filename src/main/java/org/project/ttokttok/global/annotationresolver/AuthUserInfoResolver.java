@@ -3,8 +3,7 @@ package org.project.ttokttok.global.annotationresolver;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.project.ttokttok.global.annotation.AuthUserInfo;
-import org.project.ttokttok.global.jwt.TokenProperties;
-import org.project.ttokttok.global.jwt.service.TokenProvider;
+import org.project.ttokttok.global.auth.jwt.service.TokenProvider;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.MethodParameter;
 import org.springframework.web.bind.support.WebDataBinderFactory;
@@ -12,8 +11,8 @@ import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
-import static org.project.ttokttok.global.jwt.TokenProperties.AUTH_HEADER;
-import static org.project.ttokttok.global.jwt.TokenProperties.BEARER_PREFIX;
+import static org.project.ttokttok.global.auth.jwt.TokenProperties.AUTH_HEADER;
+import static org.project.ttokttok.global.auth.jwt.TokenProperties.BEARER_PREFIX;
 
 @Configuration
 @RequiredArgsConstructor

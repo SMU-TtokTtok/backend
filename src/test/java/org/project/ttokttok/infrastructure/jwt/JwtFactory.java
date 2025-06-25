@@ -12,7 +12,7 @@ import org.springframework.test.context.ActiveProfiles;
 import java.security.Key;
 import java.util.Date;
 
-import static org.project.ttokttok.global.jwt.TokenExpiry.ACCESS_TOKEN_EXPIRY_TIME;
+import static org.project.ttokttok.global.auth.jwt.TokenExpiry.ACCESS_TOKEN_EXPIRY_TIME;
 
 @Component
 @ActiveProfiles("test")

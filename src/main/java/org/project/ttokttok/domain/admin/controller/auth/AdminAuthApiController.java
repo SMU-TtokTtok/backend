@@ -15,9 +15,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
 
-import static org.project.ttokttok.global.jwt.TokenExpiry.REFRESH_TOKEN_EXPIRY_TIME;
-import static org.project.ttokttok.global.jwt.TokenProperties.AUTH_HEADER;
-import static org.project.ttokttok.global.jwt.TokenProperties.REFRESH_KEY;
+import static org.project.ttokttok.global.auth.jwt.TokenExpiry.REFRESH_TOKEN_EXPIRY_TIME;
+import static org.project.ttokttok.global.auth.jwt.TokenProperties.AUTH_HEADER;
+import static org.project.ttokttok.global.auth.jwt.TokenProperties.REFRESH_KEY;
 
 @RestController
 @RequiredArgsConstructor

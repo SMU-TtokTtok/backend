@@ -1,4 +1,4 @@
-package org.project.ttokttok.global.jwt.filter;
+package org.project.ttokttok.global.auth.jwt.filter;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -6,16 +6,16 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.project.ttokttok.global.jwt.dto.response.UserProfileResponse;
-import org.project.ttokttok.global.jwt.service.TokenProvider;
+import org.project.ttokttok.global.auth.jwt.dto.response.UserProfileResponse;
+import org.project.ttokttok.global.auth.jwt.service.TokenProvider;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-import static org.project.ttokttok.global.jwt.TokenProperties.AUTH_HEADER;
-import static org.project.ttokttok.global.jwt.TokenProperties.BEARER_PREFIX;
+import static org.project.ttokttok.global.auth.jwt.TokenProperties.AUTH_HEADER;
+import static org.project.ttokttok.global.auth.jwt.TokenProperties.BEARER_PREFIX;
 
 @Slf4j
 @RequiredArgsConstructor
