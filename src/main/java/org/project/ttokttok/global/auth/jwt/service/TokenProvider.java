@@ -102,10 +102,7 @@ public class TokenProvider {
 
     // 유효한 이슈어(발급자)인지 검증
     private void isValidIssuer(String issuer) {
-        // 이슈 발급자도 base64 인코딩되어 있기에 디코딩
-        String decodedIssuer = Arrays.toString(Decoders.BASE64.decode(this.issuer));
-
-        if (!issuer.equals(decodedIssuer))
+        if (!issuer.equals(this.issuer))
             throw new InvalidIssuerException();
     }
 
@@ -113,7 +110,7 @@ public class TokenProvider {
     private String generateAccessToken(String username, Role role) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + ACCESS_TOKEN_EXPIRY_TIME.getExpiry());
-
+        // 토큰 삽입은 그냥 인코딩된 issuer.
         return Jwts.builder()
                 .setIssuer(issuer)
                 .setSubject(username)

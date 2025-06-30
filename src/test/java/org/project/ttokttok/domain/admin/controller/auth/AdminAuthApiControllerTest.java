@@ -1,6 +1,7 @@
 package org.project.ttokttok.domain.admin.controller.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -9,6 +10,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.project.ttokttok.domain.admin.controller.dto.request.AdminLoginRequest;
 import org.project.ttokttok.domain.admin.domain.Admin;
 import org.project.ttokttok.domain.admin.repository.AdminRepository;
+import org.project.ttokttok.global.entity.Role;
 import org.project.ttokttok.infrastructure.jwt.JwtFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -22,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -154,14 +157,68 @@ class AdminAuthApiControllerTest {
     @DisplayName("logout(): Redis에 있는 리프레시 토큰을 삭제하고 로그아웃에 성공한다.")
     @Test
     void logoutSuccess() throws Exception {
-        //given
+        // given
+        final String username = "adminlogout";
+        final String password = "logoutpassword123";
+        createAdmin(username, password);
 
+        // 로그인하여 토큰 및 쿠키 발급
+        AdminLoginRequest request = new AdminLoginRequest(username, password);
+        String requestBody = objectMapper.writeValueAsString(request);
 
-        //when
+        var loginResult = mockMvc.perform(post(LOGIN_ENDPOINT)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isOk())
+                .andReturn();
 
+        String accessToken = "Bearer " + loginResult.getResponse().getHeader("Authorization");
+        String refreshCookie = loginResult.getResponse().getCookie("ttref").getValue();
 
-        //then
+        // when & then
+        mockMvc.perform(post(LOGOUT_ENDPOINT)
+                        .header("Authorization", accessToken)
+                        .cookie(new Cookie("ttref", refreshCookie)))
+                .andExpect(status().isNoContent())
+                .andExpect(header().exists("Set-Cookie"));
 
+        // Redis에서 리프레시 토큰이 삭제되었는지 확인
+        String redisKey = "refresh:" + username;
+        assertNull(redisTemplate.opsForValue().get(redisKey));
+    }
+
+    @DisplayName("logout(): 이미 로그아웃했거나 토큰이 존재하지 않을 경우 409 Conflict가 반환된다.")
+    @Test
+    void logoutFail_TokenNotFound() throws Exception {
+        // given
+        final String username = "adminlogoutfail";
+        final String password = "logoutfailpassword123";
+        createAdmin(username, password);
+
+        // 로그인하여 토큰 및 쿠키 발급
+        AdminLoginRequest request = new AdminLoginRequest(username, password);
+        String requestBody = objectMapper.writeValueAsString(request);
+
+        var loginResult = mockMvc.perform(post(LOGIN_ENDPOINT)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String accessToken = "Bearer " + loginResult.getResponse().getHeader("Authorization");
+        String refreshCookie = loginResult.getResponse().getCookie("ttref").getValue();
+
+        // Redis에서 리프레시 토큰 삭제
+        String redisKey = "refresh:" + username;
+        redisTemplate.delete(redisKey);
+
+        // when & then
+        mockMvc.perform(post(LOGOUT_ENDPOINT)
+                        .header("Authorization", accessToken)
+                        .cookie(new Cookie("ttref", refreshCookie)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.statusCode").value(409))
+                .andExpect(jsonPath("$.details").exists());
     }
 
     // ======= 유틸 메서드 =======

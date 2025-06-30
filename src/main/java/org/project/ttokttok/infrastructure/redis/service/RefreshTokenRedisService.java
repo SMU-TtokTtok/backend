@@ -52,8 +52,9 @@ public class RefreshTokenRedisService {
     public void deleteRefreshToken(String username) {
         // 추후 필요하다면, 액세스토큰 블랙리스트 로직 추가 고려하기
         if (isExistKey(username)) {
-            log.info("로그아웃 완료: {}, logout at: {}", username, LocalDateTime.now());
             redisTemplate.delete(REFRESH_REDIS_KEY + username);
+            log.info("로그아웃 완료: {}, logout at: {}", username, LocalDateTime.now());
+            return;
         }
 
         throw new AlreadyLogoutException();
