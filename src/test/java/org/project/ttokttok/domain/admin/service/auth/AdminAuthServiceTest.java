@@ -1,25 +1,46 @@
 package org.project.ttokttok.domain.admin.service.auth;
 
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.project.ttokttok.domain.admin.domain.Admin;
+import org.project.ttokttok.domain.admin.exception.AdminNotFoundException;
+import org.project.ttokttok.domain.admin.exception.AdminPasswordNotMatchException;
 import org.project.ttokttok.domain.admin.repository.AdminRepository;
-import org.project.ttokttok.infrastructure.redis.service.RefreshTokenRedisService;
+import org.project.ttokttok.domain.admin.service.dto.request.AdminLoginServiceRequest;
+import org.project.ttokttok.domain.admin.service.dto.response.AdminLoginServiceResponse;
+import org.project.ttokttok.domain.admin.service.dto.response.ReissueServiceResponse;
+import org.project.ttokttok.global.auth.jwt.dto.request.TokenRequest;
+import org.project.ttokttok.global.auth.jwt.dto.response.TokenResponse;
+import org.project.ttokttok.global.auth.jwt.exception.InvalidRefreshTokenException;
+import org.project.ttokttok.global.auth.jwt.exception.InvalidTokenFromCookieException;
+import org.project.ttokttok.global.auth.jwt.exception.RefreshTokenNotFoundException;
 import org.project.ttokttok.global.auth.jwt.service.TokenProvider;
+import org.project.ttokttok.global.entity.Role;
+import org.project.ttokttok.infrastructure.redis.service.RefreshTokenRedisService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 @Transactional
 @ActiveProfiles("test")
+@ExtendWith(MockitoExtension.class)
 class AdminAuthServiceTest {
 
     @Mock
-    private PasswordEncoder passwordEncoder;
+    private AdminRepository adminRepository;
 
     @Mock
-    private AdminRepository adminRepository;
+    private PasswordEncoder passwordEncoder;
 
     @Mock
     private TokenProvider tokenProvider;
@@ -30,9 +51,145 @@ class AdminAuthServiceTest {
     @InjectMocks
     private AdminAuthService adminAuthService;
 
-    // 로그인 성공
+    @Test
+    @DisplayName("login(): 로그인에 성공하면 토큰 페어를 반환한다.")
+    void loginSuccess() {
+        // Given
+        String username = "adminUser";
+        String password = "securePassword";
+        Admin mockAdmin = mock(Admin.class);
+        TokenResponse mockTokenResponse = new TokenResponse("any-access-token", "any-refresh-token");
+        AdminLoginServiceRequest request = new AdminLoginServiceRequest(username, password);
+        // When
+        when(adminRepository.findByUsername(username)).thenReturn(Optional.of(mockAdmin));
+        doNothing().when(mockAdmin).validatePassword(eq(password), any(PasswordEncoder.class));
+        when(tokenProvider.generateToken(any(TokenRequest.class))).thenReturn(mockTokenResponse);
 
-    // 존재하지 않는 admin
+        AdminLoginServiceResponse result = adminAuthService.login(request);
 
-    // 틀린 비밀번호
+        // Then
+        assertNotNull(result);
+        assertNotNull(result.accessToken());
+        assertNotNull(result.refreshToken());
+
+        verify(adminRepository).findByUsername(username);
+        verify(mockAdmin).validatePassword(password, passwordEncoder);
+        verify(tokenProvider).generateToken(any(TokenRequest.class));
+    }
+
+    @Test
+    @DisplayName("login(): 존재하지 않는 관리자 로그인 시 AdminNotFoundException을 발생시킨다.")
+    void loginAdminNotFound() {
+        // Given
+        String username = "unknown";
+        AdminLoginServiceRequest request = new AdminLoginServiceRequest(username, "anyPassword");
+
+        // When
+        when(adminRepository.findByUsername(username))
+                .thenReturn(Optional.empty());
+
+        // Then
+        assertThrows(AdminNotFoundException.class, () -> adminAuthService.login(request));
+    }
+
+    @Test
+    @DisplayName("login(): 비밀번호가 틀릴 경우 예외가 발생한다.")
+    void loginInvalidPassword() {
+        // Given
+        String username = "adminUser";
+        String password = "wrongPassword";
+        Admin mockAdmin = mock(Admin.class);
+        AdminLoginServiceRequest request = new AdminLoginServiceRequest(username, password);
+
+        // When
+        when(adminRepository.findByUsername(username)).thenReturn(Optional.of(mockAdmin));
+        doThrow(new AdminPasswordNotMatchException()).when(mockAdmin).validatePassword(eq(password), any());
+
+        // Then
+        assertThrows(AdminPasswordNotMatchException.class, () -> adminAuthService.login(request));
+    }
+
+    @Test
+    @DisplayName("reissue(): 쿠키에 토큰이 없으면 InvalidTokenFromCookieException 발생")
+    void reissue_fail_token_null() {
+        // Given
+        String username = "adminUser";
+        String nullRefreshToken = null;
+
+        // When & Then
+        assertThrows(InvalidTokenFromCookieException.class, () -> {
+            adminAuthService.reissue(username, nullRefreshToken);
+        });
+    }
+
+    @Test
+    @DisplayName("reissue(): Redis에 저장된 토큰이 없으면 RefreshTokenNotFoundException 발생")
+    void reissue_fail_token_not_found() {
+        // Given
+        String username = "adminUser";
+        String refreshToken = "some-token";
+
+        // When
+        when(refreshTokenRedisService.getRefreshToken(username))
+                .thenThrow(new RefreshTokenNotFoundException());
+
+        // Then
+        assertThrows(RefreshTokenNotFoundException.class, () ->
+                adminAuthService.reissue(username, refreshToken));
+    }
+
+    @Test
+    @DisplayName("reissue(): Redis에 저장된 토큰과 다르면 InvalidRefreshTokenException 발생")
+    void reissue_fail_token_mismatch() {
+        // Given
+        String username = "adminUser";
+        String requestToken = "client-token";
+        String storedToken = "different-token";
+
+        // When
+        when(refreshTokenRedisService.getRefreshToken(username))
+                .thenReturn(storedToken);
+
+        // Then
+        assertThrows(InvalidRefreshTokenException.class, () ->
+                adminAuthService.reissue(username, requestToken));
+    }
+
+    @Test
+    @DisplayName("reissue(): 유효한 리프레시 토큰이 주어지면 새 토큰과 TTL을 반환한다.")
+    void reissueSuccess() {
+        // given
+        String username = "adminUser";
+        String refreshToken = "valid-refresh-token";
+
+        String newAccessToken = "new-access-token";
+        String newRefreshToken = "new-refresh-token";
+        long mockTtl = 1800L;
+
+        // TokenResponse stub
+        TokenResponse mockTokenResponse = new TokenResponse(newAccessToken, newRefreshToken);
+
+        // Redis에서 동일한 refreshToken 존재함
+        when(refreshTokenRedisService.getRefreshToken(username)).thenReturn(refreshToken);
+
+        // 토큰 재발급
+        when(tokenProvider.reissueToken(username, Role.ROLE_ADMIN)).thenReturn(mockTokenResponse);
+
+        // Redis TTL 갱신
+        when(refreshTokenRedisService.updateRefreshToken(username, newRefreshToken)).thenReturn(mockTtl);
+
+        // when
+        ReissueServiceResponse result = adminAuthService.reissue(username, refreshToken);
+
+        // then
+        assertNotNull(result);
+        assertEquals(newAccessToken, result.accessToken());
+        assertEquals(newRefreshToken, result.refreshToken());
+        assertEquals(mockTtl, result.refreshTTL());
+
+        // verify 호출 순서까지 확인
+        verify(refreshTokenRedisService).getRefreshToken(username);
+        verify(tokenProvider).reissueToken(username, Role.ROLE_ADMIN);
+        verify(refreshTokenRedisService).updateRefreshToken(username, newRefreshToken);
+    }
 }

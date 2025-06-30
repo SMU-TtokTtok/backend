@@ -1,6 +1,9 @@
 package org.project.ttokttok.global.auth.security;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.project.ttokttok.global.auth.jwt.filter.JwtAuthenticationManager;
 import org.project.ttokttok.global.auth.jwt.filter.TokenAuthenticationFilter;
 import org.project.ttokttok.global.auth.jwt.service.TokenProvider;
@@ -25,6 +28,7 @@ import java.util.List;
 import static org.project.ttokttok.global.auth.security.SecurityWhiteList.ALLOW_URLS;
 import static org.project.ttokttok.global.auth.security.SecurityWhiteList.SWAGGER_URLS;
 import static org.springframework.boot.autoconfigure.security.servlet.PathRequest.toH2Console;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @Configuration
 @EnableWebSecurity
@@ -56,7 +60,6 @@ public class SecurityConfig {
         return new TokenAuthenticationFilter(tokenProvider, jwtAuthenticationManager);
     }
 
-    // todo: 추후에 보안 사항에 맞게 수정
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
@@ -65,17 +68,25 @@ public class SecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable) // 폼 로그인 비활성화
                 .cors(cors -> cors.configurationSource(corsConfig())) // cors 설정 추가
                 .sessionManagement(sessionManagement -> // jwt 방식이기에, 세션 무상태로 설정
-                                sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                        sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(request -> // 요청 권한 관련 설정
                         request
                                 .requestMatchers(ALLOW_URLS.getEndPoints()).permitAll() // JWT를 가질 수 없는 요청은 허용
                                 .requestMatchers(SWAGGER_URLS.getEndPoints()).permitAll()
                                 .requestMatchers("/api/admin/**").hasRole("ADMIN") // ADMIN 권한이 필요한 요청은 검증
-                                // 일단 admin 제외, 다 열어둠
-                                .anyRequest().permitAll()
+                                .anyRequest().authenticated() // 나머지 요청은 인증 필요
                 )
-                //.exceptionHandling()
+                .exceptionHandling(exception ->
+                        exception.authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401
+                            response.setContentType(APPLICATION_JSON_VALUE);
+                            response.getWriter().write("{\"error\": \"만료된 토큰이거나 인증이 필요합니다.\"}");
+                        }).accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.setStatus(HttpServletResponse.SC_FORBIDDEN); // 403
+                            response.setContentType(APPLICATION_JSON_VALUE);
+                            response.getWriter().write("{\"error\": \"접근 권한이 없습니다.\"}");
+                        }))
                 .addFilterBefore(tokenAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class) // 필터 적용 전에 커스텀 필터 거치게 함
                 .build();
     }
