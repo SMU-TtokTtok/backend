@@ -35,6 +35,18 @@ public class GlobalExceptionHandler {
                 .body(createValidErrorResponse(e));
     }
 
+    @ExceptionHandler({Exception.class})
+    public ResponseEntity<ErrorResponse> handleUncaughtException(Exception e) {
+        ErrorResponse response = ErrorResponse.builder()
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                .details("서버 내부 오류가 발생했습니다.")
+                .build();
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(response);
+    }
+
+
     private ErrorResponse createValidErrorResponse(MethodArgumentNotValidException e) {
         List<ValidErrorDetails> errors = getValidErrorDetails(e);
 
@@ -54,5 +66,4 @@ public class GlobalExceptionHandler {
                 )
                 .toList();
     }
-
 }
