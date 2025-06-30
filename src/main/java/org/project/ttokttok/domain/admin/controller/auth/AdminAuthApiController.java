@@ -55,7 +55,7 @@ public class AdminAuthApiController {
 
     @PostMapping("/re-issue")
     public ResponseEntity<String> reissue(@AuthUserInfo String adminName,
-                                          @CookieValue(value = "ttref") String refreshToken) {
+                                          @CookieValue(value = "ttref", required = false) String refreshToken) {
 
         ReissueServiceResponse response = adminAuthService.reissue(adminName, refreshToken);
         ResponseCookie reissueCookie = CookieUtil.createResponseCookie(

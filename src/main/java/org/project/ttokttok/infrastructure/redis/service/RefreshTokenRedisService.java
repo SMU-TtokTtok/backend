@@ -69,7 +69,7 @@ public class RefreshTokenRedisService {
         tokenAliveValidate(refreshTTL);
 
         // 새로운 리프레시 토큰으로 다시 내려줌.
-        redisTemplate.opsForValue().set(REFRESH_REDIS_KEY + username, refreshToken, refreshTTL);
+        redisTemplate.opsForValue().set(REFRESH_REDIS_KEY + username, refreshToken, Duration.ofMillis(refreshTTL));
 
         return refreshTTL; // 리프레시 토큰의 남은 TTL 반환
     }

@@ -54,6 +54,8 @@ class AdminAuthApiControllerTest {
 
     private static final String LOGIN_ENDPOINT = "/api/admin/auth/login";
     private static final String LOGOUT_ENDPOINT = "/api/admin/auth/logout";
+    private static final String REISSUE_ENDPOINT = "/api/admin/auth/re-issue";
+    private static final String BEARER_PREFIX = "Bearer ";
 
     @BeforeEach
     void clearRedisBeforeEach() {
@@ -172,7 +174,7 @@ class AdminAuthApiControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        String accessToken = "Bearer " + loginResult.getResponse().getHeader("Authorization");
+        String accessToken = BEARER_PREFIX + loginResult.getResponse().getHeader("Authorization");
         String refreshCookie = loginResult.getResponse().getCookie("ttref").getValue();
 
         // when & then
@@ -205,7 +207,7 @@ class AdminAuthApiControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        String accessToken = "Bearer " + loginResult.getResponse().getHeader("Authorization");
+        String accessToken = BEARER_PREFIX + loginResult.getResponse().getHeader("Authorization");
         String refreshCookie = loginResult.getResponse().getCookie("ttref").getValue();
 
         // Redis에서 리프레시 토큰 삭제
@@ -218,6 +220,132 @@ class AdminAuthApiControllerTest {
                         .cookie(new Cookie("ttref", refreshCookie)))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.statusCode").value(409))
+                .andExpect(jsonPath("$.details").exists());
+    }
+
+    @DisplayName("reissue(): 유효한 리프레시 토큰으로 액세스 토큰과 리프레시 토큰을 재발급받는다.")
+    @Test
+    void reissueSuccess() throws Exception {
+        // given
+        final String username = "adminreissue";
+        final String password = "reissuepassword123";
+        createAdmin(username, password);
+
+        // 로그인하여 토큰 및 쿠키 발급
+        AdminLoginRequest request = new AdminLoginRequest(username, password);
+        String requestBody = objectMapper.writeValueAsString(request);
+
+        var loginResult = mockMvc.perform(post(LOGIN_ENDPOINT)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String accessToken = BEARER_PREFIX + loginResult.getResponse().getHeader("Authorization");
+        String refreshCookie = loginResult.getResponse().getCookie("ttref").getValue();
+
+        // when & then
+        mockMvc.perform(post("/api/admin/auth/re-issue")
+                        .header("Authorization", accessToken)
+                        .cookie(new Cookie("ttref", refreshCookie)))
+                .andExpect(status().isOk())
+                .andExpect(header().exists("Authorization"))
+                .andExpect(cookie().exists("ttref"))
+                .andExpect(jsonPath("$").value("re-issue Success"));
+    }
+
+    @DisplayName("reissue(): 리프레시 토큰이 존재하지 않거나 만료된 경우 404 Not Found가 반환된다.")
+    @Test
+    void reissueFail_TokenNotFoundOrExpired() throws Exception {
+        // given
+        final String username = "adminreissuefail";
+        final String password = "reissuefailpassword123";
+        createAdmin(username, password);
+
+        // 로그인하여 토큰 및 쿠키 발급
+        AdminLoginRequest request = new AdminLoginRequest(username, password);
+        String requestBody = objectMapper.writeValueAsString(request);
+
+        var loginResult = mockMvc.perform(post(LOGIN_ENDPOINT)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String accessToken = BEARER_PREFIX + loginResult.getResponse().getHeader("Authorization");
+        String refreshCookie = loginResult.getResponse().getCookie("ttref").getValue();
+
+        // Redis에서 리프레시 토큰 삭제
+        String redisKey = "refresh:" + username;
+        redisTemplate.delete(redisKey);
+
+        // when & then
+        mockMvc.perform(post("/api/admin/auth/re-issue")
+                        .header("Authorization", accessToken)
+                        .cookie(new Cookie("ttref", refreshCookie)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.statusCode").value(404))
+                .andExpect(jsonPath("$.details").exists());
+    }
+
+    @DisplayName("reissue(): 쿠키에 리프레시 토큰이 없을 경우 reissueValidate에서 예외가 발생하면 400 Bad Request가 반환된다.")
+    @Test
+    void reissueFail_InvalidTokenFromCookie() throws Exception {
+        // given
+        final String username = "admin1234";
+        final String password = "validpassword123";
+        createAdmin(username, password);
+
+        // 로그인하여 토큰 발급
+        AdminLoginRequest request = new AdminLoginRequest(username, password);
+        String requestBody = objectMapper.writeValueAsString(request);
+
+        var loginResult = mockMvc.perform(post(LOGIN_ENDPOINT)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String accessToken = BEARER_PREFIX + loginResult.getResponse().getHeader("Authorization");
+
+        // when & then
+        mockMvc.perform(post("/api/admin/auth/re-issue")
+                        .header("Authorization", accessToken))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.statusCode").value(400))
+                .andExpect(jsonPath("$.details").exists());
+    }
+
+    @DisplayName("reissue(): Redis에 저장된 리프레시 토큰과 요청된 리프레시 토큰이 다를 경우 reissueValidate에서 예외가 발생하면 401 Unauthorized가 반환된다.")
+    @Test
+    void reissueFail_InvalidRefreshToken() throws Exception {
+        // given
+        final String username = "admin1234";
+        final String password = "validpassword123";
+        createAdmin(username, password);
+
+        // 로그인하여 토큰 및 쿠키 발급
+        AdminLoginRequest request = new AdminLoginRequest(username, password);
+        String requestBody = objectMapper.writeValueAsString(request);
+
+        var loginResult = mockMvc.perform(post(LOGIN_ENDPOINT)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String accessToken = "Bearer " + loginResult.getResponse().getHeader("Authorization");
+        String refreshCookie = loginResult.getResponse().getCookie("ttref").getValue();
+
+        // Redis에 저장된 리프레시 토큰을 변경
+        redisTemplate.opsForValue().set("refresh:" + username, "differentRefreshToken");
+
+        // when & then
+        mockMvc.perform(post("/api/admin/auth/re-issue")
+                        .header("Authorization", accessToken)
+                        .cookie(new Cookie("ttref", refreshCookie)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.statusCode").value(401))
                 .andExpect(jsonPath("$.details").exists());
     }
 

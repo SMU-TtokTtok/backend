@@ -13,6 +13,7 @@ public record ReissueServiceResponse(
         return ReissueServiceResponse.builder()
                 .accessToken(tokens.accessToken())
                 .refreshToken(tokens.refreshToken())
+                .refreshTTL(refreshTTL)
                 .build();
     }
 }
