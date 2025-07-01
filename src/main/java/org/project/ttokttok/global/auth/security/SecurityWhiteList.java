@@ -9,12 +9,21 @@ public enum SecurityWhiteList {
     // 시큐리티 설정이 필요없는 URL들 추가하여 사용
 
     // 필요한 endPoint 추가하여 사용
+    // 토큰을 못쓰는 요청들에만 넣어넣으면 됨
     ALLOW_URLS(new String[]{
-            "/api/admin/auth/login"
+            "/api/admin/auth/login",
+            "/api/user/auth/send-verification",
+            "/api/user/auth/verify-email",
+            "/api/user/auth/signup",
+            "/api/user/auth/login",
+            "/api/user/auth/send-reset-code",
+            "/api/user/auth/reset-password"
     }),
 
     SWAGGER_URLS(new String[]{
             "/swagger-ui.html",
+            "/swagger-ui/**",
+            "/v3/api-docs/**"
     });
 
     final String[] endPoints;

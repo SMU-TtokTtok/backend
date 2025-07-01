@@ -33,14 +33,14 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
-        log.info("[JWT 인증 필터 실행]");
+        log.debug("[JWT 인증 필터 실행] URI: {}", request.getRequestURI());
 
         // 토큰 헤더에서 액세스 토큰 추출
         final String AuthorizationHeader = request.getHeader(AUTH_HEADER.getValue());
         final String token = getAccessToken(AuthorizationHeader);
 
-        // 올바른 토큰일 시, 스프링 시큐리티 컨텍스트에 인증 설정.
-        if (tokenProvider.validateToken(token)) {
+        // 토큰이 존재하고 올바른 토큰일 시, 스프링 시큐리티 컨텍스트에 인증 설정.
+        if (token != null && tokenProvider.validateToken(token)) {
             UserProfileResponse profile = tokenProvider.getUserProfile(token);
             Authentication authentication = jwtAuthManager.getAuthentication(profile.username(), profile.role());
 

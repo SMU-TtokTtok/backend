@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.data.redis.connection.RedisPassword;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
@@ -17,6 +18,8 @@ import java.time.Duration;
 @RequiredArgsConstructor
 public class RedisConfig {
 
+    private final Environment environment;
+
     // YAML 파일 Redis 환경 설정 변수들
     @Value("${spring.data.redis.host}")
     private String redisHost;
@@ -27,9 +30,6 @@ public class RedisConfig {
     @Value("${spring.data.redis.password:}")
     private String redisPassword;
 
-    @Value("${spring.config.activate.on-profile}")
-    private String activeProfile;
-
     // 배포 환경 시
     private final String PROD = "prod";
 
@@ -39,7 +39,10 @@ public class RedisConfig {
         //Redis의 작동 방식 중 하나인 StandAlone 방식 이용
         RedisStandaloneConfiguration redisConfig = new RedisStandaloneConfiguration();
 
-        if (activeProfile.equals(PROD)) {
+        String[] activeProfiles = environment.getActiveProfiles();
+        boolean isProd = activeProfiles.length > 0 && PROD.equals(activeProfiles[0]);
+
+        if (isProd) {
             // 운영 환경에서만 비밀번호 사용
             if (!redisPassword.isEmpty()) {
                 redisConfig.setPassword(RedisPassword.of(redisPassword));
@@ -61,8 +64,11 @@ public class RedisConfig {
                 LettuceClientConfiguration.builder()
                         .commandTimeout(Duration.ofSeconds(5));
 
+        String[] activeProfiles = environment.getActiveProfiles();
+        boolean isProd = activeProfiles.length > 0 && PROD.equals(activeProfiles[0]);
+
         // 운영환경일 때만 암호화 등록
-        if (activeProfile.equals(PROD)) {
+        if (isProd) {
             builder.useSsl();
         }
 

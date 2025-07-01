@@ -39,6 +39,12 @@ public class TokenProvider {
 
     // 토큰 검증
     public boolean validateToken(String token) {
+        // 토큰이 null이거나 빈 문자열인 경우 즉시 false 반환
+        if (token == null || token.trim().isEmpty()) {
+            log.debug("JWT 토큰이 비어있습니다.");
+            return false;
+        }
+
         try {
             Jws<Claims> jws = Jwts.parserBuilder()
                     .setSigningKey(key)
