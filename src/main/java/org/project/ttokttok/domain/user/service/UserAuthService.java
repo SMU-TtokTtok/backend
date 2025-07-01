@@ -3,7 +3,8 @@ package org.project.ttokttok.domain.user.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import org.project.ttokttok.domain.user.controller.dto.request.SignupRequest;
+import org.project.ttokttok.domain.user.service.dto.request.SignupServiceRequest;
+
 import org.project.ttokttok.domain.user.service.dto.request.LoginServiceRequest;
 import org.project.ttokttok.domain.user.service.dto.request.ResetPasswordServiceRequest;
 import org.project.ttokttok.domain.user.service.dto.response.LoginServiceResponse;
@@ -86,7 +87,7 @@ public class UserAuthService {
     /**
      * 3. 회원가입
      * */
-    public UserServiceResponse signup(SignupRequest request) {
+    public UserServiceResponse signup(SignupServiceRequest request) {
         // 3-1. 비밀번호 확인 일치 검증
         if (!request.password().equals(request.passwordConfirm())) {
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
