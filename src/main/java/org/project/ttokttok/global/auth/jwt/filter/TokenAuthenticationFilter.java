@@ -8,14 +8,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.project.ttokttok.global.auth.jwt.dto.response.UserProfileResponse;
 import org.project.ttokttok.global.auth.jwt.service.TokenProvider;
+import org.project.ttokttok.global.auth.security.SecurityWhiteList;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import static org.project.ttokttok.global.auth.jwt.TokenProperties.AUTH_HEADER;
 import static org.project.ttokttok.global.auth.jwt.TokenProperties.BEARER_PREFIX;
+import static org.project.ttokttok.global.auth.security.SecurityWhiteList.ALLOW_URLS;
+import static org.project.ttokttok.global.auth.security.SecurityWhiteList.SWAGGER_URLS;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -60,5 +64,14 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
         }
 
         return null;
+    }
+
+    // 특정 경로를 필터링하지 않도록 설정
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String requestURI = request.getRequestURI();
+
+        return Arrays.stream(ALLOW_URLS.getEndPoints()).anyMatch(requestURI::startsWith) ||
+                Arrays.stream(SWAGGER_URLS.getEndPoints()).anyMatch(requestURI::startsWith);
     }
 }

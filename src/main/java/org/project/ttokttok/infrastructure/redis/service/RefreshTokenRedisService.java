@@ -52,15 +52,16 @@ public class RefreshTokenRedisService {
     public void deleteRefreshToken(String username) {
         // 추후 필요하다면, 액세스토큰 블랙리스트 로직 추가 고려하기
         if (isExistKey(username)) {
-            log.info("로그아웃 완료: {}, logout at: {}", username, LocalDateTime.now());
             redisTemplate.delete(REFRESH_REDIS_KEY + username);
+            log.info("로그아웃 완료: {}, logout at: {}", username, LocalDateTime.now());
+            return;
         }
 
         throw new AlreadyLogoutException();
     }
 
     // 액세스 토큰 리이슈 시 사용
-    public void updateRefreshToken(String username, String refreshToken) {
+    public Long updateRefreshToken(String username, String refreshToken) {
         // 토큰 남은 시간
         Long refreshTTL = redisTemplate.getExpire(REFRESH_REDIS_KEY + username, TimeUnit.MILLISECONDS);
 
@@ -68,7 +69,9 @@ public class RefreshTokenRedisService {
         tokenAliveValidate(refreshTTL);
 
         // 새로운 리프레시 토큰으로 다시 내려줌.
-        redisTemplate.opsForValue().set(REFRESH_REDIS_KEY + username, refreshToken, refreshTTL);
+        redisTemplate.opsForValue().set(REFRESH_REDIS_KEY + username, refreshToken, Duration.ofMillis(refreshTTL));
+
+        return refreshTTL; // 리프레시 토큰의 남은 TTL 반환
     }
 
     private void tokenAliveValidate(Long refreshTTL) {

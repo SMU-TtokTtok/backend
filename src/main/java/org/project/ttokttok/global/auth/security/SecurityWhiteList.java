@@ -18,6 +18,7 @@ public enum SecurityWhiteList {
             "/api/user/auth/login",
             "/api/user/auth/send-reset-code",
             "/api/user/auth/reset-password"
+            "/api/admin/auth/reissue"
     }),
 
     SWAGGER_URLS(new String[]{

@@ -3,7 +3,6 @@ package org.project.ttokttok.domain.admin.service.auth;
 import lombok.RequiredArgsConstructor;
 import org.project.ttokttok.domain.admin.domain.Admin;
 import org.project.ttokttok.domain.admin.exception.AdminNotFoundException;
-import org.project.ttokttok.domain.admin.exception.InvalidAdminNameException;
 import org.project.ttokttok.domain.admin.repository.AdminRepository;
 import org.project.ttokttok.domain.admin.service.dto.request.AdminLoginServiceRequest;
 import org.project.ttokttok.domain.admin.service.dto.response.AdminLoginServiceResponse;
@@ -46,14 +45,17 @@ public class AdminAuthService {
 
     @Transactional
     public ReissueServiceResponse reissue(String username, String refreshToken) {
-        validateAdmin(username);
-        validateTokenFromCookie(refreshToken);
-        isRefreshSame(username, refreshToken);
+        reissueValidate(username, refreshToken);
 
         TokenResponse tokens = tokenProvider.reissueToken(username, ROLE_ADMIN);
-        refreshTokenRedisService.updateRefreshToken(username, tokens.refreshToken());
+        Long ttl = refreshTokenRedisService.updateRefreshToken(username, tokens.refreshToken());
 
-        return ReissueServiceResponse.of(tokens);
+        return ReissueServiceResponse.of(tokens, ttl);
+    }
+
+    private void reissueValidate(String username, String refreshToken) {
+        validateTokenFromCookie(refreshToken);
+        isRefreshSame(username, refreshToken);
     }
 
     private void isRefreshSame(String username, String refreshToken) {
@@ -67,12 +69,6 @@ public class AdminAuthService {
     private void validateTokenFromCookie(String refreshToken) {
         if (refreshToken == null) {
             throw new InvalidTokenFromCookieException();
-        }
-    }
-
-    private void validateAdmin(String username) {
-        if (!adminRepository.existsByUsername(username)) {
-            throw new InvalidAdminNameException();
         }
     }
 
