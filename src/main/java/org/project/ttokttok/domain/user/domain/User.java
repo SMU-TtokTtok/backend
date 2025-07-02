@@ -6,20 +6,29 @@ import lombok.Setter;
 import org.project.ttokttok.global.entity.BaseTimeEntity;
 
 @Entity
+@Table(name = "users")
 @Getter
 @Setter
 public class User extends BaseTimeEntity {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    // PK
+    @Id
+    private String id;  // UUID → String으로 변경
 
+    // 이메일
     @Column(unique = true, nullable = false)
-    private String email;        // 202220255@sangmyung.kr
+    private String email;
 
+    // 비밀번호
     @Column(nullable = false)
-    private String password;     // BCrypt 암호화
+    private String password;
 
+    // 이름
     @Column(nullable = false)
-    private String name;         // 실명
+    private String name;
 
-    private boolean isEmailVerified = false; // 이메일 인증 여부
+    // 이메일 검증
+    private boolean isEmailVerified = false;
+
+    // 약관 동의
+    private boolean termsAgreed = false;  // 새로 추가
 }
