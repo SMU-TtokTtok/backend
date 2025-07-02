@@ -29,6 +29,7 @@ public class ClubAdminService {
 
     private static final long MAX_IMAGE_SIZE = 5 * 1024 * 1024L; // 5MB
 
+    //todo: 모집 마감 상태 변경 시 Form 비활성화 고려
     @Transactional
     public void updateContent(String username, ClubContentUpdateServiceRequest request) {
         Club club = clubRepository.findById(request.clubId())

@@ -28,11 +28,11 @@ public class Club extends BaseTimeEntity {
     private String id;
 
     @Setter
-    @Column(nullable = false, unique = true)
+    @Column(length = 50, nullable = false, unique = true)
     private String name;
 
     @Setter
-    @Column(name = "profile_img", nullable = false)
+    @Column(name = "profile_img")
     private String profileImageUrl;
 
     @Setter
@@ -63,17 +63,17 @@ public class Club extends BaseTimeEntity {
     @JoinColumn(name = "admin_id", nullable = false)
     private Admin admin;
 
-    // 추후에 안내 메시지 등으로 변경 필요.
+    // todo: 추후에 안내 메시지 등으로 변경 필요.
     @Builder
     private Club(Admin admin) {
         this.admin = admin;
-        this.name = null;
+        this.name = "동아리 이름";
         this.profileImageUrl = null;
-        this.summary = null;
+        this.summary = "동아리 한줄 소개를 적어주세요.";
         this.clubType = null;
         this.clubCategory = null;
-        this.customCategory = null;
-        this.content = null;
+        this.customCategory = "";
+        this.content = "동아리 소개를 적어주세요.";
         this.recruiting = false;
     }
 }
