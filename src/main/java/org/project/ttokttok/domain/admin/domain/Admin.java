@@ -36,8 +36,6 @@ public class Admin extends BaseTimeEntity {
     @Column(nullable = false)
     private String password;
 
-    // 추후 One to one 동아리 연관관계 맺기
-
     @Builder
     private Admin(String username, String password) {
         this.username = username;
@@ -54,10 +52,8 @@ public class Admin extends BaseTimeEntity {
     }
 
     // ------- 검증용 메서드 -------
-
     public void validatePassword(String password, PasswordEncoder pe) {
         if (!pe.matches(password, this.password))
             throw new AdminPasswordNotMatchException();
     }
-
 }
