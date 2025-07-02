@@ -1,10 +1,7 @@
 package org.project.ttokttok.domain.club.domain;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.project.ttokttok.domain.admin.domain.Admin;
 import org.project.ttokttok.domain.club.domain.enums.ClubCategory;
 import org.project.ttokttok.domain.club.domain.enums.ClubType;
@@ -35,10 +32,11 @@ public class Club extends BaseTimeEntity {
     private String name;
 
     @Setter
-    @Column(name = "profile_img")
+    @Column(name = "profile_img", nullable = false)
     private String profileImageUrl;
 
     @Setter
+    @Column(nullable = false)
     private String summary; // 한줄 소개
 
     @Setter
@@ -50,18 +48,32 @@ public class Club extends BaseTimeEntity {
     private ClubCategory clubCategory; // 동아리 유형
 
     @Setter
-    @Column(length = 30)
+    @Column(length = 30, nullable = false)
     private String customCategory;
 
     @Setter
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 
     @Setter
+    @Column(nullable = false)
     private boolean recruiting; // 모집여부
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "admin_id")
+    @JoinColumn(name = "admin_id", nullable = false)
     private Admin admin;
 
+    // 추후에 안내 메시지 등으로 변경 필요.
+    @Builder
+    private Club(Admin admin) {
+        this.admin = admin;
+        this.name = null;
+        this.profileImageUrl = null;
+        this.summary = null;
+        this.clubType = null;
+        this.clubCategory = null;
+        this.customCategory = null;
+        this.content = null;
+        this.recruiting = false;
+    }
 }

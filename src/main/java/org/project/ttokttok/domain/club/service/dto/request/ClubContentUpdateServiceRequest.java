@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import org.openapitools.jackson.nullable.JsonNullable;
 import org.project.ttokttok.domain.club.domain.enums.ClubCategory;
 import org.project.ttokttok.domain.club.domain.enums.ClubType;
-import org.springframework.core.io.Resource;
+import org.springframework.web.multipart.MultipartFile;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record ClubContentUpdateServiceRequest(
@@ -14,7 +14,7 @@ public record ClubContentUpdateServiceRequest(
         JsonNullable<ClubCategory> clubCategory,
         JsonNullable<String> customCategory,
         JsonNullable<String> summary,
-        JsonNullable<Resource> profileImage,
+        JsonNullable<MultipartFile> profileImage,
         JsonNullable<String> content,
         JsonNullable<Boolean> recruiting
 ) {

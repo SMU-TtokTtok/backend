@@ -22,6 +22,7 @@ public interface ClubMapper {
     @Mapping(target = "customCategory", source = "customCategory", qualifiedByName = "unwrapNullable")
     @Mapping(target = "summary", source = "summary", qualifiedByName = "unwrapNullable")
     @Mapping(target = "content", source = "content", qualifiedByName = "unwrapNullable")
+    @Mapping(target = "recruiting", source = "recruiting", qualifiedByName = "unwrapNullable")
     void updateClubFromRequest(@MappingTarget Club club, ClubContentUpdateServiceRequest request);
 
     /**

@@ -30,6 +30,8 @@ public enum ErrorMessage {
     //동아리 에러 메시지
     CLUB_NOT_FOUND("동아리를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
     NOT_CLUB_ADMIN("해당 동아리의 관리자가 아닙니다.", HttpStatus.FORBIDDEN),
+    INVALID_IMAGE_TYPE("지원되는 이미지 형식이 아닙니다.", HttpStatus.BAD_REQUEST),
+    IMAGE_MAX_SIZE_OVER("이미지 크기는 5MB 이하만 가능합니다.", HttpStatus.BAD_REQUEST),
 
     // S3 에러 메시지
     S3_FILE_UPLOAD_ERROR("S3 파일 업로드 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
