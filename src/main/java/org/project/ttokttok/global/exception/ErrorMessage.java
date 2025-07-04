@@ -33,6 +33,12 @@ public enum ErrorMessage {
     INVALID_IMAGE_TYPE("지원되는 이미지 형식이 아닙니다.", HttpStatus.BAD_REQUEST),
     IMAGE_MAX_SIZE_OVER("이미지 크기는 5MB 이하만 가능합니다.", HttpStatus.BAD_REQUEST),
 
+    // 동아리 게시판 에러 메시지
+    ADMIN_NAME_NOT_MATCH("요청한 관리자가 이 동아리의 관리자와 다릅니다.", HttpStatus.FORBIDDEN),
+    CLUB_NULL_POINTER("클럽 객체가 Null입니다.", HttpStatus.INTERNAL_SERVER_ERROR),
+    CONTENT_NULL_OR_BLANK("내용이 Null 이거나 비어있습니다.", HttpStatus.BAD_REQUEST),
+    TITLE_NULL_OR_BLANK("Title이 Null 이거나 비어있습니다.", HttpStatus.BAD_REQUEST),
+
     // S3 에러 메시지
     S3_FILE_UPLOAD_ERROR("S3 파일 업로드 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
 
