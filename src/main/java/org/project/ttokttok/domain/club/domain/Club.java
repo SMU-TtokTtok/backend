@@ -5,8 +5,11 @@ import lombok.*;
 import org.project.ttokttok.domain.admin.domain.Admin;
 import org.project.ttokttok.domain.club.domain.enums.ClubCategory;
 import org.project.ttokttok.domain.club.domain.enums.ClubType;
+import org.project.ttokttok.domain.clubMember.domain.ClubMember;
 import org.project.ttokttok.global.entity.BaseTimeEntity;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -62,6 +65,9 @@ public class Club extends BaseTimeEntity {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "admin_id", nullable = false)
     private Admin admin;
+
+    @OneToMany(mappedBy = "club", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<ClubMember> clubMembers = new ArrayList<>();
 
     // todo: 추후에 안내 메시지 등으로 변경 필요.
     @Builder
