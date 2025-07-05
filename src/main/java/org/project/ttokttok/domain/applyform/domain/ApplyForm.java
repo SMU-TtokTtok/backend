@@ -11,22 +11,15 @@ import org.project.ttokttok.global.entity.BaseTimeEntity;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ApplyForm extends BaseTimeEntity {
 
-    // UUID 생성 전략
-    @PrePersist
-    private void generateId() {
-        if (this.id == null) {
-            this.id = java.util.UUID.randomUUID().toString();
-        }
-    }
-
     @Id
     @Column(length = 36, updatable = false, unique = true)
-    private String id;
+    private String id = UUID.randomUUID().toString();
 
     private String title;
 
@@ -58,6 +51,7 @@ public class ApplyForm extends BaseTimeEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     private Club club;
 
-    //TODO: 지원 폼 JSON 컬럼 추가 필요
-    //
+    // 추후 JsonNode나 Map으로 개선
+    @Column(columnDefinition = "JSONB", nullable = false)
+    private String formJson;
 }

@@ -8,23 +8,17 @@ import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.user.domain.User;
 import org.project.ttokttok.global.entity.BaseTimeEntity;
 
+import java.util.UUID;
+
 @Entity
 @Getter
 @Table(name = "club_members")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ClubMember extends BaseTimeEntity {
 
-    // UUID 생성 전략
-    @PrePersist
-    private void generateId() {
-        if (this.id == null) {
-            this.id = java.util.UUID.randomUUID().toString();
-        }
-    }
-
     @Id
     @Column(length = 36, updatable = false, unique = true)
-    private String id;
+    private String id = UUID.randomUUID().toString();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "club_id", nullable = false)

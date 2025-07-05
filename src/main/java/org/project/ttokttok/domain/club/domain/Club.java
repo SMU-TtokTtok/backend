@@ -18,17 +18,9 @@ import java.util.UUID;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Club extends BaseTimeEntity {
 
-    //UUID 생성 전략
-    @PrePersist
-    private void generateId() {
-        if (this.id == null) {
-            this.id = UUID.randomUUID().toString();
-        }
-    }
-
     @Id
     @Column(length = 36, updatable = false, unique = true)
-    private String id;
+    private String id = UUID.randomUUID().toString();
 
     @Setter
     @Column(length = 50, nullable = false, unique = true)
