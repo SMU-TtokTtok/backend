@@ -6,7 +6,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.openapitools.jackson.nullable.JsonNullable;
-import org.openapitools.jackson.nullable.JsonNullableModule;
 import org.project.ttokttok.domain.admin.domain.Admin;
 import org.project.ttokttok.domain.admin.repository.AdminRepository;
 import org.project.ttokttok.domain.club.controller.dto.request.UpdateClubContentRequest;
@@ -26,6 +25,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+
+import java.time.LocalDateTime;
+import java.util.Set;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -47,8 +49,8 @@ class ClubAdminApiControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    private final ObjectMapper objectMapper = new ObjectMapper()
-            .registerModule(new JsonNullableModule());
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Autowired
     private JwtFactory jwtFactory;
@@ -85,7 +87,11 @@ class ClubAdminApiControllerTest {
                 JsonNullable.of("소개글"),
                 JsonNullable.undefined(),
                 JsonNullable.of("본문입니다."),
-                JsonNullable.of(true)
+                JsonNullable.of(true),
+                JsonNullable.of(LocalDateTime.from(LocalDateTime.now())),
+                JsonNullable.of(LocalDateTime.from(LocalDateTime.now().plusDays(7))),
+                JsonNullable.of(Set.of()),
+                JsonNullable.of(5)
         );
 
         MockMultipartFile jsonPart = new MockMultipartFile(
