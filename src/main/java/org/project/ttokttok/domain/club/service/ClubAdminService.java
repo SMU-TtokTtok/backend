@@ -1,6 +1,9 @@
 package org.project.ttokttok.domain.club.service;
 
 import lombok.RequiredArgsConstructor;
+import org.project.ttokttok.domain.applyform.domain.ApplyForm;
+import org.project.ttokttok.domain.applyform.exception.ApplyFormNotFoundException;
+import org.project.ttokttok.domain.applyform.repository.ApplyFormRepository;
 import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.exception.ClubNotFoundException;
 import org.project.ttokttok.domain.club.exception.ImageMaxSizeOverException;
@@ -21,7 +24,9 @@ import java.util.Set;
 public class ClubAdminService {
 
     private final ClubRepository clubRepository;
+    private final ApplyFormRepository applyFormRepository;
     private final ClubMapper mapper;
+
     private final S3Service s3Service;
 
     private static final Set<String> ALLOWED_CONTENT_TYPES =
@@ -31,52 +36,85 @@ public class ClubAdminService {
 
     private static final String PROFILE_IMAGE_DIR = "profile-images/";
 
-    //todo: 모집 마감 상태 변경 시 Form 비활성화 고려
+    //todo: 모집 마감 상태 변경 시 Form 비활성화 고려, 모집 기간, 모집 대상, 모집 인원 수정 추가
+    // 나중에 무조건 분할 들어가야 함.
     @Transactional
     public void updateContent(String username, ClubContentUpdateServiceRequest request) {
         Club club = clubRepository.findById(request.clubId())
                 .orElseThrow(ClubNotFoundException::new);
 
-        // 요청한 이가 이 동아리의 관리자가 맞는지 검증
         validateAdmin(username, club.getAdmin().getUsername());
 
-        if (request.profileImage() != null && request.profileImage().isPresent()) {
-            // s3에 저장하고 url를 받아와서 저장.
-            MultipartFile profileImage = request.profileImage().get();
-            String profileImgKey = s3Service.uploadFile(profileImage, PROFILE_IMAGE_DIR);
-
-            // 이미지 검증
-            validateImageContentType(profileImage);
-            validateImageSize(profileImage);
-
-            // 기존 프로필 이미지가 있다면 삭제
-            validateProfileImgExist(club, profileImgKey);
-
-            club.setProfileImageUrl(profileImgKey);
+        if (hasProfileImage(request)) {
+            updateProfileImage(club, request.profileImage().get());
         }
 
-        // 요청에서 null 값만 확인 후, mapper를 통해 업데이트
+        if (hasApplyFormUpdate(request)) {
+            updateApplyForm(club, request);
+        }
+
         mapper.updateClubFromRequest(club, request);
     }
 
+    // 요청에 프로필 이미지 업데이트 요청이 있는지 확인
+    private boolean hasProfileImage(ClubContentUpdateServiceRequest request) {
+        return request.profileImage() != null && request.profileImage().isPresent();
+    }
+
+    // 프로필 이미지 업데이트 로직
+    private void updateProfileImage(Club club, MultipartFile profileImage) {
+        String profileImgKey = s3Service.uploadFile(profileImage, PROFILE_IMAGE_DIR);
+        validateImageContentType(profileImage);
+        validateImageSize(profileImage);
+        validateProfileImgExist(club, profileImgKey);
+
+        club.setProfileImageUrl(profileImgKey);
+    }
+
+    // 요청에 지원 폼 업데이트 요청이 있는지 확인
+    private boolean hasApplyFormUpdate(ClubContentUpdateServiceRequest request) {
+        return request.applyStartDate().isPresent() || request.applyDeadline().isPresent() ||
+                request.grades().isPresent() || request.maxApplyCount().isPresent() ||
+                request.recruiting().isPresent();
+    }
+
+    // 지원 폼 업데이트 로직
+    private void updateApplyForm(Club club, ClubContentUpdateServiceRequest request) {
+        ApplyForm applyForm = applyFormRepository.findByClubId(club.getId())
+                .orElseThrow(ApplyFormNotFoundException::new);
+
+        // TODO: 모집 시작 날짜가 모집 마감 날짜보다 빠를 시의 예외 처리 추가 필요
+        applyForm.updateApplyInfo(
+                request.applyStartDate().orElse(null),
+                request.applyDeadline().orElse(null),
+                request.maxApplyCount().orElse(null),
+                request.grades().orElse(null),
+                request.recruiting().orElse(null)
+        );
+    }
+
+    // 이미지가 유효한 지 검증
     private void validateImageContentType(MultipartFile profileImage) {
         if (!ALLOWED_CONTENT_TYPES.contains(profileImage.getContentType())) {
             throw new InvalidImageTypeException();
         }
     }
 
+    // 이미지 크기가 유효한지 검증
     private void validateImageSize(MultipartFile profileImage) {
         if (profileImage.getSize() > MAX_IMAGE_SIZE) {
             throw new ImageMaxSizeOverException();
         }
     }
 
+    // 기존 프로필 이미지가 있다면 삭제
     private void validateProfileImgExist(Club club, String profileImgKey) {
         if (club.getProfileImageUrl() != null && !club.getProfileImageUrl().equals(profileImgKey)) {
             s3Service.deleteFile(club.getProfileImageUrl());
         }
     }
 
+    // 동아리 관리자 검증
     private void validateAdmin(String username, String targetAdminUsername) {
         if (!username.equals(targetAdminUsername))
             throw new NotClubAdminException();

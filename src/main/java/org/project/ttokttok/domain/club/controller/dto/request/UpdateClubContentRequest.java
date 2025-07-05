@@ -4,10 +4,14 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import org.openapitools.jackson.nullable.JsonNullable;
+import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
 import org.project.ttokttok.domain.club.domain.enums.ClubCategory;
 import org.project.ttokttok.domain.club.domain.enums.ClubType;
 import org.project.ttokttok.domain.club.service.dto.request.ClubContentUpdateServiceRequest;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.time.LocalDateTime;
+import java.util.Set;
 
 public record UpdateClubContentRequest(
         //@Size(min = 1, max = 50)
@@ -35,7 +39,11 @@ public record UpdateClubContentRequest(
         JsonNullable<String> content,
 
         //@NotNull(message = "모집 여부는 Null일 수 없습니다.")
-        JsonNullable<Boolean> recruiting
+        JsonNullable<Boolean> recruiting,
+        JsonNullable<LocalDateTime> applyStartDate,
+        JsonNullable<LocalDateTime> applyDeadline,
+        JsonNullable<Set<ApplicableGrade>> grades,
+        JsonNullable<Integer> maxApplyCount
 ) {
     public ClubContentUpdateServiceRequest toServiceRequest(String clubId) {
         return ClubContentUpdateServiceRequest.builder()
@@ -48,6 +56,10 @@ public record UpdateClubContentRequest(
                 .profileImage(profileImage)
                 .content(content)
                 .recruiting(recruiting)
+                .applyStartDate(applyStartDate)
+                .applyDeadline(applyDeadline)
+                .grades(grades)
+                .maxApplyCount(maxApplyCount)
                 .build();
     }
 }

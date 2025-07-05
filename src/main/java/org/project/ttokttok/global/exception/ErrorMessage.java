@@ -40,6 +40,9 @@ public enum ErrorMessage {
     TITLE_NULL_OR_BLANK("Title이 Null 이거나 비어있습니다.", HttpStatus.BAD_REQUEST),
     CLUB_BOARD_NOT_FOUND("게시글을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
 
+    // 지원 폼 에러 메시지
+    APPLY_FORM_NOT_FOUND("지원 폼을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+
     // S3 에러 메시지
     S3_FILE_UPLOAD_ERROR("S3 파일 업로드 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
 

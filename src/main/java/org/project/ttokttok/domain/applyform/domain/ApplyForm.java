@@ -54,4 +54,23 @@ public class ApplyForm extends BaseTimeEntity {
     // 추후 JsonNode나 Map으로 개선
     @Column(columnDefinition = "JSONB", nullable = false)
     private String formJson;
+
+    public void updateApplyInfo(LocalDateTime applyStartDate,
+                                LocalDateTime applyDeadline,
+                                Integer maxApplyCount,
+                                Set<ApplicableGrade> grades,
+                                Boolean isRecruiting) {
+
+        this.applyStartDate = applyStartDate != null ? applyStartDate : this.applyStartDate;
+        this.applyDeadline = applyDeadline != null ? applyDeadline : this.applyDeadline;
+        this.maxApplyCount = maxApplyCount != null ? maxApplyCount : this.maxApplyCount;
+        if (grades != null) {
+            this.grades.clear();
+            this.grades.addAll(grades);
+        }
+
+        if (isRecruiting != null) {
+            this.status = isRecruiting ? ApplyFormStatus.ACTIVE : ApplyFormStatus.INACTIVE;
+        }
+    }
 }
