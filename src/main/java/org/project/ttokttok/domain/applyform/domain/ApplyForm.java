@@ -60,9 +60,9 @@ public class ApplyForm extends BaseTimeEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     private Club club;
 
-//    @JdbcTypeCode(SqlTypes.JSON)
-//    @Column(columnDefinition = "jsonb", nullable = false)
-//    private List<Question> formJson;
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "jsonb", nullable = false)
+    private List<Question> formJson;
 
     @Builder
     private ApplyForm(Club club,
