@@ -38,7 +38,7 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
                         club.profileImageUrl,
                         getClubMemberCount(clubId),
                         applyForm.applyStartDate,
-                        applyForm.applyDeadline,
+                        applyForm.applyEndDate,
                         getGrades(clubId),
                         applyForm.maxApplyCount,
                         club.content

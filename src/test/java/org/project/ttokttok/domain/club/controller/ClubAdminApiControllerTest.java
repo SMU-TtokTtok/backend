@@ -8,6 +8,10 @@ import org.junit.jupiter.api.Test;
 import org.openapitools.jackson.nullable.JsonNullable;
 import org.project.ttokttok.domain.admin.domain.Admin;
 import org.project.ttokttok.domain.admin.repository.AdminRepository;
+import org.project.ttokttok.domain.applyform.domain.ApplyForm;
+import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
+import org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus;
+import org.project.ttokttok.domain.applyform.repository.ApplyFormRepository;
 import org.project.ttokttok.domain.club.controller.dto.request.UpdateClubContentRequest;
 import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.domain.enums.ClubCategory;
@@ -25,6 +29,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -33,6 +38,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
+@Transactional
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 class ClubAdminApiControllerTest {
@@ -45,6 +51,9 @@ class ClubAdminApiControllerTest {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private ApplyFormRepository applyFormRepository;
 
     @Autowired
     private MockMvc mockMvc;
@@ -66,10 +75,24 @@ class ClubAdminApiControllerTest {
                 .build();
 
         clubRepository.save(club);
+
+        // ApplyForm 생성자에 맞는 테스트 데이터로 생성
+        ApplyForm applyForm = ApplyForm.builder()
+                .club(club)
+                .applyStartDate(LocalDateTime.now())
+                .applyEndDate(LocalDateTime.now().plusDays(7))
+                .maxApplyCount(10)
+                .grades(Set.of(ApplicableGrade.FIRST_GRADE, ApplicableGrade.SECOND_GRADE))
+                .title("테스트 지원서")
+                .subTitle("테스트 부제목")
+                .build();
+
+        applyFormRepository.save(applyForm);
     }
 
     @AfterEach
     void cleanUp() {
+        applyFormRepository.deleteAll();
         clubRepository.deleteAll();
         adminRepository.deleteAll();
     }
@@ -108,11 +131,10 @@ class ClubAdminApiControllerTest {
         // when & then
         mockMvc.perform(multipart(HttpMethod.PATCH, "/api/admin/clubs/{clubId}/content", clubId)
                         .file(jsonPart)
-                        .contentType(MediaType.MULTIPART_FORM_DATA)
+                        .contentType(MediaType.MULTIPART_FORM_DATA_VALUE)
                         .header("Authorization", "Bearer " + validToken) // 필요하면 추가
                 )
                 .andExpect(status().isOk())
                 .andExpect(MockMvcResultMatchers.content().string("Club content updated successfully."));
     }
 }
-

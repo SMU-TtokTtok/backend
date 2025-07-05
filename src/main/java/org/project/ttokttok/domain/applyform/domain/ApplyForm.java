@@ -2,6 +2,7 @@ package org.project.ttokttok.domain.applyform.domain;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.NoArgsConstructor;
 import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
 import org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus;
@@ -14,6 +15,7 @@ import java.util.Set;
 import java.util.UUID;
 
 @Entity
+@Table(name = "applyforms")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ApplyForm extends BaseTimeEntity {
 
@@ -29,11 +31,12 @@ public class ApplyForm extends BaseTimeEntity {
     @Column(name = "status", nullable = false)
     private ApplyFormStatus status; // 지원서 상태
 
+    // 시간 부분 빼기
     @Column(nullable = false)
     private LocalDateTime applyStartDate;
 
     @Column(nullable = false)
-    private LocalDateTime applyDeadline;
+    private LocalDateTime applyEndDate;
 
     @Column(nullable = false)
     private Integer maxApplyCount;
@@ -52,8 +55,28 @@ public class ApplyForm extends BaseTimeEntity {
     private Club club;
 
     // 추후 JsonNode나 Map으로 개선
-    @Column(columnDefinition = "JSONB", nullable = false)
-    private String formJson;
+//    @Column(columnDefinition = "JSONB", nullable = false)
+//    private String formJson;
+
+    @Builder
+    private ApplyForm(Club club,
+                      LocalDateTime applyStartDate,
+                      LocalDateTime applyEndDate,
+                      int maxApplyCount,
+                      Set<ApplicableGrade> grades,
+                      String title,
+                      String subTitle) {
+        this.club = club;
+        this.applyStartDate = applyStartDate;
+        this.applyEndDate = applyEndDate;
+        this.maxApplyCount = maxApplyCount;
+        if (grades != null) {
+            this.grades = new HashSet<>(grades);
+        }
+        this.title = title;
+        this.subTitle = subTitle;
+        this.status = ApplyFormStatus.ACTIVE;
+    }
 
     public void updateApplyInfo(LocalDateTime applyStartDate,
                                 LocalDateTime applyDeadline,
@@ -62,7 +85,7 @@ public class ApplyForm extends BaseTimeEntity {
                                 Boolean isRecruiting) {
 
         this.applyStartDate = applyStartDate != null ? applyStartDate : this.applyStartDate;
-        this.applyDeadline = applyDeadline != null ? applyDeadline : this.applyDeadline;
+        this.applyEndDate = applyDeadline != null ? applyDeadline : this.applyEndDate;
         this.maxApplyCount = maxApplyCount != null ? maxApplyCount : this.maxApplyCount;
         if (grades != null) {
             this.grades.clear();
