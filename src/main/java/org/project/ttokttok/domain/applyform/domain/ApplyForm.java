@@ -3,18 +3,25 @@ package org.project.ttokttok.domain.applyform.domain;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.Type;
+import org.hibernate.type.SqlTypes;
 import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
 import org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus;
+import org.project.ttokttok.domain.applyform.domain.json.Question;
 import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.global.entity.BaseTimeEntity;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
 @Entity
+@Getter
 @Table(name = "applyforms")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ApplyForm extends BaseTimeEntity {
@@ -31,12 +38,11 @@ public class ApplyForm extends BaseTimeEntity {
     @Column(name = "status", nullable = false)
     private ApplyFormStatus status; // 지원서 상태
 
-    // 시간 부분 빼기
     @Column(nullable = false)
-    private LocalDateTime applyStartDate;
+    private LocalDate applyStartDate;
 
     @Column(nullable = false)
-    private LocalDateTime applyEndDate;
+    private LocalDate applyEndDate;
 
     @Column(nullable = false)
     private Integer maxApplyCount;
@@ -54,14 +60,14 @@ public class ApplyForm extends BaseTimeEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     private Club club;
 
-    // 추후 JsonNode나 Map으로 개선
-//    @Column(columnDefinition = "JSONB", nullable = false)
-//    private String formJson;
+//    @JdbcTypeCode(SqlTypes.JSON)
+//    @Column(columnDefinition = "jsonb", nullable = false)
+//    private List<Question> formJson;
 
     @Builder
     private ApplyForm(Club club,
-                      LocalDateTime applyStartDate,
-                      LocalDateTime applyEndDate,
+                      LocalDate applyStartDate,
+                      LocalDate applyEndDate,
                       int maxApplyCount,
                       Set<ApplicableGrade> grades,
                       String title,
@@ -78,8 +84,9 @@ public class ApplyForm extends BaseTimeEntity {
         this.status = ApplyFormStatus.ACTIVE;
     }
 
-    public void updateApplyInfo(LocalDateTime applyStartDate,
-                                LocalDateTime applyDeadline,
+    //TODO: Mapper를 통해서 수정하도록 변경
+    public void updateApplyInfo(LocalDate applyStartDate,
+                                LocalDate applyDeadline,
                                 Integer maxApplyCount,
                                 Set<ApplicableGrade> grades,
                                 Boolean isRecruiting) {
@@ -97,3 +104,5 @@ public class ApplyForm extends BaseTimeEntity {
         }
     }
 }
+
+
