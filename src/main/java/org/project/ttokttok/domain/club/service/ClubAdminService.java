@@ -73,7 +73,7 @@ public class ClubAdminService {
 
     // 요청에 지원 폼 업데이트 요청이 있는지 확인
     private boolean hasApplyFormUpdate(ClubContentUpdateServiceRequest request) {
-        return request.applyStartDate().isPresent() || request.applyDeadline().isPresent() ||
+        return request.applyStartDate().isPresent() || request.applyEndDate().isPresent() ||
                 request.grades().isPresent() || request.maxApplyCount().isPresent() ||
                 request.recruiting().isPresent();
     }
@@ -86,7 +86,7 @@ public class ClubAdminService {
         // TODO: 모집 시작 날짜가 모집 마감 날짜보다 빠를 시의 예외 처리 추가 필요
         applyForm.updateApplyInfo(
                 request.applyStartDate().orElse(null),
-                request.applyDeadline().orElse(null),
+                request.applyEndDate().orElse(null),
                 request.maxApplyCount().orElse(null),
                 request.grades().orElse(null),
                 request.recruiting().orElse(null)
