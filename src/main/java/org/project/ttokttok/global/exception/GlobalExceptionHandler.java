@@ -47,15 +47,13 @@ public class GlobalExceptionHandler {
                 .body(response);
     }
 
-    @ExceptionHandler({HttpRequestMethodNotSupportedException.class})
-    public ResponseEntity<ErrorResponse> handleHttpRequestMethodNotSupported(HttpRequestMethodNotSupportedException e) {
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException e) {
         ErrorResponse response = ErrorResponse.builder()
-                .statusCode(HttpStatus.METHOD_NOT_ALLOWED.value())
-                .details("서버에서 지원하지 않는 HTTP 메서드입니다.")
+                .statusCode(HttpStatus.BAD_REQUEST.value())
+                .details(e.getMessage())
                 .build();
-
-        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
-                .body(response);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
     private ErrorResponse createValidErrorResponse(MethodArgumentNotValidException e) {

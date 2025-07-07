@@ -25,8 +25,26 @@ bin/
 out/
 !**/src/main/**/out/
 !**/src/test/**/out/
+
+### Application Configuration Files ###
+# 민감한 설정 파일들 (DB, API 키 등)
+/src/main/resources/application.yml
 /src/main/resources/application-*.yml
+/src/test/resources/application.yml
 /src/test/resources/application-*.yml
+
+# 환경별 설정 파일들
+/src/main/resources/application-local.yml
+/src/main/resources/application-dev.yml
+/src/main/resources/application-prod.yml
+/src/main/resources/application-test.yml
+
+# 환경변수 파일들
+.env
+.env.local
+.env.dev
+.env.prod
+.env.test
 
 
 ### NetBeans ###
@@ -39,4 +57,3 @@ out/
 ### VS Code ###
 .vscode/
 
-# /src/main/resources/application.yml
