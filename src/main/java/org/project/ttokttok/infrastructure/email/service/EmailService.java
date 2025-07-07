@@ -3,6 +3,7 @@ package org.project.ttokttok.infrastructure.email.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.project.ttokttok.infrastructure.email.dto.EmailRequest;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import java.io.UnsupportedEncodingException;
 import java.security.SecureRandom;
 
 @Slf4j
@@ -18,6 +20,15 @@ import java.security.SecureRandom;
 public class EmailService {
 
     private final JavaMailSender mailSender;
+    
+    @Value("${email.from.address}")
+    private String fromAddress;
+    
+    @Value("${email.from.name}")
+    private String fromName;
+    
+    @Value("${email.reply-to}")
+    private String replyTo;
     private static final String CHARACTERS = "0123456789";
     private static final SecureRandom random = new SecureRandom();
 
@@ -27,6 +38,8 @@ public class EmailService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
+            helper.setFrom(fromAddress, fromName); // 발신자 주소와 이름 설정
+            helper.setReplyTo(replyTo);
             helper.setTo(emailRequest.getTo());
             helper.setSubject(emailRequest.getSubject());
             helper.setText(emailRequest.getContent(), emailRequest.isHtml());
@@ -37,6 +50,9 @@ public class EmailService {
         } catch (MessagingException e) {
             log.error("이메일 메시지 생성 실패: {} - {}", emailRequest.getTo(), e.getMessage());
             throw new RuntimeException("이메일 메시지 생성에 실패했습니다.", e);
+        } catch (UnsupportedEncodingException e) {
+            log.error("이메일 인코딩 실패: {} - {}", emailRequest.getTo(), e.getMessage());
+            throw new RuntimeException("이메일 인코딩에 실패했습니다.", e);
         } catch (MailException e) {
             log.error("이메일 발송 실패: {} - {}", emailRequest.getTo(), e.getMessage());
             throw new RuntimeException("이메일 발송에 실패했습니다.", e);
@@ -52,7 +68,7 @@ public class EmailService {
         return code.toString();
     }
 
-    // 상명대 이메일 형식 검증
+    // 상명대 이메일 형식 검증 (테스트용 Gmail 추가)
     public boolean isValidSangmyungEmail(String email) {
         if (email == null || email.trim().isEmpty()) {
             return false;
