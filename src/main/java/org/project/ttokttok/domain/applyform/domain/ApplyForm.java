@@ -12,10 +12,7 @@ import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.global.entity.BaseTimeEntity;
 
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Entity
 @Getter
@@ -24,8 +21,9 @@ import java.util.UUID;
 public class ApplyForm extends BaseTimeEntity {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(length = 36, updatable = false, unique = true)
-    private String id = UUID.randomUUID().toString();
+    private String id;
 
     @Column(nullable = false, length = 100)
     private String title;
@@ -67,7 +65,7 @@ public class ApplyForm extends BaseTimeEntity {
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb", nullable = false)
-    private List<Question> formJson;
+    private List<Question> formJson = new ArrayList<>();
 
     @Builder
     private ApplyForm(Club club,
