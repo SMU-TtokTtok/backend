@@ -47,7 +47,8 @@ class AdminAuthApiControllerTest {
     private static final String LOGIN_ENDPOINT = "/api/admin/auth/login";
     private static final String LOGOUT_ENDPOINT = "/api/admin/auth/logout";
     private static final String REISSUE_ENDPOINT = "/api/admin/auth/re-issue";
-    private static final String BEARER_PREFIX = "Bearer ";
+    private static final String ACCESS_TOKEN_COOKIE_NAME = "ttac";
+    private static final String REFRESH_TOKEN_COOKIE_NAME = "ttref";
 
     @BeforeEach
     void clearRedisBeforeEach() {
@@ -70,8 +71,8 @@ class AdminAuthApiControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isOk())
-                .andExpect(header().exists("Authorization"))
-                .andExpect(cookie().exists("ttref"))
+                .andExpect(cookie().exists(ACCESS_TOKEN_COOKIE_NAME))
+                .andExpect(cookie().exists(REFRESH_TOKEN_COOKIE_NAME))
                 .andExpect(jsonPath("$").value("Admin Login Success"));
     }
 
@@ -148,14 +149,17 @@ class AdminAuthApiControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        String accessToken = BEARER_PREFIX + loginResult.getResponse().getHeader("Authorization");
-        String refreshCookie = loginResult.getResponse().getCookie("ttref").getValue();
+        Cookie accessCookie = loginResult.getResponse().getCookie(ACCESS_TOKEN_COOKIE_NAME);
+        Cookie refreshCookie = loginResult.getResponse().getCookie(REFRESH_TOKEN_COOKIE_NAME);
 
         mockMvc.perform(post(LOGOUT_ENDPOINT)
-                        .header("Authorization", accessToken)
-                        .cookie(new Cookie("ttref", refreshCookie)))
+                        .cookie(accessCookie)
+                        .cookie(refreshCookie))
                 .andExpect(status().isNoContent())
-                .andExpect(header().exists("Set-Cookie"));
+                .andExpect(cookie().exists(ACCESS_TOKEN_COOKIE_NAME))
+                .andExpect(cookie().exists(REFRESH_TOKEN_COOKIE_NAME))
+                .andExpect(cookie().maxAge(ACCESS_TOKEN_COOKIE_NAME, 0))  // 쿠키가 만료되었는지 확인
+                .andExpect(cookie().maxAge(REFRESH_TOKEN_COOKIE_NAME, 0));
 
         String redisKey = "refresh:" + username;
         assertNull(redisTemplate.opsForValue().get(redisKey));
@@ -176,15 +180,15 @@ class AdminAuthApiControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        String accessToken = BEARER_PREFIX + loginResult.getResponse().getHeader("Authorization");
-        String refreshCookie = loginResult.getResponse().getCookie("ttref").getValue();
+        Cookie accessCookie = loginResult.getResponse().getCookie(ACCESS_TOKEN_COOKIE_NAME);
+        Cookie refreshCookie = loginResult.getResponse().getCookie(REFRESH_TOKEN_COOKIE_NAME);
 
         String redisKey = "refresh:" + username;
         redisTemplate.delete(redisKey);
 
         mockMvc.perform(post(LOGOUT_ENDPOINT)
-                        .header("Authorization", accessToken)
-                        .cookie(new Cookie("ttref", refreshCookie)))
+                        .cookie(accessCookie)
+                        .cookie(refreshCookie))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.statusCode").value(409))
                 .andExpect(jsonPath("$.details").exists());
@@ -205,15 +209,15 @@ class AdminAuthApiControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        String accessToken = BEARER_PREFIX + loginResult.getResponse().getHeader("Authorization");
-        String refreshCookie = loginResult.getResponse().getCookie("ttref").getValue();
+        Cookie accessCookie = loginResult.getResponse().getCookie(ACCESS_TOKEN_COOKIE_NAME);
+        Cookie refreshCookie = loginResult.getResponse().getCookie(REFRESH_TOKEN_COOKIE_NAME);
 
         mockMvc.perform(post(REISSUE_ENDPOINT)
-                        .header("Authorization", accessToken)
-                        .cookie(new Cookie("ttref", refreshCookie)))
+                        .cookie(accessCookie)
+                        .cookie(refreshCookie))
                 .andExpect(status().isOk())
-                .andExpect(header().exists("Authorization"))
-                .andExpect(cookie().exists("ttref"))
+                .andExpect(cookie().exists(ACCESS_TOKEN_COOKIE_NAME))
+                .andExpect(cookie().exists(REFRESH_TOKEN_COOKIE_NAME))
                 .andExpect(jsonPath("$").value("re-issue Success"));
     }
 
@@ -232,15 +236,15 @@ class AdminAuthApiControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        String accessToken = BEARER_PREFIX + loginResult.getResponse().getHeader("Authorization");
-        String refreshCookie = loginResult.getResponse().getCookie("ttref").getValue();
+        Cookie accessCookie = loginResult.getResponse().getCookie(ACCESS_TOKEN_COOKIE_NAME);
+        Cookie refreshCookie = loginResult.getResponse().getCookie(REFRESH_TOKEN_COOKIE_NAME);
 
         String redisKey = "refresh:" + username;
         redisTemplate.delete(redisKey);
 
         mockMvc.perform(post(REISSUE_ENDPOINT)
-                        .header("Authorization", accessToken)
-                        .cookie(new Cookie("ttref", refreshCookie)))
+                        .cookie(accessCookie)
+                        .cookie(refreshCookie))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.statusCode").value(404))
                 .andExpect(jsonPath("$.details").exists());
@@ -261,10 +265,11 @@ class AdminAuthApiControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        String accessToken = BEARER_PREFIX + loginResult.getResponse().getHeader("Authorization");
+        Cookie accessCookie = loginResult.getResponse().getCookie(ACCESS_TOKEN_COOKIE_NAME);
+        // 리프레시 토큰 쿠키는 제공하지 않음
 
         mockMvc.perform(post(REISSUE_ENDPOINT)
-                        .header("Authorization", accessToken))
+                        .cookie(accessCookie))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.statusCode").value(400))
                 .andExpect(jsonPath("$.details").exists());
@@ -285,14 +290,14 @@ class AdminAuthApiControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        String accessToken = BEARER_PREFIX + loginResult.getResponse().getHeader("Authorization");
-        String refreshCookie = loginResult.getResponse().getCookie("ttref").getValue();
+        Cookie accessCookie = loginResult.getResponse().getCookie(ACCESS_TOKEN_COOKIE_NAME);
+        Cookie refreshCookie = loginResult.getResponse().getCookie(REFRESH_TOKEN_COOKIE_NAME);
 
         redisTemplate.opsForValue().set("refresh:" + username, "differentRefreshToken");
 
         mockMvc.perform(post(REISSUE_ENDPOINT)
-                        .header("Authorization", accessToken)
-                        .cookie(new Cookie("ttref", refreshCookie)))
+                        .cookie(accessCookie)
+                        .cookie(refreshCookie))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.statusCode").value(401))
                 .andExpect(jsonPath("$.details").exists());

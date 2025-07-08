@@ -2,13 +2,13 @@ package org.project.ttokttok.global.auth.jwt.filter;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.project.ttokttok.global.auth.jwt.dto.response.UserProfileResponse;
 import org.project.ttokttok.global.auth.jwt.service.TokenProvider;
-import org.project.ttokttok.global.auth.security.SecurityWhiteList;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -16,8 +16,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.Arrays;
 
-import static org.project.ttokttok.global.auth.jwt.TokenProperties.AUTH_HEADER;
-import static org.project.ttokttok.global.auth.jwt.TokenProperties.BEARER_PREFIX;
+import static org.project.ttokttok.global.auth.jwt.TokenProperties.ACCESS_TOKEN_COOKIE;
 import static org.project.ttokttok.global.auth.security.SecurityWhiteList.ALLOW_URLS;
 import static org.project.ttokttok.global.auth.security.SecurityWhiteList.SWAGGER_URLS;
 
@@ -39,9 +38,8 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 
         log.debug("[JWT 인증 필터 실행] URI: {}", request.getRequestURI());
 
-        // 토큰 헤더에서 액세스 토큰 추출
-        final String AuthorizationHeader = request.getHeader(AUTH_HEADER.getValue());
-        final String token = getAccessToken(AuthorizationHeader);
+        // 쿠키에서 액세스 토큰 추출
+        final String token = getAccessTokenFromCookie(request);
 
         // 토큰이 존재하고 올바른 토큰일 시, 스프링 시큐리티 컨텍스트에 인증 설정.
         if (token != null && tokenProvider.validateToken(token)) {
@@ -57,12 +55,16 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    // 액세스 토큰 접두사 추출
-    private String getAccessToken(String header) {
-        if (header != null && header.startsWith(BEARER_PREFIX.getValue())) {
-            return header.substring(BEARER_PREFIX.getValue().length());
+    // 쿠키에서 액세스 토큰 추출
+    private String getAccessTokenFromCookie(HttpServletRequest request) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            return Arrays.stream(cookies)
+                    .filter(cookie -> ACCESS_TOKEN_COOKIE.getValue().equals(cookie.getName()))
+                    .map(Cookie::getValue)
+                    .findFirst()
+                    .orElse(null);
         }
-
         return null;
     }
 
@@ -74,4 +76,5 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
         return Arrays.stream(ALLOW_URLS.getEndPoints()).anyMatch(requestURI::startsWith) ||
                 Arrays.stream(SWAGGER_URLS.getEndPoints()).anyMatch(requestURI::startsWith);
     }
+
 }

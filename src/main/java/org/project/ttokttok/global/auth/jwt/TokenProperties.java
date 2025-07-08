@@ -6,10 +6,10 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum TokenProperties {
-    // 토큰 관련 문자열 상수
+    //토큰 관련 상슈
     AUTH_HEADER("Authorization"),
-    BEARER_PREFIX("Bearer "),
-    REFRESH_KEY("ttref");
+    REFRESH_KEY("ttref"),
+    ACCESS_TOKEN_COOKIE("ttac"); // 액세스 토큰 쿠키 이름 추가
 
     final String value;
 }

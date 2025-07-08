@@ -18,7 +18,8 @@ public enum SecurityWhiteList {
             "/api/user/auth/login",
             "/api/user/auth/send-reset-code",
             "/api/user/auth/reset-password",
-            "/api/admin/auth/reissue"
+            "/api/admin/auth/reissue",
+            "/api/admin/auth/join", // todo: 추후 삭제 예정 - 관리자 가입 API 엔드포인트
     }),
 
     SWAGGER_URLS(new String[]{

@@ -2,7 +2,6 @@ package org.project.ttokttok.domain.club.repository;
 
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQuery;
@@ -69,15 +68,17 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
     }
 
     private BooleanExpression isFavorite(String clubId, String email) {
-        return favorite.user.email.eq(email)
-                .and(favorite.club.id.eq(clubId))
-                .isNotNull();
+        return JPAExpressions.selectOne()
+                .from(favorite)
+                .where(favorite.user.email.eq(email)
+                        .and(favorite.club.id.eq(clubId)))
+                .exists();
     }
 
-    private NumberExpression<Integer> getClubMemberCount(String clubId) {
-        return clubMember.club.id.eq(clubId)
-                .count()
-                .intValue();
+    private JPQLQuery<Integer> getClubMemberCount(String clubId) {
+        return JPAExpressions.select(clubMember.count().intValue())
+                .from(clubMember)
+                .where(clubMember.club.id.eq(clubId));
     }
 
     // 무한스크롤용 동아리 목록 조회 -> 무한스크롤 방식으로 동아리 목록증 조회하는 핵심 메서드

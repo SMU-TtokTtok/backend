@@ -53,6 +53,14 @@ public class AdminAuthService {
         return ReissueServiceResponse.of(tokens, ttl);
     }
 
+    // FIXME: 관리자 가입 메서드, 추후 삭제 예정
+    public String join(String username, String password) {
+        Admin admin = Admin.adminJoin(username, passwordEncoder.encode(password));
+
+        return adminRepository.save(admin)
+                .getId();
+    }
+
     private void reissueValidate(String username, String refreshToken) {
         validateTokenFromCookie(refreshToken);
         isRefreshSame(username, refreshToken);

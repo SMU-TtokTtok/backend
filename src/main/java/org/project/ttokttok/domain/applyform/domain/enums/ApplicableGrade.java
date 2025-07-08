@@ -6,11 +6,19 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum ApplicableGrade {
-    FIRST_GRADE("1학년"),   // 1학년
-    SECOND_GRADE("2학년"),  // 2학년
-    THIRD_GRADE("3학년"),   // 3학년
-    FOURTH_GRADE("4학년");  // 4학년
+    FIRST_GRADE(1),   // 1학년
+    SECOND_GRADE(2),  // 2학년
+    THIRD_GRADE(3),   // 3학년
+    FOURTH_GRADE(4);  // 4학년
 
-    // 숫자로 바꾸기
-    final String grade;
+    final int grade;
+
+    public static ApplicableGrade from(int grade) {
+        for (ApplicableGrade applicableGrade : values()) {
+            if (applicableGrade.grade == grade) {
+                return applicableGrade;
+            }
+        }
+        throw new IllegalArgumentException("잘못된 학년입니다." + grade);
+    }
 }

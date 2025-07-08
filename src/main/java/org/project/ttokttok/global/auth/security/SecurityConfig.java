@@ -104,6 +104,7 @@ public class SecurityConfig {
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")); //허용 HTTP 메서드
         config.setAllowCredentials(true); // 쿠키 등 허용 설정
         config.setAllowedHeaders(List.of("*")); // todo: 추후 수정
+        config.setExposedHeaders(List.of("Set-Cookie")); // Set-Cookie 헤더 노출
         config.setMaxAge(3600L); // CORS 살아있는 시간
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

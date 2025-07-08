@@ -8,7 +8,7 @@ import org.project.ttokttok.domain.club.domain.enums.ClubCategory;
 import org.project.ttokttok.domain.club.domain.enums.ClubType;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.Set;
 
 @Builder
@@ -23,8 +23,8 @@ public record ClubContentUpdateServiceRequest(
         JsonNullable<MultipartFile> profileImage,
         JsonNullable<String> content,
         JsonNullable<Boolean> recruiting,
-        JsonNullable<LocalDateTime> applyStartDate,
-        JsonNullable<LocalDateTime> applyDeadline,
+        JsonNullable<LocalDate> applyStartDate,
+        JsonNullable<LocalDate> applyEndDate,
         JsonNullable<Set<ApplicableGrade>> grades,
         JsonNullable<Integer> maxApplyCount
 ) {

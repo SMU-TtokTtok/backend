@@ -1,5 +1,6 @@
 package org.project.ttokttok.global.annotationresolver.auth;
 
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.project.ttokttok.global.annotation.auth.AuthUserInfo;
@@ -11,8 +12,9 @@ import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
-import static org.project.ttokttok.global.auth.jwt.TokenProperties.AUTH_HEADER;
-import static org.project.ttokttok.global.auth.jwt.TokenProperties.BEARER_PREFIX;
+import java.util.Arrays;
+
+import static org.project.ttokttok.global.auth.jwt.TokenProperties.*;
 
 @Configuration
 @RequiredArgsConstructor
@@ -38,21 +40,16 @@ public class AuthUserInfoResolver implements HandlerMethodArgumentResolver {
         HttpServletRequest request = (HttpServletRequest) webRequest.getNativeRequest();
 
         // "Authorization" 헤더 값 받아옴.
-        String token = request.getHeader(AUTH_HEADER.getValue());
+        String token = Arrays.stream(request.getCookies())
+                .filter(cookie -> cookie.getName().equals(ACCESS_TOKEN_COOKIE.getValue()))
+                .map(Cookie::getValue)
+                .findFirst()
+                .orElse(null);
 
-        if (checkTokenForm(token)) {
-            // 접두사 제거
-            String parsedToken = token.substring(BEARER_PREFIX.getValue().length());
-
-            // todo: 추후 리팩토링 고려하기
-            return tokenProvider.getUsernameFromToken(parsedToken);
+        if (token != null) {
+            return tokenProvider.getUsernameFromToken(token);
         }
 
         return null;
-    }
-
-    // jwt 토큰 형식이 null이 아니고, "Bearer " 접두사가 붙어있는지 검증
-    private boolean checkTokenForm(String token) {
-        return token != null && token.startsWith(BEARER_PREFIX.getValue());
     }
 }

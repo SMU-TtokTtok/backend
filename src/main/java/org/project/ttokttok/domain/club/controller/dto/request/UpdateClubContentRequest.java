@@ -10,6 +10,7 @@ import org.project.ttokttok.domain.club.domain.enums.ClubType;
 import org.project.ttokttok.domain.club.service.dto.request.ClubContentUpdateServiceRequest;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -40,8 +41,8 @@ public record UpdateClubContentRequest(
 
         //@NotNull(message = "모집 여부는 Null일 수 없습니다.")
         JsonNullable<Boolean> recruiting,
-        JsonNullable<LocalDateTime> applyStartDate,
-        JsonNullable<LocalDateTime> applyDeadline,
+        JsonNullable<LocalDate> applyStartDate,
+        JsonNullable<LocalDate> applyEndDate,
         JsonNullable<Set<ApplicableGrade>> grades,
         JsonNullable<Integer> maxApplyCount
 ) {
@@ -57,7 +58,7 @@ public record UpdateClubContentRequest(
                 .content(content)
                 .recruiting(recruiting)
                 .applyStartDate(applyStartDate)
-                .applyDeadline(applyDeadline)
+                .applyEndDate(applyEndDate)
                 .grades(grades)
                 .maxApplyCount(maxApplyCount)
                 .build();

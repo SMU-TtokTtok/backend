@@ -10,7 +10,6 @@ import org.project.ttokttok.domain.admin.domain.Admin;
 import org.project.ttokttok.domain.admin.repository.AdminRepository;
 import org.project.ttokttok.domain.applyform.domain.ApplyForm;
 import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
-import org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus;
 import org.project.ttokttok.domain.applyform.repository.ApplyFormRepository;
 import org.project.ttokttok.domain.club.controller.dto.request.UpdateClubContentRequest;
 import org.project.ttokttok.domain.club.domain.Club;
@@ -31,6 +30,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -79,8 +79,8 @@ class ClubAdminApiControllerTest {
         // ApplyForm 생성자에 맞는 테스트 데이터로 생성
         ApplyForm applyForm = ApplyForm.builder()
                 .club(club)
-                .applyStartDate(LocalDateTime.now())
-                .applyEndDate(LocalDateTime.now().plusDays(7))
+                .applyStartDate(LocalDate.now())
+                .applyEndDate(LocalDate.now().plusDays(7))
                 .maxApplyCount(10)
                 .grades(Set.of(ApplicableGrade.FIRST_GRADE, ApplicableGrade.SECOND_GRADE))
                 .title("테스트 지원서")
@@ -111,8 +111,8 @@ class ClubAdminApiControllerTest {
                 JsonNullable.undefined(),
                 JsonNullable.of("본문입니다."),
                 JsonNullable.of(true),
-                JsonNullable.of(LocalDateTime.from(LocalDateTime.now())),
-                JsonNullable.of(LocalDateTime.from(LocalDateTime.now().plusDays(7))),
+                JsonNullable.of(LocalDate.from(LocalDate.now())),
+                JsonNullable.of(LocalDate.from(LocalDate.now().plusDays(7))),
                 JsonNullable.of(Set.of()),
                 JsonNullable.of(5)
         );

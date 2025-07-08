@@ -16,15 +16,9 @@ import java.util.UUID;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Admin extends BaseTimeEntity {
 
-    // UUID 생성 전략
-    @PrePersist
-    private void generateId() {
-        if (this.id == null) {
-            this.id = UUID.randomUUID().toString();
-        }
-    }
-
     @Id
+    @Getter
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(length = 36, updatable = false, unique = true)
     private String id;
 
@@ -32,7 +26,6 @@ public class Admin extends BaseTimeEntity {
     @Column(nullable = false, updatable = false, unique = true)
     private String username;
 
-    @Lob
     @Column(nullable = false)
     private String password;
 

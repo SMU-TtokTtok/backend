@@ -1,29 +1,41 @@
 package org.project.ttokttok.global.util;
 
 import org.springframework.http.ResponseCookie;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 
-@Service
+import static org.project.ttokttok.global.auth.jwt.TokenProperties.ACCESS_TOKEN_COOKIE;
+import static org.project.ttokttok.global.auth.jwt.TokenProperties.REFRESH_KEY;
+
+@Component
 public class CookieUtil {
 
-    // 리프레시 토큰을 내려주는 응답 쿠키를 생성, 삭제 할 때 활용(로그인 or 로그아웃)
-    private static final String ROOT = "/";
-    private static final String EXPIRE_COOKIE_VALUE = "";
-
-    // 쿠키 생성
-    public static ResponseCookie createResponseCookie(String key, String content, Duration expiry) {
-        return ResponseCookie.from(key, content)
+    public static ResponseCookie createResponseCookie(String name, String value, Duration maxAge) {
+        return ResponseCookie.from(name, value)
                 .httpOnly(true)
-                .secure(true)
-                .path(ROOT)
-                .maxAge(expiry)
+                .secure(true) // HTTPS에서만 전송
+                .sameSite("Strict") // 동일 사이트에서만 쿠키 전송
+                .path("/")
+                .maxAge(maxAge)
                 .build();
     }
 
-    // 쿠키 만료 시키기
-    public static ResponseCookie exireResponseCookie(String key) {
-        return createResponseCookie(key, EXPIRE_COOKIE_VALUE, Duration.ZERO);
+    public static ResponseCookie exireResponseCookie(String name) {
+        return ResponseCookie.from(name, "")
+                .httpOnly(true)
+                .secure(true)
+                .sameSite("Strict")
+                .path("/")
+                .maxAge(0)
+                .build();
+    }
+
+    // 액세스 토큰과 리프레시 토큰을 모두 만료시키는 메서드
+    public static ResponseCookie[] expireBothTokenCookies() {
+        ResponseCookie expiredAccessCookie = exireResponseCookie(ACCESS_TOKEN_COOKIE.getValue());
+        ResponseCookie expiredRefreshCookie = exireResponseCookie(REFRESH_KEY.getValue());
+
+        return new ResponseCookie[] { expiredAccessCookie, expiredRefreshCookie };
     }
 }
