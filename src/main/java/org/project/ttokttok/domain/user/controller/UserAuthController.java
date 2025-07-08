@@ -25,9 +25,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import org.springframework.web.bind.annotation.*;
 
+import static org.project.ttokttok.global.auth.jwt.TokenExpiry.ACCESS_TOKEN_EXPIRY_TIME;
 import static org.project.ttokttok.global.auth.jwt.TokenExpiry.REFRESH_TOKEN_EXPIRY_TIME;
-import static org.project.ttokttok.global.auth.jwt.TokenProperties.AUTH_HEADER;
 import static org.project.ttokttok.global.auth.jwt.TokenProperties.REFRESH_KEY;
+import static org.project.ttokttok.global.auth.jwt.TokenProperties.ACCESS_TOKEN_COOKIE;
 
 
 import java.time.Duration;
@@ -136,7 +137,7 @@ public class UserAuthController {
     @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "200",
-                    description = "로그인 성공, 액세스 토큰 헤더로 반환"
+                    description = "로그인 성공, 액세스 토큰 쿠키로 반환"
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "400",
@@ -155,8 +156,18 @@ public class UserAuthController {
         LoginResponse loginResponse = LoginResponse.from(serviceResponse);
 
         // 리프레시 토큰을 쿠키로 설정 (로그인 유지 옵션이 true인 경우에만)
+        // ResponseEntity.BodyBuilder responseBuilder = ResponseEntity.ok()
+        //        .header(AUTH_HEADER.getValue(), "Bearer " + serviceResponse.accessToken());
+
+        // 액세스 토큰을 쿠키로 설정
+        ResponseCookie accessCookie = CookieUtil.createResponseCookie(
+                ACCESS_TOKEN_COOKIE.getValue(),
+                serviceResponse.accessToken(),
+                Duration.ofMillis(ACCESS_TOKEN_EXPIRY_TIME.getExpiry())
+        );
+
         ResponseEntity.BodyBuilder responseBuilder = ResponseEntity.ok()
-                .header(AUTH_HEADER.getValue(), "Bearer " + serviceResponse.accessToken());
+                .header(HttpHeaders.SET_COOKIE, accessCookie.toString()); // 수정된 부분
 
         if (request.rememberMe()) {
             ResponseCookie refreshCookie = CookieUtil.createResponseCookie(
