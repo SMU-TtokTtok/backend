@@ -1,7 +1,6 @@
 package org.project.ttokttok.domain.applyform.service;
 
 import lombok.RequiredArgsConstructor;
-import org.openapitools.jackson.nullable.JsonNullable;
 import org.project.ttokttok.domain.applyform.domain.ApplyForm;
 import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
 import org.project.ttokttok.domain.applyform.domain.json.Question;
@@ -10,6 +9,7 @@ import org.project.ttokttok.domain.applyform.exception.InvalidDateRangeException
 import org.project.ttokttok.domain.applyform.repository.ApplyFormRepository;
 import org.project.ttokttok.domain.applyform.service.dto.request.ApplyFormCreateServiceRequest;
 import org.project.ttokttok.domain.applyform.service.dto.request.ApplyFormUpdateServiceRequest;
+import org.project.ttokttok.domain.applyform.service.dto.response.ApplyFormDetailServiceResponse;
 import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.exception.ClubNotFoundException;
 import org.project.ttokttok.domain.club.exception.NotClubAdminException;
@@ -21,6 +21,8 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus.ACTIVE;
 
 @Service
 @RequiredArgsConstructor
@@ -82,6 +84,26 @@ public class ApplyFormAdminService {
 
         // 지원 폼 수정
         applyForm.updateFormContent(title, subtitle, questions);
+    }
+
+    // 동아리의 지원 폼 목록 조회 메서드
+    @Transactional(readOnly = true)
+    public ApplyFormDetailServiceResponse getApplyFormDetail(String username, String clubId) {
+        Club club = clubRepository.findById(clubId)
+                .orElseThrow(ClubNotFoundException::new);
+
+        // 관리자 권한 검증
+        validateAdmin(club.getAdmin().getUsername(), username);
+
+        // 활성화된 지원 폼 조회
+        ApplyForm applyForm = applyFormRepository.findByClubIdAndStatus(clubId, ACTIVE)
+                .orElseThrow(ApplyFormNotFoundException::new);
+
+        return ApplyFormDetailServiceResponse.of(
+                applyForm.getTitle(),
+                applyForm.getSubTitle(),
+                applyForm.getFormJson()
+        );
     }
 
     private void validateAdmin(String adminName, String requestAdminName) {

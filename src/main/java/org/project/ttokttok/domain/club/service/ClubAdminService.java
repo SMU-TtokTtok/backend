@@ -2,6 +2,7 @@ package org.project.ttokttok.domain.club.service;
 
 import lombok.RequiredArgsConstructor;
 import org.project.ttokttok.domain.applyform.domain.ApplyForm;
+import org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus;
 import org.project.ttokttok.domain.applyform.exception.ApplyFormNotFoundException;
 import org.project.ttokttok.domain.applyform.repository.ApplyFormRepository;
 import org.project.ttokttok.domain.club.domain.Club;
@@ -18,6 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Set;
+
+import static org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus.ACTIVE;
 
 @Service
 @RequiredArgsConstructor
@@ -79,7 +82,7 @@ public class ClubAdminService {
 
     // 지원 폼 업데이트 로직
     private void updateApplyForm(Club club, ClubContentUpdateServiceRequest request) {
-        ApplyForm applyForm = applyFormRepository.findByClubId(club.getId())
+        ApplyForm applyForm = applyFormRepository.findByClubIdAndStatus(club.getId(), ACTIVE)
                 .orElseThrow(ApplyFormNotFoundException::new);
 
         // TODO: 모집 시작 날짜가 모집 마감 날짜보다 빠를 시의 예외 처리 추가 필요
