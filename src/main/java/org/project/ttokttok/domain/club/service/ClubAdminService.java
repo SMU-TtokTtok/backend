@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.project.ttokttok.domain.applyform.domain.ApplyForm;
 import org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus;
 import org.project.ttokttok.domain.applyform.exception.ApplyFormNotFoundException;
+import org.project.ttokttok.domain.applyform.exception.InvalidDateRangeException;
 import org.project.ttokttok.domain.applyform.repository.ApplyFormRepository;
 import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.exception.ClubNotFoundException;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
 import java.util.Set;
 
 import static org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus.ACTIVE;
@@ -85,7 +87,11 @@ public class ClubAdminService {
         ApplyForm applyForm = applyFormRepository.findByClubIdAndStatus(club.getId(), ACTIVE)
                 .orElseThrow(ApplyFormNotFoundException::new);
 
-        // TODO: 모집 시작 날짜가 모집 마감 날짜보다 빠를 시의 예외 처리 추가 필요
+        // 모집 시작일과 종료일이 모두 존재할 경우, 시작일이 종료일보다 이후인지 검증
+        if (request.applyStartDate().isPresent() && request.applyEndDate().isPresent()) {
+            validateApplyPeriod(request.applyStartDate().get(), request.applyEndDate().get());
+        }
+
         applyForm.updateApplyInfo(
                 request.applyStartDate().orElse(null),
                 request.applyEndDate().orElse(null),
@@ -93,6 +99,12 @@ public class ClubAdminService {
                 request.grades().orElse(null),
                 request.recruiting().orElse(null)
         );
+    }
+
+    private void validateApplyPeriod(LocalDate startDate, LocalDate endDate) {
+        if (startDate.isAfter(endDate)) {
+            throw new InvalidDateRangeException();
+        }
     }
 
     // 이미지가 유효한 지 검증
