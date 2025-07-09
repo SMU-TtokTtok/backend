@@ -9,13 +9,18 @@ import java.util.List;
 public record ApplyFormDetailServiceResponse(
         String title,
         String subTitle,
-        List<Question> questions
+        List<Question> questions,
+        List<BeforeApplyFormServiceResponse> beforeForms
 ) {
-    public static ApplyFormDetailServiceResponse of(String title, String subTitle, List<Question> questions) {
+    public static ApplyFormDetailServiceResponse of(String title,
+                                                    String subTitle,
+                                                    List<Question> questions,
+                                                    List<BeforeApplyFormServiceResponse> beforeForms) {
         return ApplyFormDetailServiceResponse.builder()
                 .title(title)
                 .subTitle(subTitle)
                 .questions(questions)
+                .beforeForms(beforeForms)
                 .build();
     }
 }

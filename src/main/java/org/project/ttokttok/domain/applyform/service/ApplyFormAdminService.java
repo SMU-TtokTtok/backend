@@ -10,6 +10,7 @@ import org.project.ttokttok.domain.applyform.repository.ApplyFormRepository;
 import org.project.ttokttok.domain.applyform.service.dto.request.ApplyFormCreateServiceRequest;
 import org.project.ttokttok.domain.applyform.service.dto.request.ApplyFormUpdateServiceRequest;
 import org.project.ttokttok.domain.applyform.service.dto.response.ApplyFormDetailServiceResponse;
+import org.project.ttokttok.domain.applyform.service.dto.response.BeforeApplyFormServiceResponse;
 import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.exception.ClubNotFoundException;
 import org.project.ttokttok.domain.club.exception.NotClubAdminException;
@@ -99,10 +100,21 @@ public class ApplyFormAdminService {
         ApplyForm applyForm = applyFormRepository.findByClubIdAndStatus(clubId, ACTIVE)
                 .orElseThrow(ApplyFormNotFoundException::new);
 
+        // 이전에 사용했던 질문 목록 리스트 조회
+        List<BeforeApplyFormServiceResponse> beforeForms = applyFormRepository.findByClubId(clubId)
+                .stream()
+                .filter(form -> form.getStatus() == ACTIVE)
+                .map(form -> BeforeApplyFormServiceResponse.of(
+                        form.getId(),
+                        LocalDate.from(form.getCreatedAt())
+                ))
+                .toList();
+
         return ApplyFormDetailServiceResponse.of(
                 applyForm.getTitle(),
                 applyForm.getSubTitle(),
-                applyForm.getFormJson()
+                applyForm.getFormJson(),
+                beforeForms
         );
     }
 

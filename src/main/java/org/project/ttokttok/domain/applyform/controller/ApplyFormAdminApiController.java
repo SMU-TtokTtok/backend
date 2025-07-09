@@ -29,7 +29,7 @@ public class ApplyFormAdminApiController {
                 .body("Apply form created successfully with ID: " + applyFormId);
     }
 
-    @GetMapping("/clubs/{clubId}")
+    @GetMapping("/{clubId}")
     public ResponseEntity<ApplyFormDetailResponse> getApplyFormsByClubId(@AuthUserInfo String username,
                                                                          @PathVariable String clubId) {
         ApplyFormDetailResponse response = ApplyFormDetailResponse.from(

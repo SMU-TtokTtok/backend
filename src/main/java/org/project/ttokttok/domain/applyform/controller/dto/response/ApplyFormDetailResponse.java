@@ -10,13 +10,17 @@ import java.util.List;
 public record ApplyFormDetailResponse(
         String title,
         String subTitle,
-        List<Question> questions
+        List<Question> questions,
+        List<BeforeApplyFormResponse> beforeForms
 ) {
     public static ApplyFormDetailResponse from(ApplyFormDetailServiceResponse response) {
         return ApplyFormDetailResponse.builder()
                 .title(response.title())
                 .subTitle(response.subTitle())
                 .questions(response.questions())
+                .beforeForms(response.beforeForms().stream()
+                        .map(BeforeApplyFormResponse::from)
+                        .toList())
                 .build();
     }
 }
