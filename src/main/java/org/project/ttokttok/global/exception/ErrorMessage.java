@@ -42,6 +42,7 @@ public enum ErrorMessage {
 
     // 지원 폼 에러 메시지
     APPLY_FORM_NOT_FOUND("지원 폼을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+    APPLY_FORM_INVALID_DATE_RANGE("시작 날짜는 종료 날짜보다 이전이어야 합니다.", HttpStatus.BAD_REQUEST),
 
     // S3 에러 메시지
     S3_FILE_UPLOAD_ERROR("S3 파일 업로드 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);

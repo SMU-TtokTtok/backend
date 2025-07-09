@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class ClubService {
 
-    // 소개글 조회
     private final ClubRepository clubRepository;
 
     private final S3Service s3Service;
