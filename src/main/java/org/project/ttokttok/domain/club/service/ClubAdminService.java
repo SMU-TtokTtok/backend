@@ -36,8 +36,7 @@ public class ClubAdminService {
 
     private static final String PROFILE_IMAGE_DIR = "profile-images/";
 
-    //todo: 모집 마감 상태 변경 시 Form 비활성화 고려, 모집 기간, 모집 대상, 모집 인원 수정 추가
-    // 나중에 무조건 분할 들어가야 함.
+    // todo: 나중에 무조건 분할 들어가야 함.
     @Transactional
     public void updateContent(String username, ClubContentUpdateServiceRequest request) {
         Club club = clubRepository.findById(request.clubId())

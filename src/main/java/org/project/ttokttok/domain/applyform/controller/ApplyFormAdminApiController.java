@@ -3,6 +3,7 @@ package org.project.ttokttok.domain.applyform.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.project.ttokttok.domain.applyform.controller.dto.request.ApplyFormCreateRequest;
+import org.project.ttokttok.domain.applyform.controller.dto.request.ApplyFormUpdateRequest;
 import org.project.ttokttok.domain.applyform.service.ApplyFormAdminService;
 import org.project.ttokttok.global.annotation.auth.AuthUserInfo;
 import org.springframework.http.ResponseEntity;
@@ -27,4 +28,15 @@ public class ApplyFormAdminApiController {
                 .body("Apply form created successfully with ID: " + applyFormId);
     }
 
+    @PatchMapping("/{formId}")
+    public ResponseEntity<String> updateApplyForm(@AuthUserInfo String username,
+                                                 @PathVariable String formId,
+                                                 @RequestBody ApplyFormUpdateRequest request) {
+        applyFormAdminService.updateApplyForm(
+                request.toServiceRequest(username, formId)
+        );
+
+        return ResponseEntity.noContent()
+                .build();
+    }
 }

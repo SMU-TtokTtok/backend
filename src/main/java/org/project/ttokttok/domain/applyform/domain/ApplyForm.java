@@ -138,6 +138,16 @@ public class ApplyForm extends BaseTimeEntity {
             this.status = isRecruiting ? ApplyFormStatus.ACTIVE : ApplyFormStatus.INACTIVE;
         }
     }
+
+    public void updateFormContent(String title, String subTitle, List<Question> formJson) {
+        if (title != null) {
+            this.title = title;
+        }
+        if (subTitle != null) {
+            this.subTitle = subTitle;
+        }
+        if (formJson != null) {
+            this.formJson = formJson;
+        }
+    }
 }
-
-
