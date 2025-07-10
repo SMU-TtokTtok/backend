@@ -26,6 +26,10 @@ public class Applicant extends BaseTimeEntity {
     @Column(length = 36, updatable = false, unique = true)
     private String id;
 
+    // 지원한 사용자의 인증 정보 통해서 받은 이메일
+    @Column(nullable = false)
+    private String userEmail;
+
     // 고정 필드
     @Column(nullable = false)
     private String name;
