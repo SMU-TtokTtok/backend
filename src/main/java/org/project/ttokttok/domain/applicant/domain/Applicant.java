@@ -12,8 +12,10 @@ import org.project.ttokttok.domain.applicant.domain.enums.Status;
 import org.project.ttokttok.domain.applicant.domain.enums.StudentStatus;
 import org.project.ttokttok.domain.applicant.domain.json.Answer;
 import org.project.ttokttok.domain.applyform.domain.ApplyForm;
+import org.project.ttokttok.domain.memo.domain.Memo;
 import org.project.ttokttok.global.entity.BaseTimeEntity;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -30,10 +32,6 @@ public class Applicant extends BaseTimeEntity {
     // 지원한 사용자의 인증 정보 통해서 받은 이메일
     @Column(nullable = false)
     private String userEmail;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "applyform_id", nullable = false)
-    private ApplyForm applyForm;
 
     // 고정 필드
     @Column(nullable = false)
@@ -71,4 +69,13 @@ public class Applicant extends BaseTimeEntity {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
     private List<Answer> answers;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "applyform_id", nullable = false)
+    private ApplyForm applyForm;
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "applicant_id")
+    private List<Memo> memo = new ArrayList<>();
 }
+
