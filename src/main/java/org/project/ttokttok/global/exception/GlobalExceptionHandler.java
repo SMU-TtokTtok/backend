@@ -9,6 +9,7 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.List;
 
@@ -54,6 +55,38 @@ public class GlobalExceptionHandler {
                 .details(e.getMessage())
                 .build();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler({MethodArgumentTypeMismatchException.class})
+    public ResponseEntity<ErrorResponse> handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException e) {
+        String message = "경로에 잘못된 값이 입력되었습니다.";
+
+        // 열거형 타입 변환 오류인 경우 더 구체적인 메시지 제공
+        if (e.getRequiredType() != null && e.getRequiredType().isEnum()) {
+            message = String.format("'%s'에 유효하지 않은 값이 입력되었습니다. 허용된 값: %s",
+                    e.getName(),
+                    String.join(", ", getEnumValues(e.getRequiredType())));
+        }
+
+        ErrorResponse response = ErrorResponse.builder()
+                .statusCode(HttpStatus.BAD_REQUEST.value())
+                .details(message)
+                .build();
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(response);
+    }
+
+    // 허용되는 열거형 값들을 문자열 배열로 반환하는 메서드
+    private String[] getEnumValues(Class<?> enumClass) {
+        Object[] enumValues = enumClass.getEnumConstants();
+        String[] values = new String[enumValues.length];
+
+        for (int i = 0; i < enumValues.length; i++) {
+            values[i] = enumValues[i].toString();
+        }
+
+        return values;
     }
 
     @ExceptionHandler({HttpRequestMethodNotSupportedException.class})
