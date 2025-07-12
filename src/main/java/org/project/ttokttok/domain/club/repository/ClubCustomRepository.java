@@ -1,5 +1,6 @@
 package org.project.ttokttok.domain.club.repository;
 
+import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
 import org.project.ttokttok.domain.club.domain.enums.ClubCategory;
 import org.project.ttokttok.domain.club.domain.enums.ClubType;
 import org.project.ttokttok.domain.club.repository.dto.ClubCardQueryResponse;
@@ -16,6 +17,7 @@ public interface ClubCustomRepository {
             ClubCategory category,
             ClubType type,
             Boolean recruiting,
+            List<ApplicableGrade> grades,
             int size,
             String cursor,
             String sort,

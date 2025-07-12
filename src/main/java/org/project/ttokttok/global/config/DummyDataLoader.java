@@ -164,39 +164,39 @@ public class DummyDataLoader implements ApplicationRunner {
     private void loadClubData() {
         log.info("Club 데이터 로딩...");
         String sql = """
-                -- 2. 동아리 데이터 30개 (다양한 카테고리, 타입, 모집상태)
-                INSERT INTO clubs (id, name, profile_img, summary, club_type, club_category, custom_category, content, recruiting, admin_id, created_at, updated_at) VALUES
-                ('club-001', '그림사랑', 'https://example.com/art1.jpg', '미술을 사랑하는 사람들의 모임', 'CENTRAL', 'CULTURE', '회화', '함께 그림을 그리고 전시회도 개최하는 동아리입니다.', true, 'admin-001', NOW(), NOW()),
-                ('club-002', '상명축구부', 'https://example.com/soccer.jpg', '축구를 통한 건강한 대학생활', 'CENTRAL', 'SPORTS', '축구', '매주 정기적인 훈련과 대회 참가를 통해 실력을 키웁니다.', true, 'admin-002', NOW(), NOW()),
-                ('club-003', '코딩마스터', 'https://example.com/code.jpg', '프로그래밍 실력 향상을 위한 스터디', 'DEPARTMENT', 'ACADEMIC', '프로그래밍', '다양한 프로그래밍 언어를 배우고 프로젝트를 진행합니다.', true, 'admin-003', NOW(), NOW()),
-                ('club-004', '나눔봉사단', 'https://example.com/volunteer.jpg', '사회에 보탬이 되는 봉사활동', 'UNION', 'VOLUNTEER', '사회봉사', '지역사회를 위한 다양한 봉사활동을 함께 합니다.', true, 'admin-004', NOW(), NOW()),
-                ('club-005', '연극반', 'https://example.com/drama.jpg', '무대 위에서 펼치는 우리들의 이야기', 'CENTRAL', 'CULTURE', '연극', '연기, 연출, 무대제작 등 연극의 모든 것을 배웁니다.', false, 'admin-005', NOW(), NOW()),
-                ('club-006', '농구동아리', 'https://example.com/basketball.jpg', '슛! 골! 함께하는 농구의 즐거움', 'CENTRAL', 'SPORTS', '농구', '농구 실력 향상과 팀워크를 기르는 동아리입니다.', true, 'admin-006', NOW(), NOW()),
-                ('club-007', '영어회화', 'https://example.com/english.jpg', 'English Conversation Club', 'DEPARTMENT', 'ACADEMIC', '외국어', '원어민과 함께하는 영어회화 스터디입니다.', true, 'admin-007', NOW(), NOW()),
-                ('club-008', '포토클럽', 'https://example.com/photo.jpg', '셔터 속에 담는 아름다운 순간들', 'UNION', 'CULTURE', '사진', '사진 촬영 기법부터 보정까지 모든 것을 배웁니다.', true, 'admin-008', NOW(), NOW()),
-                ('club-009', '밴드동아리', 'https://example.com/band.jpg', '음악으로 하나되는 우리', 'CENTRAL', 'CULTURE', '음악', '다양한 장르의 음악을 연주하는 밴드 동아리입니다.', false, 'admin-009', NOW(), NOW()),
-                ('club-010', '테니스부', 'https://example.com/tennis.jpg', '라켓과 공으로 만나는 우아한 스포츠', 'CENTRAL', 'SPORTS', '테니스', '테니스 기초부터 실전까지 체계적인 훈련을 합니다.', true, 'admin-010', NOW(), NOW()),
-                ('club-011', '독서모임', 'https://example.com/book.jpg', '책 속에서 찾는 지혜와 감동', 'DEPARTMENT', 'CULTURE', '독서', '한 달에 한 권씩 책을 읽고 토론하는 모임입니다.', true, 'admin-011', NOW(), NOW()),
-                ('club-012', '댄스크루', 'https://example.com/dance.jpg', '리듬 속에서 찾는 자유로움', 'UNION', 'CULTURE', '댄스', '다양한 장르의 댄스를 배우고 공연도 합니다.', true, 'admin-012', NOW(), NOW()),
-                ('club-013', '토론동아리', 'https://example.com/debate.jpg', '논리와 사고력을 기르는 토론', 'DEPARTMENT', 'ACADEMIC', '토론', '시사 이슈부터 철학적 주제까지 다양한 토론을 합니다.', false, 'admin-013', NOW(), NOW()),
-                ('club-014', '환경지키미', 'https://example.com/env.jpg', '지구를 위한 작은 실천', 'UNION', 'VOLUNTEER', '환경보호', '환경보호 캠페인과 실천 활동을 함께 합니다.', true, 'admin-014', NOW(), NOW()),
-                ('club-015', '영화감상', 'https://example.com/movie.jpg', '스크린 속 이야기와 함께하는 시간', 'DEPARTMENT', 'CULTURE', '영화', '다양한 장르의 영화를 보고 감상을 나누는 모임입니다.', true, 'admin-015', NOW(), NOW()),
-                ('club-016', '기타동아리', 'https://example.com/guitar.jpg', '기타 선율로 전하는 마음', 'CENTRAL', 'CULTURE', '기타', '어쿠스틱 기타부터 일렉 기타까지 배웁니다.', true, 'admin-016', NOW(), NOW()),
-                ('club-017', '배드민턴', 'https://example.com/badminton.jpg', '셔틀콕과 함께하는 즐거운 운동', 'UNION', 'SPORTS', '배드민턴', '배드민턴을 통한 건강관리와 친목도모를 합니다.', false, 'admin-017', NOW(), NOW()),
-                ('club-018', '요리연구회', 'https://example.com/cooking.jpg', '맛있는 요리로 행복한 시간', 'DEPARTMENT', 'CULTURE', '요리', '다양한 요리를 배우고 레시피를 공유합니다.', true, 'admin-018', NOW(), NOW()),
-                ('club-019', '사랑나눔', 'https://example.com/love.jpg', '사랑을 실천하는 봉사활동', 'CENTRAL', 'VOLUNTEER', '복지봉사', '복지시설과 연계한 봉사활동을 정기적으로 합니다.', true, 'admin-019', NOW(), NOW()),
-                ('club-020', '체스동아리', 'https://example.com/chess.jpg', '논리적 사고를 키우는 체스', 'DEPARTMENT', 'ACADEMIC', '체스', '체스 실력 향상과 대회 참가를 목표로 합니다.', false, 'admin-020', NOW(), NOW()),
-                ('club-021', '창작문예', 'https://example.com/writing.jpg', '글로 표현하는 나만의 세계', 'UNION', 'CULTURE', '문예창작', '소설, 시, 수필 등 다양한 장르의 글쓰기를 합니다.', true, 'admin-021', NOW(), NOW()),
-                ('club-022', '러닝크루', 'https://example.com/running.jpg', '건강한 달리기 문화 만들기', 'CENTRAL', 'SPORTS', '달리기', '함께 달리며 건강도 챙기고 친목도 다집니다.', true, 'admin-022', NOW(), NOW()),
-                ('club-023', '과학탐구', 'https://example.com/science.jpg', '과학의 신비로운 세계 탐험', 'DEPARTMENT', 'ACADEMIC', '과학', '실험과 탐구를 통해 과학의 재미를 느껴봅시다.', true, 'admin-023', NOW(), NOW()),
-                ('club-024', '여행동아리', 'https://example.com/travel.jpg', '함께 떠나는 특별한 여행', 'UNION', 'ETC', '여행', '국내외 여행을 기획하고 추억을 만듭니다.', false, 'admin-024', NOW(), NOW()),
-                ('club-025', '카페동아리', 'https://example.com/cafe.jpg', '커피와 함께하는 여유로운 시간', 'DEPARTMENT', 'ETC', '카페', '커피에 대해 배우고 카페 문화를 즐깁니다.', true, 'admin-025', NOW(), NOW()),
-                ('club-026', '스터디모임', 'https://example.com/study.jpg', '함께 공부하며 성장하기', 'UNION', 'ACADEMIC', '스터디', '전공 공부부터 자격증까지 함께 공부합니다.', true, 'admin-026', NOW(), NOW()),
-                ('club-027', '게임동아리', 'https://example.com/game.jpg', '게임을 통한 즐거운 소통', 'CENTRAL', 'ETC', '게임', '다양한 게임을 즐기며 친목을 도모합니다.', true, 'admin-027', NOW(), NOW()),
-                ('club-028', '등산동아리', 'https://example.com/hiking.jpg', '자연과 함께하는 건강한 등산', 'UNION', 'SPORTS', '등산', '정기적인 등산을 통해 자연을 느끼고 체력을 기릅니다.', false, 'admin-028', NOW(), NOW()),
-                ('club-029', '기독교동아리', 'https://example.com/christian.jpg', '믿음 안에서 함께하는 공동체', 'CENTRAL', 'RELIGION', '기독교', '신앙 생활과 봉사활동을 함께 하는 동아리입니다.', true, 'admin-029', NOW(), NOW()),
-                ('club-030', '자유동아리', 'https://example.com/free.jpg', '자유로운 활동과 새로운 도전', 'DEPARTMENT', 'ETC', '자유활동', '정해진 틀 없이 자유롭게 활동하는 동아리입니다.', true, 'admin-030', NOW(), NOW());
-                """;
+            -- 2. 동아리 데이터 30개 (다양한 카테고리, 타입, 모집상태, 모집대상)
+            INSERT INTO clubs (id, name, profile_img, summary, club_type, club_category, custom_category, content, recruiting, admin_id, target_grades, created_at, updated_at) VALUES
+            ('club-001', '그림사랑', 'https://example.com/art1.jpg', '미술을 사랑하는 사람들의 모임', 'CENTRAL', 'CULTURE', '회화', '함께 그림을 그리고 전시회도 개최하는 동아리입니다.', true, 'admin-001', '["FIRST_GRADE", "SECOND_GRADE", "THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW()),
+            ('club-002', '상명축구부', 'https://example.com/soccer.jpg', '축구를 통한 건강한 대학생활', 'CENTRAL', 'SPORTS', '축구', '매주 정기적인 훈련과 대회 참가를 통해 실력을 키웁니다.', true, 'admin-002', '["FIRST_GRADE", "SECOND_GRADE", "THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW()),
+            ('club-003', '코딩마스터', 'https://example.com/code.jpg', '프로그래밍 실력 향상을 위한 스터디', 'DEPARTMENT', 'ACADEMIC', '프로그래밍', '다양한 프로그래밍 언어를 배우고 프로젝트를 진행합니다.', true, 'admin-003', '["SECOND_GRADE", "THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW()),
+            ('club-004', '나눔봉사단', 'https://example.com/volunteer.jpg', '사회에 보탬이 되는 봉사활동', 'UNION', 'VOLUNTEER', '사회봉사', '지역사회를 위한 다양한 봉사활동을 함께 합니다.', true, 'admin-004', '["FIRST_GRADE", "SECOND_GRADE", "THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW()),
+            ('club-005', '연극반', 'https://example.com/drama.jpg', '무대 위에서 펼치는 우리들의 이야기', 'CENTRAL', 'CULTURE', '연극', '연기, 연출, 무대제작 등 연극의 모든 것을 배웁니다.', false, 'admin-005', '["SECOND_GRADE", "THIRD_GRADE"]', NOW(), NOW()),
+            ('club-006', '농구동아리', 'https://example.com/basketball.jpg', '슛! 골! 함께하는 농구의 즐거움', 'CENTRAL', 'SPORTS', '농구', '농구 실력 향상과 팀워크를 기르는 동아리입니다.', true, 'admin-006', '["FIRST_GRADE", "SECOND_GRADE", "THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW()),
+            ('club-007', '영어회화', 'https://example.com/english.jpg', 'English Conversation Club', 'DEPARTMENT', 'ACADEMIC', '외국어', '원어민과 함께하는 영어회화 스터디입니다.', true, 'admin-007', '["FIRST_GRADE", "SECOND_GRADE"]', NOW(), NOW()),
+            ('club-008', '포토클럽', 'https://example.com/photo.jpg', '셔터 속에 담는 아름다운 순간들', 'UNION', 'CULTURE', '사진', '사진 촬영 기법부터 보정까지 모든 것을 배웁니다.', true, 'admin-008', '["FIRST_GRADE", "SECOND_GRADE", "THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW()),
+            ('club-009', '밴드동아리', 'https://example.com/band.jpg', '음악으로 하나되는 우리', 'CENTRAL', 'CULTURE', '음악', '다양한 장르의 음악을 연주하는 밴드 동아리입니다.', false, 'admin-009', '["THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW()),
+            ('club-010', '테니스부', 'https://example.com/tennis.jpg', '라켓과 공으로 만나는 우아한 스포츠', 'CENTRAL', 'SPORTS', '테니스', '테니스 기초부터 실전까지 체계적인 훈련을 합니다.', true, 'admin-010', '["FIRST_GRADE", "SECOND_GRADE", "THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW()),
+            ('club-011', '독서모임', 'https://example.com/book.jpg', '책 속에서 찾는 지혜와 감동', 'DEPARTMENT', 'CULTURE', '독서', '한 달에 한 권씩 책을 읽고 토론하는 모임입니다.', true, 'admin-011', '["FIRST_GRADE", "SECOND_GRADE"]', NOW(), NOW()),
+            ('club-012', '댄스크루', 'https://example.com/dance.jpg', '리듬 속에서 찾는 자유로움', 'UNION', 'CULTURE', '댄스', '다양한 장르의 댄스를 배우고 공연도 합니다.', true, 'admin-012', '["FIRST_GRADE", "SECOND_GRADE", "THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW()),
+            ('club-013', '토론동아리', 'https://example.com/debate.jpg', '논리와 사고력을 기르는 토론', 'DEPARTMENT', 'ACADEMIC', '토론', '시사 이슈부터 철학적 주제까지 다양한 토론을 합니다.', false, 'admin-013', '["THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW()),
+            ('club-014', '환경지키미', 'https://example.com/env.jpg', '지구를 위한 작은 실천', 'UNION', 'VOLUNTEER', '환경보호', '환경보호 캠페인과 실천 활동을 함께 합니다.', true, 'admin-014', '["FIRST_GRADE", "SECOND_GRADE", "THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW()),
+            ('club-015', '영화감상', 'https://example.com/movie.jpg', '스크린 속 이야기와 함께하는 시간', 'DEPARTMENT', 'CULTURE', '영화', '다양한 장르의 영화를 보고 감상을 나누는 모임입니다.', true, 'admin-015', '["FIRST_GRADE", "SECOND_GRADE", "THIRD_GRADE"]', NOW(), NOW()),
+            ('club-016', '기타동아리', 'https://example.com/guitar.jpg', '기타 선율로 전하는 마음', 'CENTRAL', 'CULTURE', '기타', '어쿠스틱 기타부터 일렉 기타까지 배웁니다.', true, 'admin-016', '["FIRST_GRADE", "SECOND_GRADE", "THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW()),
+            ('club-017', '배드민턴', 'https://example.com/badminton.jpg', '셔틀콕과 함께하는 즐거운 운동', 'UNION', 'SPORTS', '배드민턴', '배드민턴을 통한 건강관리와 친목도모를 합니다.', false, 'admin-017', '["SECOND_GRADE", "THIRD_GRADE"]', NOW(), NOW()),
+            ('club-018', '요리연구회', 'https://example.com/cooking.jpg', '맛있는 요리로 행복한 시간', 'DEPARTMENT', 'CULTURE', '요리', '다양한 요리를 배우고 레시피를 공유합니다.', true, 'admin-018', '["FIRST_GRADE", "SECOND_GRADE", "THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW()),
+            ('club-019', '사랑나눔', 'https://example.com/love.jpg', '사랑을 실천하는 봉사활동', 'CENTRAL', 'VOLUNTEER', '복지봉사', '복지시설과 연계한 봉사활동을 정기적으로 합니다.', true, 'admin-019', '["FIRST_GRADE", "SECOND_GRADE", "THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW()),
+            ('club-020', '체스동아리', 'https://example.com/chess.jpg', '논리적 사고를 키우는 체스', 'DEPARTMENT', 'ACADEMIC', '체스', '체스 실력 향상과 대회 참가를 목표로 합니다.', false, 'admin-020', '["THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW()),
+            ('club-021', '창작문예', 'https://example.com/writing.jpg', '글로 표현하는 나만의 세계', 'UNION', 'CULTURE', '문예창작', '소설, 시, 수필 등 다양한 장르의 글쓰기를 합니다.', true, 'admin-021', '["SECOND_GRADE", "THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW()),
+            ('club-022', '러닝크루', 'https://example.com/running.jpg', '건강한 달리기 문화 만들기', 'CENTRAL', 'SPORTS', '달리기', '함께 달리며 건강도 챙기고 친목도 다집니다.', true, 'admin-022', '["FIRST_GRADE", "SECOND_GRADE", "THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW()),
+            ('club-023', '과학탐구', 'https://example.com/science.jpg', '과학의 신비로운 세계 탐험', 'DEPARTMENT', 'ACADEMIC', '과학', '실험과 탐구를 통해 과학의 재미를 느껴봅시다.', true, 'admin-023', '["SECOND_GRADE", "THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW()),
+            ('club-024', '여행동아리', 'https://example.com/travel.jpg', '함께 떠나는 특별한 여행', 'UNION', 'ETC', '여행', '국내외 여행을 기획하고 추억을 만듭니다.', false, 'admin-024', '["THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW()),
+            ('club-025', '카페동아리', 'https://example.com/cafe.jpg', '커피와 함께하는 여유로운 시간', 'DEPARTMENT', 'ETC', '카페', '커피에 대해 배우고 카페 문화를 즐깁니다.', true, 'admin-025', '["FIRST_GRADE", "SECOND_GRADE", "THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW()),
+            ('club-026', '스터디모임', 'https://example.com/study.jpg', '함께 공부하며 성장하기', 'UNION', 'ACADEMIC', '스터디', '전공 공부부터 자격증까지 함께 공부합니다.', true, 'admin-026', '["FIRST_GRADE", "SECOND_GRADE", "THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW()),
+            ('club-027', '게임동아리', 'https://example.com/game.jpg', '게임을 통한 즐거운 소통', 'CENTRAL', 'ETC', '게임', '다양한 게임을 즐기며 친목을 도모합니다.', true, 'admin-027', '["FIRST_GRADE", "SECOND_GRADE", "THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW()),
+            ('club-028', '등산동아리', 'https://example.com/hiking.jpg', '자연과 함께하는 건강한 등산', 'UNION', 'SPORTS', '등산', '정기적인 등산을 통해 자연을 느끼고 체력을 기릅니다.', false, 'admin-028', '["SECOND_GRADE", "THIRD_GRADE"]', NOW(), NOW()),
+            ('club-029', '기독교동아리', 'https://example.com/christian.jpg', '믿음 안에서 함께하는 공동체', 'CENTRAL', 'RELIGION', '기독교', '신앙 생활과 봉사활동을 함께 하는 동아리입니다.', true, 'admin-029', '["FIRST_GRADE", "SECOND_GRADE", "THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW()),
+            ('club-030', '자유동아리', 'https://example.com/free.jpg', '자유로운 활동과 새로운 도전', 'DEPARTMENT', 'ETC', '자유활동', '정해진 틀 없이 자유롭게 활동하는 동아리입니다.', true, 'admin-030', '["FIRST_GRADE", "SECOND_GRADE", "THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW());
+            """;
         jdbcTemplate.execute(sql);
     }
 

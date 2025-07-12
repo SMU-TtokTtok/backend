@@ -2,11 +2,14 @@ package org.project.ttokttok.domain.club.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.Explode;
+import io.swagger.v3.oas.annotations.enums.ParameterStyle;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
 import org.project.ttokttok.domain.club.controller.dto.response.ClubDetailResponse;
 import org.project.ttokttok.domain.club.controller.dto.response.ClubListResponse;
 import org.project.ttokttok.domain.club.domain.enums.ClubCategory;
@@ -16,6 +19,8 @@ import org.project.ttokttok.domain.club.service.dto.response.ClubListServiceResp
 import org.project.ttokttok.global.annotation.auth.AuthUserInfo;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * 동아리 관련 API 컨트롤러
@@ -29,39 +34,6 @@ import org.springframework.web.bind.annotation.*;
 public class ClubUserApiController {
 
     private final ClubUserService clubUserService;
-
-    /**
-     * 메인화면 기본 동아리 목록 조회 API
-     * 로그인 후 메인화면에 바로 표시될 동아리 목록을 조회합니다.
-     * 필터 없이 최신등록순으로 동아리들을 보여줍니다.
-     *
-     * @param size 페이지 크기 (기본값 : 20)
-     * @param cursor 무한스크롤 커서 (첫 요청시 생략)
-     * @return 최신등록순으로 정렬된 동아리 목록
-     * */
-    @Operation(
-            summary = "메인화면 기본 동아리 목록 조회",
-            description = "로그인 후 메인화면에 표시될 기본 동아리 목록을 조회합니다. 기본적으로 '최신등록순' 정렬이 적용된 상태입니다."
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "조회 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 파라미터")
-    })
-    @GetMapping("/main")
-    public ResponseEntity<ClubListResponse> getMainClubs(
-            @Parameter(description = "조회 개수 (기본 20개)")
-            @RequestParam(defaultValue = "20") int size,
-
-            @Parameter(description = "무한스크롤 커서 (첫 요청시 생략)")
-            @RequestParam(required = false) String cursor) {
-
-        // 카테고리/타입/모집여부 필터는 없지만, 최신등록순 정렬 적용
-        ClubListResponse response = ClubListResponse.from(
-                clubUserService.getClubList(null, null, null, size, cursor, "latest")
-        );
-
-        return ResponseEntity.ok(response);
-    }
 
     /**
      * 동아리 상세 정보 조회 API
@@ -82,8 +54,9 @@ public class ClubUserApiController {
                 .body(response);
     }
 
+
     /**
-     * 동아리 목록 조회 API
+     * 동아리 목록 조회 API (메인화면 + 필터링 통합)
      * 메인 화면에서 동아리 목록을 필터링하여 페이징 조회합니다.
      * 
      * @param category 동아리 카테고리 필터 (봉사, 예술, 문화 등) - 선택사항
@@ -109,6 +82,13 @@ public class ClubUserApiController {
             @Parameter(description = "분류 (중앙, 연합, 과 동아리)")
             @RequestParam(required = false) ClubType type,
 
+            @Parameter(
+                    description = "학년 (1학년, 2학년, 3학년, 4학년)",
+                    style = ParameterStyle.FORM,
+                    explode = Explode.TRUE
+            )
+            @RequestParam(required = false) List<ApplicableGrade> grades,
+
             @Parameter(description = "모집여부 (true : 모집중, false : 모집마감)")
             @RequestParam(required = false) Boolean recruiting,
 
@@ -118,15 +98,16 @@ public class ClubUserApiController {
             @Parameter(description = "무한스크롤 커서 (첫 요청시 생략)")
             @RequestParam(required = false) String cursor,    // cursor 추가
 
-            @Parameter(description = "정렬 (latest, popular)")
+            @Parameter(description = "정렬 (latest: 최신등록순, popular: 인기도순, member_count: 멤버많은순)")
             @RequestParam(defaultValue = "latest") String sort) {
 
         ClubListResponse response = ClubListResponse.from(
-                clubUserService.getClubList(category, type, recruiting, size, cursor, sort)
+                clubUserService.getClubList(category, type, recruiting, grades, size, cursor, sort)
         );
 
         return ResponseEntity.ok(response);
     }
+
 
     /**
      * 메인 화면 배너용 인기 동아리 조회 API

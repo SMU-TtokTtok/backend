@@ -1,6 +1,7 @@
 package org.project.ttokttok.domain.club.service;
 
 import lombok.RequiredArgsConstructor;
+import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
 import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.domain.enums.ClubCategory;
 import org.project.ttokttok.domain.club.domain.enums.ClubType;
@@ -66,12 +67,13 @@ public class ClubUserService {
             ClubCategory category,
             ClubType type,
             Boolean recruiting,
+            List<ApplicableGrade> grades, // 추가
             int size,
             String cursor,
             String sort) {
 
         List<ClubCardQueryResponse> results = clubRepository.getClubList(
-                category, type, recruiting, size, cursor, sort, getCurrentUserEmail()
+                category, type, recruiting, grades, size, cursor, sort, getCurrentUserEmail()
         );
 
         // hasNext 확인을 위해 size+1로 조회했으므로
@@ -80,9 +82,12 @@ public class ClubUserService {
             results = results.subList(0, size);  // 실제 size만큼만 반환
         }
 
-        // 다음 커서 생성
-        String nextCursor = hasNext && !results.isEmpty() ?
-                results.get(results.size() - 1).id() : null;
+        // 다음 커서 생성 (정렬 방식에 따라 다르게 생성)
+        String nextCursor = null;
+        if (hasNext && !results.isEmpty()) {
+            ClubCardQueryResponse lastItem = results.get(results.size() - 1);
+            nextCursor = generateNextCursor(lastItem, sort);
+        }
 
         List<ClubCardServiceResponse> clubs = results.stream()
                 .map(this::toServiceResponse)
@@ -193,5 +198,27 @@ public class ClubUserService {
                 .toList();
 
         return new ClubListServiceResponse(clubs, clubs.size(), hasNext, nextCursor);
+    }
+
+    /**
+     * 정렬 방식에 따라 다음 커서 생성
+     *
+     * @param lastItem 마지막 조회된 아이템
+     * @param sort 정렬 방식
+     * @return 다음 커서 문자열
+     */
+    private String generateNextCursor(ClubCardQueryResponse lastItem, String sort) {
+        switch (sort) {
+            case "latest":
+                // 최신순: 생성일 기준 커서
+                // 현재는 ID 기준으로 대체 (생성일 정보가 ClubCardQueryResponse에 없음)
+                return lastItem.id();
+
+            case "popular":
+            case "member_count":
+            default:
+                // 인기순/멤버순/기본값: ID 기준 커서
+                return lastItem.id();
+        }
     }
 }
