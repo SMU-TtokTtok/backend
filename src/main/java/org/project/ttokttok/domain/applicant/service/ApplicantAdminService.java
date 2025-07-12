@@ -36,7 +36,7 @@ public class ApplicantAdminService {
                 .orElseThrow(NotClubAdminException::new);
 
         // 2. 현재 활성화된 지원 폼 찾기
-        ApplyForm activeApplyForm = applyFormRepository.findByClubIdAndStatus(club.getId(), ACTIVE)
+        ApplyForm activeApplyForm = applyFormRepository.findTopByClubIdOrderByCreatedAtDesc(club.getId())
                 .orElseThrow(ApplyFormNotFoundException::new);
 
         // 3. 활성화된 지원 폼의 ID를 사용해 지원자 페이지 조회
