@@ -7,15 +7,16 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum ClubCategory {
 
-    // 동아리 카테고리
+    // 동아리 카테고리 (6개)
+    // 전체는 enum 에 포함하지 않고, API 에서 필터 없이 처리
     VOLUNTEER("봉사"),
-    ART("예술"),
     CULTURE("문화"),
     ACADEMIC("학술"),
-    SOCIAL("친목"),
-    SPORTS("체육"),
+    SPORTS("스포츠"),      // "체육" -> "스포츠" 로 변경
     RELIGION("종교"),
     ETC("기타");
+
+    // 제거된 항목들 : ART("예술") - 제거, SOCIAL("친목") - 제거
 
     final String category;
 }

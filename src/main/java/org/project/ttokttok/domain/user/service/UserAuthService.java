@@ -43,6 +43,11 @@ public class UserAuthService {
 
     /**
      * 1. 이메일 인증코드 전송
+     *
+     * 상명대학교 이메일 형식을 검증하고, 기존 미인증 코드를 만료 처리한 후 새로운 인증코드를 생성하여 발송합니다.
+     *
+     * @param email 인증코드를 발송할 이메일 주소 (상명대학교 이메일만 허용)
+     * @throws IllegalArgumentException 상명대학교 이메일이 아닌 경우
      * */
     public void sendVerificationCode(String email) {
         // 1-1. 상명대 이메일 형식 검증
@@ -68,7 +73,12 @@ public class UserAuthService {
     }
 
     /**
-     * 2. 이메일 인증코드 검증
+     * 2. 이메일 인증코드 검증 - 이메일 인증코드를 검증합니다.
+     *
+     * @param email 검증할 이메일 주소
+     * @param code 검증할 인증코드
+     * @return 인증 성공 시 true
+     * @throws IllegalArgumentException 올바르지 않은 인증코드이거나 만료된 경우
      * */
     public boolean verifyEmail(String email, String code) {
         EmailVerification verification = emailVerificationRepository
@@ -85,7 +95,13 @@ public class UserAuthService {
     }
 
     /**
-     * 3. 회원가입
+     * 3. 회원가입 처리 메서드
+     *
+     * 비밀번호 확인, 이메일 중복 검증, 이메일 인증 확인을 거쳐 새로운 사용자를 생성합니다.
+     *
+     * @param request 회원가입 요청 정보
+     * @return 생성된 사용자 정보
+     * @throws IllegalArgumentException 비밀번호 불일치, 이메일 중복, 이메일 미인증 등의 경우
      * */
     public UserServiceResponse signup(SignupServiceRequest request) {
         // 3-1. 비밀번호 확인 일치 검증
@@ -119,7 +135,13 @@ public class UserAuthService {
     }
 
     /**
-     * 4. 로그인
+     * 4. 로그인 - 사용자 로그인을 처리합니다.
+     *
+     * 이메일과 비밀번호를 검증하고, 이메일 인증 상태를 확인한 후 JWT 토큰을 발급합니다.
+     *
+     * @param request 로그인 요청 정보 (이메일, 비밀번호, 로그인 유지 정보)
+     * @return 로그인 결과 (토큰 정보와 사용자 정보)
+     * @throws IllegalArgumentException 존재하지 않는 사용자, 비밀번호 불일치, 이메일 미인증 등의 경우
      * */
     @Transactional(readOnly = true)
     public LoginServiceResponse login(LoginServiceRequest request) {
@@ -153,6 +175,11 @@ public class UserAuthService {
 
     /**
      * 5. 비밀번호 재설정
+     *
+     * 새 비밀번호 확인 일치를 검증하고, 인증코드를 검증한 후 비밀번호를 업데이트 합니다.
+     *
+     * @param request 비밀번호 재설정 요청 정보
+     * @throws IllegalArgumentException 새 비밀번호 불일치, 인증코드 오류, 존재하지 않는 사용자 등의 경우
      * */
     public void resetPassword(ResetPasswordServiceRequest request) {
         // 5-1. 새 비밀번호 확인 일치 검증
@@ -174,7 +201,12 @@ public class UserAuthService {
     }
 
     /**
-     * 6. 비밀번호 재설정용 인증코드 발송
+     * 6. 비밀번호 재설정용 인증코드 발송합니다.
+     *
+     * 사용자 존재 여부를 확인하고, 기존 미인증 코드를 만료 처리한 후 새로운 인증코드를 생성하여 발송합니다.
+     *
+     * @param email 비밀번호 재설정 코드를 발송할 이메일 주소
+     * @throws IllegalArgumentException 존재하지 않는 사용자인 경우
      * */
     public void sendPasswordResetCode(String email) {
         // 사용자 존재 확인

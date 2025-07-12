@@ -1,6 +1,7 @@
 package org.project.ttokttok.domain.user.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -43,7 +44,11 @@ public class UserAuthController {
     private final UserAuthService userAuthService;
 
     /**
-     * 이메일 인증코드 발송
+     * 이메일 인증코드 발송 API
+     * 상명대학교 이메일로 6자리 인증코드를 발송합니다.
+     *
+     * @param request 이메일 인증 요청 정보 (이메일 주소 포함)
+     * @return 인증코드 발송 결과
      * */
     @Operation(
             summary = "이메일 인증코드 발송",
@@ -61,6 +66,7 @@ public class UserAuthController {
     })
     @PostMapping("/send-verification")
     public ResponseEntity<ApiResponse<Void>> sendVerificationCode(
+            @Parameter(description = "이메일 인증 요청 (상명대 이메일 주소)")
             @RequestBody @Valid SendVerificationRequest request) {
 
         userAuthService.sendVerificationCode(request.email());
@@ -71,7 +77,11 @@ public class UserAuthController {
     }
 
     /**
-     * 이메일 인증코드 검증
+     * 이메일 인증코드 검증 API
+     * 발송된 6자리 인증코드를 검증합니다.
+     *
+     * @param request 이메일 인증 검증 요청 정보 (이메일 주소, 인증코드 포함)
+     * @return 인증 검증 결과
      * */
     @Operation(
             summary = "이메일 인증코드 검증",
@@ -89,6 +99,7 @@ public class UserAuthController {
     })
     @PostMapping("/verify-email")
     public ResponseEntity<ApiResponse<Void>> verifyEmail(
+            @Parameter(description = "이메일 인증 검증 요청 (이메일 주소, 6자리 인증코드)")
             @RequestBody @Valid VerifyEmailRequest request) {
 
         userAuthService.verifyEmail(request.email(), request.code());
@@ -99,7 +110,11 @@ public class UserAuthController {
     }
 
     /**
-     * 회원가입
+     * 회원가입 API
+     * 이메일 인증 완료 후 회원가입을 진행합니다.
+     *
+     * @param request 회원가입 요청 정보 (이메일, 비밀번호, 닉네임 포함)
+     * @return 회원가입 완료된 사용자 정보
      */
     @Operation(
             summary = "회원가입",
@@ -117,6 +132,7 @@ public class UserAuthController {
     })
     @PostMapping("/signup")
     public ResponseEntity<ApiResponse<UserResponse>> signup(
+            @Parameter(description = "회원가입 요청 (이메일, 비밀번호, 닉네임)")
             @RequestBody @Valid SignupRequest request) {
 
         UserServiceResponse serviceResponse = userAuthService.signup(request.toServiceRequest());
@@ -128,7 +144,11 @@ public class UserAuthController {
     }
 
     /**
-     * 로그인
+     * 로그인 API
+     * 이메일과 비밀번호로 로그인을 진행합니다.
+     *
+     * @param request 로그인 요청 정보 (이메일, 비밀번호, 로그인 유지 여부 포함)
+     * @return 로그인 결과 및 토큰 정보
      */
     @Operation(
             summary = "로그인",
@@ -150,6 +170,7 @@ public class UserAuthController {
     })
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponse>> login(
+            @Parameter(description = "로그인 요청 (이메일, 비밀번호, 로그인 유지 여부)")
             @RequestBody @Valid LoginRequest request) {
 
         LoginServiceResponse serviceResponse = userAuthService.login(request.toServiceRequest());
@@ -184,7 +205,11 @@ public class UserAuthController {
     }
 
     /**
-     * 비밀번호 재설정 코드 발송
+     * 비밀번호 재설정 코드 발송 API
+     * 가입된 이메일로 6자리 비밀번호 재설정 코드를 발송합니다.
+     *
+     * @param request 비밀번호 재설정 코드 발송 요청 (이메일 주소 포함)
+     * @return 재설정 코드 발송 결과
      */
     @Operation(
             summary = "비밀번호 재설정 코드 발송",
@@ -206,6 +231,7 @@ public class UserAuthController {
     })
     @PostMapping("/send-reset-code")
     public ResponseEntity<ApiResponse<Void>> sendPasswordResetCode(
+            @Parameter(description = "비밀번호 재설정 코드 발송 요청 (가입된 이메일 주소")
             @RequestBody @Valid SendVerificationRequest request) {
 
         userAuthService.sendPasswordResetCode(request.email());
@@ -216,7 +242,11 @@ public class UserAuthController {
     }
 
     /**
-     * 비밀번호 재설정
+     * 비밀번호 재설정 API
+     * 발송된 재설정 코드와 새 비밀번호로 비밀번호를 재설정합니다.
+     *
+     * @param request 비밀번호 재설정 요청 (이메일, 재설정 코드, 새 비밀번호 포함)
+     * @return 비밀번호 재설정 결과
      */
     @Operation(
             summary = "비밀번호 재설정",
@@ -238,6 +268,7 @@ public class UserAuthController {
     })
     @PostMapping("/reset-password")
     public ResponseEntity<ApiResponse<Void>> resetPassword(
+            @Parameter(description = "비밀번호 재설정 요청 (이메일, 6자리 재설정 코드, 새 비밀번호)")
             @RequestBody @Valid ResetPasswordRequest request) {
 
         userAuthService.resetPassword(request.toServiceRequest());
