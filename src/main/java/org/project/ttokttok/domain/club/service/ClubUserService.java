@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class ClubService {
+public class ClubUserService {
 
     private final ClubRepository clubRepository;
 
