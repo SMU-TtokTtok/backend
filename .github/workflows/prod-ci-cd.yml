@@ -39,7 +39,7 @@ jobs:
     
       # === 디버깅용: Procfile 내용 확인 ===
       - name: Show Procfile contents
-        run: cat Procfile
+        run: cat ./deploy/Procfile
 
       - name: Install AWS CLI and EB CLI
         run: |
