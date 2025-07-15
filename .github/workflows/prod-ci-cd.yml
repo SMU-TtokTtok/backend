@@ -32,6 +32,7 @@ jobs:
       - name: Copy JAR to root
         run: |
           cp ./build/libs/*-SNAPSHOT.jar ./app.jar
+          echo "web: java -jar app.jar" > Procfile
 
       - name: Install AWS CLI and EB CLI
         run: |
