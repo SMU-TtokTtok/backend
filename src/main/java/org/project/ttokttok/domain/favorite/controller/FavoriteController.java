@@ -39,7 +39,28 @@ public class FavoriteController {
      */
     @Operation(
             summary = "즐겨찾기 토글",
-            description = "동아리를 즐겨찾기에 추가하거나 제거합니다. 이미 즐겨찾기가 되어 있으면 제거하고, 없으면 추가합니다."
+            description = """
+                    동아리를 즐겨찾기에 추가하거나 제거합니다. 이미 즐겨찾기가 되어 있으면 제거하고, 즐겨찾기가 안되어 있으면 즐겨찾기에 추가합니다.
+    
+                    ===프론트엔드 개발자를 위한 테스트 가이드===
+    
+                    **실제 프론트엔드 연동 시**
+                    - 회원가입 -> 로그인 완료 후 JWT 토큰이 쿠키에 저장됨
+
+                    ⚡ **Swagger UI에서 테스트 시:**
+                    1. 회원가입 → 로그인 완료
+                    2. tokenUserEmail에 **회원가입할 때 사용한 본인 이메일** 직접 입력
+                    3. userEmail은 비워두기 (테스트용, 입력 불필요)
+                    4. clubId에 테스트할 동아리 ID 입력 (예: club-025)
+
+                    ⚡ **빠른 테스트 (회원가입 없이):**
+                    1. tokenUserEmail에 "test@sangmyung.kr" 입력
+                    2. userEmail에도 마찬가지로 "test@sangmyung.kr" 입력
+                    3. clubId에 동아리 ID 입력
+
+                    **주의사항:**
+                    - Swagger UI에서는 tokenUserEmail을 수동으로 입력해야 합니다
+                    """
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "즐겨찾기 토글 성공"),
@@ -79,7 +100,26 @@ public class FavoriteController {
      */
     @Operation(
             summary = "즐겨찾기 목록 조회",
-            description = "사용자의 즐겨찾기한 동아리 목록을 조회합니다."
+            description = """
+                    현재 로그인한 사용자의 즐겨찾기 동아리 목록을 조회합니다.
+
+                    === 프론트엔드 개발자를 위한 테스트 가이드 ===
+                    
+                    **실제 프론트엔드 연동 시**
+                    - 회원가입 -> 로그인 완료 후 JWT 토큰이 쿠키에 저장됨
+                    
+                    ⚡ **Swagger UI에서 테스트 시:**
+                    1. 회원가입 → 로그인 완료
+                    2. tokenUserEmail에 **회원가입할 때 사용한 본인 이메일** 직접 입력
+                    3. userEmail은 비워두기 (테스트용, 입력 불필요)
+
+                    ⚡ **빠른 테스트 (회원가입 없이):**
+                    1. tokenUserEmail에 "test@sangmyung.kr" 입력
+                    2. userEmail에도 마찬가지로 "test@sangmyung.kr" 입력
+                    
+                    **주의사항:**
+                    - Swagger UI에서는 tokenUserEmail을 수동으로 입력해야 합니다
+                    """
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "즐겨찾기 목록 조회 성공"),
@@ -116,7 +156,30 @@ public class FavoriteController {
      */
     @Operation(
             summary = "즐겨찾기 상태 확인",
-            description = "특정 동아리가 즐겨찾기되어 있는지 확인합니다."
+            description = """
+                    특정 동아리가 즐겨찾기 되어 있는지 확인합니다.
+                    
+                    === 프론트엔드 개발자를 위한 테스트 가이드 ===
+                    
+                    **실제 프론트엔드 연동 시**
+                    - 회원가입 -> 로그인 완료 후 JWT 토큰이 쿠키에 저장됨
+                    
+                    ⚡ **Swagger UI에서 테스트 시:**
+                    1. 회원가입 → 로그인 완료
+                    2. tokenUserEmail에 **회원가입할 때 사용한 본인 이메일** 직접 입력
+                    3. userEmail은 비워두기 (테스트용, 입력 불필요)
+                    4. clubId에 테스트할 동아리 ID 입력 (예: club-025)
+                    5. 만약에 즐겨찾기 되어 있다면 true 로 나올것이고 안되어 있다면 false 로 나올것입니다. (동아리 카드에 별표 아이콘에 불들어오냐 안들어오냐 판단용)
+
+                    ⚡ **빠른 테스트 (회원가입 없이):**
+                    1. tokenUserEmail에 "test@sangmyung.kr" 입력
+                    2. userEmail에도 마찬가지로 "test@sangmyung.kr" 입력
+                    3. clubId에 테스트할 동아리 ID 입력 (예: club-025)
+                    4. 마찬가지로 즐겨찾기 되어 있다면 true 로 나올것이고 안되어 있다면 false 로 나올것입니다. (동아리 카드에 별표 아이콘에 불들어오냐 안들어오냐 판단용)
+                    
+                    **주의사항:**
+                    - Swagger UI에서는 tokenUserEmail을 수동으로 입력해야 합니다
+                    """
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "즐겨찾기 상태 확인 성공"),
