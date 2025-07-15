@@ -241,46 +241,6 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
     }
 
     // 복합 인기도 기준 동아리 조회 (부원수 x 0.7 + 즐겨찾기 수 x 0.3)
-//    @Override
-//    public List<ClubCardQueryResponse> getAllPopularClubs(String userEmail, double minScore) {
-//        QClub club = QClub.club;
-//        QClubMember clubMember = QClubMember.clubMember;
-//        QFavorite favorite = QFavorite.favorite;
-//        QFavorite userFavorite = new QFavorite("userFavorite");
-//
-//        // 부원수와 즐겨찾기를 Double 타입으로 계산
-//        NumberExpression<Long> memberCountLong = clubMember.count();
-//        NumberExpression<Long> favoriteCountLong = favorite.count();
-//
-//        // Long을 Double로 변환 후 복합 인기도 점수 계산
-//        NumberExpression<Double> popularityScore =
-//                memberCountLong.doubleValue().multiply(0.7)
-//                        .add(favoriteCountLong.doubleValue().multiply(0.3));
-//
-//        return queryFactory
-//                .select(Projections.constructor(ClubCardQueryResponse.class,
-//                        club.id, club.name, club.clubType, club.clubCategory,
-//                        club.customCategory, club.summary, club.profileImageUrl,
-//                        memberCountLong.intValue(),
-//                        club.recruiting,
-//                        // 즐겨찾기 여부만 서브쿼리로 처리하여 GROUP BY 문제 해결
-//                        JPAExpressions.select(userFavorite.count().gt(0))
-//                                .from(userFavorite)
-//                                .where(userFavorite.club.eq(club)
-//                                        .and(userFavorite.user.email.eq(userEmail)))
-//                ))
-//                .from(club)
-//                .leftJoin(club.clubMembers, clubMember)
-//                .leftJoin(favorite).on(favorite.club.eq(club))
-//                .where(club.recruiting.isTrue())
-//                .groupBy(club.id, club.name, club.clubType, club.clubCategory,
-//                        club.customCategory, club.summary, club.profileImageUrl,
-//                        club.recruiting)  // userFavorite.id 제거! 이게 핵심
-//                .having(popularityScore.goe(minScore))
-//                .orderBy(popularityScore.desc(), club.id.desc())
-//                .fetch();
-//    }
-
     @Override
     public List<ClubCardQueryResponse> getAllPopularClubs(String userEmail, double minScore) {
         String sql = """
