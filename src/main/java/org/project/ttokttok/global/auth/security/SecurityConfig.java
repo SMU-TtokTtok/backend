@@ -41,13 +41,6 @@ public class SecurityConfig {
     @Value("${server.url}")
     private String serverUrl;
 
-    // h2 db 접근용 security 비활성화
-    @Bean
-    public WebSecurityCustomizer customizer() {
-        return web -> web.ignoring()
-                .requestMatchers(toH2Console());
-    }
-
     // 패스워드 인코더 빈 등록
     @Bean
     public PasswordEncoder passwordEncoder() {
