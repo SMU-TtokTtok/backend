@@ -1,0 +1,59 @@
+package org.project.ttokttok.global.exception;
+
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+
+@Getter
+@RequiredArgsConstructor
+public enum ErrorMessage {
+
+    /* 에러 메시지와 HTTP 상태 반환하는 열거형.
+    *  꼭 어떤 예외 인지 주석으로 파트를 구분하여 작성 및 추가 할 것.
+    * */
+
+    //관리자 에러메시지
+    ADMIN_NOT_FOUND("관리자를 찾을 수 없음.", HttpStatus.NOT_FOUND),
+    ADMIN_PASSWORD_NOT_MATCH("비밀번호가 틀렸습니다.", HttpStatus.UNAUTHORIZED),
+    INVALID_ADMIN("잘못된 관리자명입니다.", HttpStatus.NOT_FOUND),
+
+    //토큰 에러 메시지
+    INVALID_TOKEN_ISSUER("유효하지 않은 토큰 발급자입니다.", HttpStatus.UNAUTHORIZED),
+    REFRESH_TOKEN_NOT_FOUND("토큰이 만료되었거나, 존재하지 않습니다.", HttpStatus.NOT_FOUND),
+    REFRESH_TOKEN_EXISTS("리프레시 토큰이 이미 존재합니다.(이미 로그인한 사용자입니다.)", HttpStatus.CONFLICT),
+    INVALID_ROLE("잘못된 역할 값이 토큰에 존재합니다.", HttpStatus.UNAUTHORIZED),
+    ALREADY_LOGOUT("이미 로그아웃하였거나, 존재하지 않는 토큰입니다.", HttpStatus.CONFLICT),
+    INVALID_TOKEN_AT_COOKIE("쿠키 측 리프레시 토큰이 Null입니다.", HttpStatus.BAD_REQUEST),
+    INVALID_REFRESH_TOKEN("잘못된 리프레시 토큰입니다.", HttpStatus.UNAUTHORIZED),
+    REFRESH_TOKEN_EXPIRED("리프레시 토큰 유효 기간 만료, 다시 로그인 필요", HttpStatus.FORBIDDEN),
+
+    //동아리 에러 메시지
+    CLUB_NOT_FOUND("동아리를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+    NOT_CLUB_ADMIN("해당 동아리의 관리자가 아닙니다.", HttpStatus.FORBIDDEN),
+    INVALID_IMAGE_TYPE("지원되는 이미지 형식이 아닙니다.", HttpStatus.BAD_REQUEST),
+    IMAGE_MAX_SIZE_OVER("이미지 크기는 5MB 이하만 가능합니다.", HttpStatus.BAD_REQUEST),
+
+    // 동아리 게시판 에러 메시지
+    ADMIN_NAME_NOT_MATCH("요청한 관리자가 이 동아리의 관리자와 다릅니다.", HttpStatus.FORBIDDEN),
+    CLUB_NULL_POINTER("클럽 객체가 Null입니다.", HttpStatus.INTERNAL_SERVER_ERROR),
+    CONTENT_NULL_OR_BLANK("내용이 Null 이거나 비어있습니다.", HttpStatus.BAD_REQUEST),
+    TITLE_NULL_OR_BLANK("Title이 Null 이거나 비어있습니다.", HttpStatus.BAD_REQUEST),
+    CLUB_BOARD_NOT_FOUND("게시글을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+
+    // 지원 폼 에러 메시지
+    APPLY_FORM_NOT_FOUND("지원 폼을 찾을 수 없거나, 활성화된 지원 폼이 없습니다.", HttpStatus.NOT_FOUND),
+    APPLY_FORM_INVALID_DATE_RANGE("시작 날짜는 종료 날짜보다 이전이어야 합니다.", HttpStatus.BAD_REQUEST),
+
+    // 지원자 에러 메시지
+    APPLICANT_NOT_FOUND("지원자를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+    UNAUTHORIZED_APPLICANT_ACCESS("지원자 조회에 대한 권한이 없습니다.", HttpStatus.FORBIDDEN),
+
+    // 메모 에러 메시지
+    MEMO_NOT_FOUND("메모를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+
+    // S3 에러 메시지
+    S3_FILE_UPLOAD_ERROR("S3 파일 업로드 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
+
+    private final String message;
+    private final HttpStatus status;
+}

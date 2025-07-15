@@ -1,0 +1,47 @@
+name: Deploy to Elastic Beanstalk
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+
+      - name: Generate application-prod.yml from secret
+        run: |
+          echo "${{ secrets.APPLICATION_PROD_YML }}" | base64 --decode > ./src/main/resources/application-prod.yml
+
+      - name: Build with Gradle
+        run: ./gradlew clean build -x test
+
+      - name: Install AWS CLI and EB CLI
+        run: |
+          pip install --upgrade pip
+          pip install awsebcli
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_ACCESS_KEY_SECRET }}
+          aws-region: ap-northeast-2
+
+      - name: Initialize EB CLI
+        run: eb init -p java-17 ${{ secrets.EB_APP_NAME }} --region ap-northeast-2
+
+      - name: Set EB environment
+        run: eb use ${{ secrets.EB_ENV_NAME }}
+
+      - name: Deploy to Elastic Beanstalk
+        run: eb deploy --staged --timeout 20
