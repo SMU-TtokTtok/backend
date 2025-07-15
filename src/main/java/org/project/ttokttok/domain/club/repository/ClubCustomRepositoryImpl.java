@@ -289,29 +289,29 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
 
     @Override
     public List<ClubCardQueryResponse> getPopularClubsWithFilters(
-            ClubCategory category,
-            ClubType type,
-            Boolean recruiting,
             int size,
             String cursor,
+            String sort,
             String userEmail,
             double minScore) {
 
-        QClub club = QClub.club;
-        QClubMember clubMember = QClubMember.clubMember;
-        QFavorite favorite = QFavorite.favorite;
-        QFavorite userFavorite = new QFavorite("userFavorite");
+        // 멤버 수와 즐겨찾기 수 계산을 위한 서브쿼리를 JPQLQuery 타입으로 정의
+        JPQLQuery<Long> memberCountSubQuery = JPAExpressions
+                .select(clubMember.count())
+                .from(clubMember)
+                .where(clubMember.club.id.eq(club.id));
 
-        // 부원수와 즐겨찾기수 계산
-        NumberExpression<Long> memberCountLong = clubMember.count();
-        NumberExpression<Long> favoriteCountLong = favorite.count();
+        JPQLQuery<Long> favoriteCountSubQuery = JPAExpressions
+                .select(favorite.count())
+                .from(favorite)
+                .where(favorite.club.id.eq(club.id));
 
-        // 복합 인기도 점수 계산
-        NumberExpression<Double> popularityScore =
-                memberCountLong.doubleValue().multiply(0.7)
-                        .add(favoriteCountLong.doubleValue().multiply(0.3));
+        // Expressions.numberTemplate을 사용해 두 서브쿼리의 결과를 조합하여 인기도 점수 계산
+        NumberExpression<Double> popularityScore = Expressions.numberTemplate(Double.class,
+                "({0}) * 0.7 + ({1}) * 0.3",
+                memberCountSubQuery, favoriteCountSubQuery);
 
-        return queryFactory
+        JPAQuery<ClubCardQueryResponse> query = queryFactory
                 .select(Projections.constructor(ClubCardQueryResponse.class,
                         club.id,
                         club.name,
@@ -320,28 +320,37 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
                         club.customCategory,
                         club.summary,
                         club.profileImageUrl,
-                        memberCountLong.intValue(),
+                        Expressions.numberTemplate(Integer.class, "({0})", memberCountSubQuery),
                         club.recruiting,
-                        userFavorite.isNotNull()
+                        // 즐겨찾기 여부
+                        JPAExpressions.select(favorite.count().gt(0))
+                                .from(favorite)
+                                .where(
+                                        favorite.club.id.eq(club.id),
+                                        favorite.user.email.eq(userEmail)
+                                )
                 ))
                 .from(club)
-                .leftJoin(club.clubMembers, clubMember)
-                .leftJoin(favorite).on(favorite.club.eq(club))
-                .leftJoin(userFavorite).on(userFavorite.club.eq(club)
-                        .and(userFavorite.user.email.eq(userEmail)))
                 .where(
-                        club.recruiting.isTrue(),     // 모집중인 동아리만
-                        categoryEq(category),         // 카테고리 필터
-                        typeEq(type),                // 분류 필터
-                        recruitingEq(recruiting)     // 모집 여부 필터
-                )
-                .groupBy(club.id, club.name, club.clubType, club.clubCategory,
-                        club.customCategory, club.summary, club.profileImageUrl,
-                        club.recruiting, userFavorite.id)
-                .having(popularityScore.goe(minScore))
-                .orderBy(popularityScore.desc(), club.id.desc())
-                .limit(size + 1)
-                .fetch();
+                        // 위에서 생성한 인기도 점수 표현식을 where 절에서 사용
+                        popularityScore.goe(minScore),
+                        // 커서 조건 적용
+                        cursorCondition(cursor, sort)
+                );
+
+        // 정렬 로직
+        if ("popular".equals(sort)) {
+            query.orderBy(popularityScore.desc(), club.id.desc());
+        } else if ("member_count".equals(sort)) {
+            // 멤버 수 서브쿼리를 정렬에 사용하기 위해 numberTemplate으로 감싸 NumberExpression으로 변환
+            query.orderBy(Expressions.numberTemplate(Long.class, "({0})", memberCountSubQuery).desc(), club.id.desc());
+        } else { // "latest"
+            query.orderBy(club.createdAt.desc(), club.id.desc());
+        }
+
+        query.limit(size + 1);
+
+        return query.fetch();
     }
 
     // 솔직히 개똥코드 인거 알지만....일단 돌아감...

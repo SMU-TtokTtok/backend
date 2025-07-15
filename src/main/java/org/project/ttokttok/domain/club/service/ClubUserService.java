@@ -154,30 +154,21 @@ public class ClubUserService {
     /**
      * 전체 인기 동아리 목록 조회 (필터링 지원)
      * "더보기" 클릭 시 보여지는 전체 인기 동아리 목록을 조회합니다.
-     * 카테고리, 분류, 모집여부 필터링과 함께 무한스크롤을 지원합니다.
-     * 
-     * @param category 동아리 카테고리 필터
-     * @param type 동아리 분류 필터
-     * @param recruiting 모집 여부 필터
+     * '인기도순', '멤버많은순', '최신등록순' 정렬과 무한스크롤을 지원합니다.
+     *
      * @param size 조회할 개수
      * @param cursor 커서 (무한스크롤용)
-     * @return 멤버수 기준으로 정렬된 인기 동아리 목록
+     * @param sort 정렬 방식
+     * @return 정렬된 인기 동아리 목록
      */
     public ClubListServiceResponse getPopularClubsWithFilters(
-            ClubCategory category,
-            ClubType type,
-            Boolean recruiting,
             int size,
-            String cursor) {
-
-        // 인기순(멤버수 기준) 정렬로 고정
-//        List<ClubCardQueryResponse> results = clubRepository.getClubList(
-//                category, type, recruiting, size, cursor, "popular", getCurrentUserEmail()
-//        );
+            String cursor,
+            String sort) {
 
         // 새로운 복합 인기도 기준 메서드 적용
         List<ClubCardQueryResponse> results = clubRepository.getPopularClubsWithFilters(
-                category, type, recruiting, size, cursor, getCurrentUserEmail(), popularityConfig.getMinScore()
+                size, cursor, sort, getCurrentUserEmail(), popularityConfig.getMinScore()
         );
 
         // hasNext 확인을 위해 size+1로 조회했으므로
@@ -187,8 +178,12 @@ public class ClubUserService {
         }
 
         // 다음 커서 생성
-        String nextCursor = hasNext && !results.isEmpty() ?
-                results.get(results.size() - 1).id() : null;
+        String nextCursor = null;
+        if (hasNext && !results.isEmpty()) {
+            ClubCardQueryResponse lastItem = results.get(results.size() - 1);
+            // 'getClubList'에서 사용하던 커서 생성 로직 재활용
+            nextCursor = generateNextCursor(lastItem, sort);
+        }
 
         List<ClubCardServiceResponse> clubs = results.stream()
                 .map(this::toServiceResponse)

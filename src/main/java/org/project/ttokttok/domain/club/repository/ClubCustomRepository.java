@@ -28,11 +28,9 @@ public interface ClubCustomRepository {
     List<ClubCardQueryResponse> getAllPopularClubs(String userEmail, double minScore);
 
     List<ClubCardQueryResponse> getPopularClubsWithFilters(
-            ClubCategory category,
-            ClubType type,
-            Boolean recruiting,
             int size,
             String cursor,
+            String sort,
             String userEmail,
             double minScore
     );

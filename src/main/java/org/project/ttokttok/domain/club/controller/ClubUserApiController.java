@@ -136,18 +136,16 @@ public class ClubUserApiController {
     /**
      * 전체 인기 동아리 목록 조회 API
      * "더보기" 클릭 시 보여지는 전체 인기 동아리 목록을 조회합니다.
-     * 카테고리, 분류, 모집여부 필터링과 함께 무한스크롤 또는 페이지네이션 제공됩니다.
+     * "인기도순", "멤버많은순", "최신등록순" 정렬과 무한스크롤을 지원합니다.
      *
-     * @param category 동아리 카테고리 필터 (봉사, 예술, 문화 등) - 선택사항
-     * @param type 동아리 분류 필터 (중앙, 연합, 학과) - 선택사항
-     * @param recruiting 모집 여부 필터 (true: 모집중, false: 모집마감) - 선택사항
      * @param size 페이지 크기 (기본값: 20)
      * @param cursor 무한스크롤 커서 (첫 요청시 생략)
+     * @param sort 정렬 방식 (popular : 인기도순, member_count : 멤버많은 순, latest : 최신등록 순) - 기본값 : popular
      * @return 멤버수 기준으로 정렬된 인기 동아리 목록
      * */
     @Operation(
             summary = "전체 인기 동아리 목록 조회",
-            description = "멤버수가 많은 순으로 전체 인기 동아리를 조회합니다. 필터링 및 무한스크롤 지원."
+            description = "전체 인기 동아리를 조회합니다. '인기도순', '멤버많은순', '최신등록순' 정렬 및 무한스크롤을 지원합니다."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공"),
@@ -155,22 +153,16 @@ public class ClubUserApiController {
     })
     @GetMapping("/popular")
     public ResponseEntity<ClubListResponse> getPopularClubs(
-            @Parameter(description = "카테고리 (스포츠, 예술, 문화 등)")
-            @RequestParam(required = false) ClubCategory category,
-
-            @Parameter(description = "분류 (중앙, 연합, 과 동아리)")
-            @RequestParam(required = false) ClubType type,
-
-            @Parameter(description = "모집여부 (true : 모집중, false : 모집마감)")
-            @RequestParam(required = false) Boolean recruiting,
-
             @Parameter(description = "조회 개수 (기본 20개)")
             @RequestParam(defaultValue = "20") int size,
 
             @Parameter(description = "무한스크롤 커서 (첫 요청시 생략)")
-            @RequestParam(required = false) String cursor) {
+            @RequestParam(required = false) String cursor,
 
-        ClubListServiceResponse response = clubUserService.getPopularClubsWithFilters(category, type, recruiting, size, cursor);
+            @Parameter(description = "정렬 (popular: 인기도순, member_count: 멤버많은순, latest: 최신등록순)")
+            @RequestParam(defaultValue = "popular") String sort) {
+
+        ClubListServiceResponse response = clubUserService.getPopularClubsWithFilters(size, cursor, sort);
 
         return ResponseEntity.ok(ClubListResponse.from(response));
     }
