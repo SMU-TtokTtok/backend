@@ -19,21 +19,20 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-
       - name: Generate application-prod.yml from secret
         run: |
           mkdir -p ./src/main/resources
           echo "${{ secrets.APPLICATION_PROD_YML }}" | base64 --decode > ./src/main/resources/application-prod.yml
 
-
       - name: Build with Gradle
         run: ./gradlew clean build -x test
 
-      - name: Copy JAR to root
+      - name: Copy JAR and Procfile to deploy dir
         run: |
-          cp ./build/libs/*-SNAPSHOT.jar ./app.jar
-          echo "web: java -jar app.jar" > Procfile
-
+          mkdir -p deploy
+          cp ./app.jar ./deploy/app.jar
+          cp Procfile ./deploy/Procfile
+      
       # === 디버깅용: 현재 루트에 뭐가 있는지 확인 ===
       - name: List files at root
         run: ls -al
