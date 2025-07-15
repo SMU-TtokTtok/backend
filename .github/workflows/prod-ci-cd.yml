@@ -34,6 +34,14 @@ jobs:
           cp ./build/libs/*-SNAPSHOT.jar ./app.jar
           echo "web: java -jar app.jar" > Procfile
 
+      # === 디버깅용: 현재 루트에 뭐가 있는지 확인 ===
+      - name: List files at root
+        run: ls -al
+    
+      # === 디버깅용: Procfile 내용 확인 ===
+      - name: Show Procfile contents
+        run: cat Procfile
+
       - name: Install AWS CLI and EB CLI
         run: |
           pip install --upgrade pip
