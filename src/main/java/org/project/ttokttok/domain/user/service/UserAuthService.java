@@ -160,12 +160,12 @@ public class UserAuthService {
         }
 
         // 4-4. JWT 토큰 발급
-        TokenRequest tokenRequest = TokenRequest.of(user.getId(), Role.ROLE_USER);
+        TokenRequest tokenRequest = TokenRequest.of(user.getEmail(), Role.ROLE_USER);
         TokenResponse tokens = tokenProvider.generateToken(tokenRequest);
 
         // 4-5. 리프레시 토큰 Redis 저장 (로그인 유지 옵션 고려)
         if (request.rememberMe()) {
-            refreshTokenRedisService.save(user.getId(), tokens.refreshToken());
+            refreshTokenRedisService.save(user.getEmail(), tokens.refreshToken());
         }
 
         log.info("로그인 성공: {}", user.getEmail());

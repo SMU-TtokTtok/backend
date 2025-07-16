@@ -21,7 +21,8 @@ public enum SecurityWhiteList {
             "/api/admin/auth/reissue",
             "/health",
             "/api/admin/auth/join", // todo: 추후 삭제 예정 - 관리자 가입 API 엔드포인트
-            "/api/clubs/**" // 이것도 추후 삭제 예정
+            "/api/clubs/**", // todo: 추후 삭제 예정 - 동아리 리스트 관련 내용들
+            "/api/favorites/**",  // todo: 추후 삭제 예정 - 즐겨찾기
     }),
 
     SWAGGER_URLS(new String[]{

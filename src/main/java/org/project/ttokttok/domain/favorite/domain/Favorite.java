@@ -3,16 +3,19 @@ package org.project.ttokttok.domain.favorite.domain;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.user.domain.User;
+import org.project.ttokttok.global.entity.BaseTimeEntity;
 
 import java.util.UUID;
 
 @Entity
+@Getter
 @Table(name = "user_favorites")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Favorite {
+public class Favorite extends BaseTimeEntity {
 
     @PrePersist
     private void generateId() {

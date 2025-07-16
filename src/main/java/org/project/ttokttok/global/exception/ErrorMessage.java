@@ -51,6 +51,9 @@ public enum ErrorMessage {
     // 메모 에러 메시지
     MEMO_NOT_FOUND("메모를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
 
+    // 즐겨찾기 에러 메시지
+    FAVORITE_NOT_FOUND("즐겨찾기를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+
     // S3 에러 메시지
     S3_FILE_UPLOAD_ERROR("S3 파일 업로드 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
 

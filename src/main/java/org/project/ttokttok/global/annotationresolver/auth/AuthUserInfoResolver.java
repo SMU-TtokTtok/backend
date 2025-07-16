@@ -39,6 +39,12 @@ public class AuthUserInfoResolver implements HandlerMethodArgumentResolver {
         // web 기본 요청 획득
         HttpServletRequest request = (HttpServletRequest) webRequest.getNativeRequest();
 
+        // Cookies null 체크 추가
+        Cookie[] cookies = request.getCookies();
+        if (cookies == null) {
+            return null;
+        }
+
         // "Authorization" 헤더 값 받아옴.
         String token = Arrays.stream(request.getCookies())
                 .filter(cookie -> cookie.getName().equals(ACCESS_TOKEN_COOKIE.getValue()))
