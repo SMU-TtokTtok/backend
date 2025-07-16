@@ -17,6 +17,7 @@ import org.project.ttokttok.domain.club.domain.enums.ClubType;
 import org.project.ttokttok.domain.club.service.ClubUserService;
 import org.project.ttokttok.domain.club.service.dto.response.ClubListServiceResponse;
 import org.project.ttokttok.global.annotation.auth.AuthUserInfo;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -165,5 +166,48 @@ public class ClubUserApiController {
         ClubListServiceResponse response = clubUserService.getPopularClubsWithFilters(size, cursor, sort);
 
         return ResponseEntity.ok(ClubListResponse.from(response));
+    }
+
+    /**
+     * 동아리 검색 API
+     * 동아리 이름, 소개, 카테고리 등을 기준으로 검색합니다.
+     * 검색 결과는 커서 기반 페이지네이션을 지원합니다.
+     * 검색 키워드에 따라 동아리 이름, 소개글, 카테고리 등을 포함한 결과를 반환합니다.
+     *
+     * @param keyword 검색 키워드 (동아리 이름, 소개글 등)
+     * @param sort 정렬 기준 (latest, member, popular)
+     * @param cursor 커서 기반 페이지네이션을 위한 기준 ID
+     * @param size 페이지당 로드할 개수 (기본값 20)
+     */
+    @Operation(
+            summary = "동아리 검색",
+            description = "동아리 이름, 소개, 카테고리 등을 기준으로 검색합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "검색 성공"),
+            @ApiResponse(responseCode = "400", description = "잘못된 파라미터")
+    })
+    @GetMapping("/search")
+    public ResponseEntity<ClubListResponse> searchClubs(
+            @RequestParam String keyword,
+            @RequestParam(required = false) String sort,
+            @RequestParam(required = false) String cursor,
+            @RequestParam(defaultValue = "20") int size,
+            @AuthUserInfo String tokenUserEmail,
+
+            @Parameter(description = "테스트용 사용자 이메일", required = false, hidden = false)
+            @RequestParam(required = false) String userEmail
+    ) {
+        String actualUserEmail = userEmail != null ? userEmail : tokenUserEmail;
+
+        if (actualUserEmail == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        ClubListResponse response = ClubListResponse.from(
+                clubUserService.searchClubs(keyword, sort, cursor, size, actualUserEmail)
+        );
+
+        return ResponseEntity.ok(response);
     }
 }

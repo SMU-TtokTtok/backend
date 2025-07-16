@@ -1,5 +1,6 @@
 package org.project.ttokttok.domain.club.repository;
 
+import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
@@ -213,13 +214,15 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
         if (cursor == null) {
             return null;
         }
-        
+
+        String currentSort = (sort == null) ? "latest" : sort;
+
         // 인기순 정렬일 때는 커서 기반 무한스크롤이 복잡하므로 
         // 현재는 최신순 정렬에서만 커서를 적용
 //        if ("popular".equals(sort)) {
 //            return null;  // 인기순에서는 커서 무시 (전체 조회)
 //        }
-        switch (sort) {
+        switch (currentSort) {
             case "latest":
                 // 최신순 : 생성일 기준 커서 (더 정확한 페이징)
                 try {
@@ -285,7 +288,6 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
                 ))
                 .collect(Collectors.toList());
     }
-
 
     @Override
     public List<ClubCardQueryResponse> getPopularClubsWithFilters(
@@ -466,4 +468,73 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
                 ))
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public List<ClubCardQueryResponse> searchByKeyword(String keyword, int size, String cursor, String sort, String userEmail) {
+        // Subquery for member count
+        JPQLQuery<Integer> memberCountSubQuery = JPAExpressions
+                .select(clubMember.count().intValue())
+                .from(clubMember)
+                .where(clubMember.club.id.eq(club.id));
+
+        // Subquery for bookmarked status
+        JPQLQuery<Boolean> bookmarkedSubQuery = JPAExpressions
+                .select(favorite.count().gt(0))
+                .from(favorite)
+                .where(favorite.club.id.eq(club.id).and(favorite.user.email.eq(userEmail)));
+
+        // Main query
+        JPAQuery<ClubCardQueryResponse> query = queryFactory
+                .select(Projections.constructor(ClubCardQueryResponse.class,
+                        club.id,
+                        club.name,
+                        club.clubType,
+                        club.clubCategory,
+                        club.customCategory,
+                        club.summary,
+                        club.profileImageUrl,
+                        memberCountSubQuery,
+                        club.recruiting,
+                        bookmarkedSubQuery
+                ))
+                .from(club)
+                .where(
+                        club.name.containsIgnoreCase(keyword)
+                                .or(club.summary.containsIgnoreCase(keyword))
+                                .or(club.content.containsIgnoreCase(keyword)),
+                        // Apply cursor condition from existing method
+                        cursorCondition(cursor, sort)
+                );
+
+        // Sorting logic
+        String currentSort = (sort == null) ? "latest" : sort;
+        switch (currentSort) {
+            case "popular":
+                JPQLQuery<Long> favoriteCountSubQuery = JPAExpressions
+                        .select(favorite.count())
+                        .from(favorite)
+                        .where(favorite.club.id.eq(club.id));
+
+                NumberExpression<Double> popularityScore = Expressions.numberTemplate(Double.class,
+                        "({0}) * 0.7 + ({1}) * 0.3",
+                        Expressions.numberTemplate(Long.class, "({0})", memberCountSubQuery), // Corrected line
+                        favoriteCountSubQuery);
+                query.orderBy(popularityScore.desc(), club.id.desc());
+                break;
+            case "member":
+                // To order by a subquery, it needs to be a NumberExpression
+                NumberExpression<Integer> memberCountExpression = Expressions.numberTemplate(Integer.class, "({0})", memberCountSubQuery);
+                query.orderBy(memberCountExpression.desc(), club.id.desc());
+                break;
+            case "latest":
+            default:
+                query.orderBy(club.createdAt.desc(), club.id.desc());
+                break;
+        }
+
+        query.limit(size + 1);
+
+        return query.fetch();
+    }
+
 }

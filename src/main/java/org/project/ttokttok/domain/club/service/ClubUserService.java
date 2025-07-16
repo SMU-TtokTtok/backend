@@ -213,4 +213,32 @@ public class ClubUserService {
                 return lastItem.id();
         }
     }
+
+    /**
+     * 동아리 검색 서비스 로직
+     *
+     * @param keyword 검색어
+     * @param sort 정렬 기준 (latest, member, popular)
+     * @param cursor 커서 기반 페이징용 기준 값
+     * @param size 한 페이지당 개수
+     */
+    public ClubListServiceResponse searchClubs(String keyword, String sort, String cursor, int size, String userEmail) {
+
+        // String keyword, int size, String cursor, String sort, String userEmail
+        // 실제 쿼리 호출 (정렬 기준, 커서, 사이즈 등을 기반)
+        List<ClubCardQueryResponse> queryResults = clubRepository.searchByKeyword(keyword, size, cursor, sort, userEmail);
+
+        // ClubCardQueryResponse를 ClubCardServiceResponse로 변환
+        List<ClubCardServiceResponse> results = queryResults.stream()
+                .map(this::toServiceResponse)
+                .toList();
+
+        // 다음 페이지가 있는지 판단
+        boolean hasNext = results.size() == size;
+
+        // 다음 커서 설정 (결과가 없을 경우 null)
+        String nextCursor = hasNext ? results.get(results.size() - 1).id() : null;
+
+        return new ClubListServiceResponse(results, results.size(), hasNext, nextCursor);
+    }
 }
