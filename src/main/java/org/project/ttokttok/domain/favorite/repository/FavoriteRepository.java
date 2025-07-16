@@ -8,7 +8,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
-public interface FavoriteRepository extends JpaRepository<Favorite, String> {
+public interface FavoriteRepository extends JpaRepository<Favorite, String>, FavoriteCustomRepository {
     
     /**
      * 사용자와 동아리 조합으로 즐겨찾기 조회
@@ -19,7 +19,9 @@ public interface FavoriteRepository extends JpaRepository<Favorite, String> {
     
     /**
      * 사용자의 모든 즐겨찾기 조회 (동아리 정보 포함)
+     * @deprecated 페이징 기능이 추가된 findFavoritesByUserEmail(userEmail, pageable) 사용을 권장합니다
      */
+    @Deprecated
     @Query("SELECT f FROM Favorite f " +
            "JOIN FETCH f.club c " +
            "JOIN FETCH c.admin " +

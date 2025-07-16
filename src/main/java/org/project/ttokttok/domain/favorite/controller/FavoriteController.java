@@ -7,9 +7,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.project.ttokttok.domain.favorite.controller.dto.response.FavoriteListResponse;
 import org.project.ttokttok.domain.favorite.controller.dto.response.FavoriteToggleResponse;
 import org.project.ttokttok.domain.favorite.service.FavoriteService;
+import org.project.ttokttok.domain.favorite.service.dto.request.FavoriteListServiceRequest;
 import org.project.ttokttok.domain.favorite.service.dto.request.FavoriteToggleServiceRequest;
 import org.project.ttokttok.global.annotation.auth.AuthUserInfo;
 import org.springframework.http.HttpStatus;
@@ -129,8 +131,18 @@ public class FavoriteController {
     public ResponseEntity<FavoriteListResponse> getFavoriteList(
             @Parameter(description = "JWT 토큰에서 추출한 사용자 이메일", required = false)
             @AuthUserInfo String tokenUserEmail,
+
             @Parameter(description = "테스트용 사용자 이메일", required = false, hidden = false)
-            @RequestParam(required = false) String userEmail) {
+            @RequestParam(required = false) String userEmail,
+
+            @Parameter(description = "다음 페이지 커서 ID")
+            @RequestParam(required = false) String cursor,
+
+            @Parameter(description = "조회할 개수")
+            @RequestParam(defaultValue = "20") int size,
+
+            @Parameter(description = "정렬 기준")
+            @RequestParam(defaultValue = "latest") String sort) {
 
         // 테스트용 파라미터가 있으면 사용, 없으면 JWT에서 추출한 값 사용
         String actualUserEmail = userEmail != null ? userEmail : tokenUserEmail;
@@ -139,8 +151,15 @@ public class FavoriteController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
+        FavoriteListServiceRequest request = FavoriteListServiceRequest.builder()
+                .userEmail(actualUserEmail)
+                .cursor(cursor)
+                .size(size)
+                .sort(sort)
+                .build();
+
         FavoriteListResponse response = FavoriteListResponse.from(
-                favoriteService.getFavoriteList(actualUserEmail)
+                favoriteService.getFavoriteList(request)
         );
 
         return ResponseEntity.ok(response);

@@ -8,6 +8,7 @@ import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.domain.club.service.dto.response.ClubCardServiceResponse;
 import org.project.ttokttok.domain.favorite.domain.Favorite;
 import org.project.ttokttok.domain.favorite.repository.FavoriteRepository;
+import org.project.ttokttok.domain.favorite.service.dto.request.FavoriteListServiceRequest;
 import org.project.ttokttok.domain.favorite.service.dto.request.FavoriteToggleServiceRequest;
 import org.project.ttokttok.domain.favorite.service.dto.response.FavoriteListServiceResponse;
 import org.project.ttokttok.domain.favorite.service.dto.response.FavoriteToggleServiceResponse;
@@ -16,6 +17,8 @@ import org.project.ttokttok.domain.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -71,32 +74,83 @@ public class FavoriteService {
     }
 
     /**
-     * 사용자의 즐겨찾기 목록 조회
+     * 사용자의 즐겨찾기 목록 조회 (커서 기반)
      *
-     * @param userEmail 사용자 이메일
-     * @return 즐겨찾기한 동아리 목록
+     * @param request 커서, 사이즈, 정렬 기준 포함 요청
+     * @return 커서 기반 페이징 처리된 즐겨찾기 동아리 목록
      */
     @Transactional(readOnly = true)
-    public FavoriteListServiceResponse getFavoriteList(String userEmail) {
-        log.info("즐겨찾기 목록 조회 시작 : 사용자 = {}", userEmail);
+    public FavoriteListServiceResponse getFavoriteList(FavoriteListServiceRequest request) {
+        log.info("즐겨찾기 목록 조회 시작: {}", request);
 
-        List<Favorite> favorites = favoriteRepository.findAllByUserEmailWithClub(userEmail);
-        log.info("조회된 즐겨찾기 개수 : {}", favorites.size());
-
-        // 각 즐겨찾기 정보 로그
-        for (Favorite favorite : favorites) {
-            log.info("즐겨찾기 정보 : 사용자 = {}, 동아리 = {}, 생성일 = {}",
-                    favorite.getUser().getEmail(),
-                    favorite.getClub().getId(),
-                    favorite.getCreatedAt());
+        // "popular" 정렬은 별도 처리
+        if ("popular".equals(request.sort())) {
+            return getPopularFavoriteList(request);
         }
 
-        List<ClubCardServiceResponse> favoriteClubs = favorites.stream()
+        List<Favorite> favorites = favoriteRepository.findFavoritesByRequest(request);
+
+        boolean hasNext = favorites.size() > request.size();
+        List<Favorite> actualFavorites = hasNext ? favorites.subList(0, request.size()) : favorites;
+        String nextCursor = hasNext ? actualFavorites.get(actualFavorites.size() - 1).getId() : null;
+
+        List<ClubCardServiceResponse> favoriteClubs = actualFavorites.stream()
                 .map(favorite -> toClubCardServiceResponse(favorite.getClub(), true))
                 .toList();
 
-        log.info("즐겨찾기 목록 조회 완료: 사용자={}, 개수={}", userEmail, favoriteClubs.size());
-        return FavoriteListServiceResponse.of(favoriteClubs);
+        log.info("즐겨찾기 목록 조회 완료: 사용자={}, 개수={}, 다음 페이지 존재={}", request.userEmail(), favoriteClubs.size(), hasNext);
+        return new FavoriteListServiceResponse(favoriteClubs, nextCursor, hasNext);
+    }
+
+    /**
+     * 인기순 즐겨찾기 목록 조회 (메모리 기반 처리)
+     * 'popular' 정렬은 커서 기반을 지원하지 않으므로, 첫 페이지 요청 시에만 동작합니다.
+     */
+    private FavoriteListServiceResponse getPopularFavoriteList(FavoriteListServiceRequest request) {
+        if (request.cursor() != null) {
+            // 커서가 있다는 것은 다음 페이지 요청이지만, 'popular'는 전체 목록을 정렬하므로
+            // 다음 페이지라는 개념이 없습니다. 따라서 빈 목록을 반환합니다.
+            return new FavoriteListServiceResponse(Collections.emptyList(), null, false);
+        }
+
+        // 1. 사용자의 모든 즐겨찾기 동아리 정보를 가져옵니다.
+        List<Favorite> allFavorites = favoriteRepository.findAllByUserEmailWithClub(request.userEmail());
+
+        // 2. ClubCardServiceResponse로 변환합니다.
+        List<ClubCardServiceResponse> allFavoriteClubs = allFavorites.stream()
+                .map(favorite -> toClubCardServiceResponse(favorite.getClub(), true))
+                .toList();
+
+        // 3. 인기도 점수를 기준으로 메모리에서 내림차순 정렬합니다.
+        List<ClubCardServiceResponse> sortedClubs = allFavoriteClubs.stream()
+                .sorted(Comparator.comparingDouble(this::calculatePopularityScore).reversed())
+                .toList();
+
+        // 4. 요청된 사이즈만큼 잘라서 최종 결과를 생성합니다.
+        List<ClubCardServiceResponse> resultClubs = sortedClubs.stream()
+                .limit(request.size())
+                .toList();
+
+        // 'popular' 정렬은 커서 기반 다음 페이지를 지원하지 않으므로 hasNext는 항상 false, nextCursor는 null 입니다.
+        return new FavoriteListServiceResponse(resultClubs, null, false);
+    }
+
+    /**
+     * 인기도 점수 계산 (기존 로직 반영)
+     * 점수 = (멤버 수 * 0.7) + (총 즐겨찾기 수 * 0.3)
+     *
+     * @param club 카드 응답 DTO
+     * @return 계산된 인기도 점수
+     */
+    private double calculatePopularityScore(ClubCardServiceResponse club) {
+        // ClubCardServiceResponse에서 멤버 수를 가져옵니다.
+        long memberCount = club.clubMemberCount();
+
+        // **성능 주의**: 이 부분은 각 동아리마다 즐겨찾기 수를 조회하는 추가 쿼리(N+1)를 발생시킬 수 있습니다.
+        // 즐겨찾기 수가 매우 많은 사용자의 경우 성능에 영향을 줄 수 있습니다.
+        long favoriteCount = favoriteRepository.countByClubId(club.id());
+
+        return (memberCount * 0.7) + (favoriteCount * 0.3);
     }
 
     /**
@@ -128,4 +182,4 @@ public class FavoriteService {
                 bookmarked
         );
     }
-} 
+}

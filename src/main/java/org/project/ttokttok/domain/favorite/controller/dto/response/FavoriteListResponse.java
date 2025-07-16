@@ -6,18 +6,22 @@ import org.project.ttokttok.domain.favorite.service.dto.response.FavoriteListSer
 import java.util.List;
 
 /**
- * 즐겨찾기 목록 응답 DTO
+ * 즐겨찾기 목록 응답 DTO (커서 기반)
  */
 public record FavoriteListResponse(
         List<ClubCardResponse> favoriteClubs,
-        int totalCount
+        String nextCursor, // 다음 페이지를 요청할 때 사용할 커서 (마지막 아이템의 ID)
+        boolean hasNext    // 다음 페이지 존재 여부
 ) {
     public static FavoriteListResponse from(FavoriteListServiceResponse serviceResponse) {
+        List<ClubCardResponse> clubCards = serviceResponse.favoriteClubs().stream()
+            .map(ClubCardResponse::from)
+            .toList();
+
         return new FavoriteListResponse(
-                serviceResponse.favoriteClubs().stream()
-                        .map(ClubCardResponse::from)
-                        .toList(),
-                serviceResponse.totalCount()
+                clubCards,
+                serviceResponse.nextCursor(),
+                serviceResponse.hasNext()
         );
     }
-} 
+}

@@ -1,6 +1,7 @@
 package org.project.ttokttok.domain.favorite.service.dto.response;
 
 import org.project.ttokttok.domain.club.service.dto.response.ClubCardServiceResponse;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
@@ -9,12 +10,7 @@ import java.util.List;
  */
 public record FavoriteListServiceResponse(
         List<ClubCardServiceResponse> favoriteClubs,
-        int totalCount
+        String nextCursor,
+        boolean hasNext
 ) {
-    public static FavoriteListServiceResponse of(List<ClubCardServiceResponse> favoriteClubs) {
-        return new FavoriteListServiceResponse(
-                favoriteClubs,
-                favoriteClubs.size()
-        );
-    }
 } 
