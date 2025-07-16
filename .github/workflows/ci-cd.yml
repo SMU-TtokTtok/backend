@@ -31,7 +31,7 @@ jobs:
         run: |
           JAR_NAME=$(ls build/libs/*.jar | grep -v 'plain' | head -n 1)
           JAR_BASENAME=$(basename $JAR_NAME)
-          echo "web: java -jar build/libs/$JAR_BASENAME" > Procfile
+          echo "web: java -jar $JAR_BASENAME" > Procfile
 
       - name: Prepare deployment package
         run: |
