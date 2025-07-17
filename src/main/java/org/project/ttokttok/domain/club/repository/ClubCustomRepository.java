@@ -46,4 +46,6 @@ public interface ClubCustomRepository {
             @Param("sort") String sort,
             @Param("userEmail") String userEmail
     );
+
+    long countByKeyword(String keyword);
 }

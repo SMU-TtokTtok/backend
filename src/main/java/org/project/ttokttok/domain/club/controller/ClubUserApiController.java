@@ -21,6 +21,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 
 /**
@@ -190,22 +191,19 @@ public class ClubUserApiController {
     @GetMapping("/search")
     public ResponseEntity<ClubListResponse> searchClubs(
             @RequestParam String keyword,
-            @RequestParam(required = false) String sort,
+            @Parameter(description = "정렬 (latest: 최신등록순, popular: 인기도순, member_count: 멤버많은순)")
+            @RequestParam(defaultValue = "latest") String sort,
             @RequestParam(required = false) String cursor,
             @RequestParam(defaultValue = "20") int size,
-            @AuthUserInfo String tokenUserEmail,
+            Principal principal,
 
-            @Parameter(description = "테스트용 사용자 이메일", required = false, hidden = false)
+            @Parameter(description = "테스트용 사용자 이메일", required = false, hidden = true)
             @RequestParam(required = false) String userEmail
     ) {
-        String actualUserEmail = userEmail != null ? userEmail : tokenUserEmail;
-
-        if (actualUserEmail == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+        String loginUserEmail = (principal != null) ? principal.getName() : null;
 
         ClubListResponse response = ClubListResponse.from(
-                clubUserService.searchClubs(keyword, sort, cursor, size, actualUserEmail)
+                clubUserService.searchClubs(keyword, sort, cursor, size, userEmail, loginUserEmail)
         );
 
         return ResponseEntity.ok(response);

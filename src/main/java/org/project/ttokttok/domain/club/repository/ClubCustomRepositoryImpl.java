@@ -65,10 +65,6 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
                         applyForm.club.id.eq(clubId),
                         applyForm.status.stringValue().eq(ACTIVE.getStatus())
                 )
-                .leftJoin(favorite).on(
-                        favorite.club.id.eq(clubId),
-                        favorite.user.email.eq(email)
-                )
                 .where(club.id.eq(clubId))
                 .fetchOne();
     }
@@ -80,6 +76,9 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
     }
 
     private BooleanExpression isFavorite(String clubId, String email) {
+        if (email == null) {
+            return Expressions.asBoolean(false);
+        }
         return JPAExpressions.selectOne()
                 .from(favorite)
                 .where(favorite.user.email.eq(email)
@@ -115,6 +114,15 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
             return getClubListWithNativeQuery(category, type, recruiting, grades, size, cursor, sort, userEmail);
         }
 
+        JPQLQuery<Boolean> bookmarkedSubQuery = (userEmail == null) ?
+                JPAExpressions.select(Expressions.constant(false)) :
+                JPAExpressions.select(favorite.count().gt(0))
+                        .from(favorite)
+                        .where(
+                                favorite.club.id.eq(club.id),
+                                favorite.user.email.eq(userEmail)
+                        );
+
         JPAQuery<ClubCardQueryResponse> query = queryFactory
                 .select(Projections.constructor(ClubCardQueryResponse.class,
                         club.id,                // 동아리 ID
@@ -130,14 +138,7 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
                                 .from(clubMember)
                                 .where(clubMember.club.id.eq(club.id)),
                         club.recruiting,    // 모집 여부
-
-                        // 서브쿼리로 즐겨찾기 여부 확인
-                        JPAExpressions.select(favorite.count().gt(0))
-                                .from(favorite)
-                                .where(
-                                        favorite.club.id.eq(club.id),
-                                        favorite.user.email.eq(userEmail)
-                                )
+                        bookmarkedSubQuery
                 ))
                 .from(club)
                 .where(
@@ -251,9 +252,12 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
                c.summary, c.profile_img,
                COALESCE((SELECT COUNT(*) FROM club_members cm WHERE cm.club_id = c.id), 0) as member_count,
                c.recruiting,
-               COALESCE((SELECT COUNT(*) > 0 FROM user_favorites uf 
-                        WHERE uf.club_id = c.id 
-                        AND uf.user_id = (SELECT id FROM users WHERE email = ?)), false) as bookmarked
+               CASE WHEN ? IS NOT NULL THEN 
+                    COALESCE((SELECT COUNT(*) > 0 FROM user_favorites uf 
+                             WHERE uf.club_id = c.id 
+                             AND uf.user_id = (SELECT id FROM users WHERE email = ?)), false) 
+               ELSE false 
+               END as bookmarked
         FROM clubs c
         WHERE c.recruiting = true
         AND (
@@ -268,7 +272,8 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
 
         Query query = entityManager.createNativeQuery(sql);
         query.setParameter(1, userEmail);
-        query.setParameter(2, minScore);
+        query.setParameter(2, userEmail);
+        query.setParameter(3, minScore);
 
         @SuppressWarnings("unchecked")
         List<Object[]> results = query.getResultList();
@@ -313,6 +318,15 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
                 "({0}) * 0.7 + ({1}) * 0.3",
                 memberCountSubQuery, favoriteCountSubQuery);
 
+        JPQLQuery<Boolean> bookmarkedSubQuery = (userEmail == null) ?
+                JPAExpressions.select(Expressions.constant(false)) :
+                JPAExpressions.select(favorite.count().gt(0))
+                        .from(favorite)
+                        .where(
+                                favorite.club.id.eq(club.id),
+                                favorite.user.email.eq(userEmail)
+                        );
+
         JPAQuery<ClubCardQueryResponse> query = queryFactory
                 .select(Projections.constructor(ClubCardQueryResponse.class,
                         club.id,
@@ -324,13 +338,7 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
                         club.profileImageUrl,
                         Expressions.numberTemplate(Integer.class, "({0})", memberCountSubQuery),
                         club.recruiting,
-                        // 즐겨찾기 여부
-                        JPAExpressions.select(favorite.count().gt(0))
-                                .from(favorite)
-                                .where(
-                                        favorite.club.id.eq(club.id),
-                                        favorite.user.email.eq(userEmail)
-                                )
+                        bookmarkedSubQuery
                 ))
                 .from(club)
                 .where(
@@ -373,12 +381,13 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
                c.summary, c.profile_img, 
                (SELECT COUNT(*) FROM club_members cm WHERE cm.club_id = c.id) as member_count,
                c.recruiting,
-               (SELECT COUNT(*) > 0 FROM user_favorites uf WHERE uf.club_id = c.id AND uf.user_id = (SELECT id FROM users WHERE email = ?)) as bookmarked
+               CASE WHEN ? IS NOT NULL THEN 
+                    (SELECT COUNT(*) > 0 FROM user_favorites uf WHERE uf.club_id = c.id AND uf.user_id = (SELECT id FROM users WHERE email = ?)) 
+               ELSE false 
+               END as bookmarked
         FROM clubs c
         WHERE 1=1
         """);
-
-        int paramIndex = 1;
 
         // 카테고리 조건 추가
         if (category != null) {
@@ -423,9 +432,10 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
         Query query = entityManager.createNativeQuery(sql.toString());
 
         // 파라미터 설정
-        paramIndex = 1;
+        int paramIndex = 1;
 
-        // userEmail (항상 첫 번째)
+        // userEmail (항상 첫 번째와 두 번째)
+        query.setParameter(paramIndex++, userEmail);
         query.setParameter(paramIndex++, userEmail);
 
         // 조건별 파라미터 설정
@@ -478,10 +488,11 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
                 .where(clubMember.club.id.eq(club.id));
 
         // Subquery for bookmarked status
-        JPQLQuery<Boolean> bookmarkedSubQuery = JPAExpressions
-                .select(favorite.count().gt(0))
-                .from(favorite)
-                .where(favorite.club.id.eq(club.id).and(favorite.user.email.eq(userEmail)));
+        JPQLQuery<Boolean> bookmarkedSubQuery = (userEmail == null) ?
+                JPAExpressions.select(Expressions.constant(false)) :
+                JPAExpressions.select(favorite.count().gt(0))
+                        .from(favorite)
+                        .where(favorite.club.id.eq(club.id).and(favorite.user.email.eq(userEmail)));
 
         // Main query
         JPAQuery<ClubCardQueryResponse> query = queryFactory
@@ -521,7 +532,7 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
                         favoriteCountSubQuery);
                 query.orderBy(popularityScore.desc(), club.id.desc());
                 break;
-            case "member":
+            case "member_count":
                 // To order by a subquery, it needs to be a NumberExpression
                 NumberExpression<Integer> memberCountExpression = Expressions.numberTemplate(Integer.class, "({0})", memberCountSubQuery);
                 query.orderBy(memberCountExpression.desc(), club.id.desc());
@@ -535,6 +546,19 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
         query.limit(size + 1);
 
         return query.fetch();
+    }
+
+    @Override
+    public long countByKeyword(String keyword) {
+        return queryFactory
+                .select(club.count())
+                .from(club)
+                .where(
+                        club.name.containsIgnoreCase(keyword)
+                                .or(club.summary.containsIgnoreCase(keyword))
+                                .or(club.content.containsIgnoreCase(keyword))
+                )
+                .fetchOne();
     }
 
 }

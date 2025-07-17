@@ -85,14 +85,14 @@ public class ClubUserService {
         String nextCursor = null;
         if (hasNext && !results.isEmpty()) {
             ClubCardQueryResponse lastItem = results.get(results.size() - 1);
-            nextCursor = generateNextCursor(lastItem, sort);
+            nextCursor = generateNextCursor(lastItem.id(), sort);
         }
 
         List<ClubCardServiceResponse> clubs = results.stream()
                 .map(this::toServiceResponse)
                 .toList();
 
-        return new ClubListServiceResponse(clubs, clubs.size(), hasNext, nextCursor);
+        return new ClubListServiceResponse(clubs, clubs.size(), 0L, hasNext, nextCursor);
     }
 
     /**
@@ -148,7 +148,7 @@ public class ClubUserService {
                 .map(this::toServiceResponse)
                 .toList();
 
-        return new ClubListServiceResponse(clubs, clubs.size(), false, null);
+        return new ClubListServiceResponse(clubs, clubs.size(), (long) clubs.size(), false, null);
     }
 
     /**
@@ -182,36 +182,27 @@ public class ClubUserService {
         if (hasNext && !results.isEmpty()) {
             ClubCardQueryResponse lastItem = results.get(results.size() - 1);
             // 'getClubList'에서 사용하던 커서 생성 로직 재활용
-            nextCursor = generateNextCursor(lastItem, sort);
+            nextCursor = generateNextCursor(lastItem.id(), sort);
         }
 
         List<ClubCardServiceResponse> clubs = results.stream()
                 .map(this::toServiceResponse)
                 .toList();
 
-        return new ClubListServiceResponse(clubs, clubs.size(), hasNext, nextCursor);
+        return new ClubListServiceResponse(clubs, clubs.size(), 0L, hasNext, nextCursor);
     }
 
     /**
      * 정렬 방식에 따라 다음 커서 생성
      *
-     * @param lastItem 마지막 조회된 아이템
+     * @param lastItemId 마지막으로 조회된 아이템의 ID
      * @param sort 정렬 방식
      * @return 다음 커서 문자열
      */
-    private String generateNextCursor(ClubCardQueryResponse lastItem, String sort) {
-        switch (sort) {
-            case "latest":
-                // 최신순: 생성일 기준 커서
-                // 현재는 ID 기준으로 대체 (생성일 정보가 ClubCardQueryResponse에 없음)
-                return lastItem.id();
-
-            case "popular":
-            case "member_count":
-            default:
-                // 인기순/멤버순/기본값: ID 기준 커서
-                return lastItem.id();
-        }
+    private String generateNextCursor(String lastItemId, String sort) {
+        // TODO: 정렬 방식(sort)에 따라 다른 커서 생성 로직 필요
+        // 현재는 정렬 방식에 관계없이 마지막 아이템의 ID를 커서로 사용
+        return lastItemId;
     }
 
     /**
@@ -222,23 +213,35 @@ public class ClubUserService {
      * @param cursor 커서 기반 페이징용 기준 값
      * @param size 한 페이지당 개수
      */
-    public ClubListServiceResponse searchClubs(String keyword, String sort, String cursor, int size, String userEmail) {
+    public ClubListServiceResponse searchClubs(String keyword, String sort, String cursor, int size, String testUserEmail, String loginUserEmail) {
 
-        // String keyword, int size, String cursor, String sort, String userEmail
-        // 실제 쿼리 호출 (정렬 기준, 커서, 사이즈 등을 기반)
-        List<ClubCardQueryResponse> queryResults = clubRepository.searchByKeyword(keyword, size, cursor, sort, userEmail);
+        // 1. 사용자 이메일 결정 (테스트용 이메일 우선)
+        String finalUserEmail = (testUserEmail != null) ? testUserEmail : loginUserEmail;
 
-        // ClubCardQueryResponse를 ClubCardServiceResponse로 변환
+        // 2. 전체 카운트 조회
+        long totalCount = clubRepository.countByKeyword(keyword);
+
+        // 3. 실제 데이터 조회 (무한 스크롤)
+        List<ClubCardQueryResponse> queryResults = clubRepository.searchByKeyword(keyword, size, cursor, sort, finalUserEmail);
+
+        // 4. hasNext 계산
+        boolean hasNext = queryResults.size() > size;
+        if (hasNext) {
+            queryResults = queryResults.subList(0, size); // Remove extra item
+        }
+
+        // 5. DTO 변환
         List<ClubCardServiceResponse> results = queryResults.stream()
                 .map(this::toServiceResponse)
                 .toList();
 
-        // 다음 페이지가 있는지 판단
-        boolean hasNext = results.size() == size;
+        // 6. 다음 커서 생성
+        String nextCursor = null;
+        if (hasNext && !results.isEmpty()) {
+            nextCursor = generateNextCursor(results.get(results.size() - 1).id(), sort);
+        }
 
-        // 다음 커서 설정 (결과가 없을 경우 null)
-        String nextCursor = hasNext ? results.get(results.size() - 1).id() : null;
-
-        return new ClubListServiceResponse(results, results.size(), hasNext, nextCursor);
+        // 7. 최종 응답 생성
+        return new ClubListServiceResponse(results, results.size(), totalCount, hasNext, nextCursor);
     }
 }
