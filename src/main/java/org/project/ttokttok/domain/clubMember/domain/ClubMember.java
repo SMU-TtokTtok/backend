@@ -17,8 +17,9 @@ import java.util.UUID;
 public class ClubMember extends BaseTimeEntity {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(length = 36, updatable = false, unique = true)
-    private String id = UUID.randomUUID().toString();
+    private String id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "club_id", nullable = false)
