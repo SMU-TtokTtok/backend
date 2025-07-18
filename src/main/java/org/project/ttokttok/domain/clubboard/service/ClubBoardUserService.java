@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class ClubBoardService {
+public class ClubBoardUserService {
 
     private final ClubBoardRepository clubBoardRepository;
 
