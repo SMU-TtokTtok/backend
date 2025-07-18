@@ -6,6 +6,7 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.core.env.Environment;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Component;
 public class DummyDataLoader implements ApplicationRunner {
     private final JdbcTemplate jdbcTemplate;
     private final Environment environment;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
@@ -104,6 +106,7 @@ public class DummyDataLoader implements ApplicationRunner {
 
     private void loadUserData() {
         log.info("User 데이터 로딩...");
+        String encodedPassword = passwordEncoder.encode("TestPass123!");
         String sql = """
                 -- 2. 사용자 데이터 50개 (동아리 멤버용)
                 INSERT INTO users (id, email, password, name, is_email_verified, terms_agreed, created_at, updated_at) VALUES
@@ -159,9 +162,9 @@ public class DummyDataLoader implements ApplicationRunner {
                 ('user-050', 'student050@sangmyung.kr', '$2a$10$dummyUserPassword050', '값태영', true, true, NOW(), NOW()),
                 
                 -- 테스트용 사용자 추가 (비밀번호: TestPass123!)
-                ('test-user-001', 'test@sangmyung.kr', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.', '테스트 사용자', true, true, NOW(), NOW()),
-                ('test-user-002', 'admin@sangmyung.kr', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.', '관리자 테스트', true, true, NOW(), NOW());
-                """;
+                ('test-user-001', 'test@sangmyung.kr', '%s', '테스트 사용자', true, true, NOW(), NOW()),
+                ('test-user-002', 'admin@sangmyung.kr', '%s', '관리자 테스트', true, true, NOW(), NOW());
+                """.formatted(encodedPassword, encodedPassword);
         jdbcTemplate.execute(sql);
     }
 

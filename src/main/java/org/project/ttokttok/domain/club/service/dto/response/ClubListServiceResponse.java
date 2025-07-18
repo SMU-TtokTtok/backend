@@ -9,6 +9,7 @@ import java.util.List;
 public record ClubListServiceResponse(
         List<ClubCardServiceResponse> clubs,
         int size,
+        long totalCount,
         boolean hasNext,
         String nextCursor
 ) {

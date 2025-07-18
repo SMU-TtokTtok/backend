@@ -15,6 +15,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -44,7 +45,7 @@ public class SecurityConfig {
     // 패스워드 인코더 빈 등록
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return PasswordEncoderFactories.createDelegatingPasswordEncoder();
+        return new BCryptPasswordEncoder();
     }
 
     // 커스텀 토큰 필터 빈 등록
@@ -67,6 +68,7 @@ public class SecurityConfig {
                         request
                                 .requestMatchers(ALLOW_URLS.getEndPoints()).permitAll() // JWT를 가질 수 없는 요청은 허용
                                 .requestMatchers(SWAGGER_URLS.getEndPoints()).permitAll()
+                                .requestMatchers("/api/clubs/**").permitAll() // 동아리 조회는 비로그인 사용자도 가능
                                 .requestMatchers("/api/admin/**").hasRole("ADMIN") // ADMIN 권한이 필요한 요청은 검증
                                 .anyRequest().authenticated() // 나머지 요청은 인증 필요
                 )

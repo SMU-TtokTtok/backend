@@ -11,6 +11,7 @@ import java.util.List;
 public record ClubListResponse(
         List<ClubCardResponse> clubs,        // 동아리 카드 리스트
         int size,                           // 현재 로드된 개수
+        long totalCount,                    // 전체 개수
         boolean hasNext,                    // 다음 데이터 존재 여부
         String nextCursor                   // 다음 요청시 사용할 커서 (null이면 마지막)
 ) {
@@ -20,6 +21,7 @@ public record ClubListResponse(
                         .map(ClubCardResponse::from)
                         .toList(),
                 response.size(),
+                response.totalCount(),
                 response.hasNext(),
                 response.nextCursor()
         );
