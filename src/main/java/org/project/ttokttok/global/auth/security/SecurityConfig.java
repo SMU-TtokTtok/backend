@@ -68,6 +68,7 @@ public class SecurityConfig {
                         request
                                 .requestMatchers(ALLOW_URLS.getEndPoints()).permitAll() // JWT를 가질 수 없는 요청은 허용
                                 .requestMatchers(SWAGGER_URLS.getEndPoints()).permitAll()
+                                .requestMatchers("/api/clubs/**").permitAll() // 동아리 조회는 비로그인 사용자도 가능
                                 .requestMatchers("/api/admin/**").hasRole("ADMIN") // ADMIN 권한이 필요한 요청은 검증
                                 .anyRequest().authenticated() // 나머지 요청은 인증 필요
                 )

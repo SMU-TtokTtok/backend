@@ -48,7 +48,7 @@ public class ClubUserApiController {
     private final ClubUserService clubService;
 
     @GetMapping("/{clubId}/content")
-    public ResponseEntity<ClubDetailResponse> getClubIntroduction(@AuthUserInfo String username,
+    public ResponseEntity<ClubDetailResponse> getClubIntroduction(@Parameter(hidden = true) @AuthUserInfo String username,
                                                                   @PathVariable String clubId) {
         ClubDetailResponse response = ClubDetailResponse.from(
                 clubUserService.getClubIntroduction(username, clubId)
@@ -103,10 +103,11 @@ public class ClubUserApiController {
             @RequestParam(required = false) String cursor,    // cursor 추가
 
             @Parameter(description = "정렬 (latest: 최신등록순, popular: 인기도순, member_count: 멤버많은순)")
-            @RequestParam(defaultValue = "latest") String sort) {
+            @RequestParam(defaultValue = "latest") String sort,
+            @Parameter(hidden = true) @AuthUserInfo String userEmail) {
 
         ClubListResponse response = ClubListResponse.from(
-                clubUserService.getClubList(category, type, recruiting, grades, size, cursor, sort)
+                clubUserService.getClubList(category, type, recruiting, grades, size, cursor, sort, userEmail)
         );
 
         return ResponseEntity.ok(response);
@@ -129,9 +130,9 @@ public class ClubUserApiController {
             @ApiResponse(responseCode = "400", description = "잘못된 파라미터")
     })
     @GetMapping("/banner/popular")
-    public ResponseEntity<ClubListResponse> getBannerPopularClubs() {
+    public ResponseEntity<ClubListResponse> getBannerPopularClubs(@Parameter(hidden = true) @AuthUserInfo String userEmail) {
         // 프론트엔드 요청으로 기존의 page, size 페이지네이션 방식의 파라미터 제거
-        ClubListServiceResponse response = clubUserService.getAllPopularClubs();
+        ClubListServiceResponse response = clubUserService.getAllPopularClubs(userEmail);
         return ResponseEntity.ok(ClubListResponse.from(response));
     }
 
@@ -162,9 +163,10 @@ public class ClubUserApiController {
             @RequestParam(required = false) String cursor,
 
             @Parameter(description = "정렬 (popular: 인기도순, member_count: 멤버많은순, latest: 최신등록순)")
-            @RequestParam(defaultValue = "popular") String sort) {
+            @RequestParam(defaultValue = "popular") String sort,
+            @Parameter(hidden = true) @AuthUserInfo String userEmail) {
 
-        ClubListServiceResponse response = clubUserService.getPopularClubsWithFilters(size, cursor, sort);
+        ClubListServiceResponse response = clubUserService.getPopularClubsWithFilters(size, cursor, sort, userEmail);
 
         return ResponseEntity.ok(ClubListResponse.from(response));
     }
@@ -195,15 +197,10 @@ public class ClubUserApiController {
             @RequestParam(defaultValue = "latest") String sort,
             @RequestParam(required = false) String cursor,
             @RequestParam(defaultValue = "20") int size,
-            Principal principal,
-
-            @Parameter(description = "테스트용 사용자 이메일", required = false, hidden = true)
-            @RequestParam(required = false) String userEmail
+            @Parameter(hidden = true) @AuthUserInfo String userEmail
     ) {
-        String loginUserEmail = (principal != null) ? principal.getName() : null;
-
         ClubListResponse response = ClubListResponse.from(
-                clubUserService.searchClubs(keyword, sort, cursor, size, userEmail, loginUserEmail)
+                clubUserService.searchClubs(keyword, sort, cursor, size, userEmail)
         );
 
         return ResponseEntity.ok(response);

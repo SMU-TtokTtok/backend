@@ -69,10 +69,11 @@ public class ClubUserService {
             List<ApplicableGrade> grades, // 추가
             int size,
             String cursor,
-            String sort) {
+            String sort,
+            String userEmail) {
 
         List<ClubCardQueryResponse> results = clubRepository.getClubList(
-                category, type, recruiting, grades, size, cursor, sort, getCurrentUserEmail()
+                category, type, recruiting, grades, size, cursor, sort, userEmail
         );
 
         // hasNext 확인을 위해 size+1로 조회했으므로
@@ -138,10 +139,10 @@ public class ClubUserService {
      *
      * @return 전체 인기 동아리 목록
      * */
-    public ClubListServiceResponse getAllPopularClubs() {
+    public ClubListServiceResponse getAllPopularClubs(String userEmail) {
 
         List<ClubCardQueryResponse> results = clubRepository.getAllPopularClubs(
-                getCurrentUserEmail(), popularityConfig.getMinScore()
+                userEmail, popularityConfig.getMinScore()
         );
 
         List<ClubCardServiceResponse> clubs = results.stream()
@@ -164,11 +165,12 @@ public class ClubUserService {
     public ClubListServiceResponse getPopularClubsWithFilters(
             int size,
             String cursor,
-            String sort) {
+            String sort,
+            String userEmail) {
 
         // 새로운 복합 인기도 기준 메서드 적용
         List<ClubCardQueryResponse> results = clubRepository.getPopularClubsWithFilters(
-                size, cursor, sort, getCurrentUserEmail(), popularityConfig.getMinScore()
+                size, cursor, sort, userEmail, popularityConfig.getMinScore()
         );
 
         // hasNext 확인을 위해 size+1로 조회했으므로
@@ -213,35 +215,32 @@ public class ClubUserService {
      * @param cursor 커서 기반 페이징용 기준 값
      * @param size 한 페이지당 개수
      */
-    public ClubListServiceResponse searchClubs(String keyword, String sort, String cursor, int size, String testUserEmail, String loginUserEmail) {
+    public ClubListServiceResponse searchClubs(String keyword, String sort, String cursor, int size, String userEmail) {
 
-        // 1. 사용자 이메일 결정 (테스트용 이메일 우선)
-        String finalUserEmail = (testUserEmail != null) ? testUserEmail : loginUserEmail;
-
-        // 2. 전체 카운트 조회
+        // 1. 전체 카운트 조회
         long totalCount = clubRepository.countByKeyword(keyword);
 
-        // 3. 실제 데이터 조회 (무한 스크롤)
-        List<ClubCardQueryResponse> queryResults = clubRepository.searchByKeyword(keyword, size, cursor, sort, finalUserEmail);
+        // 2. 실제 데이터 조회 (무한 스크롤)
+        List<ClubCardQueryResponse> queryResults = clubRepository.searchByKeyword(keyword, size, cursor, sort, userEmail);
 
-        // 4. hasNext 계산
+        // 3. hasNext 계산
         boolean hasNext = queryResults.size() > size;
         if (hasNext) {
             queryResults = queryResults.subList(0, size); // Remove extra item
         }
 
-        // 5. DTO 변환
+        // 4. DTO 변환
         List<ClubCardServiceResponse> results = queryResults.stream()
                 .map(this::toServiceResponse)
                 .toList();
 
-        // 6. 다음 커서 생성
+        // 5. 다음 커서 생성
         String nextCursor = null;
         if (hasNext && !results.isEmpty()) {
             nextCursor = generateNextCursor(results.get(results.size() - 1).id(), sort);
         }
 
-        // 7. 최종 응답 생성
+        // 6. 최종 응답 생성
         return new ClubListServiceResponse(results, results.size(), totalCount, hasNext, nextCursor);
     }
 }
