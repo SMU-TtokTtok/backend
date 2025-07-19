@@ -11,6 +11,7 @@ import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
+import org.project.ttokttok.domain.applyform.domain.ApplyForm;
 import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
 import org.project.ttokttok.domain.club.domain.enums.ClubCategory;
 import org.project.ttokttok.domain.club.domain.enums.ClubType;
@@ -20,8 +21,11 @@ import org.project.ttokttok.domain.clubMember.domain.QClubMember;
 import org.project.ttokttok.domain.favorite.domain.QFavorite;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.project.ttokttok.domain.applyform.domain.QApplyForm.applyForm;
 import static org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus.ACTIVE;
@@ -38,37 +42,53 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
 
     @Override
     public ClubDetailQueryResponse getClubIntroduction(String clubId, String email) {
-        return queryFactory
-                .select(Projections.constructor(ClubDetailQueryResponse.class,
+        // 기본 Club 정보 조회
+        var clubResult = queryFactory
+                .select(
                         club.name,
                         club.clubType,
                         club.clubCategory,
                         club.customCategory,
                         isFavorite(clubId, email),
-                        club.recruiting,
                         club.summary,
                         club.profileImageUrl,
                         getClubMemberCount(clubId),
-                        applyForm.applyStartDate,
-                        applyForm.applyEndDate,
-                        getGrades(clubId),
-                        applyForm.maxApplyCount,
                         club.content
-                ))
-                .from(club)
-                .leftJoin(applyForm).on(
-                        applyForm.club.id.eq(clubId),
-                        applyForm.status.stringValue().eq(ACTIVE.getStatus())
                 )
+                .from(club)
                 .where(club.id.eq(clubId))
                 .fetchOne();
+
+        if (clubResult == null) {
+            return null;
+        }
+
+        // ApplyForm 정보 조회 (있으면 사용, 없으면 기본값)
+        ApplyForm activeForm = queryFactory
+                .selectFrom(applyForm)
+                .where(applyForm.club.id.eq(clubId)
+                        .and(applyForm.status.stringValue().eq(ACTIVE.getStatus())))
+                .fetchOne();
+
+        return new ClubDetailQueryResponse(
+                clubResult.get(0, String.class),           // name
+                clubResult.get(1, ClubType.class),         // clubType
+                clubResult.get(2, ClubCategory.class),     // clubCategory
+                clubResult.get(3, String.class),           // customCategory
+                Boolean.TRUE.equals(clubResult.get(4, Boolean.class)), // bookmarked
+                activeForm != null && activeForm.getStatus() == ACTIVE, // recruiting ✅ ApplyForm 기준
+                clubResult.get(5, String.class),           // summary
+                clubResult.get(6, String.class),           // profileImageUrl
+                clubResult.get(7, Integer.class) != null ? clubResult.get(7, Integer.class) : 0, // clubMemberCount
+                activeForm != null ? activeForm.getApplyStartDate() : null,    // ✅ ApplyForm 기준
+                activeForm != null ? activeForm.getApplyEndDate() : null,      // ✅ ApplyForm 기준
+                activeForm != null ? activeForm.getGrades() : new HashSet<>(), // ✅ ApplyForm 기준
+                activeForm != null ? activeForm.getMaxApplyCount() : 0,        // ✅ ApplyForm 기준
+                clubResult.get(8, String.class)            // content
+        );
     }
 
-    private JPQLQuery<ApplicableGrade> getGrades(String clubId) {
-        return JPAExpressions.select(applyForm.grades.any())
-                .from(applyForm)
-                .where(applyForm.club.id.eq(clubId));
-    }
+
 
     private BooleanExpression isFavorite(String clubId, String email) {
         if (email == null) {
@@ -82,7 +102,7 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
     }
 
     private JPQLQuery<Integer> getClubMemberCount(String clubId) {
-        return JPAExpressions.select(clubMember.count().intValue())
+        return JPAExpressions.select(clubMember.count().coalesce(0L).intValue())
                 .from(clubMember)
                 .where(clubMember.club.id.eq(clubId));
     }

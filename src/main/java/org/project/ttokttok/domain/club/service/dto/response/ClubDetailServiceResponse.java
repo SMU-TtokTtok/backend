@@ -6,6 +6,7 @@ import org.project.ttokttok.domain.club.domain.enums.ClubCategory;
 import org.project.ttokttok.domain.club.domain.enums.ClubType;
 import org.project.ttokttok.domain.club.repository.dto.ClubDetailQueryResponse;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -39,8 +40,8 @@ public record ClubDetailServiceResponse(
                 .summary(response.summary())
                 .profileImageUrl(response.profileImageUrl())
                 .clubMemberCount(response.clubMemberCount())
-                .applyStartDate(response.applyStartDate())
-                .applyDeadLine(response.applyDeadLine())
+                .applyStartDate(response.applyStartDate() != null ? response.applyStartDate().atStartOfDay() : null)
+                .applyDeadLine(response.applyDeadLine() != null ? response.applyDeadLine().atStartOfDay() : null)
                 .grades(response.grades())
                 .maxApplyCount(response.maxApplyCount())
                 .content(response.content())

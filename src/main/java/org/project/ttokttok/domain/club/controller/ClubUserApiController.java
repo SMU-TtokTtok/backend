@@ -47,6 +47,14 @@ public class ClubUserApiController {
      */
     private final ClubUserService clubService;
 
+    @Operation(
+            summary = "동아리 소개글 조회",
+            description = "동아리 타고 들어갔을때의 소개글과 모집인원, 지원가능 학년 등을 조회합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "400", description = "잘못된 파라미터")
+    })
     @GetMapping("/{clubId}/content")
     public ResponseEntity<ClubDetailResponse> getClubIntroduction(@Parameter(hidden = true) @AuthUserInfo String username,
                                                                   @PathVariable String clubId) {
