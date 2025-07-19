@@ -1,4 +1,4 @@
-package org.project.ttokttok.domain.admin.controller.auth;
+package org.project.ttokttok.domain.admin.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.Cookie;
@@ -10,6 +10,8 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.project.ttokttok.domain.admin.controller.dto.request.AdminLoginRequest;
 import org.project.ttokttok.domain.admin.domain.Admin;
 import org.project.ttokttok.domain.admin.repository.AdminRepository;
+import org.project.ttokttok.domain.club.domain.Club;
+import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -34,6 +36,9 @@ class AdminAuthApiControllerTest {
 
     @Autowired
     private AdminRepository adminRepository;
+
+    @Autowired
+    private ClubRepository clubRepository;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -73,7 +78,8 @@ class AdminAuthApiControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(cookie().exists(ACCESS_TOKEN_COOKIE_NAME))
                 .andExpect(cookie().exists(REFRESH_TOKEN_COOKIE_NAME))
-                .andExpect(jsonPath("$").value("Admin Login Success"));
+                .andExpect(jsonPath("$.clubId").exists())
+                .andExpect(jsonPath("$.clubName").exists());
     }
 
     @Test
@@ -306,6 +312,12 @@ class AdminAuthApiControllerTest {
     private void createAdmin(String username, String rawPassword) {
         String encodedPassword = passwordEncoder.encode(rawPassword);
         Admin admin = Admin.adminJoin(username, encodedPassword);
-        adminRepository.save(admin);
+        admin = adminRepository.save(admin);
+
+        // Club 생성 및 Admin과 연결
+        Club club = Club.builder()
+                .admin(admin)
+                .build();
+        clubRepository.save(club);
     }
 }

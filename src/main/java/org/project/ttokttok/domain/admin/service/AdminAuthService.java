@@ -7,6 +7,8 @@ import org.project.ttokttok.domain.admin.repository.AdminRepository;
 import org.project.ttokttok.domain.admin.service.dto.request.AdminLoginServiceRequest;
 import org.project.ttokttok.domain.admin.service.dto.response.AdminLoginServiceResponse;
 import org.project.ttokttok.domain.admin.service.dto.response.ReissueServiceResponse;
+import org.project.ttokttok.domain.club.domain.Club;
+import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.global.auth.jwt.dto.request.TokenRequest;
 import org.project.ttokttok.global.auth.jwt.dto.response.TokenResponse;
 import org.project.ttokttok.global.auth.jwt.exception.InvalidRefreshTokenException;
@@ -25,6 +27,7 @@ public class AdminAuthService {
 
     private final PasswordEncoder passwordEncoder;
     private final AdminRepository adminRepository;
+    private final ClubRepository clubRepository;
     private final TokenProvider tokenProvider;
     private final RefreshTokenRedisService refreshTokenRedisService;
 
@@ -36,7 +39,12 @@ public class AdminAuthService {
 
         TokenResponse tokenResponse = getTokenResponse(targetAdmin.getUsername());
 
-        return AdminLoginServiceResponse.from(tokenResponse);
+        Club findClub = clubRepository.findByAdminUsername(targetAdmin.getUsername())
+                .orElseThrow(AdminNotFoundException::new);
+
+        return AdminLoginServiceResponse.of(
+                tokenResponse, findClub.getId(), findClub.getName()
+        );
     }
 
     public void logout(String username) {

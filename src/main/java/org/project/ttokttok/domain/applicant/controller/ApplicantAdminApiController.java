@@ -143,4 +143,6 @@ public class ApplicantAdminApiController {
         return ResponseEntity.noContent()
                 .build();
     }
+
+    // TODO: 지원자 합불 여부 결정
 }

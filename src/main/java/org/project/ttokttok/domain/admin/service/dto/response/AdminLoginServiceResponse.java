@@ -6,12 +6,16 @@ import org.project.ttokttok.global.auth.jwt.dto.response.TokenResponse;
 @Builder
 public record AdminLoginServiceResponse(
         String accessToken,
-        String refreshToken
+        String refreshToken,
+        String clubId,
+        String clubName
 ) {
-    public static AdminLoginServiceResponse from(final TokenResponse tokens) {
+    public static AdminLoginServiceResponse of(final TokenResponse tokens, String clubId, String clubName) {
         return AdminLoginServiceResponse.builder()
                 .accessToken(tokens.accessToken())
                 .refreshToken(tokens.refreshToken())
+                .clubId(clubId)
+                .clubName(clubName)
                 .build();
     }
 }

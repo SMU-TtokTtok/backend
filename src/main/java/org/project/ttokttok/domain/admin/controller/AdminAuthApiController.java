@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.project.ttokttok.domain.admin.controller.dto.request.AdminJoinRequest;
 import org.project.ttokttok.domain.admin.controller.dto.request.AdminLoginRequest;
+import org.project.ttokttok.domain.admin.controller.dto.response.AdminLoginResponse;
 import org.project.ttokttok.domain.admin.service.AdminAuthService;
 import org.project.ttokttok.domain.admin.service.dto.response.AdminLoginServiceResponse;
 import org.project.ttokttok.domain.admin.service.dto.response.ReissueServiceResponse;
@@ -30,7 +31,7 @@ public class AdminAuthApiController {
     private final CookieUtil cookieUtil;
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody @Valid AdminLoginRequest request) {
+    public ResponseEntity<AdminLoginResponse> login(@RequestBody @Valid AdminLoginRequest request) {
         AdminLoginServiceResponse response = adminAuthService.login(request.toServiceRequest());
 
         // 액세스 토큰 쿠키 생성
@@ -50,7 +51,11 @@ public class AdminAuthApiController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
                 .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
-                .body("Admin Login Success");
+                .body(
+                        AdminLoginResponse.of(
+                                response.clubId(),
+                                response.clubName())
+                );
     }
 
     @PostMapping("/logout")

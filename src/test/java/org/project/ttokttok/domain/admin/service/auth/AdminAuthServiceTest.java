@@ -14,6 +14,8 @@ import org.project.ttokttok.domain.admin.service.AdminAuthService;
 import org.project.ttokttok.domain.admin.service.dto.request.AdminLoginServiceRequest;
 import org.project.ttokttok.domain.admin.service.dto.response.AdminLoginServiceResponse;
 import org.project.ttokttok.domain.admin.service.dto.response.ReissueServiceResponse;
+import org.project.ttokttok.domain.club.domain.Club;
+import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.global.auth.jwt.dto.request.TokenRequest;
 import org.project.ttokttok.global.auth.jwt.dto.response.TokenResponse;
 import org.project.ttokttok.global.auth.jwt.exception.InvalidRefreshTokenException;
@@ -41,6 +43,9 @@ class AdminAuthServiceTest {
     private AdminRepository adminRepository;
 
     @Mock
+    private ClubRepository clubRepository;
+
+    @Mock
     private PasswordEncoder passwordEncoder;
 
     @Mock
@@ -59,23 +64,35 @@ class AdminAuthServiceTest {
         String username = "adminUser";
         String password = "securePassword";
         Admin mockAdmin = mock(Admin.class);
+        String clubId = "club-123";
+        String clubName = "Test Club";
+        Club mockClub = mock(Club.class);
+
         TokenResponse mockTokenResponse = new TokenResponse("any-access-token", "any-refresh-token");
         AdminLoginServiceRequest request = new AdminLoginServiceRequest(username, password);
+
         // When
         when(adminRepository.findByUsername(username)).thenReturn(Optional.of(mockAdmin));
+        when(mockAdmin.getUsername()).thenReturn(username);
         doNothing().when(mockAdmin).validatePassword(eq(password), any(PasswordEncoder.class));
         when(tokenProvider.generateToken(any(TokenRequest.class))).thenReturn(mockTokenResponse);
+        when(clubRepository.findByAdminUsername(eq(username))).thenReturn(Optional.of(mockClub));
+        when(mockClub.getId()).thenReturn(clubId);
+        when(mockClub.getName()).thenReturn(clubName);
 
         AdminLoginServiceResponse result = adminAuthService.login(request);
 
         // Then
         assertNotNull(result);
-        assertNotNull(result.accessToken());
-        assertNotNull(result.refreshToken());
+        assertEquals("any-access-token", result.accessToken());
+        assertEquals("any-refresh-token", result.refreshToken());
+        assertEquals(clubId, result.clubId());
+        assertEquals(clubName, result.clubName());
 
         verify(adminRepository).findByUsername(username);
         verify(mockAdmin).validatePassword(password, passwordEncoder);
         verify(tokenProvider).generateToken(any(TokenRequest.class));
+        verify(clubRepository).findByAdminUsername(username);
     }
 
     @Test
