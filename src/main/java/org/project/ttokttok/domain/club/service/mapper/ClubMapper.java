@@ -22,7 +22,7 @@ public interface ClubMapper {
     @Mapping(target = "customCategory", source = "customCategory", qualifiedByName = "unwrapNullable")
     @Mapping(target = "summary", source = "summary", qualifiedByName = "unwrapNullable")
     @Mapping(target = "content", source = "content", qualifiedByName = "unwrapNullable")
-    @Mapping(target = "recruiting", source = "recruiting", qualifiedByName = "unwrapNullable")
+    // recruiting 필드는 ApplyForm에서 관리하므로 제거
     void updateClubFromRequest(@MappingTarget Club club, ClubContentUpdateServiceRequest request);
 
     /**

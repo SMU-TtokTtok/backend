@@ -35,7 +35,6 @@ public class FavoriteController {
      * 즐겨찾기 토글 API
      * 동아리를 즐겨찾기에 추가하거나 제거합니다.
      *
-     * @param tokenUserEmail 인증된 사용자 이메일
      * @param clubId 동아리 ID
      * @return 즐겨찾기 토글 결과
      */
@@ -114,7 +113,7 @@ public class FavoriteController {
             @Parameter(description = "조회할 개수")
             @RequestParam(defaultValue = "20") int size,
 
-            @Parameter(description = "정렬 기준")
+            @Parameter(description = "정렬 (latest: 최신등록순, popular: 인기도순, member_count: 멤버많은순)")
             @RequestParam(defaultValue = "latest") String sort) {
 
         if (userEmail == null) {

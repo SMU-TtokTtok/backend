@@ -63,11 +63,12 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
             return null;
         }
 
-        // ApplyForm 정보 조회 (있으면 사용, 없으면 기본값)
+        // ApplyForm 정보 조회 (grades도 함께 fetch)
         ApplyForm activeForm = queryFactory
                 .selectFrom(applyForm)
+                .leftJoin(applyForm.grades).fetchJoin()
                 .where(applyForm.club.id.eq(clubId)
-                        .and(applyForm.status.stringValue().eq(ACTIVE.getStatus())))
+                        .and(applyForm.status.eq(ACTIVE)))
                 .fetchOne();
 
         return new ClubDetailQueryResponse(
@@ -76,7 +77,7 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
                 clubResult.get(2, ClubCategory.class),     // clubCategory
                 clubResult.get(3, String.class),           // customCategory
                 Boolean.TRUE.equals(clubResult.get(4, Boolean.class)), // bookmarked
-                activeForm != null && activeForm.getStatus() == ACTIVE, // recruiting ✅ ApplyForm 기준
+                activeForm != null, // ApplyForm이 존재하면 모집중
                 clubResult.get(5, String.class),           // summary
                 clubResult.get(6, String.class),           // profileImageUrl
                 clubResult.get(7, Integer.class) != null ? clubResult.get(7, Integer.class) : 0, // clubMemberCount
@@ -139,14 +140,18 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
                         JPAExpressions.select(clubMember.count().intValue())
                                 .from(clubMember)
                                 .where(clubMember.club.id.eq(club.id)),
-                        club.recruiting,
+                        // ApplyForm이 ACTIVE 상태인지 확인
+                        JPAExpressions.select(applyForm.count().gt(0))
+                                .from(applyForm)
+                                .where(applyForm.club.id.eq(club.id)
+                                        .and(applyForm.status.eq(ACTIVE))),
                         bookmarkedSubQuery
                 ))
                 .from(club)
                 .where(
                         categoryEq(category),
                         typeEq(type),
-                        recruitingEq(recruiting),
+                        // recruitingEq(recruiting), - ApplyForm에서 관리하므로 제거
                         gradesEq(grades),
                         cursorCondition(cursor, sort)
                 );
@@ -160,12 +165,12 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
             query.leftJoin(club.clubMembers, joinedClubMember)
                     .leftJoin(joinedFavorite).on(joinedFavorite.club.eq(club))
                     .groupBy(club.id, club.name, club.clubType, club.clubCategory,
-                            club.customCategory, club.summary, club.profileImageUrl, club.recruiting)
+                            club.customCategory, club.summary, club.profileImageUrl)
                     .orderBy(popularityScore.desc(), club.id.desc());
         } else if ("member_count".equals(sort)) {
             query.leftJoin(club.clubMembers, clubMember)
                     .groupBy(club.id, club.name, club.clubType, club.clubCategory,
-                            club.customCategory, club.summary, club.profileImageUrl, club.recruiting)
+                            club.customCategory, club.summary, club.profileImageUrl)
                     .orderBy(clubMember.count().desc(), club.id.desc());
         } else {
             query.orderBy(club.createdAt.desc(), club.id.desc());
@@ -184,7 +189,8 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
     }
 
     private BooleanExpression recruitingEq(Boolean recruiting) {
-        return recruiting != null ? club.recruiting.eq(recruiting) : null;
+        // recruiting은 이제 ApplyForm에서 관리되므로 항상 null 반환
+        return null;
     }
 
     private BooleanExpression gradesEq(List<ApplicableGrade> grades) {
@@ -192,20 +198,13 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
             return null;
         }
 
-        // JSONB 컬럼을 텍스트로 캐스팅하고, 각 학년 이름이 포함되어 있는지 OR 조건으로 묶어서 확인
-        BooleanExpression combinedExpression = null;
-        for (ApplicableGrade grade : grades) {
-            // "FIRST_GRADE", "SECOND_GRADE" 와 같이 큰따옴표로 감싸진 문자열을 찾도록 조건 구성
-            BooleanExpression likeExpression = Expressions.stringTemplate("cast({0} as text)", club.targetGrades)
-                    .containsIgnoreCase("\"" + grade.name() + "\"");
-
-            if (combinedExpression == null) {
-                combinedExpression = likeExpression;
-            } else {
-                combinedExpression = combinedExpression.or(likeExpression);
-            }
-        }
-        return combinedExpression;
+        // ApplyForm이 있고 해당 grades 중 하나라도 포함하는 동아리 찾기
+        return JPAExpressions.selectOne()
+                .from(applyForm)
+                .where(applyForm.club.id.eq(club.id)
+                        .and(applyForm.status.eq(ACTIVE))
+                        .and(applyForm.grades.any().in(grades)))
+                .exists();
     }
 
     private BooleanExpression cursorCondition(String cursor, String sort) {
@@ -259,12 +258,16 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
                         club.summary,
                         club.profileImageUrl,
                         Expressions.numberTemplate(Integer.class, "({0})", memberCountSubQuery),
-                        club.recruiting,
+                        // ApplyForm이 ACTIVE 상태인지 확인
+                        JPAExpressions.select(applyForm.count().gt(0))
+                                .from(applyForm)
+                                .where(applyForm.club.id.eq(club.id)
+                                        .and(applyForm.status.eq(ACTIVE))),
                         bookmarkedSubQuery
                 ))
                 .from(club)
                 .where(
-                        club.recruiting.isTrue(),
+                        // club.recruiting.isTrue(), - ApplyForm에서 관리하므로 제거
                         popularityScore.goe(minScore)
                 )
                 .orderBy(popularityScore.desc(), club.id.desc())
@@ -308,7 +311,11 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
                         club.summary,
                         club.profileImageUrl,
                         Expressions.numberTemplate(Integer.class, "({0})", memberCountSubQuery),
-                        club.recruiting,
+                        // ApplyForm이 ACTIVE 상태인지 확인
+                        JPAExpressions.select(applyForm.count().gt(0))
+                                .from(applyForm)
+                                .where(applyForm.club.id.eq(club.id)
+                                        .and(applyForm.status.eq(ACTIVE))),
                         bookmarkedSubQuery
                 ))
                 .from(club)
@@ -350,7 +357,11 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
                         club.summary,
                         club.profileImageUrl,
                         memberCountSubQuery,
-                        club.recruiting,
+                        // ApplyForm이 ACTIVE 상태인지 확인
+                        JPAExpressions.select(applyForm.count().gt(0))
+                                .from(applyForm)
+                                .where(applyForm.club.id.eq(club.id)
+                                        .and(applyForm.status.eq(ACTIVE))),
                         bookmarkedSubQuery
                 ))
                 .from(club)

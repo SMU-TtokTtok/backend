@@ -63,6 +63,15 @@ public class DummyDataLoader implements ApplicationRunner {
 
             // 6. ClubBoard 데이터
             loadClubBoardData();
+
+            // 7. ApplyForm 데이터
+            loadApplyFormData();
+            
+            // 8. 테스트용 ApplyForm 데이터 (확실히 들어가도록)
+            loadTestApplyFormData();
+            
+            // 9. 추가 엣지 케이스 ApplyForm 데이터
+            loadEdgeCaseApplyFormData();
         } catch (Exception e) {
             log.error("더미 데이터 로딩 중 오류 발생", e);
         }
@@ -175,37 +184,37 @@ public class DummyDataLoader implements ApplicationRunner {
         log.info("Club 데이터 로딩...");
         String sql = """
             -- 2. 동아리 데이터 30개 (다양한 카테고리, 타입, 모집상태, 모집대상)
-            INSERT INTO clubs (id, name, profile_img, summary, club_type, club_category, custom_category, content, recruiting, admin_id, target_grades, created_at, updated_at) VALUES
-            ('club-001', '그림사랑', 'https://example.com/art1.jpg', '미술을 사랑하는 사람들의 모임', 'CENTRAL', 'CULTURE', '회화', '함께 그림을 그리고 전시회도 개최하는 동아리입니다.', true, 'admin-001', '["FIRST_GRADE", "SECOND_GRADE", "THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW()),
-            ('club-002', '상명축구부', 'https://example.com/soccer.jpg', '축구를 통한 건강한 대학생활', 'CENTRAL', 'SPORTS', '축구', '매주 정기적인 훈련과 대회 참가를 통해 실력을 키웁니다.', true, 'admin-002', '["FIRST_GRADE", "SECOND_GRADE", "THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW()),
-            ('club-003', '코딩마스터', 'https://example.com/code.jpg', '프로그래밍 실력 향상을 위한 스터디', 'DEPARTMENT', 'ACADEMIC', '프로그래밍', '다양한 프로그래밍 언어를 배우고 프로젝트를 진행합니다.', true, 'admin-003', '["SECOND_GRADE", "THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW()),
-            ('club-004', '나눔봉사단', 'https://example.com/volunteer.jpg', '사회에 보탬이 되는 봉사활동', 'UNION', 'VOLUNTEER', '사회봉사', '지역사회를 위한 다양한 봉사활동을 함께 합니다.', true, 'admin-004', '["FIRST_GRADE", "SECOND_GRADE", "THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW()),
-            ('club-005', '연극반', 'https://example.com/drama.jpg', '무대 위에서 펼치는 우리들의 이야기', 'CENTRAL', 'CULTURE', '연극', '연기, 연출, 무대제작 등 연극의 모든 것을 배웁니다.', false, 'admin-005', '["SECOND_GRADE", "THIRD_GRADE"]', NOW(), NOW()),
-            ('club-006', '농구동아리', 'https://example.com/basketball.jpg', '슛! 골! 함께하는 농구의 즐거움', 'CENTRAL', 'SPORTS', '농구', '농구 실력 향상과 팀워크를 기르는 동아리입니다.', true, 'admin-006', '["FIRST_GRADE", "SECOND_GRADE", "THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW()),
-            ('club-007', '영어회화', 'https://example.com/english.jpg', 'English Conversation Club', 'DEPARTMENT', 'ACADEMIC', '외국어', '원어민과 함께하는 영어회화 스터디입니다.', true, 'admin-007', '["FIRST_GRADE", "SECOND_GRADE"]', NOW(), NOW()),
-            ('club-008', '포토클럽', 'https://example.com/photo.jpg', '셔터 속에 담는 아름다운 순간들', 'UNION', 'CULTURE', '사진', '사진 촬영 기법부터 보정까지 모든 것을 배웁니다.', true, 'admin-008', '["FIRST_GRADE", "SECOND_GRADE", "THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW()),
-            ('club-009', '밴드동아리', 'https://example.com/band.jpg', '음악으로 하나되는 우리', 'CENTRAL', 'CULTURE', '음악', '다양한 장르의 음악을 연주하는 밴드 동아리입니다.', false, 'admin-009', '["THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW()),
-            ('club-010', '테니스부', 'https://example.com/tennis.jpg', '라켓과 공으로 만나는 우아한 스포츠', 'CENTRAL', 'SPORTS', '테니스', '테니스 기초부터 실전까지 체계적인 훈련을 합니다.', true, 'admin-010', '["FIRST_GRADE", "SECOND_GRADE", "THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW()),
-            ('club-011', '독서모임', 'https://example.com/book.jpg', '책 속에서 찾는 지혜와 감동', 'DEPARTMENT', 'CULTURE', '독서', '한 달에 한 권씩 책을 읽고 토론하는 모임입니다.', true, 'admin-011', '["FIRST_GRADE", "SECOND_GRADE"]', NOW(), NOW()),
-            ('club-012', '댄스크루', 'https://example.com/dance.jpg', '리듬 속에서 찾는 자유로움', 'UNION', 'CULTURE', '댄스', '다양한 장르의 댄스를 배우고 공연도 합니다.', true, 'admin-012', '["FIRST_GRADE", "SECOND_GRADE", "THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW()),
-            ('club-013', '토론동아리', 'https://example.com/debate.jpg', '논리와 사고력을 기르는 토론', 'DEPARTMENT', 'ACADEMIC', '토론', '시사 이슈부터 철학적 주제까지 다양한 토론을 합니다.', false, 'admin-013', '["THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW()),
-            ('club-014', '환경지키미', 'https://example.com/env.jpg', '지구를 위한 작은 실천', 'UNION', 'VOLUNTEER', '환경보호', '환경보호 캠페인과 실천 활동을 함께 합니다.', true, 'admin-014', '["FIRST_GRADE", "SECOND_GRADE", "THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW()),
-            ('club-015', '영화감상', 'https://example.com/movie.jpg', '스크린 속 이야기와 함께하는 시간', 'DEPARTMENT', 'CULTURE', '영화', '다양한 장르의 영화를 보고 감상을 나누는 모임입니다.', true, 'admin-015', '["FIRST_GRADE", "SECOND_GRADE", "THIRD_GRADE"]', NOW(), NOW()),
-            ('club-016', '기타동아리', 'https://example.com/guitar.jpg', '기타 선율로 전하는 마음', 'CENTRAL', 'CULTURE', '기타', '어쿠스틱 기타부터 일렉 기타까지 배웁니다.', true, 'admin-016', '["FIRST_GRADE", "SECOND_GRADE", "THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW()),
-            ('club-017', '배드민턴', 'https://example.com/badminton.jpg', '셔틀콕과 함께하는 즐거운 운동', 'UNION', 'SPORTS', '배드민턴', '배드민턴을 통한 건강관리와 친목도모를 합니다.', false, 'admin-017', '["SECOND_GRADE", "THIRD_GRADE"]', NOW(), NOW()),
-            ('club-018', '요리연구회', 'https://example.com/cooking.jpg', '맛있는 요리로 행복한 시간', 'DEPARTMENT', 'CULTURE', '요리', '다양한 요리를 배우고 레시피를 공유합니다.', true, 'admin-018', '["FIRST_GRADE", "SECOND_GRADE", "THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW()),
-            ('club-019', '사랑나눔', 'https://example.com/love.jpg', '사랑을 실천하는 봉사활동', 'CENTRAL', 'VOLUNTEER', '복지봉사', '복지시설과 연계한 봉사활동을 정기적으로 합니다.', true, 'admin-019', '["FIRST_GRADE", "SECOND_GRADE", "THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW()),
-            ('club-020', '체스동아리', 'https://example.com/chess.jpg', '논리적 사고를 키우는 체스', 'DEPARTMENT', 'ACADEMIC', '체스', '체스 실력 향상과 대회 참가를 목표로 합니다.', false, 'admin-020', '["THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW()),
-            ('club-021', '창작문예', 'https://example.com/writing.jpg', '글로 표현하는 나만의 세계', 'UNION', 'CULTURE', '문예창작', '소설, 시, 수필 등 다양한 장르의 글쓰기를 합니다.', true, 'admin-021', '["SECOND_GRADE", "THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW()),
-            ('club-022', '러닝크루', 'https://example.com/running.jpg', '건강한 달리기 문화 만들기', 'CENTRAL', 'SPORTS', '달리기', '함께 달리며 건강도 챙기고 친목도 다집니다.', true, 'admin-022', '["FIRST_GRADE", "SECOND_GRADE", "THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW()),
-            ('club-023', '과학탐구', 'https://example.com/science.jpg', '과학의 신비로운 세계 탐험', 'DEPARTMENT', 'ACADEMIC', '과학', '실험과 탐구를 통해 과학의 재미를 느껴봅시다.', true, 'admin-023', '["SECOND_GRADE", "THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW()),
-            ('club-024', '여행동아리', 'https://example.com/travel.jpg', '함께 떠나는 특별한 여행', 'UNION', 'ETC', '여행', '국내외 여행을 기획하고 추억을 만듭니다.', false, 'admin-024', '["THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW()),
-            ('club-025', '카페동아리', 'https://example.com/cafe.jpg', '커피와 함께하는 여유로운 시간', 'DEPARTMENT', 'ETC', '카페', '커피에 대해 배우고 카페 문화를 즐깁니다.', true, 'admin-025', '["FIRST_GRADE", "SECOND_GRADE", "THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW()),
-            ('club-026', '스터디모임', 'https://example.com/study.jpg', '함께 공부하며 성장하기', 'UNION', 'ACADEMIC', '스터디', '전공 공부부터 자격증까지 함께 공부합니다.', true, 'admin-026', '["FIRST_GRADE", "SECOND_GRADE", "THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW()),
-            ('club-027', '게임동아리', 'https://example.com/game.jpg', '게임을 통한 즐거운 소통', 'CENTRAL', 'ETC', '게임', '다양한 게임을 즐기며 친목을 도모합니다.', true, 'admin-027', '["FIRST_GRADE", "SECOND_GRADE", "THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW()),
-            ('club-028', '등산동아리', 'https://example.com/hiking.jpg', '자연과 함께하는 건강한 등산', 'UNION', 'SPORTS', '등산', '정기적인 등산을 통해 자연을 느끼고 체력을 기릅니다.', false, 'admin-028', '["SECOND_GRADE", "THIRD_GRADE"]', NOW(), NOW()),
-            ('club-029', '기독교동아리', 'https://example.com/christian.jpg', '믿음 안에서 함께하는 공동체', 'CENTRAL', 'RELIGION', '기독교', '신앙 생활과 봉사활동을 함께 하는 동아리입니다.', true, 'admin-029', '["FIRST_GRADE", "SECOND_GRADE", "THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW()),
-            ('club-030', '자유동아리', 'https://example.com/free.jpg', '자유로운 활동과 새로운 도전', 'DEPARTMENT', 'ETC', '자유활동', '정해진 틀 없이 자유롭게 활동하는 동아리입니다.', true, 'admin-030', '["FIRST_GRADE", "SECOND_GRADE", "THIRD_GRADE", "FOURTH_GRADE"]', NOW(), NOW());
+            INSERT INTO clubs (id, name, profile_img, summary, club_type, club_category, custom_category, content, admin_id, created_at, updated_at) VALUES
+            ('club-001', '그림사랑', 'https://example.com/art1.jpg', '미술을 사랑하는 사람들의 모임', 'CENTRAL', 'CULTURE', '회화', '함께 그림을 그리고 전시회도 개최하는 동아리입니다.', 'admin-001', NOW(), NOW()),
+            ('club-002', '상명축구부', 'https://example.com/soccer.jpg', '축구를 통한 건강한 대학생활', 'CENTRAL', 'SPORTS', '축구', '매주 정기적인 훈련과 대회 참가를 통해 실력을 키웁니다.', 'admin-002', NOW(), NOW()),
+            ('club-003', '코딩마스터', 'https://example.com/code.jpg', '프로그래밍 실력 향상을 위한 스터디', 'DEPARTMENT', 'ACADEMIC', '프로그래밍', '다양한 프로그래밍 언어를 배우고 프로젝트를 진행합니다.', 'admin-003', NOW(), NOW()),
+            ('club-004', '나눔봉사단', 'https://example.com/volunteer.jpg', '사회에 보탬이 되는 봉사활동', 'UNION', 'VOLUNTEER', '사회봉사', '지역사회를 위한 다양한 봉사활동을 함께 합니다.', 'admin-004', NOW(), NOW()),
+            ('club-005', '연극반', 'https://example.com/drama.jpg', '무대 위에서 펼치는 우리들의 이야기', 'CENTRAL', 'CULTURE', '연극', '연기, 연출, 무대제작 등 연극의 모든 것을 배웁니다.', 'admin-005', NOW(), NOW()),
+            ('club-006', '농구동아리', 'https://example.com/basketball.jpg', '슛! 골! 함께하는 농구의 즐거움', 'CENTRAL', 'SPORTS', '농구', '농구 실력 향상과 팀워크를 기르는 동아리입니다.', 'admin-006', NOW(), NOW()),
+            ('club-007', '영어회화', 'https://example.com/english.jpg', 'English Conversation Club', 'DEPARTMENT', 'ACADEMIC', '외국어', '원어민과 함께하는 영어회화 스터디입니다.', 'admin-007', NOW(), NOW()),
+            ('club-008', '포토클럽', 'https://example.com/photo.jpg', '셔터 속에 담는 아름다운 순간들', 'UNION', 'CULTURE', '사진', '사진 촬영 기법부터 보정까지 모든 것을 배웁니다.', 'admin-008', NOW(), NOW()),
+            ('club-009', '밴드동아리', 'https://example.com/band.jpg', '음악으로 하나되는 우리', 'CENTRAL', 'CULTURE', '음악', '다양한 장르의 음악을 연주하는 밴드 동아리입니다.', 'admin-009', NOW(), NOW()),
+            ('club-010', '테니스부', 'https://example.com/tennis.jpg', '라켓과 공으로 만나는 우아한 스포츠', 'CENTRAL', 'SPORTS', '테니스', '테니스 기초부터 실전까지 체계적인 훈련을 합니다.', 'admin-010', NOW(), NOW()),
+            ('club-011', '독서모임', 'https://example.com/book.jpg', '책 속에서 찾는 지혜와 감동', 'DEPARTMENT', 'CULTURE', '독서', '한 달에 한 권씩 책을 읽고 토론하는 모임입니다.', 'admin-011', NOW(), NOW()),
+            ('club-012', '댄스크루', 'https://example.com/dance.jpg', '리듬 속에서 찾는 자유로움', 'UNION', 'CULTURE', '댄스', '다양한 장르의 댄스를 배우고 공연도 합니다.', 'admin-012', NOW(), NOW()),
+            ('club-013', '토론동아리', 'https://example.com/debate.jpg', '논리와 사고력을 기르는 토론', 'DEPARTMENT', 'ACADEMIC', '토론', '시사 이슈부터 철학적 주제까지 다양한 토론을 합니다.', 'admin-013', NOW(), NOW()),
+            ('club-014', '환경지키미', 'https://example.com/env.jpg', '지구를 위한 작은 실천', 'UNION', 'VOLUNTEER', '환경보호', '환경보호 캠페인과 실천 활동을 함께 합니다.', 'admin-014', NOW(), NOW()),
+            ('club-015', '영화감상', 'https://example.com/movie.jpg', '스크린 속 이야기와 함께하는 시간', 'DEPARTMENT', 'CULTURE', '영화', '다양한 장르의 영화를 보고 감상을 나누는 모임입니다.', 'admin-015', NOW(), NOW()),
+            ('club-016', '기타동아리', 'https://example.com/guitar.jpg', '기타 선율로 전하는 마음', 'CENTRAL', 'CULTURE', '기타', '어쿠스틱 기타부터 일렉 기타까지 배웁니다.', 'admin-016', NOW(), NOW()),
+            ('club-017', '배드민턴', 'https://example.com/badminton.jpg', '셔틀콕과 함께하는 즐거운 운동', 'UNION', 'SPORTS', '배드민턴', '배드민턴을 통한 건강관리와 친목도모를 합니다.', 'admin-017', NOW(), NOW()),
+            ('club-018', '요리연구회', 'https://example.com/cooking.jpg', '맛있는 요리로 행복한 시간', 'DEPARTMENT', 'CULTURE', '요리', '다양한 요리를 배우고 레시피를 공유합니다.', 'admin-018', NOW(), NOW()),
+            ('club-019', '사랑나눔', 'https://example.com/love.jpg', '사랑을 실천하는 봉사활동', 'CENTRAL', 'VOLUNTEER', '복지봉사', '복지시설과 연계한 봉사활동을 정기적으로 합니다.', 'admin-019', NOW(), NOW()),
+            ('club-020', '체스동아리', 'https://example.com/chess.jpg', '논리적 사고를 키우는 체스', 'DEPARTMENT', 'ACADEMIC', '체스', '체스 실력 향상과 대회 참가를 목표로 합니다.', 'admin-020', NOW(), NOW()),
+            ('club-021', '창작문예', 'https://example.com/writing.jpg', '글로 표현하는 나만의 세계', 'UNION', 'CULTURE', '문예창작', '소설, 시, 수필 등 다양한 장르의 글쓰기를 합니다.', 'admin-021', NOW(), NOW()),
+            ('club-022', '러닝크루', 'https://example.com/running.jpg', '건강한 달리기 문화 만들기', 'CENTRAL', 'SPORTS', '달리기', '함께 달리며 건강도 챙기고 친목도 다집니다.', 'admin-022', NOW(), NOW()),
+            ('club-023', '과학탐구', 'https://example.com/science.jpg', '과학의 신비로운 세계 탐험', 'DEPARTMENT', 'ACADEMIC', '과학', '실험과 탐구를 통해 과학의 재미를 느껴봅시다.', 'admin-023', NOW(), NOW()),
+            ('club-024', '여행동아리', 'https://example.com/travel.jpg', '함께 떠나는 특별한 여행', 'UNION', 'ETC', '여행', '국내외 여행을 기획하고 추억을 만듭니다.', 'admin-024', NOW(), NOW()),
+            ('club-025', '카페동아리', 'https://example.com/cafe.jpg', '커피와 함께하는 여유로운 시간', 'DEPARTMENT', 'ETC', '카페', '커피에 대해 배우고 카페 문화를 즐깁니다.', 'admin-025', NOW(), NOW()),
+            ('club-026', '스터디모임', 'https://example.com/study.jpg', '함께 공부하며 성장하기', 'UNION', 'ACADEMIC', '스터디', '전공 공부부터 자격증까지 함께 공부합니다.', 'admin-026', NOW(), NOW()),
+            ('club-027', '게임동아리', 'https://example.com/game.jpg', '게임을 통한 즐거운 소통', 'CENTRAL', 'ETC', '게임', '다양한 게임을 즐기며 친목을 도모합니다.', 'admin-027', NOW(), NOW()),
+            ('club-028', '등산동아리', 'https://example.com/hiking.jpg', '자연과 함께하는 건강한 등산', 'UNION', 'SPORTS', '등산', '정기적인 등산을 통해 자연을 느끼고 체력을 기릅니다.', 'admin-028', NOW(), NOW()),
+            ('club-029', '기독교동아리', 'https://example.com/christian.jpg', '믿음 안에서 함께하는 공동체', 'CENTRAL', 'RELIGION', '기독교', '신앙 생활과 봉사활동을 함께 하는 동아리입니다.', 'admin-029', NOW(), NOW()),
+            ('club-030', '자유동아리', 'https://example.com/free.jpg', '자유로운 활동과 새로운 도전', 'DEPARTMENT', 'ETC', '자유활동', '정해진 틀 없이 자유롭게 활동하는 동아리입니다.', 'admin-030', NOW(), NOW());
             """;
         jdbcTemplate.execute(sql);
     }
@@ -801,5 +810,153 @@ public class DummyDataLoader implements ApplicationRunner {
                 (gen_random_uuid(), '공연 준비 모임', '다음 달 공연을 위한 준비 모임을 진행합니다.<br/>참여 가능하신 분들은 댓글 부탁드려요!', 'club-012', NOW() - INTERVAL '1 week', NOW() - INTERVAL '1 week');
                 """;
         jdbcTemplate.execute(sql);
+    }
+
+    private void loadApplyFormData() {
+        log.info("ApplyForm 데이터 로딩...");
+        String sql = """
+                -- 7. 지원폼 데이터 (주요 동아리들만)
+                INSERT INTO applyforms (id, title, sub_title, status, apply_start_date, apply_end_date, 
+                                       has_interview, max_apply_count, club_id, form_json, created_at, updated_at) VALUES
+                
+                -- 모집중인 동아리들 (ACTIVE enum 값 사용)
+                (gen_random_uuid(), '그림사랑 신입 모집', '미술을 사랑하는 분들을 찾습니다', 'ACTIVE', 
+                 '2025-03-01', '2025-03-15', false, 10, 'club-001', '[]', NOW(), NOW()),
+                 
+                (gen_random_uuid(), '상명축구부 모집', '함께 뛸 선수를 찾습니다', 'ACTIVE',
+                 '2025-03-01', '2025-03-20', true, 15, 'club-002', '[]', NOW(), NOW()),
+                 
+                (gen_random_uuid(), '코딩마스터 모집', '프로그래밍 실력을 키워요', 'ACTIVE',
+                 '2025-03-05', '2025-03-25', false, 12, 'club-003', '[]', NOW(), NOW()),
+                 
+                (gen_random_uuid(), '나눔봉사단 모집', '함께 봉사해요', 'ACTIVE',
+                 '2025-03-01', '2025-03-30', false, 20, 'club-004', '[]', NOW(), NOW()),
+                 
+                (gen_random_uuid(), '농구동아리 모집', '농구 좋아하세요?', 'ACTIVE',
+                 '2025-03-10', '2025-03-25', true, 8, 'club-006', '[]', NOW(), NOW()),
+                 
+                (gen_random_uuid(), '영어회화 모집', '영어 실력 향상하기', 'ACTIVE',
+                 '2025-03-01', '2025-03-15', false, 15, 'club-007', '[]', NOW(), NOW()),
+                 
+                (gen_random_uuid(), '포토클럽 모집', '사진 찍는 재미를 느껴보세요', 'ACTIVE',
+                 '2025-03-05', '2025-03-20', false, 10, 'club-008', '[]', NOW(), NOW()),
+                 
+                (gen_random_uuid(), '테니스부 모집', '테니스로 건강하게', 'ACTIVE',
+                 '2025-03-01', '2025-03-18', false, 12, 'club-010', '[]', NOW(), NOW()),
+                 
+                (gen_random_uuid(), '독서모임 모집', '책을 통한 성장', 'ACTIVE',
+                 '2025-03-01', '2025-03-12', false, 8, 'club-011', '[]', NOW(), NOW()),
+                 
+                (gen_random_uuid(), '댄스크루 모집', '춤으로 하나되어요', 'ACTIVE',
+                 '2025-03-01', '2025-03-22', true, 15, 'club-012', '[]', NOW(), NOW());
+                """;
+        jdbcTemplate.execute(sql);
+        
+        // ApplyForm grades 데이터 추가
+        loadApplyFormGrades();
+    }
+
+    private void loadApplyFormGrades() {
+        log.info("ApplyForm Grades 데이터 로딩 (다양한 학년 조합)...");
+        
+        // 1학년만 모집 (신입생 전용)
+        String sql1 = """
+                INSERT INTO applyform_grades (applyform_id, grades) 
+                SELECT af.id, 'FIRST_GRADE'
+                FROM applyforms af
+                WHERE af.club_id IN ('club-001', 'club-007');
+                """;
+        
+        // 1,2학년 모집 (저학년 대상)
+        String sql2 = """
+                INSERT INTO applyform_grades (applyform_id, grades) 
+                SELECT af.id, grade_value
+                FROM applyforms af
+                CROSS JOIN (VALUES ('FIRST_GRADE'), ('SECOND_GRADE')) AS grades(grade_value)
+                WHERE af.club_id IN ('club-002', 'club-008');
+                """;
+        
+        // 3,4학년 모집 (고학년 대상)  
+        String sql3 = """
+                INSERT INTO applyform_grades (applyform_id, grades) 
+                SELECT af.id, grade_value
+                FROM applyforms af
+                CROSS JOIN (VALUES ('THIRD_GRADE'), ('FOURTH_GRADE')) AS grades(grade_value)
+                WHERE af.club_id IN ('club-003', 'club-010');
+                """;
+        
+        // 전체 학년 모집 (모든 학년 환영)
+        String sql4 = """
+                INSERT INTO applyform_grades (applyform_id, grades) 
+                SELECT af.id, grade_value
+                FROM applyforms af
+                CROSS JOIN (VALUES ('FIRST_GRADE'), ('SECOND_GRADE'), ('THIRD_GRADE'), ('FOURTH_GRADE')) AS grades(grade_value)
+                WHERE af.club_id IN ('club-004', 'club-006', 'club-011', 'club-012');
+                """;
+        
+        jdbcTemplate.execute(sql1);
+        jdbcTemplate.execute(sql2);
+        jdbcTemplate.execute(sql3);
+        jdbcTemplate.execute(sql4);
+    }
+
+    private void loadTestApplyFormData() {
+        log.info("테스트용 ApplyForm 데이터 로딩...");
+        
+        // 먼저 기존 데이터 삭제
+        jdbcTemplate.execute("DELETE FROM applyform_grades WHERE applyform_id IN (SELECT id FROM applyforms WHERE club_id = 'club-001')");
+        jdbcTemplate.execute("DELETE FROM applyforms WHERE club_id = 'club-001'");
+        
+        // club-001용 ApplyForm 생성
+        String applyFormId = "test-applyform-001";
+        String sql1 = """
+                INSERT INTO applyforms (id, title, sub_title, status, apply_start_date, apply_end_date, 
+                                       has_interview, max_apply_count, club_id, form_json, created_at, updated_at) 
+                                 VALUES (?, '그림사랑 신입 모집 테스트', '미술을 사랑하는 분들을 찾습니다', 'ACTIVE', 
+                        '2025-03-01', '2025-03-15', false, 10, 'club-001', '[]', NOW(), NOW())
+                """;
+        jdbcTemplate.update(sql1, applyFormId);
+        
+        // grades 데이터 추가 (1학년만 - 신입생 전용)
+        String sql2 = """
+                INSERT INTO applyform_grades (applyform_id, grades) VALUES 
+                (?, 'FIRST_GRADE')
+                """;
+        jdbcTemplate.update(sql2, applyFormId);
+        
+        log.info("테스트용 ApplyForm 데이터 로딩 완료: {}", applyFormId);
+    }
+
+    private void loadEdgeCaseApplyFormData() {
+        log.info("엣지 케이스 ApplyForm 데이터 로딩...");
+        
+        // 마감된 모집 (INACTIVE 상태) - recruiting: false가 되어야 함
+        String inactiveFormId = "inactive-applyform-001";
+        String sql1 = """
+                INSERT INTO applyforms (id, title, sub_title, status, apply_start_date, apply_end_date, 
+                                       has_interview, max_apply_count, club_id, form_json, created_at, updated_at) 
+                VALUES (?, '연극반 모집 마감', '모집이 마감되었습니다', 'INACTIVE', 
+                        '2025-02-01', '2025-02-15', false, 5, 'club-005', '[]', NOW(), NOW())
+                """;
+        jdbcTemplate.update(sql1, inactiveFormId);
+        
+        // 2학년만 모집하는 특별한 케이스
+        String specialFormId = "special-applyform-001";  
+        String sql2 = """
+                INSERT INTO applyforms (id, title, sub_title, status, apply_start_date, apply_end_date, 
+                                       has_interview, max_apply_count, club_id, form_json, created_at, updated_at) 
+                VALUES (?, '밴드동아리 2학년 특별모집', '2학년만 특별 모집합니다', 'ACTIVE', 
+                        '2025-03-01', '2025-03-20', true, 3, 'club-009', '[]', NOW(), NOW())
+                """;
+        jdbcTemplate.update(sql2, specialFormId);
+        
+        // grades 데이터 추가
+        String sql3 = """
+                INSERT INTO applyform_grades (applyform_id, grades) VALUES 
+                (?, 'SECOND_GRADE')
+                """;
+        jdbcTemplate.update(sql3, specialFormId);
+        
+        log.info("엣지 케이스 ApplyForm 데이터 로딩 완료");
     }
 }
