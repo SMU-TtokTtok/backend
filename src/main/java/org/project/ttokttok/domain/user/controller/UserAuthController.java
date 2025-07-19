@@ -152,7 +152,12 @@ public class UserAuthController {
      */
     @Operation(
             summary = "로그인",
-            description = "이메일과 비밀번호로 로그인합니다. 로그인 유지 옵션 선택 시 리프레시 토큰이 쿠키로 설정됩니다."
+            description = """
+                    이메일과 비밀번호로 로그인합니다. 로그인 유지 옵션 선택 시 리프레시 토큰이 쿠키로 설정됩니다.
+                    테스트 로그인 계정:
+                    - 이메일: test@sangmyung.kr
+                    - 비밀번호 : TestPass123!
+                    """
     )
     @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(

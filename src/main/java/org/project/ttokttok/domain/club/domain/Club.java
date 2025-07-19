@@ -2,16 +2,16 @@ package org.project.ttokttok.domain.club.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
+
 import org.project.ttokttok.domain.admin.domain.Admin;
-import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
+
 import org.project.ttokttok.domain.club.domain.enums.ClubCategory;
 import org.project.ttokttok.domain.club.domain.enums.ClubType;
 import org.project.ttokttok.domain.clubMember.domain.ClubMember;
 import org.project.ttokttok.global.entity.BaseTimeEntity;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -52,13 +52,7 @@ public class Club extends BaseTimeEntity {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 
-    @Setter
-    @Column(nullable = false)
-    private boolean recruiting; // 모집여부
-
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(columnDefinition = "jsonb")
-    private Set<ApplicableGrade> targetGrades = new HashSet<>();
+    // recruiting과 targetGrades는 ApplyForm에서 관리
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "admin_id", nullable = false)
@@ -67,13 +61,7 @@ public class Club extends BaseTimeEntity {
     @OneToMany(mappedBy = "club", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<ClubMember> clubMembers = new ArrayList<>();
 
-    public Set<ApplicableGrade> getTargetGrades() {
-        return targetGrades;
-    }
 
-    public void setTargetGrades(Set<ApplicableGrade> targetGrades) {
-        this.targetGrades = targetGrades;
-    }
 
     // todo: 추후에 안내 메시지 등으로 변경 필요.
     @Builder
@@ -86,7 +74,5 @@ public class Club extends BaseTimeEntity {
         this.clubCategory = null;
         this.customCategory = "";
         this.content = "동아리 소개를 적어주세요.";
-        this.recruiting = false;
-        this.targetGrades = new HashSet<>();  // 추가
     }
 }

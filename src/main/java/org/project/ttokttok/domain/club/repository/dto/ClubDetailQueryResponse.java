@@ -4,6 +4,7 @@ import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
 import org.project.ttokttok.domain.club.domain.enums.ClubCategory;
 import org.project.ttokttok.domain.club.domain.enums.ClubType;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -20,8 +21,8 @@ public record ClubDetailQueryResponse(
         String profileImageUrl, // 동아리 프로필 이미지 URL,
         int clubMemberCount,
 
-        LocalDateTime applyStartDate,
-        LocalDateTime applyDeadLine,
+        LocalDate applyStartDate,    // LocalDate로 변경
+        LocalDate applyDeadLine,     // LocalDate로 변경
         Set<ApplicableGrade> grades, // 지원 가능한 학년
         int maxApplyCount, // 최대 지원자 수
 

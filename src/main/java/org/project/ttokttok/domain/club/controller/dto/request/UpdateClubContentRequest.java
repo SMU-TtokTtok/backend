@@ -56,7 +56,7 @@ public record UpdateClubContentRequest(
                 .summary(summary)
                 .profileImage(profileImage)
                 .content(content)
-                .recruiting(recruiting)
+                // .recruiting(recruiting) - ApplyForm에서 관리하므로 제거
                 .applyStartDate(applyStartDate)
                 .applyEndDate(applyEndDate)
                 .grades(grades)

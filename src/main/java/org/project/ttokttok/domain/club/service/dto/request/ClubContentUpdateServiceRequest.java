@@ -22,7 +22,7 @@ public record ClubContentUpdateServiceRequest(
         JsonNullable<String> summary,
         JsonNullable<MultipartFile> profileImage,
         JsonNullable<String> content,
-        JsonNullable<Boolean> recruiting,
+        // recruiting은 ApplyForm에서 관리
         JsonNullable<LocalDate> applyStartDate,
         JsonNullable<LocalDate> applyEndDate,
         JsonNullable<Set<ApplicableGrade>> grades,

@@ -1,0 +1,34 @@
+-- 7. 지원폼 데이터 (주요 동아리들만)
+INSERT INTO applyforms (id, title, sub_title, status, apply_start_date, apply_end_date, 
+                                       has_interview, max_apply_count, club_id, form_json, created_at, updated_at) VALUES
+
+-- 모집중인 동아리들 (ACTIVE enum 값 사용)
+(gen_random_uuid(), '그림사랑 신입 모집', '미술을 사랑하는 분들을 찾습니다', 'ACTIVE', 
+ '2025-03-01', '2025-03-15', false, 10, 'club-001', '[]', NOW(), NOW()),
+ 
+(gen_random_uuid(), '상명축구부 모집', '함께 뛸 선수를 찾습니다', 'ACTIVE',
+ '2025-03-01', '2025-03-20', true, 15, 'club-002', '[]', NOW(), NOW()),
+ 
+(gen_random_uuid(), '코딩마스터 모집', '프로그래밍 실력을 키워요', 'ACTIVE',
+ '2025-03-05', '2025-03-25', false, 12, 'club-003', '[]', NOW(), NOW()),
+ 
+(gen_random_uuid(), '나눔봉사단 모집', '함께 봉사해요', 'ACTIVE',
+ '2025-03-01', '2025-03-30', false, 20, 'club-004', '[]', NOW(), NOW()),
+ 
+(gen_random_uuid(), '농구동아리 모집', '농구 좋아하세요?', 'ACTIVE',
+ '2025-03-10', '2025-03-25', true, 8, 'club-006', '[]', NOW(), NOW()),
+ 
+(gen_random_uuid(), '영어회화 모집', '영어 실력 향상하기', 'ACTIVE',
+ '2025-03-01', '2025-03-15', false, 15, 'club-007', '[]', NOW(), NOW()),
+ 
+(gen_random_uuid(), '포토클럽 모집', '사진 찍는 재미를 느껴보세요', 'ACTIVE',
+ '2025-03-05', '2025-03-20', false, 10, 'club-008', '[]', NOW(), NOW()),
+ 
+(gen_random_uuid(), '테니스부 모집', '테니스로 건강하게', 'ACTIVE',
+ '2025-03-01', '2025-03-18', false, 12, 'club-010', '[]', NOW(), NOW()),
+ 
+(gen_random_uuid(), '독서모임 모집', '책을 통한 성장', 'ACTIVE',
+ '2025-03-01', '2025-03-12', false, 8, 'club-011', '[]', NOW(), NOW()),
+ 
+(gen_random_uuid(), '댄스크루 모집', '춤으로 하나되어요', 'ACTIVE',
+ '2025-03-01', '2025-03-22', true, 15, 'club-012', '[]', NOW(), NOW());

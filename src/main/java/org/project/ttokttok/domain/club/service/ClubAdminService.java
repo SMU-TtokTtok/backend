@@ -79,7 +79,8 @@ public class ClubAdminService {
     private boolean hasApplyFormUpdate(ClubContentUpdateServiceRequest request) {
         return request.applyStartDate().isPresent() || request.applyEndDate().isPresent() ||
                 request.grades().isPresent() || request.maxApplyCount().isPresent() ||
-                request.recruiting().isPresent();
+                // request.recruiting().isPresent(); - ApplyForm에서 관리하므로 제거
+                false;
     }
 
     // 지원 폼 업데이트 로직
@@ -97,7 +98,8 @@ public class ClubAdminService {
                 request.applyEndDate().orElse(null),
                 request.maxApplyCount().orElse(null),
                 request.grades().orElse(null),
-                request.recruiting().orElse(null)
+                // request.recruiting().orElse(null) - ApplyForm에서 관리
+                null
         );
     }
 
