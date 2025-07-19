@@ -29,4 +29,5 @@ INSERT INTO admins (id, username, password, created_at, updated_at) VALUES
 ('admin-027', 'admin_game', '$2a$10$dummyHashForPassword027', NOW(), NOW()),
 ('admin-028', 'admin_hiking', '$2a$10$dummyHashForPassword028', NOW(), NOW()),
 ('admin-029', 'admin_christian', '$2a$10$dummyHashForPassword029', NOW(), NOW()),
-('admin-030', 'admin_etc', '$2a$10$dummyHashForPassword030', NOW(), NOW());
+('admin-030', 'admin_etc', '$2a$10$dummyHashForPassword030', NOW(), NOW()),
+('admin-031', 'admin_free', '$2a$10$dummyHashForPassword031', NOW(), NOW());

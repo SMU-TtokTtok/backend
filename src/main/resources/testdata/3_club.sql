@@ -29,4 +29,5 @@ INSERT INTO clubs (id, name, profile_img, summary, club_type, club_category, cus
 ('club-027', '게임동아리', 'https://example.com/game.jpg', '게임을 통한 즐거운 소통', 'CENTRAL', 'ETC', '게임', '다양한 게임을 즐기며 친목을 도모합니다.', 'admin-027', NOW(), NOW()),
 ('club-028', '등산동아리', 'https://example.com/hiking.jpg', '자연과 함께하는 건강한 등산', 'UNION', 'SPORTS', '등산', '정기적인 등산을 통해 자연을 느끼고 체력을 기릅니다.', 'admin-028', NOW(), NOW()),
 ('club-029', '기독교동아리', 'https://example.com/christian.jpg', '믿음 안에서 함께하는 공동체', 'CENTRAL', 'RELIGION', '기독교', '신앙 생활과 봉사활동을 함께 하는 동아리입니다.', 'admin-029', NOW(), NOW()),
-('club-030', '자유동아리', 'https://example.com/free.jpg', '자유로운 활동과 새로운 도전', 'DEPARTMENT', 'ETC', '자유활동', '정해진 틀 없이 자유롭게 활동하는 동아리입니다.', 'admin-030', NOW(), NOW());
+('club-030', '자유동아리', 'https://example.com/free.jpg', '자유로운 활동과 새로운 도전', 'DEPARTMENT', 'ETC', '자유활동', '정해진 틀 없이 자유롭게 활동하는 동아리입니다.', 'admin-030', NOW(), NOW()),
+('club-031', '벽외조사 동아리', 'https://example.com/rumbling.jpg', '지유를 찾아서 떠나는 조사', 'CENTRAL', 'VOLUNTEER', '지유', '벽 밖을 조사하여 더 넓은 세상을 탐구하는 동아리 입니다. (주의 : 오장육부 분리 가능성 있음)', 'admin-031', NOW(), NOW());
