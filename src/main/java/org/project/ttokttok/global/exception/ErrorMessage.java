@@ -54,6 +54,10 @@ public enum ErrorMessage {
     // 즐겨찾기 에러 메시지
     FAVORITE_NOT_FOUND("즐겨찾기를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
 
+    // 부원 에러 메시지
+    MEMBER_NOT_FOUND("부원을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+    DUPLICATE_ROLE("이미 해당 역할을 가진 부원이 존재합니다.", HttpStatus.CONFLICT),
+
     // S3 에러 메시지
     S3_FILE_UPLOAD_ERROR("S3 파일 업로드 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
 
