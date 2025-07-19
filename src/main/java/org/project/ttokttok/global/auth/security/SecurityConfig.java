@@ -94,6 +94,7 @@ public class SecurityConfig {
         config.setAllowedOriginPatterns(
                 //todo: 나중에 프론트 배포 링크로 바꿀 것
                 List.of("http://localhost:5173",
+                        "http://localhost:8080",
                         swaggerUrl)
         );
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")); //허용 HTTP 메서드
