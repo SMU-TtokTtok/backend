@@ -2,9 +2,13 @@ package org.project.ttokttok.domain.favorite.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.project.ttokttok.domain.applyform.domain.ApplyForm;
+import org.project.ttokttok.domain.applyform.repository.ApplyFormRepository;
 import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.exception.ClubNotFoundException;
 import org.project.ttokttok.domain.club.repository.ClubRepository;
+
+import static org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus.ACTIVE;
 import org.project.ttokttok.domain.club.service.dto.response.ClubCardServiceResponse;
 import org.project.ttokttok.domain.favorite.domain.Favorite;
 import org.project.ttokttok.domain.favorite.repository.FavoriteRepository;
@@ -34,6 +38,7 @@ public class FavoriteService {
     private final FavoriteRepository favoriteRepository;
     private final ClubRepository clubRepository;
     private final UserRepository userRepository;
+    private final ApplyFormRepository applyFormRepository;
 
     /**
      * 즐겨찾기 토글 (추가/제거)
@@ -169,6 +174,9 @@ public class FavoriteService {
      * Club 엔티티를 ClubCardServiceResponse로 변환
      */
     private ClubCardServiceResponse toClubCardServiceResponse(Club club, boolean bookmarked) {
+        // ApplyForm이 ACTIVE 상태인지 확인해서 recruiting 상태 결정
+        boolean recruiting = applyFormRepository.findByClubIdAndStatus(club.getId(), ACTIVE).isPresent();
+        
         return new ClubCardServiceResponse(
                 club.getId(),
                 club.getName(),
@@ -178,8 +186,7 @@ public class FavoriteService {
                 club.getSummary(),
                 club.getProfileImageUrl(),
                 club.getClubMembers().size(), // 멤버 수
-                // club.isRecruiting(), - ApplyForm에서 관리하므로 기본값
-                false,
+                recruiting, // ✅ ApplyForm 기준으로 수정
                 bookmarked
         );
     }

@@ -35,7 +35,6 @@ public class FavoriteController {
      * 즐겨찾기 토글 API
      * 동아리를 즐겨찾기에 추가하거나 제거합니다.
      *
-     * @param tokenUserEmail 인증된 사용자 이메일
      * @param clubId 동아리 ID
      * @return 즐겨찾기 토글 결과
      */
