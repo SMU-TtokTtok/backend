@@ -1,6 +1,7 @@
 package org.project.ttokttok.domain.clubMember.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.exception.ClubNotFoundException;
 import org.project.ttokttok.domain.club.exception.NotClubAdminException;
@@ -9,17 +10,23 @@ import org.project.ttokttok.domain.clubMember.domain.ClubMember;
 import org.project.ttokttok.domain.clubMember.domain.MemberRole;
 import org.project.ttokttok.domain.clubMember.exception.ClubMemberNotFoundException;
 import org.project.ttokttok.domain.clubMember.exception.DuplicateRoleException;
+import org.project.ttokttok.domain.clubMember.exception.ExcelFileCreateFailException;
 import org.project.ttokttok.domain.clubMember.repository.ClubMemberRepository;
 import org.project.ttokttok.domain.clubMember.repository.dto.ClubMemberPageQueryResponse;
 import org.project.ttokttok.domain.clubMember.service.dto.request.ChangeRoleServiceRequest;
 import org.project.ttokttok.domain.clubMember.service.dto.request.ClubMemberPageRequest;
 import org.project.ttokttok.domain.clubMember.service.dto.request.DeleteMemberServiceRequest;
+import org.project.ttokttok.domain.clubMember.service.dto.response.ClubMemberInExcelResponse;
 import org.project.ttokttok.domain.clubMember.service.dto.response.ClubMemberPageServiceResponse;
+import org.project.ttokttok.domain.clubMember.service.dto.response.ExcelServiceResponse;
 import org.project.ttokttok.global.excel.ExcelService;
-import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
+import java.util.List;
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ClubMemberService {
@@ -63,10 +70,32 @@ public class ClubMemberService {
     }
 
     @Transactional(readOnly = true)
-    public Resource downloadMembersAsExcel(String clubId) {
-        validateClubExists(clubId);
+    public ExcelServiceResponse downloadMembersAsExcel(String clubId, String username) {
 
-        return null;
+        validateClubAndAdmin(clubId, username);
+
+        List<ClubMemberInExcelResponse> targetClubMembers =
+                clubMemberRepository.findByClubId(clubId);
+
+        return new ExcelServiceResponse(
+                validateClubExists(clubId).getName(),
+                createMemberExcel(clubId, targetClubMembers)
+        );
+    }
+
+    private byte[] createMemberExcel(String clubId, List<ClubMemberInExcelResponse> target) {
+        try {
+            // 엑셀 파일 생성 로직
+            return excelService.createMemberExcel(
+                    clubRepository.findById(clubId)
+                            .orElseThrow(ClubNotFoundException::new)
+                            .getName(),
+                    target
+            );
+        } catch (IOException e) {
+            log.error("[ClubMember] 액셀 파일 생성에 실패", e);
+            throw new ExcelFileCreateFailException();
+        }
     }
 
     // 관리자 검증

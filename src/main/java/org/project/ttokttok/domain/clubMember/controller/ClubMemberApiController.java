@@ -8,6 +8,7 @@ import org.project.ttokttok.domain.clubMember.service.ClubMemberService;
 import org.project.ttokttok.domain.clubMember.service.dto.request.ChangeRoleServiceRequest;
 import org.project.ttokttok.domain.clubMember.service.dto.request.ClubMemberPageRequest;
 import org.project.ttokttok.domain.clubMember.service.dto.request.DeleteMemberServiceRequest;
+import org.project.ttokttok.domain.clubMember.service.dto.response.ExcelServiceResponse;
 import org.project.ttokttok.global.annotation.auth.AuthUserInfo;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -15,6 +16,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
 @RestController
@@ -76,9 +78,19 @@ public class ClubMemberApiController {
                 .build();
     }
 
-    // 부원 액셀 파일 다운로드.
-    @GetMapping("/{clubId}/export")
-    public ResponseEntity<Resource> downloadMembersExcel(@PathVariable String clubId) {
+    @GetMapping("/{clubId}/download")
+    public ResponseEntity<byte[]> downloadMembersExcel(@AuthUserInfo String username,
+                                                       @PathVariable String clubId) {
 
+        ExcelServiceResponse response = clubMemberService.downloadMembersAsExcel(clubId, username);
+
+        String fileName = URLEncoder.encode(response.clubName() + "_부원_목록.xlsx", StandardCharsets.UTF_8)
+                .replaceAll("\\+", "%20");
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
+                .contentType(MediaType.parseMediaType(
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(response.excelData());
     }
 }
