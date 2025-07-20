@@ -28,6 +28,7 @@ public record ApplyFormCreateRequest(
         @NotNull(message = "최대 지원 횟수는 Null일 수 없습니다.")
         int maxApplyCount,
 
+        // FIXME: Null 처리로 리팩토링할 것. Post 요청의 복잡도가 올라감
         JsonNullable<LocalDate> interviewStartDate,
         JsonNullable<LocalDate> interviewEndDate,
 
