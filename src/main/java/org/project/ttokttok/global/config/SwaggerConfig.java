@@ -6,20 +6,14 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import io.swagger.v3.oas.models.servers.Server;
 
 import java.util.Collections;
 import java.util.List;
 
 @Configuration
 public class SwaggerConfig {
-
-    @Value("${server.url}")
-    private String prodUrl;
 
     @Bean
     public OpenAPI boardAPI() {
@@ -34,6 +28,7 @@ public class SwaggerConfig {
         // 보안 요구사항 설정
         SecurityRequirement securityRequirement = new SecurityRequirement().addList("cookieAuth");
 
+        // 서버 정보 설정
         Server prodServer = new Server()
                 .url("https://hearmeout.kr")
                 .description("Production Server");
@@ -44,12 +39,11 @@ public class SwaggerConfig {
 
         return new OpenAPI()
                 .info(info)
-                .servers(List.of(prodServer, localServer))
+                .servers(List.of(prodServer, localServer)) // 프로덕션과 로컬 서버 정보 모두 추가
                 .components(new Components().addSecuritySchemes("cookieAuth", apiKey))
                 .security(Collections.singletonList(securityRequirement));
     }
 
-    // todo: 추후 수정
     private Info createSwaggerInfo() {
         return new Info()
                 .title("똑똑 게시판 API")
