@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import io.swagger.v3.oas.models.servers.Server;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -33,7 +35,7 @@ public class SwaggerConfig {
         SecurityRequirement securityRequirement = new SecurityRequirement().addList("cookieAuth");
 
         Server prodServer = new Server()
-                .url(prodUrl)
+                .url("https://hearmeout.kr")
                 .description("Production Server");
 
         Server localServer = new Server()
@@ -42,8 +44,8 @@ public class SwaggerConfig {
 
         return new OpenAPI()
                 .info(info)
-                .components(new Components().addSecuritySchemes("cookieAuth", apiKey))
                 .servers(List.of(prodServer, localServer))
+                .components(new Components().addSecuritySchemes("cookieAuth", apiKey))
                 .security(Collections.singletonList(securityRequirement));
     }
 

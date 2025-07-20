@@ -26,12 +26,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**") // 모든 경로에 대해 CORS 허용
-                .allowedOrigins(
-                    "http://localhost:3000", // 개발 환경 프론트엔드 URL (필요시 추가)
-                    "http://localhost:8080", // 로컬 Swagger UI URL (필요시 추가)
-                    "https://www.hearmeout.kr", // 실제 서비스 도메인
-                    "https://hearmeout.kr"      // www 없는 버전도 추가
-                )
+                .allowedOriginPatterns("*")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS") // 허용할 HTTP 메서드
                 .allowedHeaders("*") // 모든 헤더 허용
                 .allowCredentials(true) // 자격 증명(쿠키, 인증 헤더 등) 허용
