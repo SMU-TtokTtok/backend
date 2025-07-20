@@ -89,13 +89,13 @@ public class SecurityConfig {
     //CORS 설정
     private CorsConfigurationSource corsConfig() {
         CorsConfiguration config = new CorsConfiguration();
-        final String swaggerUrl = serverUrl + "/swagger-ui/index.html";
+        //final String swaggerUrl = serverUrl + "/swagger-ui/index.html";
 
         config.setAllowedOriginPatterns(
                 //todo: 나중에 프론트 배포 링크로 바꿀 것
                 List.of("http://localhost:5173",
-                        "http://localhost:8080",
-                        swaggerUrl)
+                        "http://localhost:8080"
+                )
         );
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")); //허용 HTTP 메서드
         config.setAllowCredentials(true); // 쿠키 등 허용 설정
