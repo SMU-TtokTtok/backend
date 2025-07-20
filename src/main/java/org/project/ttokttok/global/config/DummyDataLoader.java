@@ -26,6 +26,10 @@ public class DummyDataLoader implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
+        // 임시로 더미 데이터 로딩 비활성화
+        //log.info("더미 데이터 로딩 비활성화됨");
+        //return;
+
         // 개발 또는 운영(테스트용) 환경에서 더미 데이터 로드
         if (shouldLoadDummyData()) {
             log.info("더미 데이터 로딩 시작 (Profile: {})", String.join(", ", environment.getActiveProfiles()));

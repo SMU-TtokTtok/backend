@@ -30,11 +30,11 @@ public class SwaggerConfig {
 
         // 서버 정보 설정
         Server prodServer = new Server()
-                .url("https://hearmeout.kr")
+                .url("https://www.hearmeout.kr")
                 .description("Production Server");
 
         Server localServer = new Server()
-                .url("http://localhost:8080")
+                .url("http://www.localhost:8080")
                 .description("Local Server");
 
         return new OpenAPI()
