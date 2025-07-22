@@ -21,11 +21,15 @@ public class S3Service {
 
     private final S3Client s3Client;
     private final S3Presigner s3Presigner;
+    private final ContentValidatable validator;
 
     @Value("${cloud.aws.s3.bucket}")
     private String bucketName;
 
     public String uploadFile(MultipartFile file, String dirName) {
+
+        validateFile(file);
+
         String key = dirName + UUID.randomUUID() + "_" + file.getOriginalFilename();
 
         try {
@@ -63,5 +67,12 @@ public class S3Service {
                 .bucket(bucketName)
                 .key(key)
                 .build());
+    }
+
+    private void validateFile(MultipartFile file) {
+        validator.validateContent(file);
+        validator.validateSize(file.getSize());
+        validator.validateType(file.getContentType());
+        validator.validateFileName(file.getOriginalFilename());
     }
 }

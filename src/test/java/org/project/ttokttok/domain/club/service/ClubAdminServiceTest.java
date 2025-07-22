@@ -9,8 +9,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.openapitools.jackson.nullable.JsonNullable;
 import org.project.ttokttok.domain.admin.domain.Admin;
 import org.project.ttokttok.domain.club.domain.Club;
-import org.project.ttokttok.infrastructure.s3.exception.ImageMaxSizeOverException;
-import org.project.ttokttok.infrastructure.s3.exception.InvalidImageTypeException;
 import org.project.ttokttok.domain.club.exception.NotClubAdminException;
 import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.domain.club.service.dto.request.ClubContentUpdateServiceRequest;
@@ -218,7 +216,7 @@ class ClubAdminServiceTest {
 
         // when & then
         assertThatThrownBy(() -> clubAdminService.updateContent(ADMIN_USERNAME, request))
-                .isInstanceOf(ImageMaxSizeOverException.class);
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @DisplayName("updateContent(): 이미지 타입이 허용되지 않으면 InvalidImageTypeException 발생")
@@ -245,6 +243,6 @@ class ClubAdminServiceTest {
 
         // when & then
         assertThatThrownBy(() -> clubAdminService.updateContent(ADMIN_USERNAME, request))
-                .isInstanceOf(InvalidImageTypeException.class);
+                .isInstanceOf(IllegalArgumentException.class);
     }
 }
