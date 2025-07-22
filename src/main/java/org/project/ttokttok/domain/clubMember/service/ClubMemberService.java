@@ -15,9 +15,11 @@ import org.project.ttokttok.domain.clubMember.repository.ClubMemberRepository;
 import org.project.ttokttok.domain.clubMember.repository.dto.ClubMemberPageQueryResponse;
 import org.project.ttokttok.domain.clubMember.service.dto.request.ChangeRoleServiceRequest;
 import org.project.ttokttok.domain.clubMember.service.dto.request.ClubMemberPageRequest;
+import org.project.ttokttok.domain.clubMember.service.dto.request.ClubMemberSearchRequest;
 import org.project.ttokttok.domain.clubMember.service.dto.request.DeleteMemberServiceRequest;
 import org.project.ttokttok.domain.clubMember.service.dto.response.ClubMemberInExcelResponse;
 import org.project.ttokttok.domain.clubMember.service.dto.response.ClubMemberPageServiceResponse;
+import org.project.ttokttok.domain.clubMember.service.dto.response.ClubMemberSearchServiceResponse;
 import org.project.ttokttok.domain.clubMember.service.dto.response.ExcelServiceResponse;
 import org.project.ttokttok.global.excel.ExcelService;
 import org.springframework.stereotype.Service;
@@ -62,10 +64,6 @@ public class ClubMemberService {
 
         ClubMember member = findClubMemberById(request.memberId());
 
-        if (!member.getClub().getId().equals(request.clubId())) {
-            throw new ClubMemberNotFoundException();
-        }
-
         clubMemberRepository.delete(member);
     }
 
@@ -77,10 +75,33 @@ public class ClubMemberService {
         List<ClubMemberInExcelResponse> targetClubMembers =
                 clubMemberRepository.findByClubId(clubId);
 
+        Club club = validateClubExists(clubId);
+
         return new ExcelServiceResponse(
-                validateClubExists(clubId).getName(),
-                createMemberExcel(clubId, targetClubMembers)
+                club.getName(),
+                createMemberExcel(club.getName(), targetClubMembers)
         );
+    }
+
+    // 동아리 부원 검색 기능
+    public List<ClubMemberSearchServiceResponse> clubMemberSearch(ClubMemberSearchRequest request) {
+        // 동아리 관리자 검증
+        validateClubAndAdmin(request.clubId(), request.username());
+
+        // 동아리 존재 여부 검증
+        Club club = validateClubExists(request.clubId());
+
+        // 검색어가 있을 경우 해당 키워드로 부원 조회
+        return clubMemberRepository
+                .findByClubIdAndKeyword(request.clubId(), request.keyword())
+                .stream()
+                .map(member -> ClubMemberSearchServiceResponse.of(
+                        member.getGrade(),
+                        member.getUser().getName(),
+                        member.getMajor(),
+                        member.getRole()
+                ))
+                .toList();
     }
 
     private byte[] createMemberExcel(String clubId, List<ClubMemberInExcelResponse> target) {

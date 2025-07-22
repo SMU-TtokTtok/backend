@@ -4,10 +4,13 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.project.ttokttok.domain.clubMember.controller.dto.request.RoleChangeRequest;
 import org.project.ttokttok.domain.clubMember.controller.dto.response.ClubMemberPageResponse;
+import org.project.ttokttok.domain.clubMember.controller.dto.response.ClubMemberSearchCoverResponse;
 import org.project.ttokttok.domain.clubMember.service.ClubMemberService;
 import org.project.ttokttok.domain.clubMember.service.dto.request.ChangeRoleServiceRequest;
 import org.project.ttokttok.domain.clubMember.service.dto.request.ClubMemberPageRequest;
+import org.project.ttokttok.domain.clubMember.service.dto.request.ClubMemberSearchRequest;
 import org.project.ttokttok.domain.clubMember.service.dto.request.DeleteMemberServiceRequest;
+import org.project.ttokttok.domain.clubMember.service.dto.response.ClubMemberSearchServiceResponse;
 import org.project.ttokttok.domain.clubMember.service.dto.response.ExcelServiceResponse;
 import org.project.ttokttok.global.annotation.auth.AuthUserInfo;
 import org.springframework.core.io.Resource;
@@ -18,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -92,5 +96,23 @@ public class ClubMemberApiController {
                 .contentType(MediaType.parseMediaType(
                         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .body(response.excelData());
+    }
+
+    @GetMapping("/{clubId}/search")
+    public ResponseEntity<ClubMemberSearchCoverResponse> searchMembers(@AuthUserInfo String username,
+                                                                       @PathVariable String clubId,
+                                                                       @RequestParam String keyword) {
+        ClubMemberSearchRequest request = ClubMemberSearchRequest.of(
+                username,
+                clubId,
+                keyword
+        );
+
+        ClubMemberSearchCoverResponse response = ClubMemberSearchCoverResponse.from(
+                clubMemberService.clubMemberSearch(request)
+        );
+
+        return ResponseEntity.ok()
+                .body(response);
     }
 }
