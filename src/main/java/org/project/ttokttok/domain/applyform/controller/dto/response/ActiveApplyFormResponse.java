@@ -8,12 +8,14 @@ import java.util.List;
 
 @Builder
 public record ActiveApplyFormResponse(
+        String formId,
         String title,
         String subTitle,
         List<Question> questions
 ) {
     public static ActiveApplyFormResponse from(ActiveApplyFormServiceResponse response) {
         return ActiveApplyFormResponse.builder()
+                .formId
                 .title(response.title())
                 .subTitle(response.subTitle())
                 .questions(response.questions())

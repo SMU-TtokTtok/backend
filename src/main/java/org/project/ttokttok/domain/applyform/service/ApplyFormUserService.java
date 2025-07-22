@@ -23,6 +23,7 @@ public class ApplyFormUserService {
 
         return applyFormRepository.findByClubIdAndStatus(clubId, ApplyFormStatus.ACTIVE)
                 .map(applyForm -> ActiveApplyFormServiceResponse.of(
+                        applyForm.getId(),
                         applyForm.getTitle(),
                         applyForm.getSubTitle(),
                         applyForm.getFormJson()

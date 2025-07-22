@@ -5,10 +5,7 @@ import org.project.ttokttok.domain.applyform.controller.dto.response.ActiveApply
 import org.project.ttokttok.domain.applyform.service.ApplyFormUserService;
 import org.project.ttokttok.domain.applyform.service.dto.response.ActiveApplyFormServiceResponse;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -38,4 +35,6 @@ public class ApplyFormUserController {
         return ResponseEntity.ok()
                 .body(response);
     }
+
+    @PostMapping("/{clubId}/submit")
 }
