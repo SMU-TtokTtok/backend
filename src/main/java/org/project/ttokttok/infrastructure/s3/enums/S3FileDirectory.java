@@ -8,7 +8,8 @@ import lombok.RequiredArgsConstructor;
 public enum S3FileDirectory {
     PROFILE_IMAGE("profile-images/"),
     BOARD_FILE("board-files/"),
-    BOARD_IMAGE("board-images/"),;
+    BOARD_IMAGE("board-images/"),
+    INTRODUCTION_IMAGE("introduction-images/");
 
     final String directoryName;
 }
