@@ -1,5 +1,6 @@
 package org.project.ttokttok.domain.clubMember.repository;
 
+import org.project.ttokttok.domain.clubMember.repository.dto.ClubMemberCountQueryResponse;
 import org.project.ttokttok.domain.clubMember.repository.dto.ClubMemberPageQueryResponse;
 
 public interface ClubMemberCustomRepository {
@@ -8,4 +9,6 @@ public interface ClubMemberCustomRepository {
             int pageNum,
             int pageSize
     );
+
+    ClubMemberCountQueryResponse countClubMembersByClubId(String clubId);
 }

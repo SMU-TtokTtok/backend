@@ -17,10 +17,7 @@ import org.project.ttokttok.domain.clubMember.service.dto.request.ChangeRoleServ
 import org.project.ttokttok.domain.clubMember.service.dto.request.ClubMemberPageRequest;
 import org.project.ttokttok.domain.clubMember.service.dto.request.ClubMemberSearchRequest;
 import org.project.ttokttok.domain.clubMember.service.dto.request.DeleteMemberServiceRequest;
-import org.project.ttokttok.domain.clubMember.service.dto.response.ClubMemberInExcelResponse;
-import org.project.ttokttok.domain.clubMember.service.dto.response.ClubMemberPageServiceResponse;
-import org.project.ttokttok.domain.clubMember.service.dto.response.ClubMemberSearchServiceResponse;
-import org.project.ttokttok.domain.clubMember.service.dto.response.ExcelServiceResponse;
+import org.project.ttokttok.domain.clubMember.service.dto.response.*;
 import org.project.ttokttok.global.excel.ExcelService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -102,6 +99,20 @@ public class ClubMemberService {
                         member.getRole()
                 ))
                 .toList();
+    }
+
+    // 동아리 부원 수 조회
+    public ClubMemberCountServiceResponse getClubMembersCount(String clubId, String username) {
+        // 동아리 관리자 검증
+        validateClubAndAdmin(clubId, username);
+
+        // 동아리 존재 여부 검증
+        Club club = validateClubExists(clubId);
+
+        // 부원 수 조회
+        return ClubMemberCountServiceResponse.from(
+                clubMemberRepository.countClubMembersByClubId(clubId)
+        );
     }
 
     private byte[] createMemberExcel(String clubId, List<ClubMemberInExcelResponse> target) {

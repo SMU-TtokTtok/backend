@@ -3,6 +3,7 @@ package org.project.ttokttok.domain.clubMember.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.project.ttokttok.domain.clubMember.controller.dto.request.RoleChangeRequest;
+import org.project.ttokttok.domain.clubMember.controller.dto.response.ClubMemberCountResponse;
 import org.project.ttokttok.domain.clubMember.controller.dto.response.ClubMemberPageResponse;
 import org.project.ttokttok.domain.clubMember.controller.dto.response.ClubMemberSearchCoverResponse;
 import org.project.ttokttok.domain.clubMember.service.ClubMemberService;
@@ -10,6 +11,7 @@ import org.project.ttokttok.domain.clubMember.service.dto.request.ChangeRoleServ
 import org.project.ttokttok.domain.clubMember.service.dto.request.ClubMemberPageRequest;
 import org.project.ttokttok.domain.clubMember.service.dto.request.ClubMemberSearchRequest;
 import org.project.ttokttok.domain.clubMember.service.dto.request.DeleteMemberServiceRequest;
+import org.project.ttokttok.domain.clubMember.service.dto.response.ClubMemberCountServiceResponse;
 import org.project.ttokttok.domain.clubMember.service.dto.response.ClubMemberSearchServiceResponse;
 import org.project.ttokttok.domain.clubMember.service.dto.response.ExcelServiceResponse;
 import org.project.ttokttok.global.annotation.auth.AuthUserInfo;
@@ -40,6 +42,18 @@ public class ClubMemberApiController {
 
         ClubMemberPageResponse response = ClubMemberPageResponse.from(
                 clubMemberService.getClubMembers(clubId, pageRequest)
+        );
+
+        return ResponseEntity.ok()
+                .body(response);
+    }
+
+    @GetMapping("/{clubId}/total-count")
+    public ResponseEntity<ClubMemberCountResponse> getClubMemberCount(@AuthUserInfo String username,
+                                                                      @PathVariable String clubId) {
+
+        ClubMemberCountResponse response = ClubMemberCountResponse.from(
+                clubMemberService.getClubMembersCount(clubId, username)
         );
 
         return ResponseEntity.ok()
