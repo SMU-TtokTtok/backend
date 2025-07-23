@@ -1,6 +1,7 @@
 package org.project.ttokttok.domain.applyform.service;
 
 import lombok.RequiredArgsConstructor;
+import org.project.ttokttok.domain.applicant.repository.ApplicantRepository;
 import org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus;
 import org.project.ttokttok.domain.applyform.exception.ActiveApplyFormNotFoundException;
 import org.project.ttokttok.domain.applyform.repository.ApplyFormRepository;
@@ -16,6 +17,7 @@ public class ApplyFormUserService {
 
     private final ApplyFormRepository applyFormRepository;
     private final ClubRepository clubRepository;
+    private final ApplicantRepository applicantRepository;
 
     @Transactional(readOnly = true)
     public ActiveApplyFormServiceResponse getActiveApplyForm(String clubId) {
@@ -29,6 +31,10 @@ public class ApplyFormUserService {
                         applyForm.getFormJson()
                 ))
                 .orElseThrow(ActiveApplyFormNotFoundException::new);
+    }
+
+    public void submitApplyForm() {
+
     }
 
     private void validateClubExists(String clubId) {
