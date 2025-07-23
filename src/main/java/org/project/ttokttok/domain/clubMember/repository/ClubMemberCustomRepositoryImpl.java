@@ -5,6 +5,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.project.ttokttok.domain.applicant.domain.enums.Grade;
 import org.project.ttokttok.domain.clubMember.domain.ClubMember;
+import org.project.ttokttok.domain.clubMember.repository.dto.ClubMemberCountQueryResponse;
 import org.project.ttokttok.domain.clubMember.repository.dto.ClubMemberPageQueryResponse;
 import org.springframework.stereotype.Repository;
 
@@ -32,15 +33,8 @@ public class ClubMemberCustomRepositoryImpl implements ClubMemberCustomRepositor
                 .limit(pageSize)
                 .fetch();
 
-        // 총 회원 수와 학년별 회원 수를 한 번의 쿼리로 조회
-        Tuple counts = getClubMemberCounts(clubId);
-
         // 결과 추출
-        long totalCount = counts.get(0, Long.class);
-        long firstGradeCount = counts.get(1, Long.class);
-        long secondGradeCount = counts.get(2, Long.class);
-        long thirdGradeCount = counts.get(3, Long.class);
-        long fourthGradeCount = counts.get(4, Long.class);
+        long totalCount = getTotalCount(clubId);
 
         // 총 페이지 수 계산
         int totalPage = (int) Math.ceil((double) totalCount / pageSize);
@@ -49,19 +43,35 @@ public class ClubMemberCustomRepositoryImpl implements ClubMemberCustomRepositor
                 .currentPage(pageNum)
                 .totalPage(totalPage)
                 .totalCount((int) totalCount)
-                .firstGradeCount((int) firstGradeCount)
-                .secondGradeCount((int) secondGradeCount)
-                .thirdGradeCount((int) thirdGradeCount)
-                .fourthGradeCount((int) fourthGradeCount)
                 .clubMembers(members)
                 .build();
+    }
+
+    @Override
+    public ClubMemberCountQueryResponse countClubMembersByClubId(String clubId) {
+        Tuple data = getClubMemberCounts(clubId);
+
+        return ClubMemberCountQueryResponse.builder()
+                .totalCount((int) getTotalCount(clubId))
+                .firstGradeCount(data.get(0, Long.class).intValue())
+                .secondGradeCount(data.get(1, Long.class).intValue())
+                .thirdGradeCount(data.get(2, Long.class).intValue())
+                .fourthGradeCount(data.get(3, Long.class).intValue())
+                .build();
+    }
+
+    private long getTotalCount(String clubId) {
+         return queryFactory
+                .select(clubMember.count())
+                .from(clubMember)
+                .where(clubMember.club.id.eq(clubId))
+                .fetchOne();
     }
 
     // 총 회원 수와 학년별 회원 수를 조회하는 메서드
     private Tuple getClubMemberCounts(String clubId) {
         return queryFactory
                 .select(
-                        clubMember.count(),
                         clubMember.grade.when(Grade.FIRST_GRADE).then(1L).otherwise(0L).sum(),
                         clubMember.grade.when(Grade.SECOND_GRADE).then(1L).otherwise(0L).sum(),
                         clubMember.grade.when(Grade.THIRD_GRADE).then(1L).otherwise(0L).sum(),

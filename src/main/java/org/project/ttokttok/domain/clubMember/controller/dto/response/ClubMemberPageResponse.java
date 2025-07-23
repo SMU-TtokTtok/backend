@@ -10,10 +10,6 @@ public record ClubMemberPageResponse(
         int currentPage,
         int totalPage,
         int totalCount,
-        int firstGradeCount,
-        int secondGradeCount,
-        int thirdGradeCount,
-        int fourthGradeCount,
         List<ClubMemberListResponse> clubMembers
 ) {
     public static ClubMemberPageResponse from(ClubMemberPageServiceResponse response) {
@@ -30,10 +26,6 @@ public record ClubMemberPageResponse(
                 response.currentPage(),
                 response.totalPage(),
                 response.totalCount(),
-                response.firstGradeCount(),
-                response.secondGradeCount(),
-                response.thirdGradeCount(),
-                response.fourthGradeCount(),
                 memberListResponses
         );
     }

@@ -22,7 +22,7 @@ class S3ServiceTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        s3Service = new S3Service(s3Client, null); // S3Presigner는 null로 설정
+        s3Service = new S3Service(s3Client, null, null); // S3Presigner는 null로 설정
     }
 
     @Test

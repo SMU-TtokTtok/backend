@@ -10,10 +10,6 @@ public record ClubMemberPageQueryResponse(
         int currentPage,
         int totalPage,
         int totalCount,
-        int firstGradeCount,
-        int secondGradeCount,
-        int thirdGradeCount,
-        int fourthGradeCount,
         List<ClubMember> clubMembers
 ) {
 }

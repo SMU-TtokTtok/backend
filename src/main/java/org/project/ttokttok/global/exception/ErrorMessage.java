@@ -30,8 +30,7 @@ public enum ErrorMessage {
     //동아리 에러 메시지
     CLUB_NOT_FOUND("동아리를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
     NOT_CLUB_ADMIN("해당 동아리의 관리자가 아닙니다.", HttpStatus.FORBIDDEN),
-    INVALID_IMAGE_TYPE("지원되는 이미지 형식이 아닙니다.", HttpStatus.BAD_REQUEST),
-    IMAGE_MAX_SIZE_OVER("이미지 크기는 5MB 이하만 가능합니다.", HttpStatus.BAD_REQUEST),
+    FILE_IS_NOT_IMAGE("파일이 이미지가 아닙니다.", HttpStatus.BAD_REQUEST),
 
     // 동아리 게시판 에러 메시지
     ADMIN_NAME_NOT_MATCH("요청한 관리자가 이 동아리의 관리자와 다릅니다.", HttpStatus.FORBIDDEN),
@@ -43,6 +42,7 @@ public enum ErrorMessage {
     // 지원 폼 에러 메시지
     APPLY_FORM_NOT_FOUND("지원 폼을 찾을 수 없거나, 활성화된 지원 폼이 없습니다.", HttpStatus.NOT_FOUND),
     APPLY_FORM_INVALID_DATE_RANGE("시작 날짜는 종료 날짜보다 이전이어야 합니다.", HttpStatus.BAD_REQUEST),
+    ACTIVE_APPLY_FORM_NOT_FOUND("활성화된 지원 폼을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
 
     // 지원자 에러 메시지
     APPLICANT_NOT_FOUND("지원자를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
