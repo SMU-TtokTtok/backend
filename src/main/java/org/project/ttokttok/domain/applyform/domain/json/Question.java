@@ -7,6 +7,7 @@ import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record Question(
+        String questionId,
         String title,
         String subTitle,
         QuestionType questionType,
