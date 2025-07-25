@@ -1,8 +1,5 @@
 package org.project.ttokttok.domain.club.controller.dto.request;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import org.openapitools.jackson.nullable.JsonNullable;
 import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
 import org.project.ttokttok.domain.club.domain.enums.ClubCategory;
@@ -11,7 +8,6 @@ import org.project.ttokttok.domain.club.service.dto.request.ClubContentUpdateSer
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Set;
 
 public record UpdateClubContentRequest(

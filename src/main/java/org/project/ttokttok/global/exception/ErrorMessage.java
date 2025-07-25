@@ -12,6 +12,9 @@ public enum ErrorMessage {
     *  꼭 어떤 예외 인지 주석으로 파트를 구분하여 작성 및 추가 할 것.
     * */
 
+    // 사용자 에러 메시지
+    USER_NOT_FOUND("사용자를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+
     //관리자 에러메시지
     ADMIN_NOT_FOUND("관리자를 찾을 수 없음.", HttpStatus.NOT_FOUND),
     ADMIN_PASSWORD_NOT_MATCH("비밀번호가 틀렸습니다.", HttpStatus.UNAUTHORIZED),
@@ -58,6 +61,7 @@ public enum ErrorMessage {
     MEMBER_NOT_FOUND("부원을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
     DUPLICATE_ROLE("이미 해당 역할을 가진 부원이 존재합니다.", HttpStatus.CONFLICT),
     EXCEL_FILE_CREATE_FAIL("엑셀 파일 생성에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
+    ALREADY_CLUB_MEMBER("이미 동아리에 가입된 사용자입니다.", HttpStatus.CONFLICT),
 
     // S3 에러 메시지
     S3_FILE_UPLOAD_ERROR("S3 파일 업로드 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);

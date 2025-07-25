@@ -6,6 +6,7 @@ import org.project.ttokttok.domain.applicant.domain.enums.Grade;
 import org.project.ttokttok.domain.applicant.domain.enums.StudentStatus;
 import org.project.ttokttok.domain.applicant.domain.json.Answer;
 import org.project.ttokttok.domain.applicant.service.dto.response.ApplicantDetailServiceResponse;
+import org.project.ttokttok.domain.applicant.service.dto.response.MemoResponse;
 
 import java.util.List;
 
@@ -19,7 +20,8 @@ public record ApplicantDetailResponse(
         StudentStatus studentStatus,
         Grade grade,
         Gender gender,
-        List<Answer> answers
+        List<Answer> answers,
+        List<MemoResponse> memos
 ) {
     public static ApplicantDetailResponse from(ApplicantDetailServiceResponse response) {
         return ApplicantDetailResponse.builder()
@@ -32,6 +34,7 @@ public record ApplicantDetailResponse(
                 .grade(response.grade())
                 .gender(response.gender())
                 .answers(response.answers())
+                .memos(response.memos())
                 .build();
     }
 }

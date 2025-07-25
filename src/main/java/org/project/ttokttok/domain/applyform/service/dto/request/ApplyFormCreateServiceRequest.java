@@ -21,6 +21,6 @@ public record ApplyFormCreateServiceRequest(
         JsonNullable<LocalDate> interviewEndDate,
         String title,
         String subTitle,
-        List<Question> applyForm
+        List<Question> questions
 ) {
 }

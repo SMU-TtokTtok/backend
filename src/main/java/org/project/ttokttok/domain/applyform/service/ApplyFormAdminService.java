@@ -61,7 +61,7 @@ public class ApplyFormAdminService {
                 applicableGrades,
                 request.title(),
                 request.subTitle(),
-                request.applyForm()
+                request.questions()
         );
 
         return applyFormRepository.save(applyForm)

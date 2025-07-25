@@ -20,4 +20,6 @@ public interface ClubMemberRepository extends JpaRepository<ClubMember, String>,
 
     @Query("SELECT cm FROM ClubMember cm WHERE cm.club.id = :clubId AND cm.user.name LIKE %:keyword%")
     List<ClubMember> findByClubIdAndKeyword(String clubId, String keyword);
+
+    boolean existsByClubIdAndUserId(String clubId, String userId);
 }

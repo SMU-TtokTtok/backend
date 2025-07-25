@@ -2,13 +2,10 @@ package org.project.ttokttok.domain.favorite.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.project.ttokttok.domain.applyform.domain.ApplyForm;
 import org.project.ttokttok.domain.applyform.repository.ApplyFormRepository;
 import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.exception.ClubNotFoundException;
 import org.project.ttokttok.domain.club.repository.ClubRepository;
-
-import static org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus.ACTIVE;
 import org.project.ttokttok.domain.club.service.dto.response.ClubCardServiceResponse;
 import org.project.ttokttok.domain.favorite.domain.Favorite;
 import org.project.ttokttok.domain.favorite.repository.FavoriteRepository;
@@ -25,6 +22,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+
+import static org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus.ACTIVE;
 
 /**
  * 즐겨찾기 서비스 클래스

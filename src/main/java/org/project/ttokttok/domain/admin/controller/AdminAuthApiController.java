@@ -2,6 +2,7 @@ package org.project.ttokttok.domain.admin.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.project.ttokttok.domain.admin.controller.docs.AdminAuthDocs;
 import org.project.ttokttok.domain.admin.controller.dto.request.AdminJoinRequest;
 import org.project.ttokttok.domain.admin.controller.dto.request.AdminLoginRequest;
 import org.project.ttokttok.domain.admin.controller.dto.response.AdminLoginResponse;
@@ -25,7 +26,7 @@ import static org.project.ttokttok.global.auth.jwt.TokenProperties.REFRESH_KEY;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/admin/auth")
-public class AdminAuthApiController {
+public class AdminAuthApiController implements AdminAuthDocs {
 
     private final AdminAuthService adminAuthService;
     private final CookieUtil cookieUtil;

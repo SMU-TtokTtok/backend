@@ -2,6 +2,7 @@ package org.project.ttokttok.domain.memo.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.project.ttokttok.domain.memo.controller.docs.MemoDocs;
 import org.project.ttokttok.domain.memo.controller.dto.request.MemoRequest;
 import org.project.ttokttok.domain.memo.service.MemoService;
 import org.project.ttokttok.domain.memo.service.dto.request.CreateMemoServiceRequest;
@@ -14,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/admin/applies/{applicantId}/memos")
-public class MemoApiController {
+public class MemoApiController implements MemoDocs {
 
     private final MemoService memoService;
 

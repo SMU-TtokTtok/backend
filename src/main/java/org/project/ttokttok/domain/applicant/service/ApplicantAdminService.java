@@ -1,7 +1,6 @@
 package org.project.ttokttok.domain.applicant.service;
 
 import lombok.RequiredArgsConstructor;
-import org.project.ttokttok.domain.applicant.controller.dto.response.ApplicantFinalizeResponse;
 import org.project.ttokttok.domain.applicant.domain.Applicant;
 import org.project.ttokttok.domain.applicant.domain.enums.Status;
 import org.project.ttokttok.domain.applicant.exception.ApplicantNotFoundException;
@@ -18,17 +17,16 @@ import org.project.ttokttok.domain.applyform.exception.ActiveApplyFormNotFoundEx
 import org.project.ttokttok.domain.applyform.exception.ApplyFormNotFoundException;
 import org.project.ttokttok.domain.applyform.repository.ApplyFormRepository;
 import org.project.ttokttok.domain.club.domain.Club;
-import org.project.ttokttok.domain.club.exception.ClubNotFoundException;
 import org.project.ttokttok.domain.club.exception.NotClubAdminException;
 import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.domain.clubMember.domain.ClubMember;
 import org.project.ttokttok.domain.clubMember.repository.ClubMemberRepository;
 import org.project.ttokttok.domain.user.repository.UserRepository;
+import org.project.ttokttok.infrastructure.email.service.EmailService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -39,6 +37,7 @@ public class ApplicantAdminService {
     private final ClubRepository clubRepository;
     private final ClubMemberRepository clubMemberRepository;
     private final UserRepository userRepository;
+    private final EmailService emailService;
 
     public ApplicantPageServiceResponse getApplicantPage(ApplicantPageServiceRequest request) {
         // 1. username으로 관리하는 동아리 찾기
@@ -165,6 +164,34 @@ public class ApplicantAdminService {
         int finalizedApplicantCount = applicantRepository.deleteAllApplicantsByApplyFormId(currentApplyForm.getId());
 
         return ApplicantFinalizeServiceResponse.of(passedApplicantCount, finalizedApplicantCount);
+    }
+
+    public void sendResultMailToApplicants(SendResultMailServiceRequest request,
+                                           String username,
+                                           String clubId) {
+        // 1. 동아리 관리자 검증
+        Club club = validateClubAdmin(username);
+
+        // 2. 현재 활성화된 지원 폼 조회
+        ApplyForm currentApplyForm = findActiveApplyForm(clubId);
+
+        // 3. 지원자 목록 조회
+        // 합격자 이메일 목록
+        List<String> passedEmails = filterPassedApplicants(currentApplyForm.getId())
+                .stream()
+                .map(Applicant::getUserEmail)
+                .toList();
+
+        // 불합격자 이메일 목록
+        List<String> failedEmails = applicantRepository.findByApplyFormId(currentApplyForm.getId())
+                .stream()
+                .filter(applicant -> applicant.getStatus() == Status.FAIL)
+                .map(Applicant::getUserEmail)
+                .toList();
+
+        // 4. 이메일 전송
+        emailService.sendResultMail(passedEmails, request.passBody());
+        emailService.sendResultMail(failedEmails, request.failBody());
     }
 
     private Club validateClubAdmin(String username) {

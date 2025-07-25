@@ -4,14 +4,20 @@ INSERT INTO applyforms (id, title, sub_title, status, apply_start_date, apply_en
 
 -- 모집중인 동아리들 (ACTIVE enum 값 사용)
 (gen_random_uuid(), '그림사랑 신입 모집', '미술을 사랑하는 분들을 찾습니다', 'ACTIVE', 
- '2025-03-01', '2025-03-15', false, 10, 'club-001', '[]', NOW(), NOW()),
- 
+ '2025-03-01', '2025-03-15', false, 10, 'club-001',
+ '[{"questionId":"q1","title":"자기소개","subTitle":"간단한 자기소개를 작성해주세요","questionType":"TEXT","isEssential":true,"content":[]},{"questionId":"q2","title":"지원동기","subTitle":"동아리에 지원하는 이유를 작성해주세요","questionType":"TEXTAREA","isEssential":true,"content":[]}]',
+ NOW(), NOW()),
+
 (gen_random_uuid(), '상명축구부 모집', '함께 뛸 선수를 찾습니다', 'ACTIVE',
- '2025-03-01', '2025-03-20', true, 15, 'club-002', '[]', NOW(), NOW()),
- 
+ '2025-03-01', '2025-03-20', true, 15, 'club-002',
+ '[{"questionId":"q3","title":"포지션","subTitle":"선호하는 포지션을 선택해주세요","questionType":"RADIO","isEssential":true,"content":["공격수","미드필더","수비수","골키퍼"]},{"questionId":"q4","title":"축구 경력","subTitle":"축구 경험에 대해 작성해주세요","questionType":"TEXTAREA","isEssential":false,"content":[]}]',
+ NOW(), NOW()),
+
 (gen_random_uuid(), '코딩마스터 모집', '프로그래밍 실력을 키워요', 'ACTIVE',
- '2025-03-05', '2025-03-25', false, 12, 'club-003', '[]', NOW(), NOW()),
- 
+ '2025-03-05', '2025-03-25', false, 12, 'club-003',
+ '[{"questionId":"q5","title":"프로그래밍 언어","subTitle":"사용 가능한 프로그래밍 언어를 모두 선택해주세요","questionType":"CHECKBOX","isEssential":true,"content":["Java","Python","JavaScript","C++","Go"]},{"questionId":"q6","title":"개발 경험","subTitle":"개발 프로젝트 경험을 작성해주세요","questionType":"TEXTAREA","isEssential":false,"content":[]}]',
+ NOW(), NOW()),
+
 (gen_random_uuid(), '나눔봉사단 모집', '함께 봉사해요', 'ACTIVE',
  '2025-03-01', '2025-03-30', false, 20, 'club-004', '[]', NOW(), NOW()),
  

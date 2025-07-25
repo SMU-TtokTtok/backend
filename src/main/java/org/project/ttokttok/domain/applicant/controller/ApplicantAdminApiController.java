@@ -1,6 +1,8 @@
 package org.project.ttokttok.domain.applicant.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.project.ttokttok.domain.applicant.controller.dto.request.SendResultMailRequest;
 import org.project.ttokttok.domain.applicant.controller.dto.response.ApplicantDetailResponse;
 import org.project.ttokttok.domain.applicant.controller.dto.response.ApplicantFinalizeResponse;
 import org.project.ttokttok.domain.applicant.controller.dto.response.ApplicantPageResponse;
@@ -9,7 +11,6 @@ import org.project.ttokttok.domain.applicant.domain.enums.Status;
 import org.project.ttokttok.domain.applicant.service.ApplicantAdminService;
 import org.project.ttokttok.domain.applicant.service.dto.request.*;
 import org.project.ttokttok.domain.applicant.service.dto.response.ApplicantDetailServiceResponse;
-import org.project.ttokttok.domain.applicant.service.dto.response.ApplicantFinalizeServiceResponse;
 import org.project.ttokttok.global.annotation.auth.AuthUserInfo;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -158,5 +159,20 @@ public class ApplicantAdminApiController {
 
         return ResponseEntity.ok()
                 .body(response);
+    }
+
+    @PostMapping("/{clubId}/send-email")
+    public ResponseEntity<Void> sendEmailToApplicants(@AuthUserInfo String username,
+                                                      @PathVariable String clubId,
+                                                      @Valid @RequestBody SendResultMailRequest request) {
+
+        applicantAdminService.sendResultMailToApplicants(
+                request.toServiceRequest(),
+                username,
+                clubId
+        );
+
+        return ResponseEntity.noContent()
+                .build();
     }
 }

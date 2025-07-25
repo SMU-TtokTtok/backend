@@ -2,7 +2,6 @@ package org.project.ttokttok.domain.applyform.controller.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.Builder;
 import org.openapitools.jackson.nullable.JsonNullable;
 import org.project.ttokttok.domain.applyform.domain.json.Question;
 import org.project.ttokttok.domain.applyform.service.dto.request.ApplyFormCreateServiceRequest;
@@ -37,7 +36,7 @@ public record ApplyFormCreateRequest(
         String subTitle,
 
         @NotNull(message = "지원 폼 내용은 Null일 수 없습니다.")
-        List<Question> applyForm
+        List<Question> questions
 ) {
     public ApplyFormCreateServiceRequest toServiceRequest(String username, String clubId) {
         return ApplyFormCreateServiceRequest.builder()
@@ -52,7 +51,7 @@ public record ApplyFormCreateRequest(
                 .interviewEndDate(interviewEndDate)
                 .title(title)
                 .subTitle(subTitle)
-                .applyForm(applyForm)
+                .questions(questions)
                 .build();
     }
 }

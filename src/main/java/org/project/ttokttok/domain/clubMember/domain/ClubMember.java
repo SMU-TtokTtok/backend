@@ -49,6 +49,21 @@ public class ClubMember extends BaseTimeEntity {
         this.major = major != null ? major : "N/A"; // 학과 값 에러 시
     }
 
+    public static ClubMember create(Club club,
+                                    User user,
+                                    MemberRole role,
+                                    Grade grade,
+                                    String major) {
+
+        return ClubMember.builder()
+                .club(club)
+                .user(user)
+                .role(role)
+                .grade(grade)
+                .major(major)
+                .build();
+    }
+
     public void changeRole(MemberRole newRole) {
         this.role = newRole;
     }

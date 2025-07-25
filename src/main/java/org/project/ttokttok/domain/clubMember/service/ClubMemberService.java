@@ -2,22 +2,24 @@ package org.project.ttokttok.domain.clubMember.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.project.ttokttok.domain.applicant.domain.enums.Grade;
 import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.exception.ClubNotFoundException;
 import org.project.ttokttok.domain.club.exception.NotClubAdminException;
 import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.domain.clubMember.domain.ClubMember;
 import org.project.ttokttok.domain.clubMember.domain.MemberRole;
+import org.project.ttokttok.domain.clubMember.exception.AlreadyClubMemberException;
 import org.project.ttokttok.domain.clubMember.exception.ClubMemberNotFoundException;
 import org.project.ttokttok.domain.clubMember.exception.DuplicateRoleException;
 import org.project.ttokttok.domain.clubMember.exception.ExcelFileCreateFailException;
 import org.project.ttokttok.domain.clubMember.repository.ClubMemberRepository;
 import org.project.ttokttok.domain.clubMember.repository.dto.ClubMemberPageQueryResponse;
-import org.project.ttokttok.domain.clubMember.service.dto.request.ChangeRoleServiceRequest;
-import org.project.ttokttok.domain.clubMember.service.dto.request.ClubMemberPageRequest;
-import org.project.ttokttok.domain.clubMember.service.dto.request.ClubMemberSearchRequest;
-import org.project.ttokttok.domain.clubMember.service.dto.request.DeleteMemberServiceRequest;
+import org.project.ttokttok.domain.clubMember.service.dto.request.*;
 import org.project.ttokttok.domain.clubMember.service.dto.response.*;
+import org.project.ttokttok.domain.user.domain.User;
+import org.project.ttokttok.domain.user.exception.UserNotFoundException;
+import org.project.ttokttok.domain.user.repository.UserRepository;
 import org.project.ttokttok.global.excel.ExcelService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,7 +34,11 @@ public class ClubMemberService {
 
     private final ClubMemberRepository clubMemberRepository;
     private final ClubRepository clubRepository;
+    private final UserRepository userRepository;
     private final ExcelService excelService;
+
+    // 상명대 이메일 접미사
+    private static final String EMAIL_SUFFIX = "@sangmyung.kr";
 
     @Transactional(readOnly = true)
     public ClubMemberPageServiceResponse getClubMembers(String clubId, ClubMemberPageRequest request) {
@@ -113,6 +119,62 @@ public class ClubMemberService {
         return ClubMemberCountServiceResponse.from(
                 clubMemberRepository.countClubMembersByClubId(clubId)
         );
+    }
+
+
+    public String addMember(String username,
+                            String clubId,
+                            ClubMemberServiceRequest request) {
+        validateClubAndAdmin(clubId, username);
+
+        String targetEmail = getTargetEmail(request.studentNum());
+
+        User user = userRepository.findByEmail(targetEmail)
+                .orElseThrow(UserNotFoundException::new);
+
+        Club club = validateClubExists(clubId);
+
+        return createClubMember(
+                user,
+                club,
+                request.major(),
+                request.grade(),
+                request.role())
+                .getId();
+    }
+
+    // TODO: 나중에 메서드 분리
+    private ClubMember createClubMember(User user,
+                                        Club club,
+                                        String major,
+                                        Grade grade,
+                                        MemberRole role) {
+        // 회장 혹은 부회장이 있는지 검증
+        if (role == MemberRole.PRESIDENT || role == MemberRole.VICE_PRESIDENT) {
+            clubMemberRepository.findByClubIdAndRole(club.getId(), role)
+                    .ifPresent(member -> {
+                        throw new DuplicateRoleException();
+                    });
+        }
+
+        // 겹치는 사용자가 존재하는지 검증
+        if (clubMemberRepository.existsByClubIdAndUserId(club.getId(), user.getId())) {
+            throw new AlreadyClubMemberException();
+        }
+
+        ClubMember clubMember = ClubMember.builder()
+                .user(user)
+                .club(club)
+                .major(major)
+                .grade(grade)
+                .role(role)
+                .build();
+
+        return clubMemberRepository.save(clubMember);
+    }
+
+    private String getTargetEmail(Long studentNum) {
+        return String.join("", studentNum.toString(), EMAIL_SUFFIX);
     }
 
     private byte[] createMemberExcel(String clubId, List<ClubMemberInExcelResponse> target) {

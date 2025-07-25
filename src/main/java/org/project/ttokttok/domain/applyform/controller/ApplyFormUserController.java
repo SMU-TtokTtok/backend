@@ -38,15 +38,15 @@ public class ApplyFormUserController {
                 .body(response);
     }
 
-//    @PostMapping(value = "/{formId}/submit",
-//            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-//    public ResponseEntity<Void> submitApplyForm(@AuthUserInfo String email,
-//                                                @PathVariable String formId,
-//                                                @RequestPart ApplyFormSubmitRequest<?> request) {
-//
-//        //applyFormUserService.submitApplyForm();
-//
-//        return ResponseEntity.noContent()
-//                .build();
-//    }
+    @PostMapping(value = "/{formId}/submit",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Void> submitApplyForm(@AuthUserInfo String email,
+                                                @PathVariable String formId,
+                                                @RequestPart ApplyFormSubmitRequest request) {
+
+        applyFormUserService.submitApplyForm();
+
+        return ResponseEntity.noContent()
+                .build();
+    }
 }
