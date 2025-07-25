@@ -1,0 +1,166 @@
+package org.project.ttokttok.domain.club.controller.docs;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import org.project.ttokttok.domain.club.controller.dto.request.UpdateClubContentRequest;
+import org.project.ttokttok.global.annotation.auth.AuthUserInfo;
+import org.project.ttokttok.global.exception.dto.ErrorResponse;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.multipart.MultipartFile;
+
+@Tag(name = "[관리자] 동아리 관련 API", description = "관리자 동아리 정보 관리용 API 입니다.")
+public interface ClubAdminApiDocs {
+
+    @Operation(
+            summary = "동아리 소개 수정",
+            description = """
+                    동아리 관리자가 동아리 소개 내용을 수정합니다.
+                    Multipart 형식으로 요청됩니다.
+                    
+                    *주의사항*
+                    - 해당 동아리의 관리자만 수정 가능합니다.
+                    - 동아리 소개, 모집 정보 등을 포함한 전체 콘텐츠를 수정할 수 있습니다.
+                    - 마크다운 형식을 지원합니다.
+                    """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "동아리 소개 수정 성공"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 요청 (필수 필드 누락 또는 형식 오류)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "인증되지 않은 사용자",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "권한 부족 (해당 동아리의 관리자가 아님)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "존재하지 않는 동아리",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "서버 내부 오류",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    ResponseEntity<String> updateClubContent(
+            @Parameter(description = "인증된 관리자 이름", hidden = true)
+            @AuthUserInfo String username,
+            @Parameter(description = "동아리 ID", required = true, example = "UUID")
+            @PathVariable String clubId,
+            @Parameter(description = "동아리 소개 수정 요청 데이터")
+            @RequestPart @Valid UpdateClubContentRequest request
+    );
+
+    @Operation(
+            summary = "마크다운 이미지 업데이트",
+            description = """
+                    동아리 소개에 사용할 마크다운 이미지를 업로드하고 업데이트합니다.
+                    업로드된 이미지는 S3에 저장되며, 고유한 이미지 키가 반환됩니다.
+                    
+                    *주의사항*
+                    - 이미지 파일만 업로드 가능합니다.
+                    - 최대 파일 크기: 5MB
+                    - 지원 형식: JPG, PNG, WEBP
+                    - 해당 동아리의 관리자만 업로드 가능합니다.
+                    """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "이미지 업로드 및 업데이트 성공",
+                    content = @Content(schema = @Schema(implementation = String.class, example = "Markdown image Updated successfully. Image Key: IMAGE_KEY"))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 파일 형식 또는 크기 초과",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "인증되지 않은 사용자",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "해당 동아리의 관리자가 아님",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "존재하지 않는 동아리",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "서버 내부 오류 (S3 업로드 실패 등)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    ResponseEntity<String> updateMarkdownImage(
+            @Parameter(description = "인증된 관리자 이름", hidden = true)
+            @AuthUserInfo String username,
+            @Parameter(description = "동아리 ID", required = true, example = "UUID")
+            @PathVariable String clubId,
+            @Parameter(description = "업로드할 이미지 파일 (JPG, PNG, GIF, WEBP 지원, 최대 5MB)")
+            @RequestPart("image") MultipartFile imageFile
+    );
+
+    @Operation(
+            summary = "이미지 URL 조회",
+            description = """
+                    이미지 키를 사용하여 실제 이미지 URL을 조회합니다.
+                    S3에 저장된 이미지의 Pre-signed URL을 반환합니다.
+                    
+                    *주의사항*
+                    - 반환된 URL은 일정 시간 후 만료됩니다.
+                    - 존재하지 않는 이미지 키의 경우 404 오류가 발생합니다.
+                    """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "이미지 URL 조회 성공",
+                    content = @Content(schema = @Schema(implementation = String.class, example = "https://s3.amazonaws.com/bucket/club-1-image-12345.jpg?X-Amz-Expires=3600"))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 이미지 키 형식",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "존재하지 않는 이미지",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "서버 내부 오류 (S3 접근 실패 등)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    ResponseEntity<String> getImageUrl(
+            @Parameter(description = "조회할 이미지의 키", required = true, example = "club-1-image-12345")
+            @RequestParam String imageKey
+    );
+}

@@ -2,6 +2,7 @@ package org.project.ttokttok.domain.club.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.project.ttokttok.domain.club.controller.docs.ClubAdminApiDocs;
 import org.project.ttokttok.domain.club.controller.dto.request.UpdateClubContentRequest;
 import org.project.ttokttok.domain.club.service.ClubAdminService;
 import org.project.ttokttok.domain.club.service.dto.request.MarkdownImageUpdateRequest;
@@ -14,7 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/admin/clubs")
-public class ClubAdminApiController {
+public class ClubAdminApiController implements ClubAdminApiDocs {
 
     private final ClubAdminService clubAdminService;
 
