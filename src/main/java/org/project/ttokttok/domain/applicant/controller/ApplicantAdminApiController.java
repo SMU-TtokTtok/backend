@@ -2,6 +2,7 @@ package org.project.ttokttok.domain.applicant.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.project.ttokttok.domain.applicant.controller.docs.ApplicantAdminDocs;
 import org.project.ttokttok.domain.applicant.controller.dto.request.SendResultMailRequest;
 import org.project.ttokttok.domain.applicant.controller.dto.response.ApplicantDetailResponse;
 import org.project.ttokttok.domain.applicant.controller.dto.response.ApplicantFinalizeResponse;
@@ -18,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/admin/applies")
-public class ApplicantAdminApiController {
+public class ApplicantAdminApiController implements ApplicantAdminDocs {
 
     private final ApplicantAdminService applicantAdminService;
 
@@ -58,6 +59,7 @@ public class ApplicantAdminApiController {
     }
 
     // 지원자 검색
+    // TODO: 검색도 굳이 페이징이 필요한가? 고민해볼 것.
     @GetMapping("/search")
     public ResponseEntity<ApplicantPageResponse> applicantPageSearch(@AuthUserInfo String username,
                                                                      @RequestParam(name = "name") String keyword,
