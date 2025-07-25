@@ -2,6 +2,7 @@ package org.project.ttokttok.domain.applyform.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.project.ttokttok.domain.applyform.controller.docs.ApplyFormAdminDocs;
 import org.project.ttokttok.domain.applyform.controller.dto.request.ApplyFormCreateRequest;
 import org.project.ttokttok.domain.applyform.controller.dto.request.ApplyFormUpdateRequest;
 import org.project.ttokttok.domain.applyform.controller.dto.response.ApplyFormDetailResponse;
@@ -9,6 +10,7 @@ import org.project.ttokttok.domain.applyform.controller.dto.response.BeforeQuest
 import org.project.ttokttok.domain.applyform.domain.json.Question;
 import org.project.ttokttok.domain.applyform.service.ApplyFormAdminService;
 import org.project.ttokttok.global.annotation.auth.AuthUserInfo;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,7 +19,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/admin/forms")
-public class ApplyFormAdminApiController {
+public class ApplyFormAdminApiController implements ApplyFormAdminDocs {
 
     private final ApplyFormAdminService applyFormAdminService;
 
@@ -30,7 +32,7 @@ public class ApplyFormAdminApiController {
                 request.toServiceRequest(username, clubId)
         );
 
-        return ResponseEntity.ok()
+        return ResponseEntity.status(HttpStatus.CREATED)
                 .body("Apply form created successfully with ID: " + applyFormId);
     }
 
