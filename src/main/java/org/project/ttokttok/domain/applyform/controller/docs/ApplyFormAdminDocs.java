@@ -177,7 +177,7 @@ public interface ApplyFormAdminDocs {
     ResponseEntity<String> updateApplyForm(
             @Parameter(description = "인증된 관리자 이름", hidden = true)
             String username,
-            @Parameter(description = "지원폼 ID", required = true, example = "form-123")
+            @Parameter(description = "지원폼 ID", required = true, example = "UUID")
             String formId,
             @Parameter(description = "지원폼 수정 요청 데이터")
             ApplyFormUpdateRequest request
