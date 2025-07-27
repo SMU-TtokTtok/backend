@@ -36,7 +36,6 @@ public record UpdateClubContentRequest(
         JsonNullable<String> content,
 
         //@NotNull(message = "모집 여부는 Null일 수 없습니다.")
-        JsonNullable<Boolean> recruiting,
         JsonNullable<LocalDate> applyStartDate,
         JsonNullable<LocalDate> applyEndDate,
         JsonNullable<Set<ApplicableGrade>> grades,
