@@ -5,6 +5,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.project.ttokttok.domain.applicant.domain.enums.Gender;
 import org.project.ttokttok.domain.applicant.domain.enums.Grade;
 import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.user.domain.User;
@@ -35,25 +36,49 @@ public class ClubMember extends BaseTimeEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Grade grade;
+    private Grade grade; // TODO: 추후 의존 위치 바꾸던가 할 것
 
     @Column(nullable = false)
     private String major;
 
+    // ---- 추가된 필드 ----
+    @Column(nullable = false)
+    private String email; // 부원 추가 시 입력한 이메일
+
+    @Column(nullable = false)
+    private String phoneNumber; // 부원 추가 시 입력한 전화번호
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Gender gender; // 부원 추가 시 입력한 성별 -> TODO: 추후 의존 위치 바꾸던가 할 것
+
     @Builder
-    private ClubMember(Club club, User user, MemberRole role, Grade grade, String major) {
+    private ClubMember(Club club,
+                       User user,
+                       MemberRole role,
+                       Grade grade,
+                       String major,
+                       String email,
+                       String phoneNumber,
+                       Gender gender) {
         this.club = club;
         this.user = user;
         this.role = role != null ? role : MemberRole.MEMBER;
         this.grade = grade != null ? grade : Grade.FIRST_GRADE; // 기본값은 1학년
         this.major = major != null ? major : "N/A"; // 학과 값 에러 시
+        this.email = email;
+        this.phoneNumber = phoneNumber;
+        this.gender = gender;
     }
 
     public static ClubMember create(Club club,
                                     User user,
                                     MemberRole role,
                                     Grade grade,
-                                    String major) {
+                                    String major,
+                                    String email,
+                                    String phoneNumber,
+                                    Gender gender) {
 
         return ClubMember.builder()
                 .club(club)
@@ -61,6 +86,9 @@ public class ClubMember extends BaseTimeEntity {
                 .role(role)
                 .grade(grade)
                 .major(major)
+                .email(email)
+                .phoneNumber(phoneNumber)
+                .gender(gender)
                 .build();
     }
 
