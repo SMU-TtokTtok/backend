@@ -93,7 +93,7 @@ public class SecurityConfig {
 
         config.setAllowedOriginPatterns(
                 //todo: 나중에 프론트 배포 링크로 바꿀 것
-                List.of("http://localhost:5173",
+                List.of("http://localhost:3000",
                         "http://localhost:8080",
                          serverUrl
                 )
