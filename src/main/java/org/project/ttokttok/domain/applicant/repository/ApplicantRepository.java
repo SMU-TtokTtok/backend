@@ -13,4 +13,9 @@ public interface ApplicantRepository extends JpaRepository<Applicant, String>, A
     int deleteAllApplicantsByApplyFormId(String applyFormId);
 
     List<Applicant> findByApplyFormId(String applyFormId);
+
+    /**
+     * 중복 지원 체크를 위한 메서드
+     */
+    boolean existsByUserEmailAndApplyFormId(String userEmail, String applyFormId);
 }

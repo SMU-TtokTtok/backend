@@ -2,6 +2,7 @@ package org.project.ttokttok.domain.applicant.domain;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -100,5 +101,57 @@ public class Applicant extends BaseTimeEntity {
     public void deleteMemo(String memoId) {
         this.memos.removeIf(memo -> memo.getId().equals(memoId));
     }
-}
 
+    // ----- 생성자 ----- //
+    @Builder
+    private Applicant(String userEmail,
+                     String name,
+                     Integer age,
+                     String major,
+                     String email,
+                     String phone,
+                     StudentStatus studentStatus,
+                     Grade grade,
+                     Gender gender,
+                     List<Answer> answers,
+                     ApplyForm applyForm) {
+        this.userEmail = userEmail;
+        this.name = name;
+        this.age = age;
+        this.major = major;
+        this.email = email;
+        this.phone = phone;
+        this.studentStatus = studentStatus;
+        this.grade = grade;
+        this.gender = gender;
+        this.status = Status.EVALUATING; // 기본 상태는 대기
+        this.answers = answers != null ? answers : new ArrayList<>();
+        this.applyForm = applyForm;
+    }
+
+    public static Applicant createApplicant(String userEmail,
+                                          String name,
+                                          Integer age,
+                                          String major,
+                                          String email,
+                                          String phone,
+                                          StudentStatus studentStatus,
+                                          Grade grade,
+                                          Gender gender,
+                                          List<Answer> answers,
+                                          ApplyForm applyForm) {
+        return Applicant.builder()
+                .userEmail(userEmail)
+                .name(name)
+                .age(age)
+                .major(major)
+                .email(email)
+                .phone(phone)
+                .studentStatus(studentStatus)
+                .grade(grade)
+                .gender(gender)
+                .answers(answers)
+                .applyForm(applyForm)
+                .build();
+    }
+}

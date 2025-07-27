@@ -49,10 +49,22 @@ public class ClubAdminApiController implements ClubAdminApiDocs {
                 .body("Markdown image Updated successfully. Image Key: " + imageKey);
     }
 
+    // TODO: 별개의 라우터로 분리
     @GetMapping("/image")
     public ResponseEntity<String> getImageUrl(@RequestParam String imageKey) {
         String imageUrl = clubAdminService.getImageUrl(imageKey);
 
         return ResponseEntity.ok(imageUrl);
     }
+
+    // 모집 마감, 재시작 토글 api
+    @PatchMapping("/{clubId}/toggle-recruitment")
+    public ResponseEntity<Void> toggleRecruitment(@AuthUserInfo String username,
+                                                  @PathVariable String clubId) {
+        clubAdminService.toggleRecruitment(username, clubId);
+
+        return ResponseEntity.noContent()
+                .build();
+    }
+
 }

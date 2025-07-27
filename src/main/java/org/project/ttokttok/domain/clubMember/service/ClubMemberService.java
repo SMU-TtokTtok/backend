@@ -2,6 +2,7 @@ package org.project.ttokttok.domain.clubMember.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.project.ttokttok.domain.applicant.domain.enums.Gender;
 import org.project.ttokttok.domain.applicant.domain.enums.Grade;
 import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.exception.ClubNotFoundException;
@@ -99,6 +100,7 @@ public class ClubMemberService {
                 .findByClubIdAndKeyword(request.clubId(), request.keyword())
                 .stream()
                 .map(member -> ClubMemberSearchServiceResponse.of(
+                        member.getId(),
                         member.getGrade(),
                         member.getUser().getName(),
                         member.getMajor(),
@@ -139,7 +141,10 @@ public class ClubMemberService {
                 club,
                 request.major(),
                 request.grade(),
-                request.role())
+                request.role(),
+                request.email(),
+                request.phoneNumber(),
+                request.gender())
                 .getId();
     }
 
@@ -148,7 +153,10 @@ public class ClubMemberService {
                                         Club club,
                                         String major,
                                         Grade grade,
-                                        MemberRole role) {
+                                        MemberRole role,
+                                        String email,
+                                        String phoneNumber,
+                                        Gender gender) {
         // 회장 혹은 부회장이 있는지 검증
         if (role == MemberRole.PRESIDENT || role == MemberRole.VICE_PRESIDENT) {
             clubMemberRepository.findByClubIdAndRole(club.getId(), role)
@@ -162,13 +170,15 @@ public class ClubMemberService {
             throw new AlreadyClubMemberException();
         }
 
-        ClubMember clubMember = ClubMember.builder()
-                .user(user)
-                .club(club)
-                .major(major)
-                .grade(grade)
-                .role(role)
-                .build();
+        ClubMember clubMember = ClubMember.create(
+                club,
+                user,
+                role,
+                grade,
+                major,
+                email,
+                phoneNumber,
+                gender);
 
         return clubMemberRepository.save(clubMember);
     }
