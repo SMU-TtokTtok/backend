@@ -8,6 +8,7 @@ import org.project.ttokttok.domain.applyform.repository.ApplyFormRepository;
 import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.exception.ClubNotFoundException;
 import org.project.ttokttok.domain.club.exception.FileIsNotImageException;
+import org.project.ttokttok.domain.club.exception.NoApplyFormExistException;
 import org.project.ttokttok.domain.club.exception.NotClubAdminException;
 import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.domain.club.service.dto.request.ClubContentUpdateServiceRequest;
@@ -19,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 import static org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus.ACTIVE;
 import static org.project.ttokttok.infrastructure.s3.enums.S3FileDirectory.INTRODUCTION_IMAGE;
@@ -64,6 +66,32 @@ public class ClubAdminService {
         validateImage(file.getContentType());
 
         return s3Service.uploadFile(file, INTRODUCTION_IMAGE.getDirectoryName());
+    }
+
+    // 모집 마감, 재시작 토글 로직
+    @Transactional
+    public void toggleRecruitment(String username, String clubId) {
+        Club club = clubRepository.findById(clubId)
+                .orElseThrow(ClubNotFoundException::new);
+
+        validateAdmin(username, club.getAdmin().getUsername());
+
+        // 현재 존재하는 활성화된 지원 폼을 찾음.
+        Optional<ApplyForm> form = applyFormRepository.findByClubIdAndStatus(clubId, ACTIVE);
+
+        if (form.isPresent()) {
+            // 활성화된 폼이 존재한다면, 모집 상태를 토글함.
+            form.get().updateFormStatus();
+        } else if (form.isEmpty()) {
+            // 활성화된 폼이 없다면, 가장 최근에 생성된 지원 폼을 찾아 활성화시킴.
+            ApplyForm latestForm = applyFormRepository.findTopByClubIdOrderByCreatedAtDesc(clubId)
+                    .orElseThrow(ApplyFormNotFoundException::new);
+
+            latestForm.updateFormStatus();
+        } else {
+            // 지원 폼이 존재하지 않은 경우 예외 처리
+            throw new NoApplyFormExistException();
+        }
     }
 
     private void validateImage(String contentType) {

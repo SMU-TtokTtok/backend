@@ -150,4 +150,14 @@ public class ApplyForm extends BaseTimeEntity {
             this.formJson = formJson;
         }
     }
+
+    // FIXME: 모집일자의 예외 처리가 필요합니다.
+    // EX: DEADLINE이 지난 경우, 자동으로 모집 마감 처리 등
+    public void updateFormStatus() {
+        if (this.status == ApplyFormStatus.ACTIVE) {
+            this.status = ApplyFormStatus.INACTIVE;
+        } else if (this.status == ApplyFormStatus.INACTIVE) {
+            this.status = ApplyFormStatus.ACTIVE;
+        }
+    }
 }
