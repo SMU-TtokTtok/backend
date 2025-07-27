@@ -99,6 +99,7 @@ public class ClubMemberService {
                 .findByClubIdAndKeyword(request.clubId(), request.keyword())
                 .stream()
                 .map(member -> ClubMemberSearchServiceResponse.of(
+                        member.getId(),
                         member.getGrade(),
                         member.getUser().getName(),
                         member.getMajor(),
