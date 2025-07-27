@@ -21,6 +21,7 @@ public record ClubMemberSearchCoverResponse(
 
 @Builder
 record ClubMemberSearchResponse(
+        String id,
         Grade grade,
         String name,
         String major,
@@ -28,6 +29,7 @@ record ClubMemberSearchResponse(
 ) {
     public static ClubMemberSearchResponse from(ClubMemberSearchServiceResponse response) {
         return ClubMemberSearchResponse.builder()
+                .id(response.id())
                 .grade(response.grade())
                 .name(response.name())
                 .major(response.major())

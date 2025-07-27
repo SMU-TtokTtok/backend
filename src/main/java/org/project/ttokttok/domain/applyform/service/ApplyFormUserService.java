@@ -17,7 +17,6 @@ public class ApplyFormUserService {
 
     private final ApplyFormRepository applyFormRepository;
     private final ClubRepository clubRepository;
-    private final ApplicantRepository applicantRepository;
 
     @Transactional(readOnly = true)
     public ActiveApplyFormServiceResponse getActiveApplyForm(String clubId) {
@@ -31,10 +30,6 @@ public class ApplyFormUserService {
                         applyForm.getFormJson()
                 ))
                 .orElseThrow(ActiveApplyFormNotFoundException::new);
-    }
-
-    public void submitApplyForm() {
-
     }
 
     private void validateClubExists(String clubId) {
