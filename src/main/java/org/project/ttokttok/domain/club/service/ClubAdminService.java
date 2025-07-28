@@ -96,6 +96,10 @@ public class ClubAdminService {
     }
 
     public ClubDetailAdminServiceResponse getClubContent(String clubId) {
+        if (!clubRepository.existsById(clubId)) {
+            throw new ClubNotFoundException();
+        }
+
         return ClubDetailAdminServiceResponse.from(
                 clubRepository.getAdminClubIntro(clubId)
         );

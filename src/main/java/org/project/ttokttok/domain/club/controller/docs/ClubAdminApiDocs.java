@@ -232,11 +232,10 @@ public interface ClubAdminApiDocs {
             summary = "관리자 동아리 소개 조회",
             description = """
                     동아리 관리자가 동아리의 상세 정보를 조회합니다.
-                    관리자 전용 뷰로, 일반 사용자 조회와 달리 더 많은 정보를 포함합니다.
                     
                     **조회 가능한 정보**:
                     - 동아리 기본 정보 (이름, 타입, 카테고리, 대학 구분 등)
-                    - 모집 관련 정보 (모집 기간, 지원 가능 학년, 최대 지원자 수)
+                    - 모집 관련 정보
                     - 동아리 소개 내용 (마크다운 형식)
                     - 현재 동아리원 수
                     - 프로필 이미지 URL
@@ -251,6 +250,16 @@ public interface ClubAdminApiDocs {
                     responseCode = "200",
                     description = "동아리 상세 정보 조회 성공",
                     content = @Content(schema = @Schema(implementation = ClubAdminDetailResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "인증되지 않은 사용자",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "권한 부족",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             ),
             @ApiResponse(
                     responseCode = "404",
@@ -305,6 +314,11 @@ public interface ClubAdminApiDocs {
             @ApiResponse(
                     responseCode = "404",
                     description = "존재하지 않는 동아리 또는 지원 폼",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "서버 내부 오류",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             )
     })
