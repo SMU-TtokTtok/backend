@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.project.ttokttok.domain.applyform.controller.docs.ApplyFormAdminDocs;
 import org.project.ttokttok.domain.applyform.controller.dto.request.ApplyFormCreateRequest;
 import org.project.ttokttok.domain.applyform.controller.dto.request.ApplyFormUpdateRequest;
+import org.project.ttokttok.domain.applyform.controller.dto.response.ApplyFormCreateResponse;
 import org.project.ttokttok.domain.applyform.controller.dto.response.ApplyFormDetailResponse;
 import org.project.ttokttok.domain.applyform.controller.dto.response.BeforeQuestionsResponse;
 import org.project.ttokttok.domain.applyform.domain.json.Question;
@@ -25,15 +26,17 @@ public class ApplyFormAdminApiController implements ApplyFormAdminDocs {
 
     // 폼 생성 로직
     @PostMapping("/clubs/{clubId}")
-    public ResponseEntity<String> createApplyForm(@AuthUserInfo String username,
-                                                  @PathVariable String clubId,
-                                                  @RequestBody @Valid ApplyFormCreateRequest request) {
+    public ResponseEntity<ApplyFormCreateResponse> createApplyForm(@AuthUserInfo String username,
+                                                                   @PathVariable String clubId,
+                                                                   @RequestBody @Valid ApplyFormCreateRequest request) {
         String applyFormId = applyFormAdminService.createApplyForm(
                 request.toServiceRequest(username, clubId)
         );
 
+        ApplyFormCreateResponse response = new ApplyFormCreateResponse(applyFormId);
+
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body("Apply form created successfully with ID: " + applyFormId);
+                .body(response);
     }
 
     // 지원 폼 상세 조회(현재 활성화된 폼)
@@ -50,9 +53,9 @@ public class ApplyFormAdminApiController implements ApplyFormAdminDocs {
 
     // 지원 폼 수정하기
     @PatchMapping("/{formId}")
-    public ResponseEntity<String> updateApplyForm(@AuthUserInfo String username,
-                                                  @PathVariable String formId,
-                                                  @RequestBody ApplyFormUpdateRequest request) {
+    public ResponseEntity<Void> updateApplyForm(@AuthUserInfo String username,
+                                                @PathVariable String formId,
+                                                @RequestBody ApplyFormUpdateRequest request) {
         applyFormAdminService.updateApplyForm(
                 request.toServiceRequest(username, formId)
         );

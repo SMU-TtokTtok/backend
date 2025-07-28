@@ -7,16 +7,15 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import org.project.ttokttok.domain.applyform.controller.dto.request.ApplyFormCreateRequest;
 import org.project.ttokttok.domain.applyform.controller.dto.request.ApplyFormUpdateRequest;
+import org.project.ttokttok.domain.applyform.controller.dto.response.ApplyFormCreateResponse;
 import org.project.ttokttok.domain.applyform.controller.dto.response.ApplyFormDetailResponse;
 import org.project.ttokttok.domain.applyform.controller.dto.response.BeforeQuestionsResponse;
 import org.project.ttokttok.global.annotation.auth.AuthUserInfo;
 import org.project.ttokttok.global.exception.dto.ErrorResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 
 @Tag(name = "[관리자] 지원폼 관리 API", description = "동아리 관리자용 지원폼 생성/수정/조회 API 입니다.")
 public interface ApplyFormAdminDocs {
@@ -85,7 +84,7 @@ public interface ApplyFormAdminDocs {
             @ApiResponse(
                     responseCode = "201",
                     description = "지원폼 생성 성공",
-                    content = @Content(schema = @Schema(implementation = String.class, example = "Apply form created successfully with ID: UUID"))
+                    content = @Content(schema = @Schema(implementation = ApplyFormCreateResponse.class))
             ),
             @ApiResponse(
                     responseCode = "400",
@@ -113,7 +112,7 @@ public interface ApplyFormAdminDocs {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             )
     })
-    ResponseEntity<String> createApplyForm(
+    ResponseEntity<ApplyFormCreateResponse> createApplyForm(
             @Parameter(description = "인증된 관리자 이름", hidden = true)
             String username,
             @Parameter(description = "동아리 ID", required = true, example = "UUID")
@@ -174,7 +173,7 @@ public interface ApplyFormAdminDocs {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             )
     })
-    ResponseEntity<String> updateApplyForm(
+    ResponseEntity<Void> updateApplyForm(
             @Parameter(description = "인증된 관리자 이름", hidden = true)
             String username,
             @Parameter(description = "지원폼 ID", required = true, example = "UUID")
