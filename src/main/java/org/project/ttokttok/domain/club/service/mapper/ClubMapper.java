@@ -7,6 +7,7 @@ import org.mapstruct.Named;
 import org.openapitools.jackson.nullable.JsonNullable;
 import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.service.dto.request.ClubContentUpdateServiceRequest;
+import org.project.ttokttok.domain.club.service.dto.response.ClubDetailAdminServiceResponse;
 
 
 @Mapper(componentModel = "spring")
