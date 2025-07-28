@@ -17,6 +17,8 @@ public enum ClubCategory {
     ACADEMIC("학술"),
     SPORTS("체육"),
     RELIGION("종교"),
+    ARTS("예술"),
+    SOCIAL("친목"),
     ETC("기타");
 
     final String category;

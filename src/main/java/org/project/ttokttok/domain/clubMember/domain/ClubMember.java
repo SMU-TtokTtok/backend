@@ -45,7 +45,7 @@ public class ClubMember extends BaseTimeEntity {
     @Column(nullable = false)
     private String email; // 부원 추가 시 입력한 이메일
 
-    @Column(nullable = false)
+    @Column(name = "phone_number", nullable = false)
     private String phoneNumber; // 부원 추가 시 입력한 전화번호
 
     @Enumerated(EnumType.STRING)

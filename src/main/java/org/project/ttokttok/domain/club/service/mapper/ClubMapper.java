@@ -19,6 +19,7 @@ public interface ClubMapper {
     @Mapping(target = "name", source = "name", qualifiedByName = "unwrapNullable")
     @Mapping(target = "clubType", source = "clubType", qualifiedByName = "unwrapNullable")
     @Mapping(target = "clubCategory", source = "clubCategory", qualifiedByName = "unwrapNullable")
+    @Mapping(target = "clubUniv", source = "clubUniv", qualifiedByName = "unwrapNullable")
     @Mapping(target = "customCategory", source = "customCategory", qualifiedByName = "unwrapNullable")
     @Mapping(target = "summary", source = "summary", qualifiedByName = "unwrapNullable")
     @Mapping(target = "content", source = "content", qualifiedByName = "unwrapNullable")

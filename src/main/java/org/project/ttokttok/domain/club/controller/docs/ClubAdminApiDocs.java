@@ -2,7 +2,6 @@ package org.project.ttokttok.domain.club.controller.docs;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.StringToClassMapItem;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.SchemaProperty;
@@ -35,7 +34,36 @@ public interface ClubAdminApiDocs {
                     - 해당 동아리의 관리자만 수정 가능합니다.
                     - 마크다운 형식을 지원합니다.
                     - 이미지는 JPG, PNG, WEBP 형식만 지원됩니다.
-                    - 수정 사항에 포함되지 않는 필드는 NULL이 아니라 그냥 포함하지 말아주세요.
+                    - 수정 사항에 포함되지 않는 필드는 NULL이 아닌, 포함하지 말아주세요.
+                    
+                    **열거형**:
+                    - clubType:
+                        - CENTRAL (중앙)
+                        - UNION (연합)
+                        - DEPARTMENT (학과)
+                    
+                    - clubCategory:
+                        - VOLUNTEER ("봉사")
+                        - CULTURE ("문화")
+                        - ACADEMIC ("학술")
+                        - SPORTS ("체육")
+                        - RELIGION ("종교")
+                        - ARTS ("예술")
+                        - SOCIAL ("친목")
+                        - ETC ("기타")
+
+                    - clubUniv:
+                        - GLOBAL_AREA (글로벌지역 학부)
+                        - DESIGN (디자인대학)
+                        - ENGINEERING (공대)
+                        - CONVERGENCE_TECHNOLOGY (융합기술대)
+                        - ARTS` (예술대)
+
+                    - grades:
+                        - FIRST_GRADE (1학년)
+                        - SECOND_GRADE (2학년)
+                        - THIRD_GRADE (3학년)
+                        - FOURTH_GRADE (4학년)
                     """
     )
     @RequestBody(

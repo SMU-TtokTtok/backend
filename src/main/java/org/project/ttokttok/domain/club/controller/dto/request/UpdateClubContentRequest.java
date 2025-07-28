@@ -5,6 +5,7 @@ import org.openapitools.jackson.nullable.JsonNullable;
 import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
 import org.project.ttokttok.domain.club.domain.enums.ClubCategory;
 import org.project.ttokttok.domain.club.domain.enums.ClubType;
+import org.project.ttokttok.domain.club.domain.enums.ClubUniv;
 import org.project.ttokttok.domain.club.service.dto.request.ClubContentUpdateServiceRequest;
 
 import java.time.LocalDate;
@@ -31,10 +32,17 @@ public record UpdateClubContentRequest(
                 description = "동아리 카테고리",
                 type = "string",
                 example = "SPORTS",
-
                 allowableValues = {"ACADEMIC", "SPORTS", "ARTS", "HOBBY", "VOLUNTEER", "OTHER"}
         )
         JsonNullable<ClubCategory> clubCategory,
+
+        @Schema(
+                description = "대학 구분",
+                type = "string",
+                example = "ENGINEERING",
+                allowableValues = {"GLOBAL_AREA", "DESIGN", "ENGINEERING", "CONVERGENCE_TECHNOLOGY", "ARTS"}
+        )
+        JsonNullable<ClubUniv> clubUniv,
 
         @Schema(
                 description = "커스텀 카테고리명 (사용자 직접입력)",
@@ -91,13 +99,14 @@ public record UpdateClubContentRequest(
                 minimum = "1"
         )
         JsonNullable<Integer> maxApplyCount
-) { // todo: 과 열거형 추가하기
+) {
     public ClubContentUpdateServiceRequest toServiceRequest(String clubId) {
         return ClubContentUpdateServiceRequest.builder()
                 .clubId(clubId)
                 .name(name)
                 .clubType(clubType)
                 .clubCategory(clubCategory)
+                .clubUniv(clubUniv)
                 .customCategory(customCategory)
                 .summary(summary)
                 //.profileImage(profileImage)
