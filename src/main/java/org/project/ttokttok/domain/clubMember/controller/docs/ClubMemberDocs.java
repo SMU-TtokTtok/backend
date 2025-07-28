@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import org.project.ttokttok.domain.clubMember.controller.dto.request.ClubMemberAddRequest;
 import org.project.ttokttok.domain.clubMember.controller.dto.request.RoleChangeRequest;
 import org.project.ttokttok.domain.clubMember.controller.dto.response.ClubMemberCountResponse;
+import org.project.ttokttok.domain.clubMember.controller.dto.response.ClubMemberCreateResponse;
 import org.project.ttokttok.domain.clubMember.controller.dto.response.ClubMemberPageResponse;
 import org.project.ttokttok.domain.clubMember.controller.dto.response.ClubMemberSearchCoverResponse;
 import org.project.ttokttok.global.annotation.auth.AuthUserInfo;
@@ -398,7 +399,7 @@ public interface ClubMemberDocs {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             )
     })
-    ResponseEntity<String> addMembers(
+    ResponseEntity<ClubMemberCreateResponse> addMembers(
             @Parameter(description = "인증된 관리자 이름", hidden = true)
             String username,
             @Parameter(description = "동아리 ID", required = true, example = "UUID")

@@ -6,6 +6,7 @@ import org.project.ttokttok.domain.clubMember.controller.docs.ClubMemberDocs;
 import org.project.ttokttok.domain.clubMember.controller.dto.request.ClubMemberAddRequest;
 import org.project.ttokttok.domain.clubMember.controller.dto.request.RoleChangeRequest;
 import org.project.ttokttok.domain.clubMember.controller.dto.response.ClubMemberCountResponse;
+import org.project.ttokttok.domain.clubMember.controller.dto.response.ClubMemberCreateResponse;
 import org.project.ttokttok.domain.clubMember.controller.dto.response.ClubMemberPageResponse;
 import org.project.ttokttok.domain.clubMember.controller.dto.response.ClubMemberSearchCoverResponse;
 import org.project.ttokttok.domain.clubMember.service.ClubMemberService;
@@ -134,14 +135,16 @@ public class ClubMemberApiController implements ClubMemberDocs {
     }
 
     @PostMapping("/{clubId}/add")
-    public ResponseEntity<String> addMembers(@AuthUserInfo String username,
+    public ResponseEntity<ClubMemberCreateResponse> addMembers(@AuthUserInfo String username,
                                              @PathVariable String clubId,
                                              @Valid @RequestBody ClubMemberAddRequest request) {
         String clubMemberId = clubMemberService.addMember(
                 username, clubId, request.toServiceRequest()
         );
 
+        ClubMemberCreateResponse response = new ClubMemberCreateResponse(clubMemberId);
+
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body("ClubMember Add Successfully. clubMemberId: " + clubMemberId);
+                .body(response);
     }
 }

@@ -7,13 +7,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import org.project.ttokttok.domain.memo.controller.dto.request.MemoRequest;
+import org.project.ttokttok.domain.memo.controller.dto.response.MemoCreateResponse;
 import org.project.ttokttok.global.annotation.auth.AuthUserInfo;
 import org.project.ttokttok.global.exception.dto.ErrorResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 
 @Tag(name = "[관리자] 메모 API", description = "지원자 별 메모 관리용 API 입니다.")
 public interface MemoDocs {
@@ -63,7 +62,7 @@ public interface MemoDocs {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             )
     })
-    ResponseEntity<String> createMemo(
+    ResponseEntity<MemoCreateResponse> createMemo(
             @Parameter(description = "인증된 관리자 이름", hidden = true)
             String username,
             @Parameter(description = "지원자 ID", required = true, example = "UUID")
@@ -114,7 +113,7 @@ public interface MemoDocs {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             )
     })
-    ResponseEntity<String> updateMemo(
+    ResponseEntity<Void> updateMemo(
             @Parameter(description = "인증된 관리자 이름", hidden = true)
             String username,
             @Parameter(description = "지원자 ID", required = true, example = "UUID")
@@ -162,7 +161,7 @@ public interface MemoDocs {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             )
     })
-    ResponseEntity<String> deleteMemo(
+    ResponseEntity<Void> deleteMemo(
             @Parameter(description = "인증된 관리자 이름", hidden = true)
             @AuthUserInfo String username,
             @Parameter(description = "지원자 ID", required = true, example = "UUID")

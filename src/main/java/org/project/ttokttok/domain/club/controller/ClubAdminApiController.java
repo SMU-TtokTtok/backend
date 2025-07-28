@@ -6,6 +6,8 @@ import org.openapitools.jackson.nullable.JsonNullable;
 import org.project.ttokttok.domain.club.controller.docs.ClubAdminApiDocs;
 import org.project.ttokttok.domain.club.controller.dto.request.UpdateClubContentRequest;
 import org.project.ttokttok.domain.club.controller.dto.response.ClubAdminDetailResponse;
+import org.project.ttokttok.domain.club.controller.dto.response.GetImageUrlResponse;
+import org.project.ttokttok.domain.club.controller.dto.response.UpdateImageResponse;
 import org.project.ttokttok.domain.club.service.ClubAdminService;
 import org.project.ttokttok.domain.club.service.dto.request.MarkdownImageUpdateRequest;
 import org.project.ttokttok.global.annotation.auth.AuthUserInfo;
@@ -24,21 +26,21 @@ public class ClubAdminApiController implements ClubAdminApiDocs {
     // 동아리 소개 수정 로직
     @PatchMapping(value = "/{clubId}/content",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<String> updateClubContent(@AuthUserInfo String username,
+    public ResponseEntity<Void> updateClubContent(@AuthUserInfo String username,
                                                     @PathVariable String clubId,
                                                     @Valid @RequestPart UpdateClubContentRequest request,
                                                     @RequestPart(required = false) MultipartFile profileImage) {
         clubAdminService.updateContent(username, request.toServiceRequest(clubId));
 
-        return ResponseEntity.ok()
-                .body("Club content updated successfully.");
+        return ResponseEntity.noContent()
+                .build();
     }
 
     @PostMapping(value = "/{clubId}/update-image",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<String> updateMarkdownImage(@AuthUserInfo String username,
-                                                      @PathVariable String clubId,
-                                                      @RequestPart("image") MultipartFile imageFile) {
+    public ResponseEntity<UpdateImageResponse> updateMarkdownImage(@AuthUserInfo String username,
+                                                                   @PathVariable String clubId,
+                                                                   @RequestPart("image") MultipartFile imageFile) {
 
         MarkdownImageUpdateRequest request = MarkdownImageUpdateRequest.of(
                 username,
@@ -48,16 +50,21 @@ public class ClubAdminApiController implements ClubAdminApiDocs {
 
         String imageKey = clubAdminService.updateMarkdownImage(request);
 
+        UpdateImageResponse response = new UpdateImageResponse(imageKey);
+
         return ResponseEntity.ok()
-                .body("Markdown image Updated successfully. Image Key: " + imageKey);
+                .body(response);
     }
 
     // TODO: 별개의 라우터로 분리
     @GetMapping("/image")
-    public ResponseEntity<String> getImageUrl(@RequestParam String imageKey) {
+    public ResponseEntity<GetImageUrlResponse> getImageUrl(@RequestParam String imageKey) {
         String imageUrl = clubAdminService.getImageUrl(imageKey);
 
-        return ResponseEntity.ok(imageUrl);
+        GetImageUrlResponse response = new GetImageUrlResponse(imageUrl);
+
+        return ResponseEntity.ok()
+                .body(response);
     }
 
     // 모집 마감, 재시작 토글 api
@@ -70,7 +77,7 @@ public class ClubAdminApiController implements ClubAdminApiDocs {
                 .build();
     }
 
-    // 동아리 소개 조회 API
+    // 관리자 동아리 소개 조회 API
     @GetMapping("/{clubId}/content")
     public ResponseEntity<ClubAdminDetailResponse> getClubContent(@PathVariable String clubId) {
         ClubAdminDetailResponse response = ClubAdminDetailResponse.from(
