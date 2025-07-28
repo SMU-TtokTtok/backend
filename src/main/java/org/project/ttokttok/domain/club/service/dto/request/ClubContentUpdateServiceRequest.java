@@ -6,6 +6,7 @@ import org.openapitools.jackson.nullable.JsonNullable;
 import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
 import org.project.ttokttok.domain.club.domain.enums.ClubCategory;
 import org.project.ttokttok.domain.club.domain.enums.ClubType;
+import org.project.ttokttok.domain.club.domain.enums.ClubUniv;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
@@ -18,6 +19,7 @@ public record ClubContentUpdateServiceRequest(
         JsonNullable<String> name,
         JsonNullable<ClubType> clubType,
         JsonNullable<ClubCategory> clubCategory,
+        JsonNullable<ClubUniv> clubUniv,
         JsonNullable<String> customCategory,
         JsonNullable<String> summary,
         JsonNullable<MultipartFile> profileImage,

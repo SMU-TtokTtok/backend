@@ -4,17 +4,16 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.SchemaProperty;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import org.project.ttokttok.domain.club.controller.dto.request.UpdateClubContentRequest;
-import org.project.ttokttok.global.annotation.auth.AuthUserInfo;
 import org.project.ttokttok.global.exception.dto.ErrorResponse;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 
 @Tag(name = "[관리자] 동아리 관련 API", description = "관리자 동아리 정보 관리용 API 입니다.")
@@ -24,52 +23,116 @@ public interface ClubAdminApiDocs {
             summary = "동아리 소개 수정",
             description = """
                     동아리 관리자가 동아리 소개 내용을 수정합니다.
-                    Multipart 형식으로 요청됩니다.
                     
-                    *주의사항*
+                    **요청 형식**: Multipart Form Data
+                    
+                    **요청 파라미터**:
+                    - `request`: JSON 형태의 동아리 정보 (UpdateClubContentRequest, 필드 내 선택사항)
+                    - `profileImage`: 동아리 프로필 이미지 파일 (선택사항)
+                    
+                    *주의사항*:
                     - 해당 동아리의 관리자만 수정 가능합니다.
-                    - 동아리 소개, 모집 정보 등을 포함한 전체 콘텐츠를 수정할 수 있습니다.
                     - 마크다운 형식을 지원합니다.
+                    - 이미지는 JPG, PNG, WEBP 형식만 지원됩니다.
+                    - 수정 사항에 포함되지 않는 필드는 NULL이 아닌, 포함하지 말아주세요.
+                    
+                    **열거형**:
+                    - clubType:
+                        - CENTRAL (중앙)
+                        - UNION (연합)
+                        - DEPARTMENT (학과)
+                    
+                    - clubCategory:
+                        - VOLUNTEER ("봉사")
+                        - CULTURE ("문화")
+                        - ACADEMIC ("학술")
+                        - SPORTS ("체육")
+                        - RELIGION ("종교")
+                        - ARTS ("예술")
+                        - SOCIAL ("친목")
+                        - ETC ("기타")
+
+                    - clubUniv:
+                        - GLOBAL_AREA (글로벌지역 학부)
+                        - DESIGN (디자인대학)
+                        - ENGINEERING (공대)
+                        - CONVERGENCE_TECHNOLOGY (융합기술대)
+                        - ARTS` (예술대)
+
+                    - grades:
+                        - FIRST_GRADE (1학년)
+                        - SECOND_GRADE (2학년)
+                        - THIRD_GRADE (3학년)
+                        - FOURTH_GRADE (4학년)
                     """
     )
-    @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "동아리 소개 수정 성공"
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "잘못된 요청 (필수 필드 누락 또는 형식 오류)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-            ),
-            @ApiResponse(
-                    responseCode = "401",
-                    description = "인증되지 않은 사용자",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "권한 부족 (해당 동아리의 관리자가 아님)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "존재하지 않는 동아리",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-            ),
-            @ApiResponse(
-                    responseCode = "500",
-                    description = "서버 내부 오류",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-            )
-    })
+    @RequestBody(
+            content = {
+                    @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = UpdateClubContentRequest.class)
+                    ),
+                    @Content(
+                            mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
+                            schemaProperties = {
+                                    @SchemaProperty(name = "request", schema = @Schema(type = "string", format = "json", description = "동아리 정보 수정 데이터")),
+                                    @SchemaProperty(name = "profileImage", schema = @Schema(type = "string", format = "binary", description = "동아리 프로필 이미지 파일"))
+                            }
+                    )
+            }
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "동아리 소개 수정 성공",
+                            content = @Content(schema = @Schema(implementation = String.class, example = "Club content updated successfully."))
+                    ),
+                    @ApiResponse(
+                            responseCode = "400",
+                            description = "잘못된 요청 (필수 필드 누락 또는 형식 오류)",
+                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    ),
+                    @ApiResponse(
+                            responseCode = "401",
+                            description = "인증되지 않은 사용자",
+                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    ),
+                    @ApiResponse(
+                            responseCode = "403",
+                            description = "권한 없음 (동아리 관리자가 아님)",
+                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "존재하지 않는 동아리",
+                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    )
+            })
     ResponseEntity<String> updateClubContent(
-            @Parameter(description = "인증된 관리자 이름", hidden = true)
-            @AuthUserInfo String username,
-            @Parameter(description = "동아리 ID", required = true, example = "UUID")
-            @PathVariable String clubId,
-            @Parameter(description = "동아리 소개 수정 요청 데이터")
-            @RequestPart @Valid UpdateClubContentRequest request
+            @Parameter(
+                    description = "인증된 사용자 정보",
+                    hidden = true
+            ) String username,
+
+            @Parameter(
+                    description = "수정할 동아리 ID",
+                    example = "club-001",
+                    required = true
+            ) String clubId,
+
+            @Schema(
+                    type = "string",
+                    format = "json",
+                    description = "동아리 정보 수정 데이터")
+            UpdateClubContentRequest request,
+
+            @Schema(
+                    type = "string",
+                    format = "binary",
+                    description = "동아리 프로필 이미지 파일 (JPG, PNG, WEBP 지원, 최대 5MB)"
+            )
+            MultipartFile profileImage
     );
 
     @Operation(
@@ -119,11 +182,11 @@ public interface ClubAdminApiDocs {
     })
     ResponseEntity<String> updateMarkdownImage(
             @Parameter(description = "인증된 관리자 이름", hidden = true)
-            @AuthUserInfo String username,
+            String username,
             @Parameter(description = "동아리 ID", required = true, example = "UUID")
-            @PathVariable String clubId,
+            String clubId,
             @Parameter(description = "업로드할 이미지 파일 (JPG, PNG, GIF, WEBP 지원, 최대 5MB)")
-            @RequestPart("image") MultipartFile imageFile
+            MultipartFile imageFile
     );
 
     @Operation(

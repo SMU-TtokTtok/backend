@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.project.ttokttok.domain.admin.controller.docs.AdminAuthDocs;
 import org.project.ttokttok.domain.admin.controller.dto.request.AdminJoinRequest;
 import org.project.ttokttok.domain.admin.controller.dto.request.AdminLoginRequest;
+import org.project.ttokttok.domain.admin.controller.dto.response.AdminJoinResponse;
 import org.project.ttokttok.domain.admin.controller.dto.response.AdminLoginResponse;
 import org.project.ttokttok.domain.admin.service.AdminAuthService;
 import org.project.ttokttok.domain.admin.service.dto.response.AdminLoginServiceResponse;
@@ -73,7 +74,7 @@ public class AdminAuthApiController implements AdminAuthDocs {
     }
 
     @PostMapping("/re-issue")
-    public ResponseEntity<String> reissue(
+    public ResponseEntity<Void> reissue(
             @AuthUserInfo String adminName,
             @CookieValue(value = "ttref", required = false) String refreshToken) {
 
@@ -93,18 +94,20 @@ public class AdminAuthApiController implements AdminAuthDocs {
                 Duration.ofMillis(response.refreshTTL())
         );
 
-        return ResponseEntity.ok()
+        return ResponseEntity.noContent()
                 .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
                 .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
-                .body("re-issue Success");
+                .build();
     }
 
     // todo: 추후 삭제 - 관리자 가입 메서드
     @PostMapping("/join")
-    public ResponseEntity<String> join(@RequestBody @Valid AdminJoinRequest request) {
+    public ResponseEntity<AdminJoinResponse> join(@RequestBody @Valid AdminJoinRequest request) {
         String adminId = adminAuthService.join(request.username(), request.password());
 
+        AdminJoinResponse response = AdminJoinResponse.of(adminId);
+
         return ResponseEntity.ok()
-                .body(adminId);
+                .body(response);
     }
 }

@@ -7,6 +7,7 @@ import org.project.ttokttok.domain.admin.domain.Admin;
 
 import org.project.ttokttok.domain.club.domain.enums.ClubCategory;
 import org.project.ttokttok.domain.club.domain.enums.ClubType;
+import org.project.ttokttok.domain.club.domain.enums.ClubUniv;
 import org.project.ttokttok.domain.clubMember.domain.ClubMember;
 import org.project.ttokttok.global.entity.BaseTimeEntity;
 
@@ -45,6 +46,10 @@ public class Club extends BaseTimeEntity {
     private ClubCategory clubCategory; // 동아리 유형
 
     @Setter
+    @Enumerated(EnumType.STRING)
+    private ClubUniv clubUniv; // 대학 구분
+
+    @Setter
     @Column(length = 30, nullable = false)
     private String customCategory;
 
@@ -72,6 +77,7 @@ public class Club extends BaseTimeEntity {
         this.summary = "동아리 한줄 소개를 적어주세요.";
         this.clubType = null;
         this.clubCategory = null;
+        this.clubUniv = null;
         this.customCategory = "";
         this.content = "동아리 소개를 적어주세요.";
     }

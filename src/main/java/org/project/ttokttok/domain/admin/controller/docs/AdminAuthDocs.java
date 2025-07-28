@@ -106,16 +106,18 @@ public interface AdminAuthDocs {
     )
     @ApiResponses(value = {
             @ApiResponse(
-                    responseCode = "200",
+                    responseCode = "204",
                     description = "토큰 재발급 성공"
             ),
             @ApiResponse(
                     responseCode = "401",
-                    description = "유효하지 않은 리프레시 토큰"
+                    description = "유효하지 않은 리프레시 토큰",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "만료된 리프레시 토큰"
+                    description = "만료된 리프레시 토큰",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             ),
             @ApiResponse(
                     responseCode = "500",
@@ -123,7 +125,7 @@ public interface AdminAuthDocs {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             )
     })
-    ResponseEntity<String> reissue(
+    ResponseEntity<Void> reissue(
             @Parameter(description = "인증된 관리자 이름", hidden = true)
             String adminName,
             @Parameter(description = "리프레시 토큰 (쿠키에서 자동 추출)")

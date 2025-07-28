@@ -29,9 +29,9 @@ public class RefreshTokenRedisService {
 
     // 리프레시 토큰 저장 로직
     public void save(String username, String refreshToken) {
-        if (isExistKey(username)) { // 리프레시 토큰이 존재하면 예외 발생
-            throw new RefreshTokenAlreadyExistsException();
-        }
+//        if (isExistKey(username)) { // 리프레시 토큰이 존재하면 예외 발생
+//            throw new RefreshTokenAlreadyExistsException();
+//        }
 
         redisTemplate.opsForValue().set(
                 REFRESH_REDIS_KEY + username, // 레디스 키 설정(refresh:사용자명)

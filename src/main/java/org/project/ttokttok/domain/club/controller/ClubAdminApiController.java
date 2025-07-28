@@ -2,8 +2,10 @@ package org.project.ttokttok.domain.club.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.openapitools.jackson.nullable.JsonNullable;
 import org.project.ttokttok.domain.club.controller.docs.ClubAdminApiDocs;
 import org.project.ttokttok.domain.club.controller.dto.request.UpdateClubContentRequest;
+import org.project.ttokttok.domain.club.controller.dto.response.ClubAdminDetailResponse;
 import org.project.ttokttok.domain.club.service.ClubAdminService;
 import org.project.ttokttok.domain.club.service.dto.request.MarkdownImageUpdateRequest;
 import org.project.ttokttok.global.annotation.auth.AuthUserInfo;
@@ -24,7 +26,8 @@ public class ClubAdminApiController implements ClubAdminApiDocs {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> updateClubContent(@AuthUserInfo String username,
                                                     @PathVariable String clubId,
-                                                    @RequestPart @Valid UpdateClubContentRequest request) {
+                                                    @Valid @RequestPart UpdateClubContentRequest request,
+                                                    @RequestPart(required = false) MultipartFile profileImage) {
         clubAdminService.updateContent(username, request.toServiceRequest(clubId));
 
         return ResponseEntity.ok()
@@ -67,4 +70,14 @@ public class ClubAdminApiController implements ClubAdminApiDocs {
                 .build();
     }
 
+    // 동아리 소개 조회 API
+    @GetMapping("/{clubId}/content")
+    public ResponseEntity<ClubAdminDetailResponse> getClubContent(@PathVariable String clubId) {
+        ClubAdminDetailResponse response = ClubAdminDetailResponse.from(
+                clubAdminService.getClubContent(clubId)
+        );
+
+        return ResponseEntity.ok()
+                .body(response);
+    }
 }

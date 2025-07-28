@@ -13,6 +13,7 @@ import org.project.ttokttok.domain.club.exception.NotClubAdminException;
 import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.domain.club.service.dto.request.ClubContentUpdateServiceRequest;
 import org.project.ttokttok.domain.club.service.dto.request.MarkdownImageUpdateRequest;
+import org.project.ttokttok.domain.club.service.dto.response.ClubDetailAdminServiceResponse;
 import org.project.ttokttok.domain.club.service.mapper.ClubMapper;
 import org.project.ttokttok.infrastructure.s3.service.S3Service;
 import org.springframework.stereotype.Service;
@@ -92,6 +93,10 @@ public class ClubAdminService {
             // 지원 폼이 존재하지 않은 경우 예외 처리
             throw new NoApplyFormExistException();
         }
+    }
+
+    public ClubDetailAdminServiceResponse getClubContent(String clubId) {
+        return null;
     }
 
     private void validateImage(String contentType) {
