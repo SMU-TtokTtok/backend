@@ -1,7 +1,7 @@
 -- 1. Admin 데이터 30개 (동아리 관리자)
 INSERT INTO admins (id, username, password, created_at, updated_at) VALUES
 ('admin-001', 'admin_artclub', '$2a$12$XISVm6dq7zoBFTd/BnQreO0JxMoleEE6ZKJAtB/LPBV0Cs2PkJw1C', NOW(), NOW()),
-('admin-002', 'admin_soccer', '$2a$10$dummyHashForPassword002', NOW(), NOW()),
+('admin-002', 'admin_soccer', '$2a$12$8wd9.n8PUwbUh3MAmMIkMe8lYITuOhPjO/z3Mk5/6S7yrNjxiyGb.', NOW(), NOW()),
 ('admin-003', 'admin_programming', '$2a$10$dummyHashForPassword003', NOW(), NOW()),
 ('admin-004', 'admin_volunteer', '$2a$10$dummyHashForPassword004', NOW(), NOW()),
 ('admin-005', 'admin_drama', '$2a$10$dummyHashForPassword005', NOW(), NOW()),
