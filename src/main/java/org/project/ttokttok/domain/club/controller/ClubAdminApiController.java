@@ -2,6 +2,7 @@ package org.project.ttokttok.domain.club.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.openapitools.jackson.nullable.JsonNullable;
 import org.project.ttokttok.domain.club.controller.docs.ClubAdminApiDocs;
 import org.project.ttokttok.domain.club.controller.dto.request.UpdateClubContentRequest;
 import org.project.ttokttok.domain.club.service.ClubAdminService;
@@ -24,7 +25,8 @@ public class ClubAdminApiController implements ClubAdminApiDocs {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> updateClubContent(@AuthUserInfo String username,
                                                     @PathVariable String clubId,
-                                                    @RequestPart @Valid UpdateClubContentRequest request) {
+                                                    @Valid @RequestPart UpdateClubContentRequest request,
+                                                    @RequestPart(required = false) MultipartFile profileImage) {
         clubAdminService.updateContent(username, request.toServiceRequest(clubId));
 
         return ResponseEntity.ok()
