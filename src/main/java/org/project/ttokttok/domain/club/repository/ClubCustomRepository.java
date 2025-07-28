@@ -4,6 +4,7 @@ import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
 import org.project.ttokttok.domain.club.domain.enums.ClubCategory;
 import org.project.ttokttok.domain.club.domain.enums.ClubType;
 import org.project.ttokttok.domain.club.repository.dto.ClubCardQueryResponse;
+import org.project.ttokttok.domain.club.repository.dto.ClubDetailAdminQueryResponse;
 import org.project.ttokttok.domain.club.repository.dto.ClubDetailQueryResponse;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -48,4 +49,6 @@ public interface ClubCustomRepository {
     );
 
     long countByKeyword(String keyword);
+
+    ClubDetailAdminQueryResponse getAdminClubIntro(String clubId);
 }

@@ -15,7 +15,9 @@ import org.project.ttokttok.domain.applyform.domain.ApplyForm;
 import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
 import org.project.ttokttok.domain.club.domain.enums.ClubCategory;
 import org.project.ttokttok.domain.club.domain.enums.ClubType;
+import org.project.ttokttok.domain.club.domain.enums.ClubUniv;
 import org.project.ttokttok.domain.club.repository.dto.ClubCardQueryResponse;
+import org.project.ttokttok.domain.club.repository.dto.ClubDetailAdminQueryResponse;
 import org.project.ttokttok.domain.club.repository.dto.ClubDetailQueryResponse;
 import org.project.ttokttok.domain.clubMember.domain.QClubMember;
 import org.project.ttokttok.domain.favorite.domain.QFavorite;
@@ -410,5 +412,54 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
                                 .or(club.content.containsIgnoreCase(keyword))
                 )
                 .fetchOne();
+    }
+
+    //TODO: 소개글 조회 자체를 추후 수정 필요
+    @Override
+    public ClubDetailAdminQueryResponse getAdminClubIntro(String clubId) {
+        var clubResult = queryFactory
+                .select(
+                        club.name,
+                        club.clubType,
+                        club.clubCategory,
+                        club.customCategory,
+                        club.summary,
+                        club.profileImageUrl,
+                        getClubMemberCount(clubId),
+                        club.clubUniv,  // clubUniv 필드 추가
+                        club.content
+                )
+                .from(club)
+                .where(club.id.eq(clubId))
+                .fetchOne();
+
+        if (clubResult == null) {
+            return null;
+        }
+
+        // ApplyForm 정보 조회
+        ApplyForm activeForm = queryFactory
+                .selectFrom(applyForm)
+                .leftJoin(applyForm.grades).fetchJoin()
+                .where(applyForm.club.id.eq(clubId)
+                        .and(applyForm.status.eq(ACTIVE)))
+                .fetchOne();
+
+        return new ClubDetailAdminQueryResponse(
+                clubResult.get(0, String.class),           // name
+                clubResult.get(1, ClubType.class),         // clubType
+                clubResult.get(2, ClubCategory.class),     // clubCategory
+                clubResult.get(3, String.class),           // customCategory
+                activeForm != null, // ApplyForm이 존재하면 모집중 (recruiting)
+                clubResult.get(4, String.class),           // summary
+                clubResult.get(5, String.class),           // profileImageUrl
+                clubResult.get(6, Integer.class) != null ? clubResult.get(6, Integer.class) : 0, // clubMemberCount
+                clubResult.get(7, ClubUniv.class),         // clubUniv
+                activeForm != null ? activeForm.getApplyStartDate() : null,    // applyStartDate
+                activeForm != null ? activeForm.getApplyEndDate() : null,      // applyDeadLine
+                activeForm != null ? activeForm.getGrades() : new HashSet<>(), // grades
+                activeForm != null ? activeForm.getMaxApplyCount() : 0,        // maxApplyCount
+                clubResult.get(8, String.class)            // content
+        );
     }
 }

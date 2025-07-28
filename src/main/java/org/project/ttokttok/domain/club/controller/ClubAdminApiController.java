@@ -70,7 +70,7 @@ public class ClubAdminApiController implements ClubAdminApiDocs {
                 .build();
     }
 
-    // 동아리 소개 조회 API
+    // 관리자 동아리 소개 조회 API
     @GetMapping("/{clubId}/content")
     public ResponseEntity<ClubAdminDetailResponse> getClubContent(@PathVariable String clubId) {
         ClubAdminDetailResponse response = ClubAdminDetailResponse.from(

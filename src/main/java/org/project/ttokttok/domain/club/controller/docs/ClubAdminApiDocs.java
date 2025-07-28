@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.project.ttokttok.domain.club.controller.dto.request.UpdateClubContentRequest;
+import org.project.ttokttok.domain.club.controller.dto.response.ClubAdminDetailResponse;
 import org.project.ttokttok.global.exception.dto.ErrorResponse;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -225,5 +226,92 @@ public interface ClubAdminApiDocs {
     ResponseEntity<String> getImageUrl(
             @Parameter(description = "조회할 이미지의 키", required = true, example = "club-1-image-12345")
             @RequestParam String imageKey
+    );
+
+    @Operation(
+            summary = "관리자 동아리 소개 조회",
+            description = """
+                    동아리 관리자가 동아리의 상세 정보를 조회합니다.
+                    관리자 전용 뷰로, 일반 사용자 조회와 달리 더 많은 정보를 포함합니다.
+                    
+                    **조회 가능한 정보**:
+                    - 동아리 기본 정보 (이름, 타입, 카테고리, 대학 구분 등)
+                    - 모집 관련 정보 (모집 기간, 지원 가능 학년, 최대 지원자 수)
+                    - 동아리 소개 내용 (마크다운 형식)
+                    - 현재 동아리원 수
+                    - 프로필 이미지 URL
+                    
+                    *주의사항*:
+                    - 해당 동아리의 관리자만 조회 가능합니다.
+                    - 존재하지 않는 동아리 ID의 경우 404 오류가 발생합니다.
+                    """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "동아리 상세 정보 조회 성공",
+                    content = @Content(schema = @Schema(implementation = ClubAdminDetailResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "존재하지 않는 동아리",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "서버 내부 오류",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    ResponseEntity<ClubAdminDetailResponse> getClubContent(
+            @Parameter(
+                    description = "조회할 동아리 ID",
+                    example = "UUID",
+                    required = true
+            ) String clubId
+    );
+
+    @Operation(
+            summary = "모집 마감/재시작 토글",
+            description = """
+                    동아리 모집 상태를 토글합니다.
+                    현재 모집 중이면 마감으로, 마감 상태이면 모집 재시작으로 변경됩니다.
+                    
+                    **동작 방식**:
+                    - 활성화된 지원 폼이 있는 경우: 해당 폼의 상태를 토글
+                    - 활성화된 지원 폼이 없는 경우: 가장 최근 지원 폼을 활성화
+                    - 지원 폼이 전혀 없는 경우: 예외 발생
+                    
+                    *주의사항*:
+                    - 해당 동아리의 관리자만 실행 가능합니다.
+                    - 지원 폼이 존재하지 않으면 오류가 발생합니다.
+                    """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "모집 상태 토글 성공"
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "인증되지 않은 사용자",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "권한 없음 (동아리 관리자가 아님)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "존재하지 않는 동아리 또는 지원 폼",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    ResponseEntity<Void> toggleRecruitment(
+            @Parameter(description = "인증된 사용자 정보", hidden = true)
+            String username,
+            @Parameter(description = "동아리 ID", required = true, example = "UUID")
+            String clubId
     );
 }

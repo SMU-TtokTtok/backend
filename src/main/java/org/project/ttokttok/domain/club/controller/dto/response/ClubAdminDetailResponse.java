@@ -7,7 +7,7 @@ import org.project.ttokttok.domain.club.domain.enums.ClubType;
 import org.project.ttokttok.domain.club.domain.enums.ClubUniv;
 import org.project.ttokttok.domain.club.service.dto.response.ClubDetailAdminServiceResponse;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.Set;
 
 @Builder
@@ -17,15 +17,14 @@ public record ClubAdminDetailResponse(
         ClubType clubType,
         ClubCategory clubCategory,
         String customCategory,
-        boolean bookmarked, // 사용자 즐겨찾기 여부
         boolean recruiting,
         String summary, // 한줄 소개
         String profileImageUrl, // 동아리 프로필 이미지 URL
         int clubMemberCount,
         ClubUniv clubUniv, // 대학 구분
 
-        LocalDateTime applyStartDate,
-        LocalDateTime applyDeadLine,
+        LocalDate applyStartDate,
+        LocalDate applyDeadLine,
         Set<ApplicableGrade> grades, // 지원 가능한 학년
         int maxApplyCount, // 최대 지원자 수
 
@@ -38,7 +37,6 @@ public record ClubAdminDetailResponse(
                 .clubType(response.clubType())
                 .clubCategory(response.clubCategory())
                 .customCategory(response.customCategory())
-                .bookmarked(response.bookmarked())
                 .recruiting(response.recruiting())
                 .summary(response.summary())
                 .profileImageUrl(response.profileImageUrl())

@@ -96,7 +96,9 @@ public class ClubAdminService {
     }
 
     public ClubDetailAdminServiceResponse getClubContent(String clubId) {
-        return null;
+        return ClubDetailAdminServiceResponse.from(
+                clubRepository.getAdminClubIntro(clubId)
+        );
     }
 
     private void validateImage(String contentType) {
