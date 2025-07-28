@@ -32,7 +32,7 @@ public interface ClubAdminApiDocs {
                     - `profileImage`: 동아리 프로필 이미지 파일 (선택사항)
                     
                     *주의사항*:
-                    - 해당 동아리의 관리자(PRESIDENT)만 수정 가능합니다.
+                    - 해당 동아리의 관리자만 수정 가능합니다.
                     - 마크다운 형식을 지원합니다.
                     - 이미지는 JPG, PNG, WEBP 형식만 지원됩니다.
                     - 수정 사항에 포함되지 않는 필드는 NULL이 아니라 그냥 포함하지 말아주세요.
