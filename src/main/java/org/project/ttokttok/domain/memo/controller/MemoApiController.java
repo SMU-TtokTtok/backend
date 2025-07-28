@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.project.ttokttok.domain.memo.controller.docs.MemoDocs;
 import org.project.ttokttok.domain.memo.controller.dto.request.MemoRequest;
+import org.project.ttokttok.domain.memo.controller.dto.response.MemoCreateResponse;
 import org.project.ttokttok.domain.memo.service.MemoService;
 import org.project.ttokttok.domain.memo.service.dto.request.CreateMemoServiceRequest;
 import org.project.ttokttok.domain.memo.service.dto.request.DeleteMemoServiceRequest;
@@ -21,7 +22,7 @@ public class MemoApiController implements MemoDocs {
 
     // 메모 생성
     @PostMapping
-    public ResponseEntity<String> createMemo(@AuthUserInfo String username,
+    public ResponseEntity<MemoCreateResponse> createMemo(@AuthUserInfo String username,
                                              @PathVariable String applicantId,
                                              @Valid @RequestBody MemoRequest request) {
 
@@ -33,13 +34,15 @@ public class MemoApiController implements MemoDocs {
 
         String memoId = memoService.createMemo(serviceRequest);
 
+        MemoCreateResponse response = new MemoCreateResponse(memoId);
+
         return ResponseEntity.ok()
-                .body("Memo created successfully with ID: " + memoId);
+                .body(response);
     }
 
     // 메모 수정
     @PatchMapping("/{memoId}")
-    public ResponseEntity<String> updateMemo(@AuthUserInfo String username,
+    public ResponseEntity<Void> updateMemo(@AuthUserInfo String username,
                                              @PathVariable String applicantId,
                                              @PathVariable String memoId,
                                              @Valid @RequestBody MemoRequest request) {
@@ -59,7 +62,7 @@ public class MemoApiController implements MemoDocs {
 
     // 메모 삭제
     @DeleteMapping("/{memoId}")
-    public ResponseEntity<String> deleteMemo(@AuthUserInfo String username,
+    public ResponseEntity<Void> deleteMemo(@AuthUserInfo String username,
                                              @PathVariable String applicantId,
                                              @PathVariable String memoId) {
 
