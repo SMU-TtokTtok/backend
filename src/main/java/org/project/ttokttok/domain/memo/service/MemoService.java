@@ -2,6 +2,8 @@ package org.project.ttokttok.domain.memo.service;
 
 import lombok.RequiredArgsConstructor;
 import org.project.ttokttok.domain.applicant.domain.Applicant;
+import org.project.ttokttok.domain.applicant.domain.BaseApplicant;
+import org.project.ttokttok.domain.applicant.domain.DocumentApplicant;
 import org.project.ttokttok.domain.applicant.exception.ApplicantNotFoundException;
 import org.project.ttokttok.domain.applicant.repository.ApplicantRepository;
 import org.project.ttokttok.domain.memo.domain.Memo;
@@ -23,28 +25,37 @@ public class MemoService {
 
     @Transactional
     public String createMemo(CreateMemoServiceRequest request) {
-        Applicant applicant = applicantRepository.findById(request.applicantId())
-                .orElseThrow(ApplicantNotFoundException::new);
+        BaseApplicant baseApplicant = getBaseApplicant(request.applicantId());
+
+        if (!(baseApplicant instanceof DocumentApplicant documentApplicant))
+            throw new IllegalArgumentException("메모는 서류 지원자에만 작성할 수 있습니다.");
 
         // 마지막에 추가된 메모의 ID 반환
-        return applicant.addMemo(request.content());
+        return documentApplicant.addMemo(request.content());
     }
 
     @Transactional
     public void updateMemo(UpdateMemoServiceRequest request) {
-        Applicant applicant = applicantRepository.findById(request.applicantId())
-                .orElseThrow(ApplicantNotFoundException::new);
+        BaseApplicant baseApplicant = getBaseApplicant(request.applicantId());
 
-        // 편의 메서드 활용
-        applicant.updateMemo(request.memoId(), request.content());
+        if (!(baseApplicant instanceof DocumentApplicant documentApplicant))
+            throw new IllegalArgumentException("메모는 서류 지원자에만 수정할 수 있습니다.");
+
+        documentApplicant.updateMemo(request.memoId(), request.content());
     }
 
     @Transactional
     public void deleteMemo(DeleteMemoServiceRequest request) {
-        Applicant applicant = applicantRepository.findById(request.applicantId())
-                .orElseThrow(ApplicantNotFoundException::new);
+        BaseApplicant baseApplicant = getBaseApplicant(request.applicantId());
 
-        // 편의 메서드 활용
-        applicant.deleteMemo(request.memoId());
+        if (!(baseApplicant instanceof DocumentApplicant documentApplicant))
+            throw new IllegalArgumentException("메모는 서류 지원자에만 삭제할 수 있습니다.");
+
+        documentApplicant.deleteMemo(request.memoId());
+    }
+
+    private BaseApplicant getBaseApplicant(String applicantId) {
+        return applicantRepository.findById(applicantId)
+                .orElseThrow(ApplicantNotFoundException::new);
     }
 }

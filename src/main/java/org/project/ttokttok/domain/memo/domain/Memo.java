@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.project.ttokttok.domain.applicant.domain.Applicant;
+import org.project.ttokttok.domain.applicant.domain.DocumentApplicant;
 
 import java.time.LocalDateTime;
 
@@ -24,15 +25,15 @@ public class Memo {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "applicant_id", nullable = false)
-    private Applicant applicant;
+    private DocumentApplicant applicant;
 
     @Builder
-    private Memo(Applicant applicant, String content) {
+    private Memo(DocumentApplicant applicant, String content) {
         this.applicant = applicant;
         this.content = content;
     }
 
-    public static Memo create(Applicant applicant, String content) {
+    public static Memo create(DocumentApplicant applicant, String content) {
         return Memo.builder()
                 .applicant(applicant)
                 .content(content)
