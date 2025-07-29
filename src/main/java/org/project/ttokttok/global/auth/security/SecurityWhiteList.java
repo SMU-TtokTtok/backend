@@ -20,6 +20,7 @@ public enum SecurityWhiteList {
             "/api/user/auth/reset-password",
             "/api/admin/auth/reissue",
             "/health",
+            "/api/applies", // 테스트용
             "/api/admin/auth/join" // todo: 추후 삭제 예정 - 관리자 가입 API 엔드포인트
     }),
 

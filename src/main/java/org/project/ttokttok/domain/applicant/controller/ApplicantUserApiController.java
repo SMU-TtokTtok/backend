@@ -21,11 +21,11 @@ public class ApplicantUserApiController implements ApplicantUserDocs {
     private final ApplicantUserService applicantUserService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<String> apply(
-            @AuthUserInfo String userEmail,
-            @Valid @RequestPart("application") ApplyFormRequest request,
-            @RequestPart(value = "files", required = false) Map<String, MultipartFile> files) {
+    public ResponseEntity<Void> apply(@AuthUserInfo String email,
+                                      @Valid @RequestPart ApplyFormRequest request,
+                                      @RequestPart(required = false) Map<String, MultipartFile> files) {
 
-        return null;
+        return ResponseEntity.noContent()
+                .build();
     }
 }

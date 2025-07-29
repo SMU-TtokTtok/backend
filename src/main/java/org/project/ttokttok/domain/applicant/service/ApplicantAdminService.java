@@ -190,8 +190,8 @@ public class ApplicantAdminService {
                 .toList();
 
         // 4. 이메일 전송
-        emailService.sendResultMail(passedEmails, request.passBody());
-        emailService.sendResultMail(failedEmails, request.failBody());
+        emailService.sendResultMail(passedEmails, request.pass());
+        emailService.sendResultMail(failedEmails, request.fail());
     }
 
     private Club validateClubAdmin(String username) {

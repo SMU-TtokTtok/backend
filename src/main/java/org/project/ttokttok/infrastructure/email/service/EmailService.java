@@ -2,6 +2,7 @@ package org.project.ttokttok.infrastructure.email.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.project.ttokttok.domain.applicant.controller.dto.request.MailFormatRequest;
 import org.project.ttokttok.infrastructure.email.dto.EmailRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.MailException;
@@ -107,14 +108,14 @@ public class EmailService {
 
     // TODO: 성능이 너무 안 나올 경우, 배치 처리로 변경 필요
     // 동아리 지원 결과 안내 이메일 발송
-    public void sendResultMail(List<String> emails, String resultBody) {
+    public void sendResultMail(List<String> emails, MailFormatRequest request) {
         for (String email : emails) {
             if (!isValidEmail(email)) {
                 log.warn("유효하지 않은 이메일 주소: {}", email);
                 continue;
             }
 
-            EmailRequest emailRequest = EmailRequest.createResultEmail(email, resultBody);
+            EmailRequest emailRequest = EmailRequest.createResultEmail(email, request.title(), request.body());
             sendEmailAsync(emailRequest);
             log.info("지원 결과 안내 이메일 발송 완료: {}", email);
         }

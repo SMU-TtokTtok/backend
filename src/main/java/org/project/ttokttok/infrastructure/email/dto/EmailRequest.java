@@ -32,11 +32,11 @@ public class EmailRequest {
     }
 
     // 동아리 지원 결과 안내용 팩토리 메서드
-    public static EmailRequest createResultEmail(String email, String resultBody) {
+    public static EmailRequest createResultEmail(String email, String title, String body) {
         return EmailRequest.builder()
                 .to(email)
-                .subject("[똑똑] 지원 결과 안내")
-                .content(createResultContent(resultBody))
+                .subject(title)
+                .content(createResultContent(body))
                 .isHtml(true)
                 .build();
     }

@@ -67,6 +67,7 @@ class ClubAdminServiceTest {
                 JsonNullable.undefined(),
                 JsonNullable.undefined(),
                 JsonNullable.undefined(),
+                JsonNullable.undefined(),
                 JsonNullable.of("new summary"),
                 JsonNullable.undefined(),
                 JsonNullable.of("new content"),
@@ -96,7 +97,8 @@ class ClubAdminServiceTest {
                 CLUB_ID, JsonNullable.undefined(), JsonNullable.undefined(),
                 JsonNullable.undefined(), JsonNullable.undefined(), JsonNullable.undefined(),
                 JsonNullable.undefined(), JsonNullable.undefined(), JsonNullable.undefined(),
-                JsonNullable.undefined(), JsonNullable.undefined(), JsonNullable.undefined()
+                JsonNullable.undefined(), JsonNullable.undefined(), JsonNullable.undefined(),
+                JsonNullable.undefined()
         );
 
         given(clubRepository.findById(CLUB_ID)).willReturn(Optional.of(club));
@@ -118,7 +120,7 @@ class ClubAdminServiceTest {
                 CLUB_ID,
                 JsonNullable.undefined(), JsonNullable.undefined(), JsonNullable.undefined(),
                 JsonNullable.undefined(), JsonNullable.undefined(),
-                JsonNullable.of(image),
+                JsonNullable.undefined(), JsonNullable.of(image),
                 JsonNullable.undefined(), JsonNullable.undefined(), JsonNullable.undefined(),
                 JsonNullable.undefined(), JsonNullable.undefined()
         );
@@ -141,10 +143,11 @@ class ClubAdminServiceTest {
         ClubContentUpdateServiceRequest request = new ClubContentUpdateServiceRequest(
                 CLUB_ID,
                 JsonNullable.undefined(), JsonNullable.undefined(), JsonNullable.undefined(),
-                JsonNullable.undefined(), JsonNullable.of("요약만 수정"),
+                JsonNullable.undefined(), JsonNullable.undefined(),
+                JsonNullable.of("요약만 수정"), JsonNullable.undefined(),
                 JsonNullable.undefined(), JsonNullable.undefined(),
                 JsonNullable.undefined(), JsonNullable.undefined(),
-                JsonNullable.undefined(), JsonNullable.undefined()
+                JsonNullable.undefined()
         );
 
         given(clubRepository.findById(CLUB_ID)).willReturn(Optional.of(club));
@@ -173,7 +176,7 @@ class ClubAdminServiceTest {
                 CLUB_ID,
                 JsonNullable.undefined(), JsonNullable.undefined(), JsonNullable.undefined(),
                 JsonNullable.undefined(), JsonNullable.undefined(),
-                JsonNullable.of(image),
+                JsonNullable.undefined(), JsonNullable.of(image),
                 JsonNullable.undefined(), JsonNullable.undefined(),
                 JsonNullable.undefined(), JsonNullable.undefined(),
                 JsonNullable.undefined()
@@ -205,7 +208,7 @@ class ClubAdminServiceTest {
                 CLUB_ID,
                 JsonNullable.undefined(), JsonNullable.undefined(), JsonNullable.undefined(),
                 JsonNullable.undefined(), JsonNullable.undefined(),
-                JsonNullable.of(image),
+                JsonNullable.undefined(), JsonNullable.of(image),
                 JsonNullable.undefined(), JsonNullable.undefined(),
                 JsonNullable.undefined(), JsonNullable.undefined(),
                 JsonNullable.undefined()
@@ -232,7 +235,7 @@ class ClubAdminServiceTest {
                 CLUB_ID,
                 JsonNullable.undefined(), JsonNullable.undefined(), JsonNullable.undefined(),
                 JsonNullable.undefined(), JsonNullable.undefined(),
-                JsonNullable.of(image),
+                JsonNullable.undefined(), JsonNullable.of(image),
                 JsonNullable.undefined(), JsonNullable.undefined(),
                 JsonNullable.undefined(), JsonNullable.undefined(),
                 JsonNullable.undefined()
