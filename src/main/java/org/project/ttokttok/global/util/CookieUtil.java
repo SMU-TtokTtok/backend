@@ -17,7 +17,7 @@ public class CookieUtil {
                 //.secure(true) // HTTPS에서만 전송
                 .secure(false) // FIXME: 프론트 테스트 용으로 비활성화
                 //.sameSite("Strict") // 동일 사이트에서만 쿠키 전송
-                .sameSite("Lax") // 개발용
+                .sameSite("None") // 개발용
                 .path("/")
                 .maxAge(maxAge)
                 .build();
@@ -29,7 +29,7 @@ public class CookieUtil {
                 //.secure(true)
                 .secure(false) // FIXME: 프론트 테스트 용으로 비활성화
                 //.sameSite("Strict")
-                .sameSite("Lax")
+                .sameSite("None")
                 .path("/")
                 .maxAge(0)
                 .build();
