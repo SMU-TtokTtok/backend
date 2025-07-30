@@ -302,7 +302,7 @@ public class UserAuthController {
     )
     @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "204",
+                    responseCode = "200",
                     description = "로그아웃 성공"
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -319,7 +319,7 @@ public class UserAuthController {
             )
     })
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(@AuthUserInfo String userEmail, HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<Void>> logout(@AuthUserInfo String userEmail, HttpServletRequest request) {
         // 쿠키에서 액세스 토큰 추출
         String accessToken = null;
         Cookie[] cookies = request.getCookies();
@@ -341,9 +341,9 @@ public class UserAuthController {
         ResponseCookie[] expiredCookies = cookieUtil.expireBothTokenCookies();
         log.info("로그아웃 - 쿠키 만료 설정: {}", expiredCookies[0].toString());
 
-        return ResponseEntity.noContent()
+        return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, expiredCookies[0].toString())
                 .header(HttpHeaders.SET_COOKIE, expiredCookies[1].toString())
-                .build();
+                .body(ApiResponse.success("로그아웃이 완료되었습니다."));
     }
 }
