@@ -7,17 +7,20 @@ public interface ApplicantCustomRepository {
                                                                   boolean evaluating,
                                                                   int cursor,
                                                                   int size,
-                                                                  String applyFormId);
+                                                                  String applyFormId,
+                                                                  String kind);
 
     ApplicantPageQueryResponse searchApplicantsByKeyword(String searchKeyword,
                                                          String sortCriteria,
                                                          boolean evaluating,
                                                          int cursor,
                                                          int size,
-                                                         String applyFormId);
+                                                         String applyFormId,
+                                                         String kind);
 
     ApplicantPageQueryResponse findApplicantsByStatus(boolean isPassed,
                                                       int page,
                                                       int size,
-                                                      String applyFormId);
+                                                      String applyFormId,
+                                                      String kind);
 }

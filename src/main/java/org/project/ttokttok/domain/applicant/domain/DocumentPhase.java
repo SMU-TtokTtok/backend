@@ -2,6 +2,7 @@ package org.project.ttokttok.domain.applicant.domain;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -14,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@Getter
 @Table(name = "document_phases")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class DocumentPhase extends BaseTimeEntity {
