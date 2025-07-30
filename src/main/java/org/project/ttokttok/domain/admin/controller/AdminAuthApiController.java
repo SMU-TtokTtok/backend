@@ -37,14 +37,14 @@ public class AdminAuthApiController implements AdminAuthDocs {
         AdminLoginServiceResponse response = adminAuthService.login(request.toServiceRequest());
 
         // 액세스 토큰 쿠키 생성
-        ResponseCookie accessCookie = CookieUtil.createResponseCookie(
+        ResponseCookie accessCookie = cookieUtil.createResponseCookie(
                 ACCESS_TOKEN_COOKIE.getValue(),
                 response.accessToken(),
                 Duration.ofMillis(ACCESS_TOKEN_EXPIRY_TIME.getExpiry())
         );
 
         // 리프레시 토큰 쿠키 생성
-        ResponseCookie refreshCookie = CookieUtil.createResponseCookie(
+        ResponseCookie refreshCookie = cookieUtil.createResponseCookie(
                 REFRESH_KEY.getValue(),
                 response.refreshToken(),
                 Duration.ofMillis(REFRESH_TOKEN_EXPIRY_TIME.getExpiry())
@@ -65,7 +65,7 @@ public class AdminAuthApiController implements AdminAuthDocs {
         adminAuthService.logout(adminName);
 
         // 두 쿠키 모두 만료시키기
-        ResponseCookie[] expiredCookies = CookieUtil.expireBothTokenCookies();
+        ResponseCookie[] expiredCookies = cookieUtil.expireBothTokenCookies();
 
         return ResponseEntity.noContent()
                 .header(HttpHeaders.SET_COOKIE, expiredCookies[0].toString())
@@ -81,14 +81,14 @@ public class AdminAuthApiController implements AdminAuthDocs {
         ReissueServiceResponse response = adminAuthService.reissue(adminName, refreshToken);
 
         // 새 액세스 토큰 쿠키 생성
-        ResponseCookie accessCookie = CookieUtil.createResponseCookie(
+        ResponseCookie accessCookie = cookieUtil.createResponseCookie(
                 ACCESS_TOKEN_COOKIE.getValue(),
                 response.accessToken(),
                 Duration.ofMillis(ACCESS_TOKEN_EXPIRY_TIME.getExpiry())
         );
 
         // 새 리프레시 토큰 쿠키 생성 (남은 TTL 사용)
-        ResponseCookie refreshCookie = CookieUtil.createResponseCookie(
+        ResponseCookie refreshCookie = cookieUtil.createResponseCookie(
                 REFRESH_KEY.getValue(),
                 response.refreshToken(),
                 Duration.ofMillis(response.refreshTTL())

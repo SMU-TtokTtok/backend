@@ -26,7 +26,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.UUID;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
 
 @Slf4j
 @Service
@@ -163,10 +167,8 @@ public class UserAuthService {
         TokenRequest tokenRequest = TokenRequest.of(user.getEmail(), Role.ROLE_USER);
         TokenResponse tokens = tokenProvider.generateToken(tokenRequest);
 
-        // 4-5. 리프레시 토큰 Redis 저장 (로그인 유지 옵션 고려)
-        if (request.rememberMe()) {
-            refreshTokenRedisService.save(user.getEmail(), tokens.refreshToken());
-        }
+        // 4-5. 리프레시 토큰 Redis 저장 (항상 저장)
+        refreshTokenRedisService.save(user.getEmail(), tokens.refreshToken());
 
         log.info("로그인 성공: {}", user.getEmail());
 
@@ -229,5 +231,53 @@ public class UserAuthService {
 
         emailVerificationRepository.save(verification);
         log.info("비밀번호 재설정 코드 발송 완료: {}", email);
+    }
+
+    /**
+     * 7. 로그아웃 - 사용자 로그아웃을 처리합니다.
+     *
+     * Redis에 저장된 리프레시 토큰을 삭제하고, 액세스 토큰을 블랙리스트에 추가하여 로그아웃을 처리합니다.
+     *
+     * @param email 로그아웃할 사용자의 이메일
+     * @param accessToken 로그아웃할 액세스 토큰 (선택적)
+     * @throws IllegalArgumentException 이미 로그아웃된 상태인 경우
+     * */
+    public void logout(String email, String accessToken) {
+        // 액세스 토큰의 만료 시간 계산
+        long accessTokenExpiryTime = 0;
+        if (accessToken != null) {
+            try {
+                Date expiration = getClaims(accessToken).getExpiration();
+                accessTokenExpiryTime = expiration.getTime() - System.currentTimeMillis();
+                if (accessTokenExpiryTime < 0) {
+                    accessTokenExpiryTime = 0; // 이미 만료된 토큰
+                }
+            } catch (Exception e) {
+                log.warn("액세스 토큰 만료 시간 추출 실패: {}", e.getMessage());
+                accessTokenExpiryTime = 0;
+            }
+        }
+
+        // Redis에서 리프레시 토큰 삭제 및 액세스 토큰 블랙리스트 추가
+        refreshTokenRedisService.logout(email, accessToken, accessTokenExpiryTime);
+        log.info("로그아웃 완료: {}", email);
+    }
+
+    /**
+     * 7. 로그아웃 - 사용자 로그아웃을 처리합니다. (기존 메서드 호환성)
+     *
+     * @param email 로그아웃할 사용자의 이메일
+     * */
+    public void logout(String email) {
+        logout(email, null);
+    }
+
+    // JWT 토큰에서 Claims 추출
+    private Claims getClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(tokenProvider.getKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
     }
 }

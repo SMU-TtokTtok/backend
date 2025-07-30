@@ -9,6 +9,7 @@ import org.project.ttokttok.global.auth.jwt.dto.request.TokenRequest;
 import org.project.ttokttok.global.auth.jwt.dto.response.TokenResponse;
 import org.project.ttokttok.global.auth.jwt.dto.response.UserProfileResponse;
 import org.project.ttokttok.global.auth.jwt.exception.InvalidIssuerException;
+import org.project.ttokttok.infrastructure.redis.service.RefreshTokenRedisService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -30,11 +31,13 @@ public class TokenProvider {
 
     // JWT 암호화 / 복호화에 사용
     private final Key key;
+    private final RefreshTokenRedisService refreshTokenRedisService;
 
-    public TokenProvider(@Value("${jwt.secret}") String secret) {
+    public TokenProvider(@Value("${jwt.secret}") String secret, RefreshTokenRedisService refreshTokenRedisService) {
         // 시크릿값 base64 디코딩
         byte[] keyBytes = Decoders.BASE64.decode(secret);
         this.key = Keys.hmacShaKeyFor(keyBytes);
+        this.refreshTokenRedisService = refreshTokenRedisService;
     }
 
     // 토큰 검증
@@ -42,6 +45,12 @@ public class TokenProvider {
         // 토큰이 null이거나 빈 문자열인 경우 즉시 false 반환
         if (token == null || token.trim().isEmpty()) {
             log.debug("JWT 토큰이 비어있습니다.");
+            return false;
+        }
+
+        // 블랙리스트 확인
+        if (refreshTokenRedisService.isAccessTokenBlacklisted(token)) {
+            log.warn("블랙리스트에 등록된 토큰입니다.");
             return false;
         }
 
@@ -104,6 +113,11 @@ public class TokenProvider {
     // 토큰에서 사용자 역할 추출
     private String getRoleFromToken(String token) {
         return getClaims(token).get("role", String.class);
+    }
+
+    // JWT 서명 키 반환
+    public Key getKey() {
+        return this.key;
     }
 
     // 유효한 이슈어(발급자)인지 검증
