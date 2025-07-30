@@ -25,7 +25,7 @@ public class ApplicantUserApiController implements ApplicantUserDocs {
                                       @Valid @RequestPart ApplyFormRequest request,
                                       @RequestPart(required = false) Map<String, MultipartFile> files) {
 
-        return ResponseEntity.noContent()
+        return ResponseEntity.ok()
                 .build();
     }
 }

@@ -60,7 +60,7 @@ public class ApplyFormAdminApiController implements ApplyFormAdminDocs {
                 request.toServiceRequest(username, formId)
         );
 
-        return ResponseEntity.noContent()
+        return ResponseEntity.ok()
                 .build();
     }
 

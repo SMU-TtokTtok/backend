@@ -72,7 +72,7 @@ public interface AdminAuthDocs {
     )
     @ApiResponses(value = {
             @ApiResponse(
-                    responseCode = "204",
+                    responseCode = "200",
                     description = "로그아웃 성공"
             ),
             @ApiResponse(
@@ -106,7 +106,7 @@ public interface AdminAuthDocs {
     )
     @ApiResponses(value = {
             @ApiResponse(
-                    responseCode = "204",
+                    responseCode = "200",
                     description = "토큰 재발급 성공"
             ),
             @ApiResponse(

@@ -142,7 +142,7 @@ public class ApplicantAdminApiController implements ApplicantAdminDocs {
 
         applicantAdminService.updateApplicantStatus(request);
 
-        return ResponseEntity.noContent()
+        return ResponseEntity.ok()
                 .build();
     }
 
@@ -174,7 +174,7 @@ public class ApplicantAdminApiController implements ApplicantAdminDocs {
                 clubId
         );
 
-        return ResponseEntity.noContent()
+        return ResponseEntity.ok()
                 .build();
     }
 }

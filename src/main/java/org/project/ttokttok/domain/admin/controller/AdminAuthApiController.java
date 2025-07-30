@@ -67,7 +67,7 @@ public class AdminAuthApiController implements AdminAuthDocs {
         // 두 쿠키 모두 만료시키기
         ResponseCookie[] expiredCookies = CookieUtil.expireBothTokenCookies();
 
-        return ResponseEntity.noContent()
+        return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, expiredCookies[0].toString())
                 .header(HttpHeaders.SET_COOKIE, expiredCookies[1].toString())
                 .build();
@@ -94,7 +94,7 @@ public class AdminAuthApiController implements AdminAuthDocs {
                 Duration.ofMillis(response.refreshTTL())
         );
 
-        return ResponseEntity.noContent()
+        return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
                 .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
                 .build();

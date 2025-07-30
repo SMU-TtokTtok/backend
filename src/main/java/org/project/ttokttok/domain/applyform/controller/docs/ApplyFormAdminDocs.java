@@ -144,7 +144,7 @@ public interface ApplyFormAdminDocs {
     )
     @ApiResponses(value = {
             @ApiResponse(
-                    responseCode = "204",
+                    responseCode = "200",
                     description = "지원폼 수정 성공"
             ),
             @ApiResponse(

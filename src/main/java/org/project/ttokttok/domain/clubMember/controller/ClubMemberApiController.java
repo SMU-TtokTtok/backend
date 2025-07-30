@@ -79,7 +79,7 @@ public class ClubMemberApiController implements ClubMemberDocs {
 
         clubMemberService.changeRole(serviceRequest);
 
-        return ResponseEntity.noContent()
+        return ResponseEntity.ok()
                 .build();
     }
 
@@ -96,7 +96,7 @@ public class ClubMemberApiController implements ClubMemberDocs {
 
         clubMemberService.deleteMember(serviceRequest);
 
-        return ResponseEntity.noContent()
+        return ResponseEntity.ok()
                 .build();
     }
 

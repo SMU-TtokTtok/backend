@@ -32,7 +32,7 @@ public class ClubAdminApiController implements ClubAdminApiDocs {
                                                     @RequestPart(required = false) MultipartFile profileImage) {
         clubAdminService.updateContent(username, request.toServiceRequest(clubId));
 
-        return ResponseEntity.noContent()
+        return ResponseEntity.ok()
                 .build();
     }
 
@@ -73,7 +73,7 @@ public class ClubAdminApiController implements ClubAdminApiDocs {
                                                   @PathVariable String clubId) {
         clubAdminService.toggleRecruitment(username, clubId);
 
-        return ResponseEntity.noContent()
+        return ResponseEntity.ok()
                 .build();
     }
 

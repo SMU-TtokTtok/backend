@@ -56,7 +56,7 @@ public class MemoApiController implements MemoDocs {
 
         memoService.updateMemo(serviceRequest);
 
-        return ResponseEntity.noContent()
+        return ResponseEntity.ok()
                 .build();
     }
 
@@ -74,7 +74,7 @@ public class MemoApiController implements MemoDocs {
 
         memoService.deleteMemo(serviceRequest);
 
-        return ResponseEntity.noContent()
+        return ResponseEntity.ok()
                 .build();
     }
 }

@@ -145,7 +145,7 @@ public interface ClubMemberDocs {
     )
     @ApiResponses(value = {
             @ApiResponse(
-                    responseCode = "204",
+                    responseCode = "200",
                     description = "멤버 삭제 성공"
             ),
             @ApiResponse(
@@ -197,7 +197,7 @@ public interface ClubMemberDocs {
     )
     @ApiResponses(value = {
             @ApiResponse(
-                    responseCode = "204",
+                    responseCode = "200",
                     description = "역할 변경 성공"
             ),
             @ApiResponse(

@@ -265,7 +265,7 @@ public interface ApplicantAdminDocs {
     )
     @ApiResponses(value = {
             @ApiResponse(
-                    responseCode = "204",
+                    responseCode = "200",
                     description = "평가 상태 업데이트 성공"
             ),
             @ApiResponse(
@@ -357,7 +357,7 @@ public interface ApplicantAdminDocs {
     )
     @ApiResponses(value = {
             @ApiResponse(
-                    responseCode = "204",
+                    responseCode = "200",
                     description = "이메일 발송 성공"
             ),
             @ApiResponse(
