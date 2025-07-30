@@ -16,6 +16,7 @@ import org.project.ttokttok.domain.user.controller.dto.response.UserResponse;
 import org.project.ttokttok.domain.user.service.UserAuthService;
 import org.project.ttokttok.domain.user.service.dto.response.LoginServiceResponse;
 import org.project.ttokttok.domain.user.service.dto.response.UserServiceResponse;
+import org.project.ttokttok.global.annotation.auth.AuthUserInfo;
 import org.project.ttokttok.global.util.CookieUtil;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
@@ -31,8 +32,9 @@ import static org.project.ttokttok.global.auth.jwt.TokenExpiry.REFRESH_TOKEN_EXP
 import static org.project.ttokttok.global.auth.jwt.TokenProperties.REFRESH_KEY;
 import static org.project.ttokttok.global.auth.jwt.TokenProperties.ACCESS_TOKEN_COOKIE;
 
-
 import java.time.Duration;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 
 @Slf4j
 @Tag(name = "사용자 인증", description = "회원가입, 로그인, 이메일 인증 등 사용자 인증 관련 API")
@@ -42,6 +44,7 @@ import java.time.Duration;
 public class UserAuthController {
 
     private final UserAuthService userAuthService;
+    private final CookieUtil cookieUtil;
 
     /**
      * 이메일 인증코드 발송 API
@@ -181,32 +184,26 @@ public class UserAuthController {
         LoginServiceResponse serviceResponse = userAuthService.login(request.toServiceRequest());
         LoginResponse loginResponse = LoginResponse.from(serviceResponse);
 
-        // 리프레시 토큰을 쿠키로 설정 (로그인 유지 옵션이 true인 경우에만)
-        // ResponseEntity.BodyBuilder responseBuilder = ResponseEntity.ok()
-        //        .header(AUTH_HEADER.getValue(), "Bearer " + serviceResponse.accessToken());
-
-        // 액세스 토큰을 쿠키로 설정
-        ResponseCookie accessCookie = CookieUtil.createResponseCookie(
+        // 액세스 토큰 쿠키 생성
+        ResponseCookie accessCookie = cookieUtil.createResponseCookie(
                 ACCESS_TOKEN_COOKIE.getValue(),
                 serviceResponse.accessToken(),
                 Duration.ofMillis(ACCESS_TOKEN_EXPIRY_TIME.getExpiry())
         );
 
-        ResponseEntity.BodyBuilder responseBuilder = ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, accessCookie.toString()); // 수정된 부분
-
-        if (request.rememberMe()) {
-            ResponseCookie refreshCookie = CookieUtil.createResponseCookie(
-                    REFRESH_KEY.getValue(),
-                    serviceResponse.refreshToken(),
-                    Duration.ofMillis(REFRESH_TOKEN_EXPIRY_TIME.getExpiry())
-            );
-            responseBuilder.header(HttpHeaders.SET_COOKIE, refreshCookie.toString());
-        }
-
-        return responseBuilder.body(
-                ApiResponse.success("로그인 성공", loginResponse)
+        // 리프레시 토큰 쿠키 생성 (항상 설정)
+        ResponseCookie refreshCookie = cookieUtil.createResponseCookie(
+                REFRESH_KEY.getValue(),
+                serviceResponse.refreshToken(),
+                Duration.ofMillis(REFRESH_TOKEN_EXPIRY_TIME.getExpiry())
         );
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
+                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                .body(
+                        ApiResponse.success("로그인 성공", loginResponse)
+                );
     }
 
     /**
@@ -281,5 +278,72 @@ public class UserAuthController {
         return ResponseEntity.ok(
                 ApiResponse.success("비밀번호가 재설정되었습니다.")
         );
+    }
+
+    /**
+     * 로그아웃 API
+     * 사용자 로그아웃을 처리합니다. 토큰 쿠키가 만료 처리되고 Redis에 저장된 토큰 정보도 삭제됩니다.
+     *
+     * @param userEmail 인증된 사용자 이메일
+     * @param request HTTP 요청 객체 (쿠키 추출용)
+     * @return 로그아웃 결과
+     */
+    @Operation(
+            summary = "사용자 로그아웃",
+            description = """
+                    사용자 계정에서 로그아웃합니다.
+                    토큰 쿠키가 만료 처리됩니다.
+                    Redis에 저장된 토큰 정보도 삭제됩니다.
+                    액세스 토큰은 블랙리스트에 추가되어 즉시 무효화됩니다.
+                    
+                    주의 사항
+                    - 이미 로그아웃 되어있다면 409 응답을 반환합니다.
+                    """
+    )
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "로그아웃 성공"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401",
+                    description = "인증되지 않은 사용자"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "409",
+                    description = "이미 로그아웃 상태인 계정"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "500",
+                    description = "서버 내부 작동 오류"
+            )
+    })
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Void>> logout(@AuthUserInfo String userEmail, HttpServletRequest request) {
+        // 쿠키에서 액세스 토큰 추출
+        String accessToken = null;
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (ACCESS_TOKEN_COOKIE.getValue().equals(cookie.getName())) {
+                    accessToken = cookie.getValue();
+                    log.info("로그아웃 - 액세스 토큰 추출: {}", accessToken);
+                    break;
+                }
+            }
+        } else {
+            log.warn("로그아웃 - 쿠키가 없습니다.");
+        }
+
+        userAuthService.logout(userEmail, accessToken);
+
+        // 두 쿠키 모두 만료시키기
+        ResponseCookie[] expiredCookies = cookieUtil.expireBothTokenCookies();
+        log.info("로그아웃 - 쿠키 만료 설정: {}", expiredCookies[0].toString());
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, expiredCookies[0].toString())
+                .header(HttpHeaders.SET_COOKIE, expiredCookies[1].toString())
+                .body(ApiResponse.success("로그아웃이 완료되었습니다."));
     }
 }

@@ -26,6 +26,8 @@ public class RefreshTokenRedisService {
 
     // 레디스 리프레시 토큰 저장 키 접두사.
     private static final String REFRESH_REDIS_KEY = "refresh:";
+    // 액세스 토큰 블랙리스트 키 접두사
+    private static final String ACCESS_BLACKLIST_KEY = "blacklist:access:";
 
     // 리프레시 토큰 저장 로직
     public void save(String username, String refreshToken) {
@@ -58,6 +60,37 @@ public class RefreshTokenRedisService {
         }
 
         throw new AlreadyLogoutException();
+    }
+
+    // 액세스 토큰 블랙리스트 추가 - 로그아웃 시
+    public void addAccessTokenToBlacklist(String accessToken, long expiryTime) {
+        // 액세스 토큰의 남은 만료 시간만큼 블랙리스트에 저장
+        redisTemplate.opsForValue().set(
+                ACCESS_BLACKLIST_KEY + accessToken,
+                "blacklisted",
+                Duration.ofMillis(expiryTime)
+        );
+        log.info("액세스 토큰 블랙리스트 추가: {}", accessToken);
+    }
+
+    // 액세스 토큰이 블랙리스트에 있는지 확인
+    public boolean isAccessTokenBlacklisted(String accessToken) {
+        return Boolean.TRUE.equals(redisTemplate.hasKey(ACCESS_BLACKLIST_KEY + accessToken));
+    }
+
+    // 로그아웃 시 리프레시 토큰 삭제 + 액세스 토큰 블랙리스트 추가
+    public void logout(String username, String accessToken, long accessTokenExpiryTime) {
+        // 리프레시 토큰 삭제
+        if (isExistKey(username)) {
+            redisTemplate.delete(REFRESH_REDIS_KEY + username);
+        }
+
+        // 액세스 토큰 블랙리스트 추가
+        if (accessToken != null) {
+            addAccessTokenToBlacklist(accessToken, accessTokenExpiryTime);
+        }
+
+        log.info("로그아웃 완료: {}, logout at: {}", username, LocalDateTime.now());
     }
 
     // 액세스 토큰 리이슈 시 사용
