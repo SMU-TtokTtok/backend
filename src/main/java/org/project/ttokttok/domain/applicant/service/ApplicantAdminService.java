@@ -74,7 +74,7 @@ public class ApplicantAdminService {
         validateApplicantAccess(applicant.getApplyForm().getClub().getId(), club.getId());
 
         // 4. 메모 정보 추출
-        List<MemoResponse> memos = MemoResponse.fromList(applicant.getMemos());
+        List<MemoResponse> memos = MemoResponse.fromList(applicant.getDocumentPhase().getMemos());
 
         return ApplicantDetailServiceResponse.of(
                 applicant.getName(),

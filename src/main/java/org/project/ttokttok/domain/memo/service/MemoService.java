@@ -1,6 +1,7 @@
 package org.project.ttokttok.domain.memo.service;
 
 import lombok.RequiredArgsConstructor;
+import org.project.ttokttok.domain.applicant.domain.Applicant;
 import org.project.ttokttok.domain.applicant.exception.ApplicantNotFoundException;
 import org.project.ttokttok.domain.applicant.repository.ApplicantRepository;
 import org.project.ttokttok.domain.memo.service.dto.request.CreateMemoServiceRequest;
@@ -18,36 +19,35 @@ public class MemoService {
 
     @Transactional
     public String createMemo(CreateMemoServiceRequest request) {
-        BaseApplicant baseApplicant = getBaseApplicant(request.applicantId());
+        Applicant applicant = getApplicant(request.applicantId());
 
-        if (!(baseApplicant instanceof DocumentApplicant documentApplicant))
+        if (applicant.getDocumentPhase() == null)
             throw new IllegalArgumentException("메모는 서류 지원자에만 작성할 수 있습니다.");
 
-        // 마지막에 추가된 메모의 ID 반환
-        return documentApplicant.addMemo(request.content());
+        return applicant.getDocumentPhase().addMemo(request.content());
     }
 
     @Transactional
     public void updateMemo(UpdateMemoServiceRequest request) {
-        BaseApplicant baseApplicant = getBaseApplicant(request.applicantId());
+        Applicant applicant = getApplicant(request.applicantId());
 
-        if (!(baseApplicant instanceof DocumentApplicant documentApplicant))
+        if (applicant.getDocumentPhase() == null)
             throw new IllegalArgumentException("메모는 서류 지원자에만 수정할 수 있습니다.");
 
-        documentApplicant.updateMemo(request.memoId(), request.content());
+        applicant.getDocumentPhase().updateMemo(request.memoId(), request.content());
     }
 
     @Transactional
     public void deleteMemo(DeleteMemoServiceRequest request) {
-        BaseApplicant baseApplicant = getBaseApplicant(request.applicantId());
+        Applicant applicant = getApplicant(request.applicantId());
 
-        if (!(baseApplicant instanceof DocumentApplicant documentApplicant))
+        if (applicant.getDocumentPhase() == null)
             throw new IllegalArgumentException("메모는 서류 지원자에만 삭제할 수 있습니다.");
 
-        documentApplicant.deleteMemo(request.memoId());
+        applicant.getDocumentPhase().deleteMemo(request.memoId());
     }
 
-    private BaseApplicant getBaseApplicant(String applicantId) {
+    private Applicant getApplicant(String applicantId) {
         return applicantRepository.findById(applicantId)
                 .orElseThrow(ApplicantNotFoundException::new);
     }

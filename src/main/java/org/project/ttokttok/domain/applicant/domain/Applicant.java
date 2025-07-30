@@ -2,6 +2,7 @@ package org.project.ttokttok.domain.applicant.domain;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.project.ttokttok.domain.applicant.domain.enums.*;
 import org.project.ttokttok.domain.applicant.domain.json.Answer;
@@ -13,6 +14,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Entity
+@Getter
 @Table(name = "applicants")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Applicant extends BaseTimeEntity {
