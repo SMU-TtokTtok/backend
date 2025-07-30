@@ -28,6 +28,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.util.List;
 
+import static org.project.ttokttok.domain.clubMember.domain.MemberRole.*;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -126,7 +128,8 @@ public class ClubMemberService {
 
     public String addMember(String username,
                             String clubId,
-                            ClubMemberServiceRequest request) {
+                            ClubMemberServiceRequest request,
+                            String role) {
         validateClubAndAdmin(clubId, username);
 
         String targetEmail = getTargetEmail(request.studentNum());
@@ -136,12 +139,14 @@ public class ClubMemberService {
 
         Club club = validateClubExists(clubId);
 
+        MemberRole memberRole = executeOrMember(role);
+
         return createClubMember(
                 user,
                 club,
                 request.major(),
                 request.grade(),
-                request.role(),
+                memberRole,
                 request.email(),
                 request.phoneNumber(),
                 request.gender())
@@ -158,7 +163,7 @@ public class ClubMemberService {
                                         String phoneNumber,
                                         Gender gender) {
         // 회장 혹은 부회장이 있는지 검증
-        if (role == MemberRole.PRESIDENT || role == MemberRole.VICE_PRESIDENT) {
+        if (role == PRESIDENT || role == VICE_PRESIDENT) {
             clubMemberRepository.findByClubIdAndRole(club.getId(), role)
                     .ifPresent(member -> {
                         throw new DuplicateRoleException();
@@ -228,13 +233,21 @@ public class ClubMemberService {
 
     // 역할 변경 시 역할 중복 검증
     private void validateRoleChange(String clubId, MemberRole newRole, String currentMemberId) {
-        if (newRole == MemberRole.PRESIDENT || newRole == MemberRole.VICE_PRESIDENT) {
+        if (newRole == PRESIDENT || newRole == VICE_PRESIDENT) {
             clubMemberRepository.findByClubIdAndRole(clubId, newRole)
                     .ifPresent(existingMember -> {
                         if (!existingMember.getId().equals(currentMemberId)) {
                             throw new DuplicateRoleException();
                         }
                     });
+        }
+    }
+
+    private MemberRole executeOrMember(String role) {
+        if (!role.equalsIgnoreCase(EXECUTIVE.name())) {
+            return MEMBER;
+        } else {
+            return EXECUTIVE;
         }
     }
 }

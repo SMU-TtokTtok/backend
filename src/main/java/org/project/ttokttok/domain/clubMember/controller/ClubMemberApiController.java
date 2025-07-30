@@ -9,6 +9,7 @@ import org.project.ttokttok.domain.clubMember.controller.dto.response.ClubMember
 import org.project.ttokttok.domain.clubMember.controller.dto.response.ClubMemberCreateResponse;
 import org.project.ttokttok.domain.clubMember.controller.dto.response.ClubMemberPageResponse;
 import org.project.ttokttok.domain.clubMember.controller.dto.response.ClubMemberSearchCoverResponse;
+import org.project.ttokttok.domain.clubMember.controller.enums.ClubRole;
 import org.project.ttokttok.domain.clubMember.service.ClubMemberService;
 import org.project.ttokttok.domain.clubMember.service.dto.request.ChangeRoleServiceRequest;
 import org.project.ttokttok.domain.clubMember.service.dto.request.ClubMemberPageRequest;
@@ -138,9 +139,10 @@ public class ClubMemberApiController implements ClubMemberDocs {
     @PostMapping("/{clubId}/add")
     public ResponseEntity<ClubMemberCreateResponse> addMembers(@AuthUserInfo String username,
                                                                @PathVariable String clubId,
-                                                               @Valid @RequestBody ClubMemberAddRequest request) {
+                                                               @Valid @RequestBody ClubMemberAddRequest request,
+                                                               @RequestParam ClubRole role) {
         String clubMemberId = clubMemberService.addMember(
-                username, clubId, request.toServiceRequest()
+                username, clubId, request.toServiceRequest(), role.name()
         );
 
         ClubMemberCreateResponse response = new ClubMemberCreateResponse(clubMemberId);
