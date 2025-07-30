@@ -110,4 +110,11 @@ public class AdminAuthApiController implements AdminAuthDocs {
         return ResponseEntity.ok()
                 .body(response);
     }
+
+    // 프론트 테스트용
+    @GetMapping("/info")
+    public ResponseEntity<AdminLoginResponse> getAdminInfo(@AuthUserInfo String adminName) {
+        return ResponseEntity.ok()
+                .body(adminAuthService.getAdminInfo(adminName));
+    }
 }
