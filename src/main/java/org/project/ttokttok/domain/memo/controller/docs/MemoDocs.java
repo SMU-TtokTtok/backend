@@ -84,7 +84,7 @@ public interface MemoDocs {
     )
     @ApiResponses(value = {
             @ApiResponse(
-                    responseCode = "204",
+                    responseCode = "200",
                     description = "메모 수정 성공"
             ),
             @ApiResponse(
@@ -137,7 +137,7 @@ public interface MemoDocs {
     )
     @ApiResponses(value = {
             @ApiResponse(
-                    responseCode = "204",
+                    responseCode = "200",
                     description = "메모 삭제 성공"
             ),
             @ApiResponse(

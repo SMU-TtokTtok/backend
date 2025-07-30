@@ -87,7 +87,7 @@ public interface ClubAdminApiDocs {
     @ApiResponses(
             value = {
                     @ApiResponse(
-                            responseCode = "204",
+                            responseCode = "200",
                             description = "동아리 소개 수정 성공"
                     ),
                     @ApiResponse(
@@ -299,7 +299,7 @@ public interface ClubAdminApiDocs {
     )
     @ApiResponses(value = {
             @ApiResponse(
-                    responseCode = "204",
+                    responseCode = "200",
                     description = "모집 상태 토글 성공"
             ),
             @ApiResponse(
