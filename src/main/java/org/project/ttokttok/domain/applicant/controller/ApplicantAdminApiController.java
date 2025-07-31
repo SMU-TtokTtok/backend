@@ -9,7 +9,7 @@ import org.project.ttokttok.domain.applicant.controller.dto.response.ApplicantFi
 import org.project.ttokttok.domain.applicant.controller.dto.response.ApplicantPageResponse;
 import org.project.ttokttok.domain.applicant.controller.enums.Kind;
 import org.project.ttokttok.domain.applicant.controller.enums.Sort;
-import org.project.ttokttok.domain.applicant.domain.enums.Status;
+import org.project.ttokttok.domain.applicant.domain.enums.PhaseStatus;
 import org.project.ttokttok.domain.applicant.service.ApplicantAdminService;
 import org.project.ttokttok.domain.applicant.service.dto.request.*;
 import org.project.ttokttok.domain.applicant.service.dto.response.ApplicantDetailServiceResponse;
@@ -80,7 +80,8 @@ public class ApplicantAdminApiController implements ApplicantAdminDocs {
                 sort.name(),
                 isEvaluating,
                 cursor,
-                size
+                size,
+                kind.name()
         );
 
         ApplicantPageResponse response = ApplicantPageResponse.from(
@@ -103,7 +104,8 @@ public class ApplicantAdminApiController implements ApplicantAdminDocs {
                 username,
                 true,
                 page,
-                size
+                size,
+                kind.name()
         );
 
         ApplicantPageResponse response = ApplicantPageResponse.from(
@@ -125,7 +127,8 @@ public class ApplicantAdminApiController implements ApplicantAdminDocs {
                 username,
                 false, // passed = false
                 page,
-                size
+                size,
+                kind.name()
         );
 
         ApplicantPageResponse response = ApplicantPageResponse.from(
@@ -139,14 +142,15 @@ public class ApplicantAdminApiController implements ApplicantAdminDocs {
     // 지원자 상태 업데이트 - status 부분 리팩토링 필요
     @PatchMapping("/evaluations/{applicantId}")
     public ResponseEntity<Map<String, String>> updateApplicantEvaluation(@AuthUserInfo String username,
-                                                          @PathVariable String applicantId,
-                                                          @RequestBody Status status,
-                                                          @RequestParam Kind kind) {
+                                                                         @PathVariable String applicantId,
+                                                                         @RequestBody PhaseStatus status,
+                                                                         @RequestParam Kind kind) {
 
         StatusUpdateServiceRequest request = StatusUpdateServiceRequest.of(
                 username,
                 applicantId,
-                status
+                status,
+                kind.name()
         );
 
         applicantAdminService.updateApplicantStatus(request);
