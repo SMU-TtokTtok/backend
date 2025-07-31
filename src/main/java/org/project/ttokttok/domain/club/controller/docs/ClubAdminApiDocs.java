@@ -209,7 +209,7 @@ public interface ClubAdminApiDocs {
             @ApiResponse(
                     responseCode = "200",
                     description = "이미지 URL 조회 성공",
-                    content = @Content(schema = @Schema(implementation = String.class, example = "https://s3.amazonaws.com/bucket/club-1-image-12345.jpg?X-Amz-Expires=3600"))
+                    content = @Content(schema = @Schema(implementation = GetImageUrlResponse.class))
             ),
             @ApiResponse(
                     responseCode = "400",
