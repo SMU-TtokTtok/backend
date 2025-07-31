@@ -29,9 +29,9 @@ public class ClubAdminApiController implements ClubAdminApiDocs {
     @PatchMapping(value = "/{clubId}/content",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Map<String, String>> updateClubContent(@AuthUserInfo String username,
-                                                    @PathVariable String clubId,
-                                                    @Valid @RequestPart UpdateClubContentRequest request,
-                                                    @RequestPart(required = false) MultipartFile profileImage) {
+                                                                 @PathVariable String clubId,
+                                                                 @Valid @RequestPart UpdateClubContentRequest request,
+                                                                 @RequestPart(required = false) MultipartFile profileImage) {
         clubAdminService.updateContent(username, request.toServiceRequest(clubId));
 
         return ResponseEntity.ok()

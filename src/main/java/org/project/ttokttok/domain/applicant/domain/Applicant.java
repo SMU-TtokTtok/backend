@@ -105,16 +105,16 @@ public class Applicant extends BaseTimeEntity {
     // ----- 생성자 ----- //
     @Builder
     private Applicant(String userEmail,
-                     String name,
-                     Integer age,
-                     String major,
-                     String email,
-                     String phone,
-                     StudentStatus studentStatus,
-                     Grade grade,
-                     Gender gender,
-                     List<Answer> answers,
-                     ApplyForm applyForm) {
+                      String name,
+                      Integer age,
+                      String major,
+                      String email,
+                      String phone,
+                      StudentStatus studentStatus,
+                      Grade grade,
+                      Gender gender,
+                      List<Answer> answers,
+                      ApplyForm applyForm) {
         this.userEmail = userEmail;
         this.name = name;
         this.age = age;
@@ -130,16 +130,16 @@ public class Applicant extends BaseTimeEntity {
     }
 
     public static Applicant createApplicant(String userEmail,
-                                          String name,
-                                          Integer age,
-                                          String major,
-                                          String email,
-                                          String phone,
-                                          StudentStatus studentStatus,
-                                          Grade grade,
-                                          Gender gender,
-                                          List<Answer> answers,
-                                          ApplyForm applyForm) {
+                                            String name,
+                                            Integer age,
+                                            String major,
+                                            String email,
+                                            String phone,
+                                            StudentStatus studentStatus,
+                                            Grade grade,
+                                            Gender gender,
+                                            List<Answer> answers,
+                                            ApplyForm applyForm) {
         return Applicant.builder()
                 .userEmail(userEmail)
                 .name(name)
