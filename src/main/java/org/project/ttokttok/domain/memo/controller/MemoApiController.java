@@ -13,6 +13,8 @@ import org.project.ttokttok.global.annotation.auth.AuthUserInfo;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/admin/applies/{applicantId}/memos")
@@ -23,8 +25,8 @@ public class MemoApiController implements MemoDocs {
     // 메모 생성
     @PostMapping
     public ResponseEntity<MemoCreateResponse> createMemo(@AuthUserInfo String username,
-                                             @PathVariable String applicantId,
-                                             @Valid @RequestBody MemoRequest request) {
+                                                         @PathVariable String applicantId,
+                                                         @Valid @RequestBody MemoRequest request) {
 
         var serviceRequest = CreateMemoServiceRequest.of(
                 username,
@@ -42,10 +44,10 @@ public class MemoApiController implements MemoDocs {
 
     // 메모 수정
     @PatchMapping("/{memoId}")
-    public ResponseEntity<Void> updateMemo(@AuthUserInfo String username,
-                                             @PathVariable String applicantId,
-                                             @PathVariable String memoId,
-                                             @Valid @RequestBody MemoRequest request) {
+    public ResponseEntity<Map<String, String>> updateMemo(@AuthUserInfo String username,
+                                                          @PathVariable String applicantId,
+                                                          @PathVariable String memoId,
+                                                          @Valid @RequestBody MemoRequest request) {
 
         var serviceRequest = UpdateMemoServiceRequest.of(
                 memoId,
@@ -56,15 +58,15 @@ public class MemoApiController implements MemoDocs {
 
         memoService.updateMemo(serviceRequest);
 
-        return ResponseEntity.noContent()
-                .build();
+        return ResponseEntity.ok()
+                .body(Map.of("message", "메모 수정에 성공했습니다."));
     }
 
     // 메모 삭제
     @DeleteMapping("/{memoId}")
-    public ResponseEntity<Void> deleteMemo(@AuthUserInfo String username,
-                                             @PathVariable String applicantId,
-                                             @PathVariable String memoId) {
+    public ResponseEntity<Map<String, String>> deleteMemo(@AuthUserInfo String username,
+                                                          @PathVariable String applicantId,
+                                                          @PathVariable String memoId) {
 
         var serviceRequest = DeleteMemoServiceRequest.of(
                 memoId,
@@ -74,7 +76,7 @@ public class MemoApiController implements MemoDocs {
 
         memoService.deleteMemo(serviceRequest);
 
-        return ResponseEntity.noContent()
-                .build();
+        return ResponseEntity.ok()
+                .body(Map.of("message", "메모 삭제에 성공했습니다."));
     }
 }

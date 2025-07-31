@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
+
 @Tag(name = "Health Check API", description = "API 서버의 헬스 체크를 위한 엔드포인트입니다.")
 @RestController
 @RequestMapping("/health")
@@ -27,9 +29,9 @@ public class HealthCheckController {
             )
     })
     @GetMapping
-    public ResponseEntity<String> healthCheck() {
+    public ResponseEntity<Map<String, String>> healthCheck() {
         // 헬스 체크를 위한 간단한 응답
         return ResponseEntity.ok()
-                .body("Healthy");
+                .body(Map.of("status", "Healthy"));
     }
 }

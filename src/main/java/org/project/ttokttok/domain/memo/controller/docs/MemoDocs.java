@@ -14,6 +14,8 @@ import org.project.ttokttok.global.exception.dto.ErrorResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import java.util.Map;
+
 @Tag(name = "[관리자] 메모 API", description = "지원자 별 메모 관리용 API 입니다.")
 public interface MemoDocs {
 
@@ -84,7 +86,7 @@ public interface MemoDocs {
     )
     @ApiResponses(value = {
             @ApiResponse(
-                    responseCode = "204",
+                    responseCode = "200",
                     description = "메모 수정 성공"
             ),
             @ApiResponse(
@@ -113,7 +115,7 @@ public interface MemoDocs {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             )
     })
-    ResponseEntity<Void> updateMemo(
+    ResponseEntity<Map<String, String>> updateMemo(
             @Parameter(description = "인증된 관리자 이름", hidden = true)
             String username,
             @Parameter(description = "지원자 ID", required = true, example = "UUID")
@@ -137,7 +139,7 @@ public interface MemoDocs {
     )
     @ApiResponses(value = {
             @ApiResponse(
-                    responseCode = "204",
+                    responseCode = "200",
                     description = "메모 삭제 성공"
             ),
             @ApiResponse(
@@ -161,7 +163,7 @@ public interface MemoDocs {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             )
     })
-    ResponseEntity<Void> deleteMemo(
+    ResponseEntity<Map<String, String>> deleteMemo(
             @Parameter(description = "인증된 관리자 이름", hidden = true)
             @AuthUserInfo String username,
             @Parameter(description = "지원자 ID", required = true, example = "UUID")

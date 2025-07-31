@@ -63,6 +63,8 @@ public enum ErrorMessage {
     DUPLICATE_ROLE("이미 해당 역할을 가진 부원이 존재합니다.", HttpStatus.CONFLICT),
     EXCEL_FILE_CREATE_FAIL("엑셀 파일 생성에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
     ALREADY_CLUB_MEMBER("이미 동아리에 가입된 사용자입니다.", HttpStatus.CONFLICT),
+    LIST_SIZE_NOT_MATCH("지원서 질문 ID 리스트와 파일 리스트의 크기는 같아야 합니다.", HttpStatus.BAD_REQUEST),
+    ANSWER_REQUEST_NOT_MATCH("지원서 질문 ID와 답변 요청, 어느 한쪽이 Null 입니다.", HttpStatus.BAD_REQUEST),
 
     // S3 에러 메시지
     S3_FILE_UPLOAD_ERROR("S3 파일 업로드 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);

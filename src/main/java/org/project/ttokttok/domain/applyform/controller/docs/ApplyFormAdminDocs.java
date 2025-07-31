@@ -17,6 +17,8 @@ import org.project.ttokttok.global.exception.dto.ErrorResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import java.util.Map;
+
 @Tag(name = "[관리자] 지원폼 관리 API", description = "동아리 관리자용 지원폼 생성/수정/조회 API 입니다.")
 public interface ApplyFormAdminDocs {
 
@@ -144,7 +146,7 @@ public interface ApplyFormAdminDocs {
     )
     @ApiResponses(value = {
             @ApiResponse(
-                    responseCode = "204",
+                    responseCode = "200",
                     description = "지원폼 수정 성공"
             ),
             @ApiResponse(
@@ -173,7 +175,7 @@ public interface ApplyFormAdminDocs {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             )
     })
-    ResponseEntity<Void> updateApplyForm(
+    ResponseEntity<Map<String, String>> updateApplyForm(
             @Parameter(description = "인증된 관리자 이름", hidden = true)
             String username,
             @Parameter(description = "지원폼 ID", required = true, example = "UUID")

@@ -13,6 +13,8 @@ import org.project.ttokttok.global.exception.dto.ErrorResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
 
+import java.util.Map;
+
 @Tag(name = "[관리자] 관리자 인증 API", description = "관리자 인증 / 인가 관련 API 입니다.")
 public interface AdminAuthDocs {
 
@@ -72,7 +74,7 @@ public interface AdminAuthDocs {
     )
     @ApiResponses(value = {
             @ApiResponse(
-                    responseCode = "204",
+                    responseCode = "200",
                     description = "로그아웃 성공"
             ),
             @ApiResponse(
@@ -91,7 +93,7 @@ public interface AdminAuthDocs {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             )
     })
-    ResponseEntity<Void> logout(
+    ResponseEntity<Map<String, String>> logout(
             @Parameter(description = "인증된 관리자 이름", hidden = true)
             String adminName
     );
@@ -106,7 +108,7 @@ public interface AdminAuthDocs {
     )
     @ApiResponses(value = {
             @ApiResponse(
-                    responseCode = "204",
+                    responseCode = "200",
                     description = "토큰 재발급 성공"
             ),
             @ApiResponse(
@@ -125,7 +127,7 @@ public interface AdminAuthDocs {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             )
     })
-    ResponseEntity<Void> reissue(
+    ResponseEntity<Map<String, String>> reissue(
             @Parameter(description = "인증된 관리자 이름", hidden = true)
             String adminName,
             @Parameter(description = "리프레시 토큰 (쿠키에서 자동 추출)")

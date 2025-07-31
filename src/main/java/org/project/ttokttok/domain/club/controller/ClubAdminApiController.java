@@ -16,6 +16,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Map;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/admin/clubs")
@@ -26,14 +28,14 @@ public class ClubAdminApiController implements ClubAdminApiDocs {
     // 동아리 소개 수정 로직
     @PatchMapping(value = "/{clubId}/content",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Void> updateClubContent(@AuthUserInfo String username,
-                                                    @PathVariable String clubId,
-                                                    @Valid @RequestPart UpdateClubContentRequest request,
-                                                    @RequestPart(required = false) MultipartFile profileImage) {
+    public ResponseEntity<Map<String, String>> updateClubContent(@AuthUserInfo String username,
+                                                                 @PathVariable String clubId,
+                                                                 @Valid @RequestPart UpdateClubContentRequest request,
+                                                                 @RequestPart(required = false) MultipartFile profileImage) {
         clubAdminService.updateContent(username, request.toServiceRequest(clubId));
 
-        return ResponseEntity.noContent()
-                .build();
+        return ResponseEntity.ok()
+                .body(Map.of("message", "동아리 소개가 수정되었습니다."));
     }
 
     @PostMapping(value = "/{clubId}/update-image",
@@ -69,12 +71,12 @@ public class ClubAdminApiController implements ClubAdminApiDocs {
 
     // 모집 마감, 재시작 토글 api
     @PatchMapping("/{clubId}/toggle-recruitment")
-    public ResponseEntity<Void> toggleRecruitment(@AuthUserInfo String username,
-                                                  @PathVariable String clubId) {
+    public ResponseEntity<Map<String, String>> toggleRecruitment(@AuthUserInfo String username,
+                                                                 @PathVariable String clubId) {
         clubAdminService.toggleRecruitment(username, clubId);
 
-        return ResponseEntity.noContent()
-                .build();
+        return ResponseEntity.ok()
+                .body(Map.of("message", "동아리 모집 상태가 변경되었습니다."));
     }
 
     // 관리자 동아리 소개 조회 API

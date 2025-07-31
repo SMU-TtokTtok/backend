@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -53,15 +54,15 @@ public class ApplyFormAdminApiController implements ApplyFormAdminDocs {
 
     // 지원 폼 수정하기
     @PatchMapping("/{formId}")
-    public ResponseEntity<Void> updateApplyForm(@AuthUserInfo String username,
-                                                @PathVariable String formId,
-                                                @RequestBody ApplyFormUpdateRequest request) {
+    public ResponseEntity<Map<String, String>> updateApplyForm(@AuthUserInfo String username,
+                                                               @PathVariable String formId,
+                                                               @RequestBody ApplyFormUpdateRequest request) {
         applyFormAdminService.updateApplyForm(
                 request.toServiceRequest(username, formId)
         );
 
-        return ResponseEntity.noContent()
-                .build();
+        return ResponseEntity.ok()
+                .body(Map.of("message", "지원 폼이 성공적으로 수정되었습니다."));
     }
 
     // 이전에 만들어둔 지원 폼 질문 형태 받아오기

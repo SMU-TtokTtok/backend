@@ -9,6 +9,7 @@ import org.project.ttokttok.domain.clubMember.controller.dto.response.ClubMember
 import org.project.ttokttok.domain.clubMember.controller.dto.response.ClubMemberCreateResponse;
 import org.project.ttokttok.domain.clubMember.controller.dto.response.ClubMemberPageResponse;
 import org.project.ttokttok.domain.clubMember.controller.dto.response.ClubMemberSearchCoverResponse;
+import org.project.ttokttok.domain.clubMember.controller.enums.ClubRole;
 import org.project.ttokttok.domain.clubMember.service.ClubMemberService;
 import org.project.ttokttok.domain.clubMember.service.dto.request.ChangeRoleServiceRequest;
 import org.project.ttokttok.domain.clubMember.service.dto.request.ClubMemberPageRequest;
@@ -28,6 +29,7 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -65,10 +67,10 @@ public class ClubMemberApiController implements ClubMemberDocs {
     }
 
     @PatchMapping("/{clubId}/{memberId}/role")
-    public ResponseEntity<Void> changeRole(@AuthUserInfo String username,
-                                           @PathVariable String clubId,
-                                           @PathVariable String memberId,
-                                           @Valid @RequestBody RoleChangeRequest request) {
+    public ResponseEntity<Map<String, String>> changeRole(@AuthUserInfo String username,
+                                                          @PathVariable String clubId,
+                                                          @PathVariable String memberId,
+                                                          @Valid @RequestBody RoleChangeRequest request) {
 
         ChangeRoleServiceRequest serviceRequest = ChangeRoleServiceRequest.of(
                 username,
@@ -79,14 +81,14 @@ public class ClubMemberApiController implements ClubMemberDocs {
 
         clubMemberService.changeRole(serviceRequest);
 
-        return ResponseEntity.noContent()
+        return ResponseEntity.ok()
                 .build();
     }
 
     @DeleteMapping("/{clubId}/{memberId}")
-    public ResponseEntity<Void> deleteMember(@AuthUserInfo String username,
-                                             @PathVariable String clubId,
-                                             @PathVariable String memberId) {
+    public ResponseEntity<Map<String, String>> deleteMember(@AuthUserInfo String username,
+                                                            @PathVariable String clubId,
+                                                            @PathVariable String memberId) {
 
         DeleteMemberServiceRequest serviceRequest = DeleteMemberServiceRequest.of(
                 username,
@@ -96,7 +98,7 @@ public class ClubMemberApiController implements ClubMemberDocs {
 
         clubMemberService.deleteMember(serviceRequest);
 
-        return ResponseEntity.noContent()
+        return ResponseEntity.ok()
                 .build();
     }
 
@@ -136,10 +138,11 @@ public class ClubMemberApiController implements ClubMemberDocs {
 
     @PostMapping("/{clubId}/add")
     public ResponseEntity<ClubMemberCreateResponse> addMembers(@AuthUserInfo String username,
-                                             @PathVariable String clubId,
-                                             @Valid @RequestBody ClubMemberAddRequest request) {
+                                                               @PathVariable String clubId,
+                                                               @Valid @RequestBody ClubMemberAddRequest request,
+                                                               @RequestParam ClubRole role) {
         String clubMemberId = clubMemberService.addMember(
-                username, clubId, request.toServiceRequest()
+                username, clubId, request.toServiceRequest(), role.name()
         );
 
         ClubMemberCreateResponse response = new ClubMemberCreateResponse(clubMemberId);

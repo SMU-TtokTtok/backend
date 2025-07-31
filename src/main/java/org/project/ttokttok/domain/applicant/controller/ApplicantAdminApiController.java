@@ -16,6 +16,8 @@ import org.project.ttokttok.global.annotation.auth.AuthUserInfo;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/admin/applies")
@@ -130,7 +132,7 @@ public class ApplicantAdminApiController implements ApplicantAdminDocs {
 
     // 지원자 상태 업데이트 - status 부분 리팩토링 필요
     @PatchMapping("/evaluations/{applicantId}")
-    public ResponseEntity<Void> updateApplicantEvaluation(@AuthUserInfo String username,
+    public ResponseEntity<Map<String, String>> updateApplicantEvaluation(@AuthUserInfo String username,
                                                           @PathVariable String applicantId,
                                                           @RequestBody Status status) {
 
@@ -142,8 +144,8 @@ public class ApplicantAdminApiController implements ApplicantAdminDocs {
 
         applicantAdminService.updateApplicantStatus(request);
 
-        return ResponseEntity.noContent()
-                .build();
+        return ResponseEntity.ok()
+                .body(Map.of("message", "지원자 상태가 성공적으로 업데이트되었습니다."));
     }
 
     // 지원자 상태 최종 확정
@@ -164,9 +166,9 @@ public class ApplicantAdminApiController implements ApplicantAdminDocs {
     }
 
     @PostMapping("/{clubId}/send-email")
-    public ResponseEntity<Void> sendEmailToApplicants(@AuthUserInfo String username,
-                                                      @PathVariable String clubId,
-                                                      @Valid @RequestBody SendResultMailRequest request) {
+    public ResponseEntity<Map<String, String>> sendEmailToApplicants(@AuthUserInfo String username,
+                                                                     @PathVariable String clubId,
+                                                                     @Valid @RequestBody SendResultMailRequest request) {
 
         applicantAdminService.sendResultMailToApplicants(
                 request.toServiceRequest(),
@@ -174,7 +176,7 @@ public class ApplicantAdminApiController implements ApplicantAdminDocs {
                 clubId
         );
 
-        return ResponseEntity.noContent()
-                .build();
+        return ResponseEntity.ok()
+                .body(Map.of("message", "이메일 전송이 완료되었습니다."));
     }
 }

@@ -1,6 +1,7 @@
 package org.project.ttokttok.domain.admin.service;
 
 import lombok.RequiredArgsConstructor;
+import org.project.ttokttok.domain.admin.controller.dto.response.AdminLoginResponse;
 import org.project.ttokttok.domain.admin.domain.Admin;
 import org.project.ttokttok.domain.admin.exception.AdminNotFoundException;
 import org.project.ttokttok.domain.admin.repository.AdminRepository;
@@ -93,5 +94,16 @@ public class AdminAuthService {
         refreshTokenRedisService.save(username, tokenResponse.refreshToken());
 
         return tokenResponse;
+    }
+
+    // FIXME: 프론트 테스트용, 추후 삭제
+    public AdminLoginResponse getAdminInfo(String adminName) {
+        Club findClub = clubRepository.findByAdminUsername(adminName)
+                .orElseThrow(AdminNotFoundException::new);
+
+        return AdminLoginResponse.of(
+                findClub.getId(),
+                findClub.getName()
+        );
     }
 }

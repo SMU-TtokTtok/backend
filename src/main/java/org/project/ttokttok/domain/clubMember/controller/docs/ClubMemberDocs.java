@@ -14,12 +14,15 @@ import org.project.ttokttok.domain.clubMember.controller.dto.response.ClubMember
 import org.project.ttokttok.domain.clubMember.controller.dto.response.ClubMemberCreateResponse;
 import org.project.ttokttok.domain.clubMember.controller.dto.response.ClubMemberPageResponse;
 import org.project.ttokttok.domain.clubMember.controller.dto.response.ClubMemberSearchCoverResponse;
+import org.project.ttokttok.domain.clubMember.controller.enums.ClubRole;
 import org.project.ttokttok.global.annotation.auth.AuthUserInfo;
 import org.project.ttokttok.global.exception.dto.ErrorResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.Map;
 
 @Tag(name = "[관리자] 동아리 부원 관리 API", description = "동아리 관리자용 부원 관리 API 입니다.")
 public interface ClubMemberDocs {
@@ -77,13 +80,13 @@ public interface ClubMemberDocs {
     })
     ResponseEntity<ClubMemberPageResponse> getClubMembers(
             @Parameter(description = "인증된 관리자 이름", hidden = true)
-            @AuthUserInfo String username,
+            String username,
             @Parameter(description = "동아리 ID", required = true, example = "UUID")
-            @PathVariable String clubId,
+            String clubId,
             @Parameter(description = "페이지 번호 (1부터 시작)", example = "1")
-            @RequestParam(defaultValue = "1", required = false) int page,
+            int page,
             @Parameter(description = "페이지 크기", example = "5")
-            @RequestParam(defaultValue = "5", required = false) int size
+            int size
     );
 
     @Operation(
@@ -145,7 +148,7 @@ public interface ClubMemberDocs {
     )
     @ApiResponses(value = {
             @ApiResponse(
-                    responseCode = "204",
+                    responseCode = "200",
                     description = "멤버 삭제 성공"
             ),
             @ApiResponse(
@@ -169,7 +172,7 @@ public interface ClubMemberDocs {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             )
     })
-    ResponseEntity<Void> deleteMember(
+    ResponseEntity<Map<String, String>> deleteMember(
             @Parameter(description = "인증된 관리자 이름", hidden = true)
             @AuthUserInfo String username,
             @Parameter(description = "동아리 ID", required = true, example = "UUID")
@@ -197,7 +200,7 @@ public interface ClubMemberDocs {
     )
     @ApiResponses(value = {
             @ApiResponse(
-                    responseCode = "204",
+                    responseCode = "200",
                     description = "역할 변경 성공"
             ),
             @ApiResponse(
@@ -226,7 +229,7 @@ public interface ClubMemberDocs {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             )
     })
-    ResponseEntity<Void> changeRole(
+    ResponseEntity<Map<String, String>> changeRole(
             @Parameter(description = "인증된 관리자 이름", hidden = true)
             @AuthUserInfo String username,
             @Parameter(description = "동아리 ID", required = true, example = "UUID")
@@ -405,6 +408,8 @@ public interface ClubMemberDocs {
             @Parameter(description = "동아리 ID", required = true, example = "UUID")
             String clubId,
             @Parameter(description = "멤버 추가 요청 데이터")
-            ClubMemberAddRequest request
+            ClubMemberAddRequest request,
+            @Parameter(description = "추가할 멤버의 역할", required = true, example = "EXECUTIVE")
+            ClubRole role
     );
 }

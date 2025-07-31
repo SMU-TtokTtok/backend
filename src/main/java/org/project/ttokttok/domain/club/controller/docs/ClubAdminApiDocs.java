@@ -19,6 +19,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Map;
+
 @Tag(name = "[관리자] 동아리 관련 API", description = "관리자 동아리 정보 관리용 API 입니다.")
 public interface ClubAdminApiDocs {
 
@@ -87,8 +89,9 @@ public interface ClubAdminApiDocs {
     @ApiResponses(
             value = {
                     @ApiResponse(
-                            responseCode = "204",
-                            description = "동아리 소개 수정 성공"
+                            responseCode = "200",
+                            description = "동아리 소개 수정 성공",
+                            content = @Content(schema = @Schema(implementation = Map.class, example = "{\"message\": \"동아리 소개가 수정되었습니다.\"}"))
                     ),
                     @ApiResponse(
                             responseCode = "400",
@@ -111,7 +114,7 @@ public interface ClubAdminApiDocs {
                             content = @Content(schema = @Schema(implementation = ErrorResponse.class))
                     )
             })
-    ResponseEntity<Void> updateClubContent(
+    ResponseEntity<Map<String, String>> updateClubContent(
             @Parameter(
                     description = "인증된 사용자 정보",
                     hidden = true
@@ -154,7 +157,7 @@ public interface ClubAdminApiDocs {
             @ApiResponse(
                     responseCode = "200",
                     description = "이미지 업로드 및 업데이트 성공",
-                    content = @Content(schema = @Schema(implementation = String.class, example = "Markdown image Updated successfully. Image Key: IMAGE_KEY"))
+                    content = @Content(schema = @Schema(implementation = UpdateImageResponse.class))
             ),
             @ApiResponse(
                     responseCode = "400",
@@ -206,7 +209,7 @@ public interface ClubAdminApiDocs {
             @ApiResponse(
                     responseCode = "200",
                     description = "이미지 URL 조회 성공",
-                    content = @Content(schema = @Schema(implementation = String.class, example = "https://s3.amazonaws.com/bucket/club-1-image-12345.jpg?X-Amz-Expires=3600"))
+                    content = @Content(schema = @Schema(implementation = GetImageUrlResponse.class))
             ),
             @ApiResponse(
                     responseCode = "400",
@@ -299,7 +302,7 @@ public interface ClubAdminApiDocs {
     )
     @ApiResponses(value = {
             @ApiResponse(
-                    responseCode = "204",
+                    responseCode = "200",
                     description = "모집 상태 토글 성공"
             ),
             @ApiResponse(
@@ -323,7 +326,7 @@ public interface ClubAdminApiDocs {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             )
     })
-    ResponseEntity<Void> toggleRecruitment(
+    ResponseEntity<Map<String, String>> toggleRecruitment(
             @Parameter(description = "인증된 사용자 정보", hidden = true)
             String username,
             @Parameter(description = "동아리 ID", required = true, example = "UUID")
