@@ -1,16 +1,22 @@
 package org.project.ttokttok.domain.clubMember.repository;
 
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.Predicate;
+import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.project.ttokttok.domain.applicant.domain.enums.Grade;
 import org.project.ttokttok.domain.clubMember.domain.ClubMember;
+import org.project.ttokttok.domain.clubMember.domain.MemberRole;
 import org.project.ttokttok.domain.clubMember.repository.dto.ClubMemberCountQueryResponse;
 import org.project.ttokttok.domain.clubMember.repository.dto.ClubMemberPageQueryResponse;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+import static org.project.ttokttok.domain.clubMember.domain.MemberRole.*;
 import static org.project.ttokttok.domain.clubMember.domain.QClubMember.clubMember;
 
 @Repository
@@ -28,7 +34,10 @@ public class ClubMemberCustomRepositoryImpl implements ClubMemberCustomRepositor
         List<ClubMember> members = queryFactory
                 .selectFrom(clubMember)
                 .where(clubMember.club.id.eq(clubId))
-                .orderBy(clubMember.grade.asc())
+                .orderBy(
+                        orderByRoleAsc(),
+                        clubMember.grade.asc()
+                )
                 .offset((long) (pageNum - 1) * pageSize)
                 .limit(pageSize)
                 .fetch();
@@ -61,7 +70,7 @@ public class ClubMemberCustomRepositoryImpl implements ClubMemberCustomRepositor
     }
 
     private long getTotalCount(String clubId) {
-         return queryFactory
+        return queryFactory
                 .select(clubMember.count())
                 .from(clubMember)
                 .where(clubMember.club.id.eq(clubId))
@@ -80,5 +89,22 @@ public class ClubMemberCustomRepositoryImpl implements ClubMemberCustomRepositor
                 .from(clubMember)
                 .where(clubMember.club.id.eq(clubId))
                 .fetchOne();
+    }
+
+    private BooleanExpression executiveOrMember(String role) {
+        if (!role.equalsIgnoreCase(EXECUTIVE.name()))
+            return clubMember.role.eq(MEMBER);
+        else
+            return clubMember.role.in(PRESIDENT, VICE_PRESIDENT, EXECUTIVE);
+    }
+
+    public OrderSpecifier<Integer> orderByRoleAsc() {
+        return new CaseBuilder()
+                .when(clubMember.role.eq(MemberRole.PRESIDENT)).then(0)
+                .when(clubMember.role.eq(MemberRole.VICE_PRESIDENT)).then(1)
+                .when(clubMember.role.eq(MemberRole.EXECUTIVE)).then(2)
+                .when(clubMember.role.eq(MemberRole.MEMBER)).then(3)
+                .otherwise(4) // 나머지 예외처리도 고려
+                .asc();
     }
 }

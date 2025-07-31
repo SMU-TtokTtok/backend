@@ -11,7 +11,6 @@ public record ClubMemberServiceRequest(
         String name,
         String major,
         Grade grade,
-        MemberRole role,
         String email,
         String phoneNumber,
         Gender gender

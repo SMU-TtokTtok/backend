@@ -11,21 +11,22 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/applies")
+@RequestMapping("/api/user/applies")
 public class ApplicantUserApiController implements ApplicantUserDocs {
 
     private final ApplicantUserService applicantUserService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Void> apply(@AuthUserInfo String email,
-                                      @Valid @RequestPart ApplyFormRequest request,
-                                      @RequestPart(required = false) Map<String, MultipartFile> files) {
+    public ResponseEntity<Map<String, String>> apply(@Valid @RequestPart ApplyFormRequest request, // json으로 명시 필요
+                                                     @RequestPart(required = false) List<String> questionIds, // json으로 명시 필요
+                                                     @RequestPart(required = false) List<MultipartFile> files) {
 
         return ResponseEntity.ok()
-                .build();
+                .body(Map.of("message", "지원서 작성 완료!"));
     }
 }

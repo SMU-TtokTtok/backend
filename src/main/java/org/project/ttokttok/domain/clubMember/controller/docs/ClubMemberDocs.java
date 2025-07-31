@@ -14,6 +14,7 @@ import org.project.ttokttok.domain.clubMember.controller.dto.response.ClubMember
 import org.project.ttokttok.domain.clubMember.controller.dto.response.ClubMemberCreateResponse;
 import org.project.ttokttok.domain.clubMember.controller.dto.response.ClubMemberPageResponse;
 import org.project.ttokttok.domain.clubMember.controller.dto.response.ClubMemberSearchCoverResponse;
+import org.project.ttokttok.domain.clubMember.controller.enums.ClubRole;
 import org.project.ttokttok.global.annotation.auth.AuthUserInfo;
 import org.project.ttokttok.global.exception.dto.ErrorResponse;
 import org.springframework.http.ResponseEntity;
@@ -79,13 +80,13 @@ public interface ClubMemberDocs {
     })
     ResponseEntity<ClubMemberPageResponse> getClubMembers(
             @Parameter(description = "인증된 관리자 이름", hidden = true)
-            @AuthUserInfo String username,
+            String username,
             @Parameter(description = "동아리 ID", required = true, example = "UUID")
-            @PathVariable String clubId,
+            String clubId,
             @Parameter(description = "페이지 번호 (1부터 시작)", example = "1")
-            @RequestParam(defaultValue = "1", required = false) int page,
+            int page,
             @Parameter(description = "페이지 크기", example = "5")
-            @RequestParam(defaultValue = "5", required = false) int size
+            int size
     );
 
     @Operation(
@@ -407,6 +408,8 @@ public interface ClubMemberDocs {
             @Parameter(description = "동아리 ID", required = true, example = "UUID")
             String clubId,
             @Parameter(description = "멤버 추가 요청 데이터")
-            ClubMemberAddRequest request
+            ClubMemberAddRequest request,
+            @Parameter(description = "추가할 멤버의 역할", required = true, example = "EXECUTIVE")
+            ClubRole role
     );
 }
