@@ -9,14 +9,16 @@ public record ApplicantSearchServiceRequest(
         String sortCriteria,
         boolean isEvaluating,
         int cursor,
-        int size
+        int size,
+        String kind
 ) {
     public static ApplicantSearchServiceRequest of(String username,
                                                    String searchKeyword,
                                                    String sortCriteria,
                                                    boolean isEvaluating,
                                                    int cursor,
-                                                   int size
+                                                   int size,
+                                                   String kind
     ) {
         return ApplicantSearchServiceRequest.builder()
                 .username(username)
@@ -25,6 +27,7 @@ public record ApplicantSearchServiceRequest(
                 .isEvaluating(isEvaluating)
                 .cursor(cursor)
                 .size(size)
+                .kind(kind)
                 .build();
     }
 }

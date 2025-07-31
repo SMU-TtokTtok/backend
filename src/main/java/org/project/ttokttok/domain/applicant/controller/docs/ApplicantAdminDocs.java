@@ -13,7 +13,7 @@ import org.project.ttokttok.domain.applicant.controller.dto.response.ApplicantFi
 import org.project.ttokttok.domain.applicant.controller.dto.response.ApplicantPageResponse;
 import org.project.ttokttok.domain.applicant.controller.enums.Kind;
 import org.project.ttokttok.domain.applicant.controller.enums.Sort;
-import org.project.ttokttok.domain.applicant.domain.enums.Status;
+import org.project.ttokttok.domain.applicant.domain.enums.PhaseStatus;
 import org.project.ttokttok.global.exception.dto.ErrorResponse;
 import org.springframework.http.ResponseEntity;
 
@@ -299,7 +299,7 @@ public interface ApplicantAdminDocs {
     ResponseEntity<Map<String, String>> updateApplicantEvaluation(
             @Parameter(hidden = true) String username,
             @Parameter(description = "지원자 ID", example = "UUID") String applicantId,
-            @Parameter(description = "변경할 상태", schema = @Schema(implementation = Status.class), example = "PASS") Status status,
+            @Parameter(description = "변경할 상태", schema = @Schema(implementation = PhaseStatus.class), example = "PASS") PhaseStatus status,
             @Parameter(description = "서류 / 면접 구분", schema = @Schema(implementation = Kind.class), example = "DOCUMENT / INTERVIEW") Kind kind
     );
 
