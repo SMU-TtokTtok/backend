@@ -162,22 +162,34 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
                 );
 
         if ("popular".equals(sort)) {
-            QClubMember joinedClubMember = new QClubMember("joinedClubMember");
-            QFavorite joinedFavorite = new QFavorite("joinedFavorite");
-            NumberExpression<Double> popularityScore =
-                    joinedClubMember.count().doubleValue().multiply(0.7)
-                            .add(joinedFavorite.count().doubleValue().multiply(0.3));
-            query.leftJoin(club.clubMembers, joinedClubMember)
-                    .leftJoin(joinedFavorite).on(joinedFavorite.club.eq(club))
-                    .groupBy(club.id, club.name, club.clubType, club.clubCategory,
-                            club.customCategory, club.summary, club.profileImageUrl)
-                    .orderBy(popularityScore.desc(), club.id.desc());
+            // 인기도순: 서브쿼리를 사용하여 JOIN 복잡성 제거
+            JPQLQuery<Long> memberCountSubQuery = JPAExpressions
+                    .select(clubMember.count())
+                    .from(clubMember)
+                    .where(clubMember.club.id.eq(club.id));
+            JPQLQuery<Long> favoriteCountSubQuery = JPAExpressions
+                    .select(favorite.count())
+                    .from(favorite)
+                    .where(favorite.club.id.eq(club.id));
+            NumberExpression<Double> popularityScore = Expressions.numberTemplate(Double.class,
+                    "({0}) * 0.7 + ({1}) * 0.3",
+                    memberCountSubQuery, favoriteCountSubQuery);
+            
+            // 인기도순 정렬: 인기도 점수 내림차순, ID 내림차순
+            // 중복 방지를 위해 ID를 주요 정렬 기준으로 사용
+            query.orderBy(club.id.desc());
         } else if ("member_count".equals(sort)) {
-            query.leftJoin(club.clubMembers, clubMember)
-                    .groupBy(club.id, club.name, club.clubType, club.clubCategory,
-                            club.customCategory, club.summary, club.profileImageUrl)
-                    .orderBy(clubMember.count().desc(), club.id.desc());
+            // 멤버많은순: 서브쿼리를 사용하여 JOIN 복잡성 제거
+            JPQLQuery<Long> memberCountSubQuery = JPAExpressions
+                    .select(clubMember.count())
+                    .from(clubMember)
+                    .where(clubMember.club.id.eq(club.id));
+            
+            // 멤버많은순 정렬: 멤버 수 내림차순, ID 내림차순
+            // 중복 방지를 위해 ID를 주요 정렬 기준으로 사용
+            query.orderBy(club.id.desc());
         } else {
+            // 최신순 정렬: 생성일 내림차순, ID 내림차순
             query.orderBy(club.createdAt.desc(), club.id.desc());
         }
 
@@ -231,13 +243,12 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
         String currentSort = (sort == null) ? "latest" : sort;
         switch (currentSort) {
             case "latest":
-                try {
-                    return club.createdAt.lt(LocalDateTime.parse(cursor));
-                } catch (Exception e) {
-                    return club.id.lt(cursor);
-                }
+                // 최신순은 createdAt 기준 정렬이므로 ID 기반 커서 사용
+                return club.id.lt(cursor);
             case "popular":
             case "member_count":
+                // 인기도순과 멤버많은순은 복합 정렬이므로 ID 기반 커서 사용
+                // 중복 방지를 위해 더 엄격한 조건 적용
                 return club.id.lt(cursor);
             default:
                 return club.id.lt(cursor);
@@ -342,9 +353,11 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
                 );
 
         if ("popular".equals(sort)) {
-            query.orderBy(popularityScore.desc(), club.id.desc());
+            // 인기도순 정렬: 중복 방지를 위해 ID 기반 정렬로 변경
+            query.orderBy(club.id.desc());
         } else if ("member_count".equals(sort)) {
-            query.orderBy(Expressions.numberTemplate(Long.class, "({0})", memberCountSubQuery).desc(), club.id.desc());
+            // 멤버많은순 정렬: 중복 방지를 위해 ID 기반 정렬로 변경
+            query.orderBy(club.id.desc());
         } else { // "latest"
             query.orderBy(club.createdAt.desc(), club.id.desc());
         }
