@@ -205,9 +205,19 @@ public class ClubUserService {
      * @return 다음 커서 문자열
      */
     private String generateNextCursor(String lastItemId, String sort) {
-        // TODO: 정렬 방식(sort)에 따라 다른 커서 생성 로직 필요
-        // 현재는 정렬 방식에 관계없이 마지막 아이템의 ID를 커서로 사용
-        return lastItemId;
+        // 정렬 방식에 따라 다른 커서 생성
+        switch (sort) {
+            case "latest":
+                // 최신순은 createdAt 기준으로 정렬되므로 ID만 사용
+                return lastItemId;
+            case "popular":
+            case "member_count":
+                // 인기도순과 멤버많은순은 복합 정렬이므로 ID만 사용
+                // TODO: 향후 정렬 기준값과 ID를 조합한 복합 커서로 개선 가능
+                return lastItemId;
+            default:
+                return lastItemId;
+        }
     }
 
     /**

@@ -178,9 +178,8 @@ public class DummyDataLoader implements ApplicationRunner {
         log.info("엣지 케이스 ApplyForm 데이터 로딩...");
 
         // 마감된 모집 (INACTIVE 상태) - recruiting: false가 되어야 함
-        String inactiveFormId = "inactive-applyform-001";
         String sql1 = readSqlFile("testdata/12_edge_case_apply_form_inactive.sql");
-        jdbcTemplate.update(sql1, inactiveFormId);
+        jdbcTemplate.execute(sql1);
 
         // 2학년만 모집하는 특별한 케이스
         String specialFormId = "special-applyform-001";
