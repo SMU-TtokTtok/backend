@@ -41,7 +41,6 @@ public class S3Service {
                             .bucket(bucketName)
                             .key(key)
                             .contentType(file.getContentType())
-                            .acl(ObjectCannedACL.PUBLIC_READ)
                             .build(),
                     RequestBody.fromInputStream(file.getInputStream(), file.getSize())
             );

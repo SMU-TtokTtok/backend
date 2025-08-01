@@ -56,6 +56,7 @@ public class ClubAdminService {
         mapper.updateClubFromRequest(club, request);
     }
 
+    @Transactional
     public String updateMarkdownImage(MarkdownImageUpdateRequest request) {
         Club club = clubRepository.findById(request.clubId())
                 .orElseThrow(ClubNotFoundException::new);
