@@ -33,7 +33,7 @@ public class S3Service {
 
         validateFile(file);
 
-        String key = createFileKey(file.getOriginalFilename(), dirName);
+        String key = createFileKey(dirName);
 
         try {
             s3Client.putObject(
@@ -64,7 +64,7 @@ public class S3Service {
         validator.validateFileName(file.getOriginalFilename());
     }
 
-    private String createFileKey(String fileName, String dirName) {
-        return fileCloudUrl + "/" + dirName + UUID.randomUUID() + "_" + fileName;
+    private String createFileKey(String dirName) {
+        return fileCloudUrl + "/" + dirName + UUID.randomUUID();
     }
 }
