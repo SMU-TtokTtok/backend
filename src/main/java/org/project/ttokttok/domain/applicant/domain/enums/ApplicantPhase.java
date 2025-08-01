@@ -7,6 +7,4 @@ public enum ApplicantPhase {
     INTERVIEW_EVALUATING, // 면접 평가중
     INTERVIEW_FAIL, // 면접 불합격
     INTERVIEW_PASS, // 면접 합격
-    FINAL_PASSED, // 최종 합격
-    FINAL_FAILED // 최종 불합격
 }

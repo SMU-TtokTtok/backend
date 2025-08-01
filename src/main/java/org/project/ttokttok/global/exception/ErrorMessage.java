@@ -52,6 +52,11 @@ public enum ErrorMessage {
     APPLICANT_NOT_FOUND("지원자를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
     UNAUTHORIZED_APPLICANT_ACCESS("지원자 조회에 대한 권한이 없습니다.", HttpStatus.FORBIDDEN),
     INVALID_PHASE_TRANSITION("지원자의 상태를 변경할 수 없습니다.", HttpStatus.BAD_REQUEST),
+    INVALID_KIND("지원자의 상태를 변경할 수 없습니다. 잘못된 kind 값입니다.", HttpStatus.BAD_REQUEST),
+    LIST_SIZE_NOT_MATCH("지원서 질문 ID 리스트와 파일 리스트의 크기는 같아야 합니다.", HttpStatus.BAD_REQUEST),
+    ANSWER_REQUEST_NOT_MATCH("지원서 질문 ID와 답변 요청, 어느 한쪽이 Null 입니다.", HttpStatus.BAD_REQUEST),
+    INVALID_PHASE_STATUS("잘못된 STATUS 입력입니다.", HttpStatus.BAD_REQUEST),
+    NO_INTERVIEW_PHASE("인터뷰 단계가 존재하지 않습니다.", HttpStatus.BAD_REQUEST),
 
     // 메모 에러 메시지
     MEMO_NOT_FOUND("메모를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
@@ -64,8 +69,6 @@ public enum ErrorMessage {
     DUPLICATE_ROLE("이미 해당 역할을 가진 부원이 존재합니다.", HttpStatus.CONFLICT),
     EXCEL_FILE_CREATE_FAIL("엑셀 파일 생성에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
     ALREADY_CLUB_MEMBER("이미 동아리에 가입된 사용자입니다.", HttpStatus.CONFLICT),
-    LIST_SIZE_NOT_MATCH("지원서 질문 ID 리스트와 파일 리스트의 크기는 같아야 합니다.", HttpStatus.BAD_REQUEST),
-    ANSWER_REQUEST_NOT_MATCH("지원서 질문 ID와 답변 요청, 어느 한쪽이 Null 입니다.", HttpStatus.BAD_REQUEST),
 
     // S3 에러 메시지
     S3_FILE_UPLOAD_ERROR("S3 파일 업로드 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);

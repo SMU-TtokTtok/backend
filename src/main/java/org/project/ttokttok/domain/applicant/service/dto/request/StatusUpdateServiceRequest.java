@@ -18,6 +18,7 @@ public record StatusUpdateServiceRequest(
                 .username(username)
                 .applicantId(applicantId)
                 .status(status)
+                .kind(kind)
                 .build();
     }
 }

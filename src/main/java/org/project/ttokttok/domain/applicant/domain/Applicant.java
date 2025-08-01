@@ -2,6 +2,7 @@ package org.project.ttokttok.domain.applicant.domain;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.project.ttokttok.domain.applicant.domain.enums.*;
@@ -47,7 +48,7 @@ public class Applicant extends BaseTimeEntity {
     // 현재 진행 단계
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private ApplicantPhase currentPhase;  // DOCUMENT_SUBMITTED, DOCUMENT_PASSED, INTERVIEW_SCHEDULED, INTERVIEW_COMPLETED, FINAL_PASSED, FINAL_FAILED
+    private ApplicantPhase currentPhase;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "applyform_id")
@@ -63,42 +64,44 @@ public class Applicant extends BaseTimeEntity {
     // 비즈니스 메서드
     public void submitDocument(List<Answer> answers) {
         // 초기 상태이거나, 재지원 가능한 상태인지 확인
-        if (this.currentPhase != null && !canResubmitDocument()) {
+        if (this.currentPhase != null && !isEvaluatingDocument()) {
             throw new InvalidPhaseTransitionException();
         }
 
-        this.currentPhase = ApplicantPhase.DOCUMENT_SUBMITTED;
+        this.currentPhase = ApplicantPhase.DOCUMENT_EVALUATING;
         this.documentPhase = DocumentPhase.create(this, answers);
     }
 
+    // 서류 상태 합격 설정
     public void passDocumentEvaluation() {
-        validateCurrentPhase(ApplicantPhase.DOCUMENT_SUBMITTED);
-        this.currentPhase = ApplicantPhase.DOCUMENT_PASSED;
+        //validateCurrentPhase(ApplicantPhase.DOCUMENT_EVALUATING);
+        this.currentPhase = ApplicantPhase.DOCUMENT_PASS;
         this.documentPhase.updateStatus(PhaseStatus.PASS);
     }
 
+    // 서류 상태 불합격 설정
     public void failDocumentEvaluation() {
-        validateCurrentPhase(ApplicantPhase.DOCUMENT_SUBMITTED);
-        this.currentPhase = ApplicantPhase.FINAL_FAILED;
+        //validateCurrentPhase(ApplicantPhase.DOCUMENT_EVALUATING);
+        this.currentPhase = ApplicantPhase.DOCUMENT_FAIL;
         this.documentPhase.updateStatus(PhaseStatus.FAIL);
     }
 
-    public void scheduleInterview(LocalDate interviewDate) {
-        validateCurrentPhase(ApplicantPhase.DOCUMENT_PASSED);
-        this.currentPhase = ApplicantPhase.INTERVIEW_SCHEDULED;
+    // 서류 합격자 -> 면접 단계로 전환
+    public void setInterviewPlan(LocalDate interviewDate) {
+        validateCurrentPhase(ApplicantPhase.DOCUMENT_PASS);
+        this.currentPhase = ApplicantPhase.INTERVIEW_EVALUATING;
         this.interviewPhase = InterviewPhase.create(this, interviewDate);
     }
 
+    // 면접에 따라 합격 설정
     public void completeInterview(PhaseStatus result) {
-        validateCurrentPhase(ApplicantPhase.INTERVIEW_SCHEDULED);
-        this.currentPhase = ApplicantPhase.INTERVIEW_COMPLETED;
         this.interviewPhase.updateStatus(result);
 
         // 면접 결과에 따라 최종 단계 결정
         if (result == PhaseStatus.PASS) {
-            this.currentPhase = ApplicantPhase.FINAL_PASSED;
+            this.currentPhase = ApplicantPhase.INTERVIEW_PASS;
         } else if (result == PhaseStatus.FAIL) {
-            this.currentPhase = ApplicantPhase.FINAL_FAILED;
+            this.currentPhase = ApplicantPhase.INTERVIEW_FAIL;
         }
     }
 
@@ -113,7 +116,6 @@ public class Applicant extends BaseTimeEntity {
                       StudentStatus studentStatus,
                       Grade grade,
                       Gender gender,
-                      List<Answer> answers,
                       ApplyForm applyForm) {
         this.userEmail = userEmail;
         this.name = name;
@@ -124,8 +126,7 @@ public class Applicant extends BaseTimeEntity {
         this.studentStatus = studentStatus;
         this.grade = grade;
         this.gender = gender;
-        this.status = Status.EVALUATING; // 기본 상태는 대기
-        this.answers = answers != null ? answers : new ArrayList<>();
+        this.currentPhase = ApplicantPhase.DOCUMENT_EVALUATING; // 기본 상태는 대기
         this.applyForm = applyForm;
     }
 
@@ -138,7 +139,6 @@ public class Applicant extends BaseTimeEntity {
                                             StudentStatus studentStatus,
                                             Grade grade,
                                             Gender gender,
-                                            List<Answer> answers,
                                             ApplyForm applyForm) {
         return Applicant.builder()
                 .userEmail(userEmail)
@@ -150,31 +150,44 @@ public class Applicant extends BaseTimeEntity {
                 .studentStatus(studentStatus)
                 .grade(grade)
                 .gender(gender)
-                .answers(answers)
                 .applyForm(applyForm)
                 .build();
     }
 
+    private void validateCurrentPhase(ApplicantPhase expectedPhase) {
+        if (this.currentPhase != expectedPhase) {
+            throw new InvalidPhaseTransitionException();
+        }
+    }
+
     public boolean canScheduleInterview() {
-        return this.currentPhase == ApplicantPhase.DOCUMENT_PASSED;
+        return this.currentPhase == ApplicantPhase.DOCUMENT_PASS;
     }
 
     public boolean canEvaluateDocument() {
-        return this.currentPhase == ApplicantPhase.DOCUMENT_SUBMITTED;
+        return this.currentPhase == ApplicantPhase.DOCUMENT_EVALUATING;
     }
 
-    public boolean canCompleteInterview() {
-        return this.currentPhase == ApplicantPhase.INTERVIEW_SCHEDULED;
+    public boolean canEvaluateInterview() {
+        return this.currentPhase == ApplicantPhase.INTERVIEW_EVALUATING;
+    }
+
+    public boolean isEvaluatingDocument() {
+        // 서류 평가 중이거나, 서류 불합격 상태에서 재지원 가능
+        return this.currentPhase == ApplicantPhase.DOCUMENT_EVALUATING;
     }
 
     // 편의 메서드들
     public boolean isInDocumentPhase() {
-        return currentPhase == ApplicantPhase.DOCUMENT_SUBMITTED;
+        return currentPhase == ApplicantPhase.DOCUMENT_EVALUATING
+                || currentPhase == ApplicantPhase.DOCUMENT_FAIL
+                || currentPhase == ApplicantPhase.DOCUMENT_PASS;
     }
 
     public boolean isInInterviewPhase() {
-        return currentPhase == ApplicantPhase.INTERVIEW_SCHEDULED ||
-                currentPhase == ApplicantPhase.INTERVIEW_COMPLETED;
+        return currentPhase == ApplicantPhase.INTERVIEW_EVALUATING
+                || currentPhase == ApplicantPhase.INTERVIEW_FAIL
+                || currentPhase == ApplicantPhase.INTERVIEW_PASS;
     }
 
     public boolean hasInterviewPhase() {
