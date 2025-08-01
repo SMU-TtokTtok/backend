@@ -30,4 +30,15 @@ public record ClubContentUpdateServiceRequest(
         JsonNullable<Set<ApplicableGrade>> grades,
         JsonNullable<Integer> maxApplyCount
 ) {
+    public ClubPatchRequest toClubPatchRequest() {
+        return new ClubPatchRequest(
+                name,
+                clubType,
+                clubCategory,
+                clubUniv,
+                customCategory,
+                summary,
+                content
+        );
+    }
 }

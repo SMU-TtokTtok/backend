@@ -33,7 +33,8 @@ public class S3Service {
 
         validateFile(file);
 
-        String key = createFileKey(file.getOriginalFilename(), dirName);
+        String key = dirName + UUID.randomUUID() + "_" + file.getOriginalFilename();
+        String url = createFileUrl(key);
 
         try {
             s3Client.putObject(
@@ -41,11 +42,10 @@ public class S3Service {
                             .bucket(bucketName)
                             .key(key)
                             .contentType(file.getContentType())
-                            .acl(ObjectCannedACL.PUBLIC_READ)
                             .build(),
                     RequestBody.fromInputStream(file.getInputStream(), file.getSize())
             );
-            return key;
+            return url;
         } catch (IOException e) {
             throw new S3FileUploadException();
         }
@@ -65,7 +65,7 @@ public class S3Service {
         validator.validateFileName(file.getOriginalFilename());
     }
 
-    private String createFileKey(String fileName, String dirName) {
-        return fileCloudUrl + dirName + UUID.randomUUID() + "_" + fileName;
+    private String createFileUrl(String key) {
+        return fileCloudUrl + "/" + key;
     }
 }

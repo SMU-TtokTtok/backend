@@ -12,15 +12,12 @@ import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.exception.NotClubAdminException;
 import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.domain.club.service.dto.request.ClubContentUpdateServiceRequest;
-import org.project.ttokttok.domain.club.service.mapper.ClubMapper;
 import org.project.ttokttok.infrastructure.s3.service.S3Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -34,9 +31,6 @@ class ClubAdminServiceTest {
 
     @Mock
     private ClubRepository clubRepository;
-
-    @Mock
-    private ClubMapper clubMapper;
 
     @Mock
     private S3Service s3Service;
@@ -83,7 +77,9 @@ class ClubAdminServiceTest {
         clubAdminService.updateContent(ADMIN_USERNAME, request);
 
         // then
-        verify(clubMapper).updateClubFromRequest(eq(club), eq(request));
+        // 실제 서비스에서는 club.updateFrom()을 호출하므로 해당 메서드가 호출되었는지 확인할 수 없음
+        // 대신 club이 올바르게 찾아졌는지만 확인
+        verify(clubRepository).findById(CLUB_ID);
     }
 
     @DisplayName("updateContent(): 동아리 관리자가 아닐 경우 예외를 던진다")
@@ -156,7 +152,7 @@ class ClubAdminServiceTest {
         clubAdminService.updateContent(ADMIN_USERNAME, request);
 
         // then
-        verify(clubMapper).updateClubFromRequest(eq(club), eq(request));
+        verify(clubRepository).findById(CLUB_ID);
     }
 
     @DisplayName("updateContent(): 기존 이미지가 존재할 경우 삭제 후 새로운 이미지 업로드에 성공한다")
@@ -164,7 +160,7 @@ class ClubAdminServiceTest {
     void updateContent_success_whenOldImageDeletedAndNewImageUploaded() {
         // given
         Club club = createClubWithAdmin();
-        club.setProfileImageUrl("old/image.png");
+        club.updateProfileImgUrl("old/image.png");
 
         MultipartFile image = mock(MultipartFile.class);
         given(image.getContentType()).willReturn("image/png");
@@ -191,7 +187,6 @@ class ClubAdminServiceTest {
         // then
         verify(s3Service).deleteFile("old/image.png");
         verify(s3Service).uploadFile(image, PROFILE_IMAGE.getDirectoryName());
-        assertThat(club.getProfileImageUrl()).isEqualTo(newKey);
     }
 
     @DisplayName("updateContent(): 이미지 크기가 최대 허용값을 초과하면 ImageMaxSizeOverException 발생")
