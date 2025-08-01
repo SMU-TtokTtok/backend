@@ -11,7 +11,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.project.ttokttok.domain.club.controller.dto.request.UpdateClubContentRequest;
 import org.project.ttokttok.domain.club.controller.dto.response.ClubAdminDetailResponse;
-import org.project.ttokttok.domain.club.controller.dto.response.GetImageUrlResponse;
 import org.project.ttokttok.domain.club.controller.dto.response.UpdateImageResponse;
 import org.project.ttokttok.global.exception.dto.ErrorResponse;
 import org.springframework.http.MediaType;
@@ -192,44 +191,6 @@ public interface ClubAdminApiDocs {
             String clubId,
             @Parameter(description = "업로드할 이미지 파일 (JPG, PNG, GIF, WEBP 지원, 최대 5MB)")
             MultipartFile imageFile
-    );
-
-    @Operation(
-            summary = "이미지 URL 조회",
-            description = """
-                    이미지 키를 사용하여 실제 이미지 URL을 조회합니다.
-                    S3에 저장된 이미지의 Pre-signed URL을 반환합니다.
-                    
-                    *주의사항*
-                    - 반환된 URL은 일정 시간 후 만료됩니다.
-                    - 존재하지 않는 이미지 키의 경우 404 오류가 발생합니다.
-                    """
-    )
-    @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "이미지 URL 조회 성공",
-                    content = @Content(schema = @Schema(implementation = GetImageUrlResponse.class))
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "잘못된 이미지 키 형식",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "존재하지 않는 이미지",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-            ),
-            @ApiResponse(
-                    responseCode = "500",
-                    description = "서버 내부 오류 (S3 접근 실패 등)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-            )
-    })
-    ResponseEntity<GetImageUrlResponse> getImageUrl(
-            @Parameter(description = "조회할 이미지의 키", required = true, example = "club-1-image-12345")
-            @RequestParam String imageKey
     );
 
     @Operation(

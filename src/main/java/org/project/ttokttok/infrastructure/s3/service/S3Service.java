@@ -26,11 +26,14 @@ public class S3Service {
     @Value("${cloud.aws.s3.bucket}")
     private String bucketName;
 
+    @Value("${file-cloud.url}")
+    private String fileCloudUrl;
+
     public String uploadFile(MultipartFile file, String dirName) {
 
         validateFile(file);
 
-        String key = dirName + UUID.randomUUID() + "_" + file.getOriginalFilename();
+        String key = createFileKey(file.getOriginalFilename(), dirName);
 
         try {
             s3Client.putObject(
@@ -48,20 +51,6 @@ public class S3Service {
         }
     }
 
-    public String generatePresignedUrl(String key) {
-        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
-                .bucket(bucketName)
-                .key(key)
-                .build();
-
-        GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
-                .signatureDuration(Duration.ofMinutes(10)) // 유효 시간
-                .getObjectRequest(getObjectRequest)
-                .build();
-
-        return s3Presigner.presignGetObject(presignRequest).url().toString();
-    }
-
     public void deleteFile(String key) {
         s3Client.deleteObject(DeleteObjectRequest.builder()
                 .bucket(bucketName)
@@ -74,5 +63,9 @@ public class S3Service {
         validator.validateSize(file.getSize());
         validator.validateType(file.getContentType());
         validator.validateFileName(file.getOriginalFilename());
+    }
+
+    private String createFileKey(String fileName, String dirName) {
+        return fileCloudUrl + dirName + UUID.randomUUID() + "_" + fileName;
     }
 }

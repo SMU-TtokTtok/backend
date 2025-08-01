@@ -90,6 +90,15 @@ public class DummyDataLoader implements ApplicationRunner {
 
             // 9. 추가 엣지 케이스 ApplyForm 데이터
             loadEdgeCaseApplyFormData();
+
+            // 10. 지원자 데이터 로딩
+            loadApplicantData();
+
+            // 11. DocumentPhase 데이터 로딩
+            loadDocumentPhaseData();
+
+            // 12. InterviewPhase 데이터 로딩
+            loadInterviewPhaseData();
         } catch (Exception e) {
             log.error("더미 데이터 로딩 중 오류 발생", e);
         }
@@ -183,5 +192,29 @@ public class DummyDataLoader implements ApplicationRunner {
         jdbcTemplate.update(sql3, specialFormId);
 
         log.info("엣지 케이스 ApplyForm 데이터 로딩 완료");
+    }
+
+    private void loadApplicantData() throws IOException {
+        log.info("Applicant 데이터 로딩...");
+        String sql = readSqlFile("testdata/14_applicant.sql");
+        jdbcTemplate.execute(sql);
+
+        log.info("Applicant 데이터 로딩 완료");
+    }
+
+    private void loadDocumentPhaseData() throws IOException {
+        log.info("InterviewPhase 데이터 로딩...");
+        String sql = readSqlFile("testdata/15_document_phase.sql");
+        jdbcTemplate.execute(sql);
+
+        log.info("DocumentPhase 데이터 로딩 완료");
+    }
+
+    private void loadInterviewPhaseData() throws IOException {
+        log.info("InterviewPhase 데이터 로딩...");
+        String sql = readSqlFile("testdata/16_interview_phase.sql");
+        jdbcTemplate.execute(sql);
+
+        log.info("InterviewPhase 데이터 로딩 완료");
     }
 }

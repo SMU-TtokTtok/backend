@@ -2,11 +2,9 @@ package org.project.ttokttok.domain.club.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.openapitools.jackson.nullable.JsonNullable;
 import org.project.ttokttok.domain.club.controller.docs.ClubAdminApiDocs;
 import org.project.ttokttok.domain.club.controller.dto.request.UpdateClubContentRequest;
 import org.project.ttokttok.domain.club.controller.dto.response.ClubAdminDetailResponse;
-import org.project.ttokttok.domain.club.controller.dto.response.GetImageUrlResponse;
 import org.project.ttokttok.domain.club.controller.dto.response.UpdateImageResponse;
 import org.project.ttokttok.domain.club.service.ClubAdminService;
 import org.project.ttokttok.domain.club.service.dto.request.MarkdownImageUpdateRequest;
@@ -53,17 +51,6 @@ public class ClubAdminApiController implements ClubAdminApiDocs {
         String imageKey = clubAdminService.updateMarkdownImage(request);
 
         UpdateImageResponse response = new UpdateImageResponse(imageKey);
-
-        return ResponseEntity.ok()
-                .body(response);
-    }
-
-    // TODO: 별개의 라우터로 분리
-    @GetMapping("/image")
-    public ResponseEntity<GetImageUrlResponse> getImageUrl(@RequestParam String imageKey) {
-        String imageUrl = clubAdminService.getImageUrl(imageKey);
-
-        GetImageUrlResponse response = new GetImageUrlResponse(imageUrl);
 
         return ResponseEntity.ok()
                 .body(response);
