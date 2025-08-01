@@ -72,9 +72,10 @@ public class ApplicantUserService {
                 request.studentStatus(),
                 request.grade(),
                 request.gender(),
-                answers,
                 form
         );
+
+        applicant.submitDocument(answers);
 
         return applicantRepository.save(applicant)
                 .getId();

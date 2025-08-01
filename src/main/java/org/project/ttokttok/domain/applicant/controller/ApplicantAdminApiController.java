@@ -166,7 +166,8 @@ public class ApplicantAdminApiController implements ApplicantAdminDocs {
                                                                               @RequestParam Kind kind) {
         ApplicantFinalizationRequest request = ApplicantFinalizationRequest.of(
                 username,
-                clubId
+                clubId,
+                kind.name()
         );
 
         ApplicantFinalizeResponse response = ApplicantFinalizeResponse.from(

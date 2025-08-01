@@ -2,9 +2,10 @@ package org.project.ttokttok.domain.applicant.service.dto.request;
 
 public record ApplicantFinalizationRequest(
         String username,
-        String clubId
+        String clubId,
+        String kind
 ) {
-    public static ApplicantFinalizationRequest of(String username, String clubId) {
-        return new ApplicantFinalizationRequest(username, clubId);
+    public static ApplicantFinalizationRequest of(String username, String clubId, String kind) {
+        return new ApplicantFinalizationRequest(username, clubId, kind);
     }
 }

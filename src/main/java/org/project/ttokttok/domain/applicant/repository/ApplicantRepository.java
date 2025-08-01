@@ -10,10 +10,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ApplicantRepository extends JpaRepository<Applicant, String>, ApplicantCustomRepository {
-    @Modifying(clearAutomatically = true)
-    @Query("DELETE FROM Applicant a WHERE a.applyForm.id = :applyFormId and a.status != 'EVALUATING'")
-    int deleteAllApplicantsByApplyFormId(String applyFormId);
-
     List<Applicant> findByApplyFormId(String applyFormId);
 
     // FETCH JOIN을 사용하여 DocumentPhase와 Memos를 함께 조회
