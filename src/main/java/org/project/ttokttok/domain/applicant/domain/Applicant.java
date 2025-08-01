@@ -5,18 +5,13 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
-import org.project.ttokttok.domain.applicant.domain.enums.Gender;
-import org.project.ttokttok.domain.applicant.domain.enums.Grade;
-import org.project.ttokttok.domain.applicant.domain.enums.Status;
-import org.project.ttokttok.domain.applicant.domain.enums.StudentStatus;
+import org.project.ttokttok.domain.applicant.domain.enums.*;
 import org.project.ttokttok.domain.applicant.domain.json.Answer;
+import org.project.ttokttok.domain.applicant.exception.InvalidPhaseTransitionException;
 import org.project.ttokttok.domain.applyform.domain.ApplyForm;
-import org.project.ttokttok.domain.memo.domain.Memo;
 import org.project.ttokttok.global.entity.BaseTimeEntity;
 
-import java.util.ArrayList;
+import java.time.LocalDate;
 import java.util.List;
 
 @Entity
@@ -30,24 +25,12 @@ public class Applicant extends BaseTimeEntity {
     @Column(length = 36, updatable = false, unique = true)
     private String id;
 
-    // 지원한 사용자의 인증 정보 통해서 받은 이메일
-    @Column(nullable = false)
+    // 지원자 기본 정보 (변하지 않는 정보)
     private String userEmail;
-
-    // 고정 필드
-    @Column(nullable = false)
     private String name;
-
-    @Column(nullable = false)
     private Integer age;
-
-    @Column(nullable = false)
     private String major;
-
-    @Column(nullable = false)
     private String email;
-
-    @Column(nullable = false)
     private String phone;
 
     @Enumerated(EnumType.STRING)
@@ -62,44 +45,64 @@ public class Applicant extends BaseTimeEntity {
     @Column(nullable = false)
     private Gender gender;
 
+    // 현재 진행 단계
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Status status;
-
-    // 사용자 응답
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(columnDefinition = "jsonb")
-    private List<Answer> answers;
+    private ApplicantPhase currentPhase;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "applyform_id", nullable = false)
+    @JoinColumn(name = "applyform_id")
     private ApplyForm applyForm;
 
-    @OneToMany(mappedBy = "applicant", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<Memo> memos = new ArrayList<>();
+    // 단계별 상세 정보 (1:1 관계, 필요시에만 존재)
+    @OneToOne(mappedBy = "applicant", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private DocumentPhase documentPhase;
 
-    // ----- 유틸 메서드 ----- //
-    public void updateStatus(Status status) {
-        this.status = status;
+    @OneToOne(mappedBy = "applicant", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private InterviewPhase interviewPhase;
+
+    // 비즈니스 메서드
+    public void submitDocument(List<Answer> answers) {
+        // 초기 상태이거나, 재지원 가능한 상태인지 확인
+        if (this.currentPhase != null && !isEvaluatingDocument()) {
+            throw new InvalidPhaseTransitionException();
+        }
+
+        this.currentPhase = ApplicantPhase.DOCUMENT_EVALUATING;
+        this.documentPhase = DocumentPhase.create(this, answers);
     }
 
-    // ----- 연관관계 편의 메서드 ----- //
-    public String addMemo(String content) {
-        Memo memo = Memo.create(this, content);
-        this.memos.add(memo);
-
-        return memo.getId();
+    // 서류 상태 합격 설정
+    public void passDocumentEvaluation() {
+        //validateCurrentPhase(ApplicantPhase.DOCUMENT_EVALUATING);
+        this.currentPhase = ApplicantPhase.DOCUMENT_PASS;
+        this.documentPhase.updateStatus(PhaseStatus.PASS);
     }
 
-    public void updateMemo(String memoId, String content) {
-        this.memos.stream()
-                .filter(memo -> memo.getId().equals(memoId))
-                .findFirst()
-                .ifPresent(memo -> memo.updateContent(content));
+    // 서류 상태 불합격 설정
+    public void failDocumentEvaluation() {
+        //validateCurrentPhase(ApplicantPhase.DOCUMENT_EVALUATING);
+        this.currentPhase = ApplicantPhase.DOCUMENT_FAIL;
+        this.documentPhase.updateStatus(PhaseStatus.FAIL);
     }
 
-    public void deleteMemo(String memoId) {
-        this.memos.removeIf(memo -> memo.getId().equals(memoId));
+    // 서류 합격자 -> 면접 단계로 전환
+    public void setInterviewPlan(LocalDate interviewDate) {
+        validateCurrentPhase(ApplicantPhase.DOCUMENT_PASS);
+        this.currentPhase = ApplicantPhase.INTERVIEW_EVALUATING;
+        this.interviewPhase = InterviewPhase.create(this, interviewDate);
+    }
+
+    // 면접에 따라 합격 설정
+    public void completeInterview(PhaseStatus result) {
+        this.interviewPhase.updateStatus(result);
+
+        // 면접 결과에 따라 최종 단계 결정
+        if (result == PhaseStatus.PASS) {
+            this.currentPhase = ApplicantPhase.INTERVIEW_PASS;
+        } else if (result == PhaseStatus.FAIL) {
+            this.currentPhase = ApplicantPhase.INTERVIEW_FAIL;
+        }
     }
 
     // ----- 생성자 ----- //
@@ -113,7 +116,6 @@ public class Applicant extends BaseTimeEntity {
                       StudentStatus studentStatus,
                       Grade grade,
                       Gender gender,
-                      List<Answer> answers,
                       ApplyForm applyForm) {
         this.userEmail = userEmail;
         this.name = name;
@@ -124,8 +126,7 @@ public class Applicant extends BaseTimeEntity {
         this.studentStatus = studentStatus;
         this.grade = grade;
         this.gender = gender;
-        this.status = Status.EVALUATING; // 기본 상태는 대기
-        this.answers = answers != null ? answers : new ArrayList<>();
+        this.currentPhase = ApplicantPhase.DOCUMENT_EVALUATING; // 기본 상태는 대기
         this.applyForm = applyForm;
     }
 
@@ -138,7 +139,6 @@ public class Applicant extends BaseTimeEntity {
                                             StudentStatus studentStatus,
                                             Grade grade,
                                             Gender gender,
-                                            List<Answer> answers,
                                             ApplyForm applyForm) {
         return Applicant.builder()
                 .userEmail(userEmail)
@@ -150,8 +150,47 @@ public class Applicant extends BaseTimeEntity {
                 .studentStatus(studentStatus)
                 .grade(grade)
                 .gender(gender)
-                .answers(answers)
                 .applyForm(applyForm)
                 .build();
+    }
+
+    private void validateCurrentPhase(ApplicantPhase expectedPhase) {
+        if (this.currentPhase != expectedPhase) {
+            throw new InvalidPhaseTransitionException();
+        }
+    }
+
+    public boolean canScheduleInterview() {
+        return this.currentPhase == ApplicantPhase.DOCUMENT_PASS;
+    }
+
+    public boolean canEvaluateDocument() {
+        return this.currentPhase == ApplicantPhase.DOCUMENT_EVALUATING;
+    }
+
+    public boolean canEvaluateInterview() {
+        return this.currentPhase == ApplicantPhase.INTERVIEW_EVALUATING;
+    }
+
+    public boolean isEvaluatingDocument() {
+        // 서류 평가 중이거나, 서류 불합격 상태에서 재지원 가능
+        return this.currentPhase == ApplicantPhase.DOCUMENT_EVALUATING;
+    }
+
+    // 편의 메서드들
+    public boolean isInDocumentPhase() {
+        return currentPhase == ApplicantPhase.DOCUMENT_EVALUATING
+                || currentPhase == ApplicantPhase.DOCUMENT_FAIL
+                || currentPhase == ApplicantPhase.DOCUMENT_PASS;
+    }
+
+    public boolean isInInterviewPhase() {
+        return currentPhase == ApplicantPhase.INTERVIEW_EVALUATING
+                || currentPhase == ApplicantPhase.INTERVIEW_FAIL
+                || currentPhase == ApplicantPhase.INTERVIEW_PASS;
+    }
+
+    public boolean hasInterviewPhase() {
+        return interviewPhase != null;
     }
 }

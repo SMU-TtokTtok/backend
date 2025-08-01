@@ -76,11 +76,11 @@ public class SecurityConfig {
                         exception.authenticationEntryPoint((request, response, authException) -> {
                             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401
                             response.setContentType(APPLICATION_JSON_VALUE);
-                            response.getWriter().write("{\"error\": \"만료된 토큰이거나 인증이 필요합니다.\"}");
+                            response.getWriter().write("{\"error\": \"Expired Token Or Need Authentication.\"}");
                         }).accessDeniedHandler((request, response, accessDeniedException) -> {
                             response.setStatus(HttpServletResponse.SC_FORBIDDEN); // 403
                             response.setContentType(APPLICATION_JSON_VALUE);
-                            response.getWriter().write("{\"error\": \"접근 권한이 없습니다.\"}");
+                            response.getWriter().write("{\"error\": \"Request has Low Authority. \"}");
                         }))
                 .addFilterBefore(tokenAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class) // 필터 적용 전에 커스텀 필터 거치게 함
                 .build();

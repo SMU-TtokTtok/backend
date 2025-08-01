@@ -7,8 +7,9 @@ import org.project.ttokttok.domain.applicant.controller.dto.request.SendResultMa
 import org.project.ttokttok.domain.applicant.controller.dto.response.ApplicantDetailResponse;
 import org.project.ttokttok.domain.applicant.controller.dto.response.ApplicantFinalizeResponse;
 import org.project.ttokttok.domain.applicant.controller.dto.response.ApplicantPageResponse;
+import org.project.ttokttok.domain.applicant.controller.enums.Kind;
 import org.project.ttokttok.domain.applicant.controller.enums.Sort;
-import org.project.ttokttok.domain.applicant.domain.enums.Status;
+import org.project.ttokttok.domain.applicant.domain.enums.PhaseStatus;
 import org.project.ttokttok.domain.applicant.service.ApplicantAdminService;
 import org.project.ttokttok.domain.applicant.service.dto.request.*;
 import org.project.ttokttok.domain.applicant.service.dto.response.ApplicantDetailServiceResponse;
@@ -30,14 +31,16 @@ public class ApplicantAdminApiController implements ApplicantAdminDocs {
                                                                    @RequestParam(name = "sort", required = false, defaultValue = "GRADE") Sort sort,
                                                                    @RequestParam(required = false, defaultValue = "false") boolean isEvaluating,
                                                                    @RequestParam(required = false, defaultValue = "1") int cursor,
-                                                                   @RequestParam(required = false, defaultValue = "7") int size) {
+                                                                   @RequestParam(required = false, defaultValue = "7") int size,
+                                                                   @RequestParam Kind kind) {
 
         ApplicantPageServiceRequest request = ApplicantPageServiceRequest.of(
                 username,
                 sort.name(),
                 isEvaluating,
                 cursor,
-                size
+                size,
+                kind.name()
         );
 
         ApplicantPageResponse response = ApplicantPageResponse.from(
@@ -68,7 +71,8 @@ public class ApplicantAdminApiController implements ApplicantAdminDocs {
                                                                      @RequestParam(name = "sort", required = false, defaultValue = "GRADE") Sort sort,
                                                                      @RequestParam(required = false, defaultValue = "false") boolean isEvaluating,
                                                                      @RequestParam(required = false, defaultValue = "1") int cursor,
-                                                                     @RequestParam(required = false, defaultValue = "7") int size) {
+                                                                     @RequestParam(required = false, defaultValue = "7") int size,
+                                                                     @RequestParam Kind kind) {
 
         ApplicantSearchServiceRequest request = ApplicantSearchServiceRequest.of(
                 username,
@@ -76,7 +80,8 @@ public class ApplicantAdminApiController implements ApplicantAdminDocs {
                 sort.name(),
                 isEvaluating,
                 cursor,
-                size
+                size,
+                kind.name()
         );
 
         ApplicantPageResponse response = ApplicantPageResponse.from(
@@ -92,13 +97,15 @@ public class ApplicantAdminApiController implements ApplicantAdminDocs {
     @GetMapping("/passed")
     public ResponseEntity<ApplicantPageResponse> getPassedApplicantsPage(@AuthUserInfo String username,
                                                                          @RequestParam(required = false, defaultValue = "1") int page,
-                                                                         @RequestParam(required = false, defaultValue = "4") int size) {
+                                                                         @RequestParam(required = false, defaultValue = "4") int size,
+                                                                         @RequestParam Kind kind) {
 
         ApplicantStatusServiceRequest request = ApplicantStatusServiceRequest.of(
                 username,
                 true,
                 page,
-                size
+                size,
+                kind.name()
         );
 
         ApplicantPageResponse response = ApplicantPageResponse.from(
@@ -113,13 +120,15 @@ public class ApplicantAdminApiController implements ApplicantAdminDocs {
     @GetMapping("/failed")
     public ResponseEntity<ApplicantPageResponse> getFailedApplicantsPage(@AuthUserInfo String username,
                                                                          @RequestParam(required = false, defaultValue = "1") int page,
-                                                                         @RequestParam(required = false, defaultValue = "4") int size) {
+                                                                         @RequestParam(required = false, defaultValue = "4") int size,
+                                                                         @RequestParam Kind kind) {
 
         ApplicantStatusServiceRequest request = ApplicantStatusServiceRequest.of(
                 username,
                 false, // passed = false
                 page,
-                size
+                size,
+                kind.name()
         );
 
         ApplicantPageResponse response = ApplicantPageResponse.from(
@@ -133,13 +142,15 @@ public class ApplicantAdminApiController implements ApplicantAdminDocs {
     // 지원자 상태 업데이트 - status 부분 리팩토링 필요
     @PatchMapping("/evaluations/{applicantId}")
     public ResponseEntity<Map<String, String>> updateApplicantEvaluation(@AuthUserInfo String username,
-                                                          @PathVariable String applicantId,
-                                                          @RequestBody Status status) {
+                                                                         @PathVariable String applicantId,
+                                                                         @RequestBody PhaseStatus status,
+                                                                         @RequestParam Kind kind) {
 
         StatusUpdateServiceRequest request = StatusUpdateServiceRequest.of(
                 username,
                 applicantId,
-                status
+                status,
+                kind.name()
         );
 
         applicantAdminService.updateApplicantStatus(request);
@@ -151,10 +162,12 @@ public class ApplicantAdminApiController implements ApplicantAdminDocs {
     // 지원자 상태 최종 확정
     @PutMapping("/{clubId}/finalize")
     public ResponseEntity<ApplicantFinalizeResponse> finalizeApplicantsStatus(@AuthUserInfo String username,
-                                                                              @PathVariable String clubId) {
+                                                                              @PathVariable String clubId,
+                                                                              @RequestParam Kind kind) {
         ApplicantFinalizationRequest request = ApplicantFinalizationRequest.of(
                 username,
-                clubId
+                clubId,
+                kind.name()
         );
 
         ApplicantFinalizeResponse response = ApplicantFinalizeResponse.from(

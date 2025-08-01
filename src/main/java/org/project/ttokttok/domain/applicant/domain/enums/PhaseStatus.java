@@ -1,6 +1,6 @@
 package org.project.ttokttok.domain.applicant.domain.enums;
 
-public enum Status {
+public enum PhaseStatus {
     // 지원서 상태
     PASS, // 합격
     FAIL, // 불합격
