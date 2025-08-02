@@ -59,4 +59,97 @@ INSERT INTO document_phases (
 
 -- 댄스크루 지원자들 (빈 form_json이므로 빈 답변)
 ('doc-phase-016', 'applicant-016', '[]', 'PASS', NOW(), NOW()),
-('doc-phase-017', 'applicant-017', '[]', 'PASS', NOW(), NOW());
+('doc-phase-017', 'applicant-017', '[]', 'PASS', NOW(), NOW()),
+
+('doc-phase-018', 'applicant-018',
+ '[{"title":"포지션","subTitle":"선호하는 포지션을 선택해주세요","questionType":"RADIO","isEssential":true,"content":["공격수","미드필더","수비수","골키퍼"],"value":"수비수"},{"title":"축구 경력","subTitle":"축구 경험에 대해 작성해주세요","questionType":"LONG_ANSWER","isEssential":false,"content":[],"value":"대학교에 입학한 후 수비수로 활동하고 있습니다. 팀 내 수비 리더로서 역할을 맡고 있습니다."}]',
+ 'PASS', NOW(), NOW()),
+
+('doc-phase-019', 'applicant-019',
+ '[{"title":"포지션","subTitle":"선호하는 포지션을 선택해주세요","questionType":"RADIO","isEssential":true,"content":["공격수","미드필더","수비수","골키퍼"],"value":"미드필더"},{"title":"축구 경력","subTitle":"축구 경험에 대해 작성해주세요","questionType":"LONG_ANSWER","isEssential":false,"content":[],"value":"미드필더로 다양한 대회에 참가했고, 뛰어난 패스와 시야를 자랑합니다."}]',
+ 'EVALUATING', NOW(), NOW()),
+
+('doc-phase-020', 'applicant-020',
+ '[{"title":"포지션","subTitle":"선호하는 포지션을 선택해주세요","questionType":"RADIO","isEssential":true,"content":["공격수","미드필더","수비수","골키퍼"],"value":"골키퍼"},{"title":"축구 경력","subTitle":"축구 경험에 대해 작성해주세요","questionType":"LONG_ANSWER","isEssential":false,"content":[],"value":"고등학교 때부터 골키퍼로 뛰었으며, 반사 신경이 빠르고 수비 조율에 강점이 있습니다."}]',
+ 'EVALUATING', NOW(), NOW()),
+
+('doc-phase-021', 'applicant-021',
+ '[{"title":"포지션","subTitle":"선호하는 포지션을 선택해주세요","questionType":"RADIO","isEssential":true,"content":["공격수","미드필더","수비수","골키퍼"],"value":"공격수"},{"title":"축구 경력","subTitle":"축구 경험에 대해 작성해주세요","questionType":"LONG_ANSWER","isEssential":false,"content":[],"value":"초등학교 시절부터 꾸준히 공격수 포지션을 맡아왔으며, 득점력이 강점입니다."}]',
+ 'PASS', NOW(), NOW()),
+
+('doc-phase-022', 'applicant-022',
+ '[{"title":"포지션","subTitle":"선호하는 포지션을 선택해주세요","questionType":"RADIO","isEssential":true,"content":["공격수","미드필더","수비수","골키퍼"],"value":"수비수"},{"title":"축구 경력","subTitle":"축구 경험에 대해 작성해주세요","questionType":"LONG_ANSWER","isEssential":false,"content":[],"value":"고등학교 축구부 주장 출신으로 수비 조직력이 뛰어납니다."}]',
+ 'PASS', NOW(), NOW()),
+
+('doc-phase-023', 'applicant-023',
+ '[{"title":"포지션","subTitle":"선호하는 포지션을 선택해주세요","questionType":"RADIO","isEssential":true,"content":["공격수","미드필더","수비수","골키퍼"],"value":"미드필더"},{"title":"축구 경력","subTitle":"축구 경험에 대해 작성해주세요","questionType":"LONG_ANSWER","isEssential":false,"content":[],"value":"미드필더 포지션에서 뛰어난 경기 운영 능력을 보여줬습니다."}]',
+ 'EVALUATING', NOW(), NOW()),
+
+('doc-phase-024', 'applicant-024',
+ '[{"title":"포지션","subTitle":"선호하는 포지션을 선택해주세요","questionType":"RADIO","isEssential":true,"content":["공격수","미드필더","수비수","골키퍼"],"value":"골키퍼"},{"title":"축구 경력","subTitle":"축구 경험에 대해 작성해주세요","questionType":"LONG_ANSWER","isEssential":false,"content":[],"value":"골키퍼로서의 경험이 많고, 페널티킥 방어에 자신이 있습니다."}]',
+ 'EVALUATING', NOW(), NOW()),
+
+('doc-phase-025', 'applicant-025',
+ '[{"title":"포지션","subTitle":"선호하는 포지션을 선택해주세요","questionType":"RADIO","isEssential":true,"content":["공격수","미드필더","수비수","골키퍼"],"value":"공격수"},{"title":"축구 경력","subTitle":"축구 경험에 대해 작성해주세요","questionType":"LONG_ANSWER","isEssential":false,"content":[],"value":"짧은 경력이지만 공격 본능이 뛰어나고, 팀 플레이에 적극적입니다."}]',
+ 'EVALUATING', NOW(), NOW()),
+
+('doc-phase-026', 'applicant-026',
+ '[{"title":"포지션","subTitle":"선호하는 포지션을 선택해주세요","questionType":"RADIO","isEssential":true,"content":["공격수","미드필더","수비수","골키퍼"],"value":"수비수"},{"title":"축구 경력","subTitle":"축구 경험에 대해 작성해주세요","questionType":"LONG_ANSWER","isEssential":false,"content":[],"value":"수비 포지션에서의 위치 선정과 태클이 강점입니다."}]',
+ 'PASS', NOW(), NOW()),
+
+('doc-phase-027', 'applicant-027',
+ '[{"title":"포지션","subTitle":"선호하는 포지션을 선택해주세요","questionType":"RADIO","isEssential":true,"content":["공격수","미드필더","수비수","골키퍼"],"value":"미드필더"},{"title":"축구 경력","subTitle":"축구 경험에 대해 작성해주세요","questionType":"LONG_ANSWER","isEssential":false,"content":[],"value":"경기 조율 능력이 좋고, 팀 분위기를 잘 이끕니다."}]',
+ 'EVALUATING', NOW(), NOW()),
+
+('doc-phase-028', 'applicant-028',
+ '[{"title":"포지션","subTitle":"선호하는 포지션을 선택해주세요","questionType":"RADIO","isEssential":true,"content":["공격수","미드필더","수비수","골키퍼"],"value":"골키퍼"},{"title":"축구 경력","subTitle":"축구 경험에 대해 작성해주세요","questionType":"LONG_ANSWER","isEssential":false,"content":[],"value":"순발력이 좋고, 키가 커서 공중볼 처리에 능숙합니다."}]',
+ 'EVALUATING', NOW(), NOW()),
+
+('doc-phase-029', 'applicant-029',
+ '[{"title":"포지션","subTitle":"선호하는 포지션을 선택해주세요","questionType":"RADIO","isEssential":true,"content":["공격수","미드필더","수비수","골키퍼"],"value":"공격수"},{"title":"축구 경력","subTitle":"축구 경험에 대해 작성해주세요","questionType":"LONG_ANSWER","isEssential":false,"content":[],"value":"공격 포인트를 올리는 능력이 탁월하며, 승부욕이 강합니다."}]',
+ 'PASS', NOW(), NOW()),
+
+('doc-phase-030', 'applicant-030',
+ '[{"title":"포지션","subTitle":"선호하는 포지션을 선택해주세요","questionType":"RADIO","isEssential":true,"content":["공격수","미드필더","수비수","골키퍼"],"value":"수비수"},{"title":"축구 경력","subTitle":"축구 경험에 대해 작성해주세요","questionType":"LONG_ANSWER","isEssential":false,"content":[],"value":"공중볼 경합과 1:1 수비에서 강점을 보입니다."}]',
+ 'PASS', NOW(), NOW()),
+
+('doc-phase-031', 'applicant-031',
+ '[{"title":"포지션","subTitle":"선호하는 포지션을 선택해주세요","questionType":"RADIO","isEssential":true,"content":["공격수","미드필더","수비수","골키퍼"],"value":"미드필더"},{"title":"축구 경력","subTitle":"축구 경험에 대해 작성해주세요","questionType":"LONG_ANSWER","isEssential":false,"content":[],"value":"패싱 능력이 좋고, 볼 배급이 정확합니다."}]',
+ 'EVALUATING', NOW(), NOW()),
+
+('doc-phase-032', 'applicant-032',
+ '[{"title":"포지션","subTitle":"선호하는 포지션을 선택해주세요","questionType":"RADIO","isEssential":true,"content":["공격수","미드필더","수비수","골키퍼"],"value":"골키퍼"},{"title":"축구 경력","subTitle":"축구 경험에 대해 작성해주세요","questionType":"LONG_ANSWER","isEssential":false,"content":[],"value":"골키퍼로 다양한 대회에서 활약했습니다."}]',
+ 'EVALUATING', NOW(), NOW()),
+
+('doc-phase-033', 'applicant-033',
+ '[{"title":"포지션","subTitle":"선호하는 포지션을 선택해주세요","questionType":"RADIO","isEssential":true,"content":["공격수","미드필더","수비수","골키퍼"],"value":"공격수"},{"title":"축구 경력","subTitle":"축구 경험에 대해 작성해주세요","questionType":"LONG_ANSWER","isEssential":false,"content":[],"value":"순간적인 돌파와 마무리가 좋은 공격수입니다."}]',
+ 'PASS', NOW(), NOW()),
+
+('doc-phase-034', 'applicant-034',
+ '[{"title":"포지션","subTitle":"선호하는 포지션을 선택해주세요","questionType":"RADIO","isEssential":true,"content":["공격수","미드필더","수비수","골키퍼"],"value":"수비수"},{"title":"축구 경력","subTitle":"축구 경험에 대해 작성해주세요","questionType":"LONG_ANSWER","isEssential":false,"content":[],"value":"수비 위치 선정이 좋고, 커버 플레이에 능합니다."}]',
+ 'PASS', NOW(), NOW()),
+
+('doc-phase-035', 'applicant-035',
+ '[{"title":"포지션","subTitle":"선호하는 포지션을 선택해주세요","questionType":"RADIO","isEssential":true,"content":["공격수","미드필더","수비수","골키퍼"],"value":"미드필더"},{"title":"축구 경력","subTitle":"축구 경험에 대해 작성해주세요","questionType":"LONG_ANSWER","isEssential":false,"content":[],"value":"전방과 후방을 연결하는 플레이를 잘합니다."}]',
+ 'EVALUATING', NOW(), NOW()),
+
+('doc-phase-036', 'applicant-036',
+ '[{"title":"포지션","subTitle":"선호하는 포지션을 선택해주세요","questionType":"RADIO","isEssential":true,"content":["공격수","미드필더","수비수","골키퍼"],"value":"골키퍼"},{"title":"축구 경력","subTitle":"축구 경험에 대해 작성해주세요","questionType":"LONG_ANSWER","isEssential":false,"content":[],"value":"위기 상황에서 침착하게 대응할 수 있습니다."}]',
+ 'EVALUATING', NOW(), NOW()),
+
+('doc-phase-037', 'applicant-037',
+ '[{"title":"포지션","subTitle":"선호하는 포지션을 선택해주세요","questionType":"RADIO","isEssential":true,"content":["공격수","미드필더","수비수","골키퍼"],"value":"공격수"},{"title":"축구 경력","subTitle":"축구 경험에 대해 작성해주세요","questionType":"LONG_ANSWER","isEssential":false,"content":[],"value":"공격수로서 빠른 판단력이 장점입니다."}]',
+ 'EVALUATING', NOW(), NOW()),
+
+('doc-phase-038', 'applicant-038',
+ '[{"title":"포지션","subTitle":"선호하는 포지션을 선택해주세요","questionType":"RADIO","isEssential":true,"content":["공격수","미드필더","수비수","골키퍼"],"value":"수비수"},{"title":"축구 경력","subTitle":"축구 경험에 대해 작성해주세요","questionType":"LONG_ANSWER","isEssential":false,"content":[],"value":"수비에서의 강한 체력과 집중력이 돋보입니다."}]',
+ 'PASS', NOW(), NOW()),
+
+('doc-phase-039', 'applicant-039',
+ '[{"title":"포지션","subTitle":"선호하는 포지션을 선택해주세요","questionType":"RADIO","isEssential":true,"content":["공격수","미드필더","수비수","골키퍼"],"value":"미드필더"},{"title":"축구 경력","subTitle":"축구 경험에 대해 작성해주세요","questionType":"LONG_ANSWER","isEssential":false,"content":[],"value":"공간 활용과 패스 능력이 뛰어납니다."}]',
+ 'EVALUATING', NOW(), NOW()),
+
+('doc-phase-040', 'applicant-040',
+ '[{"title":"포지션","subTitle":"선호하는 포지션을 선택해주세요","questionType":"RADIO","isEssential":true,"content":["공격수","미드필더","수비수","골키퍼"],"value":"골키퍼"},{"title":"축구 경력","subTitle":"축구 경험에 대해 작성해주세요","questionType":"LONG_ANSWER","isEssential":false,"content":[],"value":"반사 신경이 빠르고, 선방 능력이 탁월합니다."}]',
+ 'EVALUATING', NOW(), NOW());
+
