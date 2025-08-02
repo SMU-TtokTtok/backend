@@ -21,6 +21,7 @@ import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.exception.NotClubAdminException;
 import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.domain.clubMember.domain.ClubMember;
+import org.project.ttokttok.domain.clubMember.domain.MemberRole;
 import org.project.ttokttok.domain.clubMember.repository.ClubMemberRepository;
 import org.project.ttokttok.domain.user.repository.UserRepository;
 import org.project.ttokttok.infrastructure.email.service.EmailService;
@@ -31,6 +32,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.project.ttokttok.domain.applicant.domain.enums.PhaseStatus.PASS;
+import static org.project.ttokttok.domain.clubMember.domain.MemberRole.MEMBER;
 
 @Slf4j
 @Service
@@ -339,13 +341,17 @@ public class ApplicantAdminService {
     }
 
     private ClubMember convertToClubMember(Applicant applicant, Club club) {
-        return ClubMember.builder()
-                .club(club)
-                .user(userRepository.findByEmail(applicant.getUserEmail())
-                        .orElseThrow(ApplicantNotFoundException::new))
-                .grade(applicant.getGrade())
-                .major(applicant.getMajor())
-                .build();
+        return ClubMember.create(
+                club,
+                userRepository.findByEmail(applicant.getUserEmail())
+                        .orElseThrow(ApplicantNotFoundException::new),
+                MEMBER,
+                applicant.getGrade(),
+                applicant.getMajor(),
+                applicant.getUserEmail(),
+                applicant.getPhone(),
+                applicant.getGender()
+        );
     }
 
     // 지원서가 현재 관리하는 동아리의 지원서인지 검증하는 메서드

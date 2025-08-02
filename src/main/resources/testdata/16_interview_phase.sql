@@ -30,11 +30,16 @@ INSERT INTO interview_phases (
 ('interview-phase-007', 'applicant-017', '2025-03-29', 'FAIL', NOW(), NOW()),
 
 ('interview-phase-018', 'applicant-018', '2025-03-30', 'PASS', NOW(), NOW()),
+('interview-phase-019', 'applicant-019', '2025-03-30', 'FAIL', NOW(), NOW()),
 ('interview-phase-021', 'applicant-021', '2025-04-02', 'PASS', NOW(), NOW()),
-('interview-phase-022', 'applicant-022', '2025-04-03', 'FAIL', NOW(), NOW()),
+('interview-phase-023', 'applicant-023', '2025-04-03', 'FAIL', NOW(), NOW()),
+('interview-phase-025', 'applicant-025', '2025-04-03', 'FAIL', NOW(), NOW()),
 ('interview-phase-026', 'applicant-026', '2025-04-07', 'EVALUATING', NOW(), NOW()),
 ('interview-phase-029', 'applicant-029', '2025-04-10', 'EVALUATING', NOW(), NOW()),
 ('interview-phase-030', 'applicant-030', '2025-04-11', 'PASS', NOW(), NOW()),
 ('interview-phase-033', 'applicant-033', '2025-03-31', 'PASS', NOW(), NOW()),
 ('interview-phase-034', 'applicant-034', '2025-04-01', 'FAIL', NOW(), NOW()),
-('interview-phase-038', 'applicant-038', '2025-04-05', 'EVALUATING', NOW(), NOW());
+('interview-phase-035', 'applicant-035', '2025-04-01', 'PASS', NOW(), NOW()),
+('interview-phase-037', 'applicant-037', '2025-04-01', 'PASS', NOW(), NOW()),
+('interview-phase-038', 'applicant-038', '2025-04-01', 'PASS', NOW(), NOW()),
+('interview-phase-039', 'applicant-039', '2025-04-05', 'EVALUATING', NOW(), NOW());
