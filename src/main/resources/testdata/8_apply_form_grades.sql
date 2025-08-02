@@ -39,3 +39,9 @@ SELECT af.id, grade_value
 FROM applyforms af
 CROSS JOIN (VALUES ('THIRD_GRADE'), ('FOURTH_GRADE')) AS grades(grade_value)
 WHERE af.club_id IN ('club-034');
+
+INSERT INTO applyform_grades (applyform_id, grades)
+SELECT af.id, grade_value
+FROM applyforms af
+         CROSS JOIN (VALUES ('FIRST_GRADE'), ('SECOND_GRADE')) AS grades(grade_value)
+WHERE af.club_id IN ('club-035');
