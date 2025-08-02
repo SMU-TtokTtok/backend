@@ -61,36 +61,6 @@ public class Applicant extends BaseTimeEntity {
     @OneToOne(mappedBy = "applicant", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private InterviewPhase interviewPhase;
 
-    // 비즈니스 메서드
-    // 초기 상태이거나, 재지원 가능한 상태인지 확인
-    public void submitDocument(List<Answer> answers) {
-
-        if (this.currentPhase != null && isInInterviewPhase()) {
-            throw new InvalidPhaseTransitionException();
-        }
-
-        this.currentPhase = ApplicantPhase.DOCUMENT;
-        this.documentPhase = DocumentPhase.create(this, answers);
-    }
-
-    // 서류 상태 합격 설정
-    public void passDocumentEvaluation(LocalDate interviewDate) {
-        this.documentPhase.updateStatus(PhaseStatus.PASS);
-        this.interviewPhase = InterviewPhase.create(this, interviewDate);
-
-        this.currentPhase = ApplicantPhase.INTERVIEW;
-    }
-
-    // 서류 상태 불합격 설정
-    public void failDocumentEvaluation() {
-        this.documentPhase.updateStatus(PhaseStatus.FAIL);
-    }
-
-    // 면접에 따라 합격 설정
-    public void completeInterview(PhaseStatus result) {
-        this.interviewPhase.updateStatus(result);
-    }
-
     // ----- 생성자 ----- //
     @Builder
     private Applicant(String userEmail,
@@ -140,6 +110,43 @@ public class Applicant extends BaseTimeEntity {
                 .build();
     }
 
+    // 비즈니스 메서드
+    // 초기 상태이거나, 재지원 가능한 상태인지 확인
+    public void submitDocument(List<Answer> answers) {
+
+        if (this.currentPhase != null && isInInterviewPhase()) {
+            throw new InvalidPhaseTransitionException();
+        }
+
+        this.currentPhase = ApplicantPhase.DOCUMENT;
+        this.documentPhase = DocumentPhase.create(this, answers);
+    }
+
+    // 서류 상태 합격 설정
+    public void passDocumentEvaluation() {
+        this.documentPhase.updateStatus(PhaseStatus.PASS);
+    }
+
+    // 최종 합격 처리 -> 면접 단계 생성
+    public void updateToInterviewPhase(LocalDate interviewDate) {
+        this.interviewPhase = InterviewPhase.create(this, interviewDate);
+        this.currentPhase = ApplicantPhase.INTERVIEW;
+    }
+
+    // 서류 상태 불합격 설정
+    public void failDocumentEvaluation() {
+        if (this.applyForm.isHasInterview() && this.interviewPhase != null) {
+            throw new IllegalArgumentException("이미 면접 단계에 존재하는 지원자입니다.");
+        }
+
+        this.documentPhase.updateStatus(PhaseStatus.FAIL);
+    }
+
+    // 면접에 따라 합격 설정
+    public void completeInterview() {
+        this.interviewPhase.updateStatus(PhaseStatus.PASS);
+    }
+
     // 편의 메서드들
     public boolean isInDocumentPhase() {
         return currentPhase == ApplicantPhase.DOCUMENT;
@@ -151,5 +158,17 @@ public class Applicant extends BaseTimeEntity {
 
     public boolean hasInterviewPhase() {
         return this.applyForm.isHasInterview();
+    }
+
+    public void setDocumentEvaluating() {
+        if (this.applyForm.isHasInterview() && this.interviewPhase != null) {
+            throw new IllegalArgumentException("이미 면접 단계에 존재하는 지원자입니다.");
+        }
+
+        this.documentPhase.updateStatus(PhaseStatus.EVALUATING);
+    }
+
+    public void setInterviewEvaluating() {
+        this.interviewPhase.updateStatus(PhaseStatus.EVALUATING);
     }
 }

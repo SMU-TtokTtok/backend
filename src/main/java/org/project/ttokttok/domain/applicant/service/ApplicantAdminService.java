@@ -21,6 +21,7 @@ import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.exception.NotClubAdminException;
 import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.domain.clubMember.domain.ClubMember;
+import org.project.ttokttok.domain.clubMember.domain.MemberRole;
 import org.project.ttokttok.domain.clubMember.repository.ClubMemberRepository;
 import org.project.ttokttok.domain.user.repository.UserRepository;
 import org.project.ttokttok.infrastructure.email.service.EmailService;
@@ -31,6 +32,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.project.ttokttok.domain.applicant.domain.enums.PhaseStatus.PASS;
+import static org.project.ttokttok.domain.clubMember.domain.MemberRole.MEMBER;
 
 @Slf4j
 @Service
@@ -177,7 +179,7 @@ public class ApplicantAdminService {
         int passedApplicantCount = processApplicants(currentApplyForm, club, isDocument);
 
         // 5. 최종 확정된 지원자 수 계산 (합격자 + 불합격자, 평가 중 제외)
-        int finalizedApplicantCount = calculateFinalizedApplicantCount(currentApplyForm.getId(), isDocument);
+        int finalizedApplicantCount = calculateFinalizedApplicantCount(currentApplyForm.getId(), isDocument) + passedApplicantCount;
 
         return ApplicantFinalizeServiceResponse.of(passedApplicantCount, finalizedApplicantCount);
     }
@@ -204,10 +206,10 @@ public class ApplicantAdminService {
                 .filter(applicant -> {
                     if (applicant.isInDocumentPhase()) {
                         return applicant.getDocumentPhase() != null &&
-                               applicant.getDocumentPhase().getStatus() == PhaseStatus.FAIL;
+                                applicant.getDocumentPhase().getStatus() == PhaseStatus.FAIL;
                     } else if (applicant.isInInterviewPhase()) {
                         return applicant.hasInterviewPhase() &&
-                               applicant.getInterviewPhase().getStatus() == PhaseStatus.FAIL;
+                                applicant.getInterviewPhase().getStatus() == PhaseStatus.FAIL;
                     }
                     return false;
                 })
@@ -235,40 +237,47 @@ public class ApplicantAdminService {
         // 면접 단계면, 최종적으로 ClubMember 엔티티 생성하고 저장
         List<Applicant> passedApplicants = filterPassedApplicants(applyForm.getId(), isDocument);
 
-        if (!passedApplicants.isEmpty()) {
-            if (isDocument) {
-                // 서류 합격자들을 면접 단계로 전환
-                passedApplicants.forEach(applicant -> {
-                    if (applicant.hasInterviewPhase()) {
-                        applicant.passDocumentEvaluation(null); // 면접 날짜는 나중에 설정
-                    }
-                });
-            } else {
-                // 면접 합격자들을 ClubMember로 전환
-                savePassedApplicantsAsClubMembers(passedApplicants, club);
-            }
+        if (!passedApplicants.isEmpty() && !isDocument) {
+            // 면접 단계인 경우, ClubMember로 변환하여 저장
+            savePassedApplicantsAsClubMembers(passedApplicants, club);
+        } else if (!passedApplicants.isEmpty() && applyForm.isHasInterview()) {
+            passedApplicants.stream()
+                    // 면접 단계가 아닌 사람만
+                    .filter(applicant -> !applicant.isInInterviewPhase())
+                    .forEach(applicant ->
+                            applicant.updateToInterviewPhase(applyForm.getInterviewStartDate())
+                    );
+        } else if (!passedApplicants.isEmpty()) {
+            // 서류 단계인 경우, 합격 상태로 업데이트
+            savePassedApplicantsAsClubMembers(passedApplicants, club);
         }
-
         return passedApplicants.size();
     }
 
-    // 최종 확정된 지원자 수 계산 (평가 중 제외)
+    // 최종 확정된 지원자 수 계산 ->
     private int calculateFinalizedApplicantCount(String applyFormId, boolean isDocument) {
         return applicantRepository.findByApplyFormId(applyFormId)
                 .stream()
                 .mapToInt(applicant -> {
-                    if (isDocument && applicant.isInDocumentPhase()) {
-                        PhaseStatus status = applicant.getDocumentPhase() != null ?
-                                           applicant.getDocumentPhase().getStatus() : null;
-                        return (status == PASS || status == PhaseStatus.FAIL) ? 1 : 0;
-                    } else if (!isDocument && applicant.isInInterviewPhase()) {
-                        PhaseStatus status = applicant.hasInterviewPhase() ?
-                                           applicant.getInterviewPhase().getStatus() : null;
-                        return (status == PASS || status == PhaseStatus.FAIL) ? 1 : 0;
-                    }
+                    Integer status = failApplicantCount(isDocument, applicant);
+                    if (status != null)
+                        return status;
                     return 0;
                 })
                 .sum();
+    }
+
+    private Integer failApplicantCount(boolean isDocument, Applicant applicant) {
+        if (isDocument && applicant.isInDocumentPhase()) {
+            PhaseStatus status = applicant.getDocumentPhase() != null ?
+                    applicant.getDocumentPhase().getStatus() : null;
+            return (status == PhaseStatus.FAIL) ? 1 : 0;
+        } else if (!isDocument && applicant.isInInterviewPhase()) {
+            PhaseStatus status = applicant.hasInterviewPhase() ?
+                    applicant.getInterviewPhase().getStatus() : null;
+            return (status == PhaseStatus.FAIL) ? 1 : 0;
+        }
+        return null;
     }
 
     // 합격한 지원자들만 필터링하는 메서드 (오버로드 버전 추가)
@@ -278,14 +287,14 @@ public class ApplicantAdminService {
                 .filter(applicant -> {
                     // 서류 합격자
                     if (applicant.isInDocumentPhase() &&
-                        applicant.getDocumentPhase() != null &&
-                        applicant.getDocumentPhase().getStatus() == PASS) {
+                            applicant.getDocumentPhase() != null &&
+                            applicant.getDocumentPhase().getStatus() == PASS) {
                         return true;
                     }
                     // 면접 합격자
                     return applicant.isInInterviewPhase() &&
-                           applicant.hasInterviewPhase() &&
-                           applicant.getInterviewPhase().getStatus() == PASS;
+                            applicant.hasInterviewPhase() &&
+                            applicant.getInterviewPhase().getStatus() == PASS;
                 })
                 .toList();
     }
@@ -297,37 +306,52 @@ public class ApplicantAdminService {
                 .filter(applicant -> {
                     if (isDocument) {
                         return applicant.isInDocumentPhase() && applicant.getDocumentPhase().getStatus() == PASS;
-                    } else {
-                        return applicant.isInInterviewPhase() && applicant.hasInterviewPhase() && applicant.getInterviewPhase().getStatus() == PASS;
+                    } else if (applicant.isInInterviewPhase()){
+                        // 연산자 우선순위 이슈로 괄호 추가
+                        return applicant.hasInterviewPhase() && applicant.getInterviewPhase().getStatus() == PASS;
                     }
+                    return false;
                 })
                 .toList();
     }
 
     // 합격한 지원자들을 ClubMember로 변환하여 저장하는 메서드
     private void savePassedApplicantsAsClubMembers(List<Applicant> passedApplicants, Club club) {
-        // 면접 단계인 경우, ClubMember 엔티티로 변환하여 저장
-        passedApplicants.forEach(applicant -> {
-            if (applicant.getInterviewPhase() == null) {
-                throw new NoInterviewPhaseException();
-            }
-        });
 
-        List<ClubMember> clubMembers = passedApplicants.stream()
+        List<Applicant> validApplicants = passedApplicants.stream()
+                .filter(applicant -> {
+                    // 이미 ClubMember로 등록된 지원자 제외
+                    boolean alreadyMember = clubMemberRepository
+                            .existsByClubIdAndUserEmail(club.getId(), applicant.getUserEmail());
+                    if (alreadyMember) {
+                        log.warn("지원자 {}는 이미 동아리 부원으로 등록되어 있습니다.", applicant.getUserEmail());
+                        return false;
+                    }
+                    return true;
+                })
+                .toList();
+
+        List<ClubMember> clubMembers = validApplicants.stream()
                 .map(passedApplicant -> convertToClubMember(passedApplicant, club))
                 .toList();
 
-        clubMemberRepository.saveAll(clubMembers);
+        if (!clubMembers.isEmpty()) {
+            clubMemberRepository.saveAll(clubMembers);
+        }
     }
 
     private ClubMember convertToClubMember(Applicant applicant, Club club) {
-        return ClubMember.builder()
-                .club(club)
-                .user(userRepository.findByEmail(applicant.getUserEmail())
-                        .orElseThrow(ApplicantNotFoundException::new))
-                .grade(applicant.getGrade())
-                .major(applicant.getMajor())
-                .build();
+        return ClubMember.create(
+                club,
+                userRepository.findByEmail(applicant.getUserEmail())
+                        .orElseThrow(ApplicantNotFoundException::new),
+                MEMBER,
+                applicant.getGrade(),
+                applicant.getMajor(),
+                applicant.getUserEmail(),
+                applicant.getPhone(),
+                applicant.getGender()
+        );
     }
 
     // 지원서가 현재 관리하는 동아리의 지원서인지 검증하는 메서드
@@ -337,74 +361,31 @@ public class ApplicantAdminService {
         }
     }
 
+    // todo: 추후 리팩토링
     // 사용자 지원 상태를 업데이트하는 로직 메서드
     private void updateApplicantPhaseStatus(Applicant applicant, PhaseStatus status, String kind) {
 
         boolean isDocument = Kind.isDocument(kind);
 
-        // 1. 서류 상태에서 면접 합격 바로는 불가능.
-        validateDocumentToInterviewTransition(applicant, isDocument);
-
-        // 2. 면접의 경우 면접 단계 존재 여부 확인
-        validateInterviewPhaseExistence(applicant, isDocument);
-
-        // 3. 면접 상태에서 서류로 넘어가기는 불가능.
-        validateInterviewToDocumentTransition(applicant, isDocument);
-
-        // 상태에 따른 비즈니스 로직 실행
         switch (status) {
             case PASS:
-                if (isDocument) {
-                    applicant.passDocumentEvaluation(null);
-                } else {
-                    applicant.completeInterview(PASS);
-                }
+                if (isDocument)
+                    applicant.passDocumentEvaluation(); // 면접 날짜는 나중에 설정
+                else
+                    applicant.completeInterview();
                 break;
-
             case FAIL:
-                if (isDocument) {
+                if (isDocument)
                     applicant.failDocumentEvaluation();
-                } else {
-                    applicant.completeInterview(PhaseStatus.FAIL);
-                }
+                else
+                    applicant.completeInterview();
                 break;
-
             case EVALUATING:
-                // Phase의 상태만 업데이트 (Applicant의 currentPhase는 이미 EVALUATING 상태)
-                if (isDocument && applicant.getDocumentPhase() != null) {
-                    applicant.getDocumentPhase().updateStatus(PhaseStatus.EVALUATING);
-                } else if (!isDocument && applicant.getInterviewPhase() != null) {
-                    applicant.getInterviewPhase().updateStatus(PhaseStatus.EVALUATING);
-                }
+                if (isDocument)
+                    applicant.setDocumentEvaluating();
+                else
+                    applicant.setInterviewEvaluating();
                 break;
-
-            default:
-                throw new InvalidPhaseStatusException();
-        }
-    }
-
-    private void validateDocumentToInterviewTransition(Applicant applicant, boolean isDocument) {
-        // 1. 서류 상태에서 면접 합격 바로는 불가능.
-        if (applicant.isInDocumentPhase() && !isDocument) {
-            // 서류 평가에서 바로 면접 로직 처리 시도 시
-            log.warn("사용자가 서류 상태에서 면접 로직 처리 시도: {}", applicant.getName());
-            throw new InvalidPhaseTransitionException();
-        }
-    }
-
-    private void validateInterviewPhaseExistence(Applicant applicant, boolean isDocument) {
-        // 2. 면접의 경우 면접 단계 존재 여부 확인
-        if (!isDocument && !applicant.hasInterviewPhase()) {
-            throw new NoInterviewPhaseException();
-        }
-    }
-
-    private void validateInterviewToDocumentTransition(Applicant applicant, boolean isDocument) {
-        // 3. 면접 상태에서 서류로 넘어가기는 불가능.
-        if (applicant.isInInterviewPhase() && isDocument) {
-            // 면접 평가에서 서류 로직으로 처리 시도 시
-            log.warn("면접 평가에서 서류 로직으로 처리 시도: {}", applicant.getName());
-            throw new InvalidPhaseTransitionException();
         }
     }
 }
