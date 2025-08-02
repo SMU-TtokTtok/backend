@@ -47,7 +47,8 @@ public class AuthUserInfoResolver implements HandlerMethodArgumentResolver {
 
         // "Authorization" 헤더 값 받아옴.
         String token = Arrays.stream(request.getCookies())
-                .filter(cookie -> cookie.getName().equals(ACCESS_TOKEN_COOKIE.getValue()))
+                .filter(cookie -> cookie.getName().equals(ACCESS_TOKEN_COOKIE.getValue())||
+                        cookie.getName().equals(USER_ACCESS_TOKEN_COOKIE.getValue()))
                 .map(Cookie::getValue)
                 .findFirst()
                 .orElse(null);
