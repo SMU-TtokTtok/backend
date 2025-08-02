@@ -304,9 +304,11 @@ public class ApplicantAdminService {
                 .filter(applicant -> {
                     if (isDocument) {
                         return applicant.isInDocumentPhase() && applicant.getDocumentPhase().getStatus() == PASS;
-                    } else {
-                        return applicant.hasInterviewPhase() && applicant.isInInterviewPhase() && applicant.getInterviewPhase().getStatus() == PASS;
+                    } else if (applicant.isInInterviewPhase()){
+                        // 연산자 우선순위 이슈로 괄호 추가
+                        return applicant.hasInterviewPhase() && applicant.getInterviewPhase().getStatus() == PASS;
                     }
+                    return false;
                 })
                 .toList();
     }
