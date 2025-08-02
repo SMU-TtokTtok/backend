@@ -34,4 +34,5 @@ INSERT INTO clubs (id, name, profile_img, summary, club_type, club_category, clu
 -- ENGINEERING 과동아리 추가 (과동아리 필터링 테스트용)
 ('club-032', '기계공학연구회', 'https://example.com/mechanical.jpg', '기계공학 실습과 연구', 'DEPARTMENT', 'ACADEMIC', 'ENGINEERING', '기계공학', '기계공학 관련 실습과 연구를 진행하는 동아리입니다.', 'admin-032', NOW(), NOW()),
 ('club-033', '전자공학동아리', 'https://example.com/electronics.jpg', '전자공학 실험실습', 'DEPARTMENT', 'ACADEMIC', 'ENGINEERING', '전자공학', '전자공학 실험과 실습을 통해 실력을 키웁니다.', 'admin-033', NOW(), NOW()),
-('club-034', '화학공학연구회', 'https://example.com/chemical.jpg', '화학공학 실험연구', 'DEPARTMENT', 'ACADEMIC', 'ENGINEERING', '화학공학', '화학공학 실험과 연구를 진행하는 동아리입니다.', 'admin-034', NOW(), NOW());
+('club-034', '화학공학연구회', 'https://example.com/chemical.jpg', '화학공학 실험연구', 'DEPARTMENT', 'ACADEMIC', 'ENGINEERING', '화학공학', '화학공학 실험과 연구를 진행하는 동아리입니다.', 'admin-034', NOW(), NOW()),
+('club-035', '멋사', 'https://example.com/chemical.jpg', '개발동아리', 'DEPARTMENT', 'ACADEMIC', 'ENGINEERING', '화학공학', '화학공학 실험과 연구를 진행하는 동아리입니다.', 'admin-035', NOW(), NOW());

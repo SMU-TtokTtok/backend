@@ -169,6 +169,7 @@ public class ApplicantCustomRepositoryImpl implements ApplicantCustomRepository 
                 ).fetchOne();
     }
 
+    //FIXME: 학년순으로 제대로 정렬 안되는 이슈 해결 필요
     // 들어온 sortCriteria에 따라 정렬 조건을 반환하는 메서드
     private OrderSpecifier<?> getSortCriteria(@Nullable String sortCriteria) {
         if (sortCriteria == null || sortCriteria.isEmpty()) {
@@ -247,11 +248,6 @@ public class ApplicantCustomRepositoryImpl implements ApplicantCustomRepository 
     }
 
     //----EXPRESSION METHODS----//
-    private Expression<?> getExpression(String kind) {
-        return kind.equalsIgnoreCase(INTERVIEW) ?
-                interviewPhase.interviewDate :
-                Expressions.nullExpression(LocalDate.class);
-    }
 
     // 서류 or 면접 상태 파악
     private Expression<?> getPhaseStatus(boolean isInterview) {

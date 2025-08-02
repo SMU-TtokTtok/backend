@@ -33,6 +33,7 @@ public class ApplyFormAdminService {
     private final ClubRepository clubRepository;
 
     // 지원 폼 생성 메서드
+    @Transactional
     public String createApplyForm(ApplyFormCreateServiceRequest request) {
         Club club = clubRepository.findById(request.clubId())
                 .orElseThrow(ClubNotFoundException::new);

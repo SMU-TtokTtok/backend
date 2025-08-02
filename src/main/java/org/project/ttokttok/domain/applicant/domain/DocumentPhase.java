@@ -8,6 +8,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import org.project.ttokttok.domain.applicant.domain.enums.PhaseStatus;
 import org.project.ttokttok.domain.applicant.domain.json.Answer;
+import org.project.ttokttok.domain.applicant.domain.json.AnswerListConverter;
 import org.project.ttokttok.domain.memo.domain.Memo;
 import org.project.ttokttok.global.entity.BaseTimeEntity;
 
@@ -29,6 +30,7 @@ public class DocumentPhase extends BaseTimeEntity {
     @JoinColumn(name = "applicant_id")
     private Applicant applicant;
 
+    @Convert(converter = AnswerListConverter.class)
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
     private List<Answer> answers;
