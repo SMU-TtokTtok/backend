@@ -123,9 +123,14 @@ public class ApplicantCustomRepositoryImpl implements ApplicantCustomRepository 
         List<ApplicantSimpleInfoDto> applicants = baseQuery
                 .where(
                         applicant.applyForm.id.eq(applyFormId),
+                        kind.equalsIgnoreCase(INTERVIEW) ?
+                                interviewPhase.applicant.eq(applicant) :
+                                documentPhase.applicant.eq(applicant),
                         containsName(searchKeyword),
                         isEvaluating(evaluating),
-                        hasStatus(status)
+                        kind.equalsIgnoreCase(INTERVIEW) ?
+                                interviewStatusCheck(status) :
+                                documentStatusCheck(status)
                 )
                 .orderBy(getSortCriteria(sortCriteria))
                 .limit(size)
@@ -163,9 +168,14 @@ public class ApplicantCustomRepositoryImpl implements ApplicantCustomRepository 
         return query
                 .where(
                         applicant.applyForm.id.eq(applyFormId),
+                        kind.equalsIgnoreCase(INTERVIEW) ?
+                                interviewPhase.applicant.eq(applicant) :
+                                documentPhase.applicant.eq(applicant),
                         containsName(searchKeyword),
                         isEvaluating(evaluating),
-                        hasStatus(statusFilter)
+                        kind.equalsIgnoreCase(INTERVIEW) ?
+                                interviewStatusCheck(statusFilter) :
+                                documentStatusCheck(statusFilter)
                 ).fetchOne();
     }
 
@@ -225,26 +235,32 @@ public class ApplicantCustomRepositoryImpl implements ApplicantCustomRepository 
         return searchKeyword != null ? applicant.name.contains(searchKeyword) : null;
     }
 
+    //FIXME: 서류 면접 구분 로직 추가 필요
     // 평가 중 여부 확인
     private BooleanExpression isEvaluating(boolean evaluating) {
         return evaluating ? applicant.currentPhase.in(DOCUMENT_EVALUATING, INTERVIEW_EVALUATING) : null;
     }
 
-    // 현재 단계에 따라 상태 결정 로직
-    private BooleanExpression hasStatus(PhaseStatus status) {
+    private BooleanExpression documentStatusCheck(PhaseStatus status) {
         if (status == null) return null;
 
-        // 상태별로 직접 조건 생성
-        switch (status) {
-            case EVALUATING:
-                return applicant.currentPhase.in(DOCUMENT_EVALUATING, INTERVIEW_EVALUATING);
-            case PASS:
-                return applicant.currentPhase.in(DOCUMENT_PASS, INTERVIEW_PASS);
-            case FAIL:
-                return applicant.currentPhase.in(DOCUMENT_FAIL, INTERVIEW_FAIL);
-            default:
-                return null;
-        }
+        return switch (status) {
+            case EVALUATING -> applicant.currentPhase.eq(DOCUMENT_EVALUATING);
+            case PASS -> applicant.currentPhase.eq(DOCUMENT_PASS);
+            case FAIL -> applicant.currentPhase.eq(DOCUMENT_FAIL);
+            default -> null;
+        };
+    }
+
+    private BooleanExpression interviewStatusCheck(PhaseStatus status) {
+        if (status == null) return null;
+
+        return switch (status) {
+            case EVALUATING -> applicant.currentPhase.eq(INTERVIEW_EVALUATING);
+            case PASS -> applicant.currentPhase.eq(INTERVIEW_PASS);
+            case FAIL -> applicant.currentPhase.eq(INTERVIEW_FAIL);
+            default -> null;
+        };
     }
 
     //----EXPRESSION METHODS----//
