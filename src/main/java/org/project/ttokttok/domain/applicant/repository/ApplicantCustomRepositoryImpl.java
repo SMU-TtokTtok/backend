@@ -6,6 +6,7 @@ import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.core.types.dsl.StringExpression;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.annotation.Nullable;
@@ -258,23 +259,23 @@ public class ApplicantCustomRepositoryImpl implements ApplicantCustomRepository 
     }
 
     // 서류 상태
-    private Expression<PhaseStatus> getDocumentStatus() {
+    private StringExpression/*<PhaseStatus>*/ getDocumentStatus() {
         return new CaseBuilder()
                 .when(applicant.currentPhase.eq(DOCUMENT_EVALUATING))
-                .then(EVALUATING)
+                .then("EVALUATING")
                 .when(applicant.currentPhase.eq(DOCUMENT_PASS))
-                .then(PASS)
-                .otherwise(FAIL);
+                .then("PASS")
+                .otherwise("FAIL");
     }
 
     // 면접 상태
-    private Expression<PhaseStatus> getInterviewStatus() {
+    private StringExpression/*<PhaseStatus>*/ getInterviewStatus() {
         return new CaseBuilder()
                 .when(applicant.currentPhase.in(INTERVIEW_EVALUATING))
-                .then(EVALUATING)
+                .then("EVALUATING")
                 .when(applicant.currentPhase.eq(INTERVIEW_PASS))
-                .then(PASS)
-                .otherwise(FAIL);
+                .then("PASS")
+                .otherwise("FAIL");
     }
 
 }
