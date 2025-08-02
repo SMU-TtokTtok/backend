@@ -18,28 +18,28 @@ INSERT INTO document_phases (
 
 -- 상명축구부 지원자들
 ('doc-phase-004', 'applicant-004',
- '[{"title":"포지션","subTitle":"선호하는 포지션을 선택해주세요","questionType":"RADIO","isEssential":true,"content":["공격수","미드필더","수비수","골키퍼"],"answer":"미드필더"},{"title":"축구 경력","subTitle":"축구 경험에 대해 작성해주세요","questionType":"LONG_ANSWER","isEssential":false,"content":[],"answer":"고등학교 때 축구부에서 3년간 활동했습니다. 주로 중앙 미드필더 포지션을 맡았고, 지역 대회에서 우승 경험이 있습니다."}]',
+ '[{"title":"포지션","subTitle":"선호하는 포지션을 선택해주세요","questionType":"RADIO","isEssential":true,"content":["공격수","미드필더","수비수","골키퍼"],"value":"미드필더"},{"title":"축구 경력","subTitle":"축구 경험에 대해 작성해주세요","questionType":"LONG_ANSWER","isEssential":false,"content":[],"value":"고등학교 때 축구부에서 3년간 활동했습니다. 주로 중앙 미드필더 포지션을 맡았고, 지역 대회에서 우승 경험이 있습니다."}]',
  'EVALUATING', NOW(), NOW()),
 
 ('doc-phase-005', 'applicant-005',
- '[{"title":"포지션","subTitle":"선호하는 포지션을 선택해주세요","questionType":"RADIO","isEssential":true,"content":["공격수","미드필더","수비수","골키퍼"],"answer":"공격수"},{"title":"축구 경력","subTitle":"축구 경험에 대해 작성해주세요","questionType":"LONG_ANSWER","isEssential":false,"content":[],"answer":"중학교부터 축구를 시작했고, 고등학교에서는 학교 대표로 각종 대회에 참가했습니다. 골 결정력이 좋다는 평가를 받고 있습니다."}]',
+ '[{"title":"포지션","subTitle":"선호하는 포지션을 선택해주세요","questionType":"RADIO","isEssential":true,"content":["공격수","미드필더","수비수","골키퍼"],"value":"공격수"},{"title":"축구 경력","subTitle":"축구 경험에 대해 작성해주세요","questionType":"LONG_ANSWER","isEssential":false,"content":[],"value":"중학교부터 축구를 시작했고, 고등학교에서는 학교 대표로 각종 대회에 참가했습니다. 골 결정력이 좋다는 평가를 받고 있습니다."}]',
  'PASS', NOW(), NOW()),
 
 ('doc-phase-006', 'applicant-006',
- '[{"title":"포지션","subTitle":"선호하는 포지션을 선택해주세요","questionType":"RADIO","isEssential":true,"content":["공격수","미드필더","수비수","골키퍼"],"answer":"수비수"},{"title":"축구 경력","subTitle":"축구 경험에 대해 작성해주세요","questionType":"LONG_ANSWER","isEssential":false,"content":[],"answer":"대학교 입학 후부터 축구를 본격적으로 시작했습니다. 늦게 시작했지만 열정적으로 훈련에 참여하고 있고, 수비 센스가 좋다는 평가를 받고 있습니다."}]',
+ '[{"title":"포지션","subTitle":"선호하는 포지션을 선택해주세요","questionType":"RADIO","isEssential":true,"content":["공격수","미드필더","수비수","골키퍼"],"value":"수비수"},{"title":"축구 경력","subTitle":"축구 경험에 대해 작성해주세요","questionType":"LONG_ANSWER","isEssential":false,"content":[],"value":"대학교 입학 후부터 축구를 본격적으로 시작했습니다. 늦게 시작했지만 열정적으로 훈련에 참여하고 있고, 수비 센스가 좋다는 평가를 받고 있습니다."}]',
  'PASS', NOW(), NOW()),
 
 ('doc-phase-007', 'applicant-007',
- '[{"title":"포지션","subTitle":"선호하는 포지션을 선택해주세요","questionType":"RADIO","isEssential":true,"content":["공격수","미드필더","수비수","골키퍼"],"answer":"골키퍼"},{"title":"축구 경력","subTitle":"축구 경험에 대해 작성해주세요","questionType":"LONG_ANSWER","isEssential":false,"content":[],"answer":"골키퍼 포지션에 관심이 있어서 개인적으로 연습하고 있습니다. 반응속도가 빠른 편이고, 골키퍼로서 성장하고 싶습니다."}]',
+ '[{"title":"포지션","subTitle":"선호하는 포지션을 선택해주세요","questionType":"RADIO","isEssential":true,"content":["공격수","미드필더","수비수","골키퍼"],"value":"골키퍼"},{"title":"축구 경력","subTitle":"축구 경험에 대해 작성해주세요","questionType":"LONG_ANSWER","isEssential":false,"content":[],"value":"골키퍼 포지션에 관심이 있어서 개인적으로 연습하고 있습니다. 반응속도가 빠른 편이고, 골키퍼로서 성장하고 싶습니다."}]',
  'PASS', NOW(), NOW()),
 
 -- 코딩마스터 지원자들
 ('doc-phase-008', 'applicant-008',
- '[{"title":"프로그래밍 언어","subTitle":"사용 가능한 프로그래밍 언어를 모두 선택해주세요","questionType":"CHECKBOX","isEssential":true,"content":["Java","Python","JavaScript","C++","Go"],"answer":["Java","Python"]},{"title":"개발 경험","subTitle":"개발 프로젝트 경험을 작성해주세요","questionType":"LONG_ANSWER","isEssential":false,"content":[],"answer":"학교 과제로 간단한 웹 프로젝트를 진행해본 경험이 있습니다. Spring Boot와 React를 사용했고, 팀 프로젝트에서 백엔드 개발을 담당했습니다."}]',
+ '[{"title":"프로그래밍 언어","subTitle":"사용 가능한 프로그래밍 언어를 모두 선택해주세요","questionType":"CHECKBOX","isEssential":true,"content":["Java","Python","JavaScript","C++","Go"],"value":["Java","Python"]},{"title":"개발 경험","subTitle":"개발 프로젝트 경험을 작성해주세요","questionType":"LONG_ANSWER","isEssential":false,"content":[],"value":"학교 과제로 간단한 웹 프로젝트를 진행해본 경험이 있습니다. Spring Boot와 React를 사용했고, 팀 프로젝트에서 백엔드 개발을 담당했습니다."}]',
  'EVALUATING', NOW(), NOW()),
 
 ('doc-phase-009', 'applicant-009',
- '[{"title":"프로그래밍 언어","subTitle":"사용 가능한 프로그래밍 언어를 모두 선택해주세요","questionType":"CHECKBOX","isEssential":true,"content":["Java","Python","JavaScript","C++","Go"],"answer":["Java","JavaScript","Python"]},{"title":"개발 경험","subTitle":"개발 프로젝트 경험을 작성해주세요","questionType":"LONG_ANSWER","isEssential":false,"content":[],"answer":"개인 프로젝트로 To-Do 앱을 개발해봤고, 오픈소스 프로젝트에도 기여한 경험이 있습니다. 알고리즘 문제 해결에도 관심이 많아서 코딩테스트 준비도 하고 있습니다."}]',
+ '[{"title":"프로그래밍 언어","subTitle":"사용 가능한 프로그래밍 언어를 모두 선택해주세요","questionType":"CHECKBOX","isEssential":true,"content":["Java","Python","JavaScript","C++","Go"],"value":["Java","JavaScript","Python"]},{"title":"개발 경험","subTitle":"개발 프로젝트 경험을 작성해주세요","questionType":"LONG_ANSWER","isEssential":false,"content":[],"value":"개인 프로젝트로 To-Do 앱을 개발해봤고, 오픈소스 프로젝트에도 기여한 경험이 있습니다. 알고리즘 문제 해결에도 관심이 많아서 코딩테스트 준비도 하고 있습니다."}]',
  'PASS', NOW(), NOW()),
 
 ('doc-phase-010', 'applicant-010',
