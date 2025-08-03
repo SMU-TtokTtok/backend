@@ -17,8 +17,8 @@ public record ApplyFormCreateServiceRequest(
         LocalDate recruitEndDate,
         Set<Integer> applicableGrades,
         int maxApplyCount,
-        JsonNullable<LocalDate> interviewStartDate,
-        JsonNullable<LocalDate> interviewEndDate,
+        LocalDate interviewStartDate,
+        LocalDate interviewEndDate,
         String title,
         String subTitle,
         List<Question> questions

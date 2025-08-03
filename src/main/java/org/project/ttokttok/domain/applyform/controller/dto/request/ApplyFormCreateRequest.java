@@ -1,5 +1,7 @@
 package org.project.ttokttok.domain.applyform.controller.dto.request;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.openapitools.jackson.nullable.JsonNullable;
@@ -27,9 +29,13 @@ public record ApplyFormCreateRequest(
         @NotNull(message = "최대 지원 횟수는 Null일 수 없습니다.")
         int maxApplyCount,
 
-        // FIXME: Null 처리로 리팩토링할 것. Post 요청의 복잡도가 올라감
-        JsonNullable<LocalDate> interviewStartDate,
-        JsonNullable<LocalDate> interviewEndDate,
+        @Nullable
+        @Schema(description = "면접 시작일, 면접 전형이 없는 경우 Null일 수 있습니다.", example = "2000-01-02 혹은 null")
+        LocalDate interviewStartDate,
+
+        @Nullable
+        @Schema(description = "면접 종료일, 면접 전형이 없는 경우 Null일 수 있습니다.", example = "2000-01-02 혹은 null")
+        LocalDate interviewEndDate,
 
         @NotBlank(message = "지원서 제목은 비어 있을 수 없습니다.")
         String title,
