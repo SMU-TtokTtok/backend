@@ -112,6 +112,7 @@ public class ApplyFormAdminService {
                 .toList();
 
         return ApplyFormDetailServiceResponse.of(
+                applyForm.getId(),
                 applyForm.getTitle(),
                 applyForm.getSubTitle(),
                 applyForm.getFormJson(),

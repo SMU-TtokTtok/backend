@@ -12,19 +12,16 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import org.project.ttokttok.domain.applicant.domain.dto.ApplicantSimpleInfoDto;
-import org.project.ttokttok.domain.applicant.domain.enums.ApplicantPhase;
 import org.project.ttokttok.domain.applicant.domain.enums.PhaseStatus;
 import org.project.ttokttok.domain.applicant.repository.dto.response.ApplicantPageQueryResponse;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Objects;
 
 import static org.project.ttokttok.domain.applicant.domain.QApplicant.applicant;
 import static org.project.ttokttok.domain.applicant.domain.QDocumentPhase.documentPhase;
 import static org.project.ttokttok.domain.applicant.domain.QInterviewPhase.interviewPhase;
-import static org.project.ttokttok.domain.applicant.domain.enums.ApplicantPhase.*;
 import static org.project.ttokttok.domain.applicant.domain.enums.PhaseStatus.*;
 
 @Repository
@@ -189,7 +186,7 @@ public class ApplicantCustomRepositoryImpl implements ApplicantCustomRepository 
     // 들어온 sortCriteria에 따라 정렬 조건을 반환하는 메서드
     private OrderSpecifier<?> getSortCriteria(@Nullable String sortCriteria) {
         if (sortCriteria == null || sortCriteria.isEmpty()) {
-            return applicant.grade.asc(); // 기본 정렬은 학년 오름차순
+            return applicant.grade.asc();
         }
 
         switch (sortCriteria.toUpperCase()) {
