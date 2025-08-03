@@ -3,6 +3,7 @@ package org.project.ttokttok.domain.applicant.controller.dto.response;
 import lombok.Builder;
 import org.project.ttokttok.domain.applicant.domain.dto.ApplicantSimpleInfoDto;
 import org.project.ttokttok.domain.applicant.service.dto.response.ApplicantPageServiceResponse;
+import org.project.ttokttok.domain.applicant.service.dto.response.ApplicantSimpleResponse;
 
 import java.util.List;
 
@@ -11,14 +12,14 @@ public record ApplicantPageResponse(
         int currentPage,
         int totalPage,
         int totalCount,
-        List<ApplicantSimpleInfoDto> applicants
+        List<ApplicantSimpleResponse> applicants
 ) {
-    public static ApplicantPageResponse from(ApplicantPageServiceResponse serviceResponse) {
+    public static ApplicantPageResponse from(ApplicantPageServiceResponse response) {
         return ApplicantPageResponse.builder()
-                .currentPage(serviceResponse.currentPage())
-                .totalPage(serviceResponse.totalPage())
-                .totalCount(serviceResponse.totalCount())
-                .applicants(serviceResponse.applicants())
+                .currentPage(response.currentPage())
+                .totalPage(response.totalPage())
+                .totalCount(response.totalCount())
+                .applicants(response.applicants())
                 .build();
     }
 }

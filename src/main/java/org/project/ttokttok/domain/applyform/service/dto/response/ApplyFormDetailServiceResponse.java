@@ -7,16 +7,19 @@ import java.util.List;
 
 @Builder
 public record ApplyFormDetailServiceResponse(
+        String formId,
         String title,
         String subTitle,
         List<Question> questions,
         List<BeforeApplyFormServiceResponse> beforeForms
 ) {
-    public static ApplyFormDetailServiceResponse of(String title,
+    public static ApplyFormDetailServiceResponse of(String formId,
+                                                    String title,
                                                     String subTitle,
                                                     List<Question> questions,
                                                     List<BeforeApplyFormServiceResponse> beforeForms) {
         return ApplyFormDetailServiceResponse.builder()
+                .formId(formId)
                 .title(title)
                 .subTitle(subTitle)
                 .questions(questions)

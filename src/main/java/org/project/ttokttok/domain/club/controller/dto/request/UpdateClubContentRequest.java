@@ -7,6 +7,7 @@ import org.project.ttokttok.domain.club.domain.enums.ClubCategory;
 import org.project.ttokttok.domain.club.domain.enums.ClubType;
 import org.project.ttokttok.domain.club.domain.enums.ClubUniv;
 import org.project.ttokttok.domain.club.service.dto.request.ClubContentUpdateServiceRequest;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.Set;
@@ -100,7 +101,7 @@ public record UpdateClubContentRequest(
         )
         JsonNullable<Integer> maxApplyCount
 ) {
-    public ClubContentUpdateServiceRequest toServiceRequest(String clubId) {
+    public ClubContentUpdateServiceRequest toServiceRequest(String clubId, JsonNullable<MultipartFile> profileImage) {
         return ClubContentUpdateServiceRequest.builder()
                 .clubId(clubId)
                 .name(name)
@@ -109,7 +110,7 @@ public record UpdateClubContentRequest(
                 .clubUniv(clubUniv)
                 .customCategory(customCategory)
                 .summary(summary)
-                //.profileImage(profileImage)
+                .profileImage(profileImage)
                 .content(content)
                 .applyStartDate(applyStartDate)
                 .applyEndDate(applyEndDate)

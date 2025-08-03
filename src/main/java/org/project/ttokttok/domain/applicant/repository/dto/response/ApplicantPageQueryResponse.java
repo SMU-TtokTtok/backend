@@ -19,7 +19,9 @@ public record ApplicantPageQueryResponse(
                 .currentPage(currentPage)
                 .totalPage(totalPage)
                 .totalCount(totalCount)
-                .applicants(applicants)
+                .applicants(applicants.stream()
+                        .map(ApplicantSimpleInfoDto::toResponse)
+                        .toList())
                 .build();
     }
 }

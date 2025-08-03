@@ -2,6 +2,7 @@ package org.project.ttokttok.domain.applicant.domain.dto;
 
 import org.project.ttokttok.domain.applicant.domain.enums.Grade;
 import org.project.ttokttok.domain.applicant.domain.enums.PhaseStatus;
+import org.project.ttokttok.domain.applicant.service.dto.response.ApplicantSimpleResponse;
 
 import java.time.LocalDate;
 
@@ -11,8 +12,18 @@ public record ApplicantSimpleInfoDto(
         Grade grade,
         String name,
         String major,
-        PhaseStatus status,
+        String status,
         LocalDate interviewDate
 ) {
+    public ApplicantSimpleResponse toResponse() {
+        return ApplicantSimpleResponse.builder()
+                .id(id)
+                .grade(grade)
+                .name(name)
+                .major(major)
+                .status(PhaseStatus.valueOf(status))
+                .interviewDate(interviewDate)
+                .build();
+    }
 }
 

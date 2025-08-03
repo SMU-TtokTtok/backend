@@ -1,6 +1,7 @@
 package org.project.ttokttok.domain.applicant.domain.dto;
 
 import lombok.Builder;
+import org.project.ttokttok.domain.applicant.service.dto.response.ApplicantSimpleResponse;
 
 import java.util.List;
 
@@ -10,6 +11,6 @@ public record ApplicantPageDto(
         int currentPage,
         int totalPage,
         int totalCount,
-        List<ApplicantSimpleInfoDto> applicants
+        List<ApplicantSimpleResponse> applicants
 ) {
 }

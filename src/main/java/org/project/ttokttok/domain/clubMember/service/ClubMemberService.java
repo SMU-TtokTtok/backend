@@ -84,7 +84,7 @@ public class ClubMemberService {
         Club club = validateClubExists(clubId);
 
         return new ExcelServiceResponse(
-                club.getName(),
+                club.getId(),
                 createMemberExcel(club.getName(), targetClubMembers)
         );
     }
@@ -194,11 +194,11 @@ public class ClubMemberService {
         return String.join("", studentNum.toString(), EMAIL_SUFFIX);
     }
 
-    private byte[] createMemberExcel(String clubId, List<ClubMemberInExcelResponse> target) {
+    private byte[] createMemberExcel(String clubName, List<ClubMemberInExcelResponse> target) {
         try {
             // 엑셀 파일 생성 로직
             return excelService.createMemberExcel(
-                    clubRepository.findById(clubId)
+                    clubRepository.findByName(clubName)
                             .orElseThrow(ClubNotFoundException::new)
                             .getName(),
                     target

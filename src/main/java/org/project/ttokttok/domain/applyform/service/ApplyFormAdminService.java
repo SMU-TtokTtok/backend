@@ -20,6 +20,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -33,6 +35,7 @@ public class ApplyFormAdminService {
     private final ClubRepository clubRepository;
 
     // 지원 폼 생성 메서드
+    @Transactional
     public String createApplyForm(ApplyFormCreateServiceRequest request) {
         Club club = clubRepository.findById(request.clubId())
                 .orElseThrow(ClubNotFoundException::new);
@@ -55,8 +58,8 @@ public class ApplyFormAdminService {
                 request.hasInterview(),
                 request.recruitStartDate(),
                 request.recruitEndDate(),
-                request.interviewStartDate().orElse(null),
-                request.interviewEndDate().orElse(null),
+                request.interviewStartDate(),
+                request.interviewEndDate(),
                 request.maxApplyCount(),
                 applicableGrades,
                 request.title(),
@@ -96,26 +99,30 @@ public class ApplyFormAdminService {
         // 관리자 권한 검증
         validateAdmin(club.getAdmin().getUsername(), username);
 
-        // 활성화된 지원 폼 조회
-        ApplyForm applyForm = applyFormRepository.findByClubIdAndStatus(clubId, ACTIVE)
-                .orElseThrow(ApplyFormNotFoundException::new);
+        // 활성화된 지원 폼 조회 -> 없을 경우, 그냥 null 반환
+        Optional<ApplyForm> applyForm = applyFormRepository.findByClubIdAndStatus(clubId, ACTIVE);
 
         // 이전에 사용했던 질문 목록 리스트 조회
-        List<BeforeApplyFormServiceResponse> beforeForms = applyFormRepository.findByClubId(clubId)
+        List<BeforeApplyFormServiceResponse> beforeForms = getBeforeForms(clubId);
+
+        return ApplyFormDetailServiceResponse.of(
+                applyForm.map(ApplyForm::getId).orElse(null),
+                applyForm.map(ApplyForm::getTitle).orElse(null),
+                applyForm.map(ApplyForm::getSubTitle).orElse(null),
+                applyForm.map(ApplyForm::getFormJson).orElse(List.of()),
+                beforeForms
+        );
+    }
+
+    private List<BeforeApplyFormServiceResponse> getBeforeForms(String clubId) {
+        return applyFormRepository.findByClubId(clubId)
                 .stream()
-                .filter(form -> form.getStatus() == ACTIVE)
+                .filter(form -> form.getStatus() != ACTIVE)
                 .map(form -> BeforeApplyFormServiceResponse.of(
                         form.getId(),
                         LocalDate.from(form.getCreatedAt())
                 ))
                 .toList();
-
-        return ApplyFormDetailServiceResponse.of(
-                applyForm.getTitle(),
-                applyForm.getSubTitle(),
-                applyForm.getFormJson(),
-                beforeForms
-        );
     }
 
     // 이전에 사용한 지원폼의 질문 조회 메서드 추가

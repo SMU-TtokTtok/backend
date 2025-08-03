@@ -2,6 +2,7 @@ package org.project.ttokttok.domain.club.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.openapitools.jackson.nullable.JsonNullable;
 import org.project.ttokttok.domain.club.controller.docs.ClubAdminApiDocs;
 import org.project.ttokttok.domain.club.controller.dto.request.UpdateClubContentRequest;
 import org.project.ttokttok.domain.club.controller.dto.response.ClubAdminDetailResponse;
@@ -30,7 +31,9 @@ public class ClubAdminApiController implements ClubAdminApiDocs {
                                                                  @PathVariable String clubId,
                                                                  @Valid @RequestPart UpdateClubContentRequest request,
                                                                  @RequestPart(required = false) MultipartFile profileImage) {
-        clubAdminService.updateContent(username, request.toServiceRequest(clubId));
+        clubAdminService.updateContent(
+                username, request.toServiceRequest(clubId, JsonNullable.of(profileImage))
+        );
 
         return ResponseEntity.ok()
                 .body(Map.of("message", "동아리 소개가 수정되었습니다."));

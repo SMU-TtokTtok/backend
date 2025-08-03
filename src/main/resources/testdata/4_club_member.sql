@@ -45,7 +45,8 @@ INSERT INTO club_members (id, club_id, member_id, grade, major, role, email, pho
 (gen_random_uuid(), 'club-002', 'user-022', 'THIRD_GRADE', 'Undeclared', 'MEMBER', 'shadow22@example.com', '010-2244-3355', 'MALE', NOW(), NOW()),
 (gen_random_uuid(), 'club-002', 'user-023', 'FOURTH_GRADE', 'Undeclared', 'MEMBER', 'poacher23@example.com', '010-3355-4466', 'MALE', NOW(), NOW()),
 (gen_random_uuid(), 'club-002', 'user-024', 'FIRST_GRADE', 'Undeclared', 'MEMBER', 'complete24@example.com', '010-4466-5577', 'FEMALE', NOW(), NOW()),
-(gen_random_uuid(), 'club-002', 'user-025', 'SECOND_GRADE', 'Undeclared', 'MEMBER', 'utility25@example.com', '010-5577-6688', 'MALE', NOW(), NOW());
+(gen_random_uuid(), 'club-002', 'user-025', 'SECOND_GRADE', 'Undeclared', 'MEMBER', 'utility25@example.com', '010-5577-6688', 'MALE', NOW(), NOW()),
+(gen_random_uuid(), 'club-002', 'user-100', 'FOURTH_GRADE', '소프트노예전공', 'MEMBER', 'tnals72441@daum.net', '010-5577-6688', 'MALE', NOW(), NOW());
 
 -- club-003 (코딩마스터): 18명
 INSERT INTO club_members (id, club_id, member_id, grade, major, role, email, phone_number, gender, created_at, updated_at) VALUES

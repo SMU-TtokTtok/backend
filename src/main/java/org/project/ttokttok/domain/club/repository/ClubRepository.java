@@ -9,4 +9,6 @@ import java.util.Optional;
 public interface ClubRepository extends JpaRepository<Club, String>, ClubCustomRepository{
     @Query("SELECT c from Club c where c.admin.username = :username")
     Optional<Club> findByAdminUsername(String username);
+
+    Optional<Club> findByName(String clubName);
 }

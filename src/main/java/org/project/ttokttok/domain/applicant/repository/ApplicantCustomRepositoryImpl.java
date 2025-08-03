@@ -6,6 +6,7 @@ import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.core.types.dsl.StringExpression;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.annotation.Nullable;
@@ -21,7 +22,6 @@ import java.util.List;
 import static org.project.ttokttok.domain.applicant.domain.QApplicant.applicant;
 import static org.project.ttokttok.domain.applicant.domain.QDocumentPhase.documentPhase;
 import static org.project.ttokttok.domain.applicant.domain.QInterviewPhase.interviewPhase;
-import static org.project.ttokttok.domain.applicant.domain.enums.ApplicantPhase.*;
 import static org.project.ttokttok.domain.applicant.domain.enums.PhaseStatus.*;
 
 @Repository
@@ -30,7 +30,7 @@ public class ApplicantCustomRepositoryImpl implements ApplicantCustomRepository 
 
     private final JPAQueryFactory queryFactory;
 
-    private static final String INTERVIEW = "INTERVIEW";
+    private static final String INTERVIEW_STRING = "INTERVIEW";
     private static final String SUBMIT = "SUBMIT";
 
     @Override
@@ -122,11 +122,21 @@ public class ApplicantCustomRepositoryImpl implements ApplicantCustomRepository 
         List<ApplicantSimpleInfoDto> applicants = baseQuery
                 .where(
                         applicant.applyForm.id.eq(applyFormId),
+                        kind.equalsIgnoreCase(INTERVIEW_STRING) ?
+                                interviewPhase.applicant.eq(applicant) :
+                                documentPhase.applicant.eq(applicant),
                         containsName(searchKeyword),
-                        isEvaluating(evaluating),
-                        hasStatus(status)
+                        kind.equalsIgnoreCase(INTERVIEW_STRING) ?
+                                interviewEvaluatingCheck(evaluating) :
+                                documentEvaluatingCheck(evaluating),
+                        kind.equalsIgnoreCase(INTERVIEW_STRING) ?
+                                interviewStatusCheck(status) :
+                                documentStatusCheck(status)
                 )
-                .orderBy(getSortCriteria(sortCriteria))
+                .orderBy(
+                        getSortCriteria(sortCriteria),
+                        applicant.id.asc() // 기본적으로 ID로 정렬하여 일관성 유지
+                )
                 .limit(size)
                 .offset((long) size * (cursor - 1))
                 .fetch();
@@ -147,7 +157,7 @@ public class ApplicantCustomRepositoryImpl implements ApplicantCustomRepository 
                                    boolean evaluating,
                                    String kind,
                                    PhaseStatus statusFilter) {
-        boolean isInterview = INTERVIEW.equalsIgnoreCase(kind);
+        boolean isInterview = INTERVIEW_STRING.equalsIgnoreCase(kind);
 
         JPAQuery<Long> query = queryFactory
                 .select(applicant.count())
@@ -162,16 +172,24 @@ public class ApplicantCustomRepositoryImpl implements ApplicantCustomRepository 
         return query
                 .where(
                         applicant.applyForm.id.eq(applyFormId),
+                        kind.equalsIgnoreCase(INTERVIEW_STRING) ?
+                                interviewPhase.applicant.eq(applicant) :
+                                documentPhase.applicant.eq(applicant),
                         containsName(searchKeyword),
-                        isEvaluating(evaluating),
-                        hasStatus(statusFilter)
+                        kind.equalsIgnoreCase(INTERVIEW_STRING) ?
+                                interviewEvaluatingCheck(evaluating) :
+                                documentEvaluatingCheck(evaluating),
+                        kind.equalsIgnoreCase(INTERVIEW_STRING) ?
+                                interviewStatusCheck(statusFilter) :
+                                documentStatusCheck(statusFilter)
                 ).fetchOne();
     }
 
+    //FIXME: 학년순으로 제대로 정렬 안되는 이슈 해결 필요
     // 들어온 sortCriteria에 따라 정렬 조건을 반환하는 메서드
     private OrderSpecifier<?> getSortCriteria(@Nullable String sortCriteria) {
         if (sortCriteria == null || sortCriteria.isEmpty()) {
-            return applicant.grade.asc(); // 기본 정렬은 학년 오름차순
+            return applicant.grade.asc();
         }
 
         switch (sortCriteria.toUpperCase()) {
@@ -183,7 +201,7 @@ public class ApplicantCustomRepositoryImpl implements ApplicantCustomRepository 
     }
 
     private JPAQuery<ApplicantSimpleInfoDto> createBaseQuery(String kind) {
-        boolean isInterview = INTERVIEW.equalsIgnoreCase(kind);
+        boolean isInterview = INTERVIEW_STRING.equalsIgnoreCase(kind);
 
         // IF문으로 안전하게 분기처리
         if (isInterview) {
@@ -218,39 +236,41 @@ public class ApplicantCustomRepositoryImpl implements ApplicantCustomRepository 
     }
 
     // ---- BOOLEAN EXPRESSION METHODS ---- //
-    // 검색 키워드가 있는 경우 이름에 포함되는지 조건 추가
     private BooleanExpression containsName(String searchKeyword) {
         return searchKeyword != null ? applicant.name.contains(searchKeyword) : null;
     }
 
-    // 평가 중 여부 확인
-    private BooleanExpression isEvaluating(boolean evaluating) {
-        return evaluating ? applicant.currentPhase.in(DOCUMENT_EVALUATING, INTERVIEW_EVALUATING) : null;
+    private BooleanExpression documentEvaluatingCheck(boolean evaluating) {
+        return evaluating ? applicant.documentPhase.status.eq(EVALUATING) : null;
     }
 
-    // 현재 단계에 따라 상태 결정 로직
-    private BooleanExpression hasStatus(PhaseStatus status) {
+    private BooleanExpression interviewEvaluatingCheck(boolean evaluating) {
+        return evaluating ? applicant.interviewPhase.status.eq(EVALUATING) : null;
+    }
+
+    private BooleanExpression documentStatusCheck(PhaseStatus status) {
         if (status == null) return null;
 
-        // 상태별로 직접 조건 생성
-        switch (status) {
-            case EVALUATING:
-                return applicant.currentPhase.in(DOCUMENT_EVALUATING, INTERVIEW_EVALUATING);
-            case PASS:
-                return applicant.currentPhase.in(DOCUMENT_PASS, INTERVIEW_PASS);
-            case FAIL:
-                return applicant.currentPhase.in(DOCUMENT_FAIL, INTERVIEW_FAIL);
-            default:
-                return null;
-        }
+        return switch (status) {
+            case EVALUATING -> applicant.documentPhase.status.eq(EVALUATING);
+            case PASS -> applicant.documentPhase.status.eq(PASS);
+            case FAIL -> applicant.documentPhase.status.eq(FAIL);
+            default -> null;
+        };
+    }
+
+    private BooleanExpression interviewStatusCheck(PhaseStatus status) {
+        if (status == null) return null;
+
+        return switch (status) {
+            case EVALUATING -> applicant.interviewPhase.status.eq(EVALUATING);
+            case PASS -> applicant.interviewPhase.status.eq(PASS);
+            case FAIL -> applicant.interviewPhase.status.eq(FAIL);
+            default -> null;
+        };
     }
 
     //----EXPRESSION METHODS----//
-    private Expression<?> getExpression(String kind) {
-        return kind.equalsIgnoreCase(INTERVIEW) ?
-                interviewPhase.interviewDate :
-                Expressions.nullExpression(LocalDate.class);
-    }
 
     // 서류 or 면접 상태 파악
     private Expression<?> getPhaseStatus(boolean isInterview) {
@@ -258,23 +278,23 @@ public class ApplicantCustomRepositoryImpl implements ApplicantCustomRepository 
     }
 
     // 서류 상태
-    private Expression<PhaseStatus> getDocumentStatus() {
+    private StringExpression/*<PhaseStatus>*/ getDocumentStatus() {
         return new CaseBuilder()
-                .when(applicant.currentPhase.eq(DOCUMENT_EVALUATING))
-                .then(EVALUATING)
-                .when(applicant.currentPhase.eq(DOCUMENT_PASS))
-                .then(PASS)
-                .otherwise(FAIL);
+                .when(applicant.documentPhase.status.eq(EVALUATING))
+                .then("EVALUATING")
+                .when(applicant.documentPhase.status.eq(PASS))
+                .then("PASS")
+                .otherwise("FAIL");
     }
 
     // 면접 상태
-    private Expression<PhaseStatus> getInterviewStatus() {
+    private StringExpression/*<PhaseStatus>*/ getInterviewStatus() {
         return new CaseBuilder()
-                .when(applicant.currentPhase.in(INTERVIEW_EVALUATING))
-                .then(EVALUATING)
-                .when(applicant.currentPhase.eq(INTERVIEW_PASS))
-                .then(PASS)
-                .otherwise(FAIL);
+                .when(applicant.interviewPhase.status.eq(EVALUATING))
+                .then("EVALUATING")
+                .when(applicant.interviewPhase.status.eq(PASS))
+                .then("PASS")
+                .otherwise("FAIL");
     }
 
 }

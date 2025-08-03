@@ -96,7 +96,7 @@ public class ApplicantUserService {
                             .filter(q -> q.questionId().equals(questionId))
                             .findFirst()
                             .orElseThrow(ApplyFormNotFoundException::new);
-                    String fileKey = s3Service.uploadFile(file, "applicant/" + email + "/" + formId);
+                    String fileKey = s3Service.uploadFile(file, "/applicant/" + email + "/" + formId);
                     return new Answer(
                             question.title(),
                             question.subTitle(),

@@ -8,6 +8,7 @@ import java.util.List;
 
 @Builder
 public record ApplyFormDetailResponse(
+        String formId,
         String title,
         String subTitle,
         List<Question> questions,
@@ -15,6 +16,7 @@ public record ApplyFormDetailResponse(
 ) {
     public static ApplyFormDetailResponse from(ApplyFormDetailServiceResponse response) {
         return ApplyFormDetailResponse.builder()
+                .formId(response.formId())
                 .title(response.title())
                 .subTitle(response.subTitle())
                 .questions(response.questions())

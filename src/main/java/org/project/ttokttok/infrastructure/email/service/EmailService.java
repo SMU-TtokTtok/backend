@@ -36,7 +36,7 @@ public class EmailService {
     private String replyTo;
     private static final String CHARACTERS = "0123456789";
     private static final SecureRandom random = new SecureRandom();
-    private static final String EMAIL_REGEX = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\\\.[A-Za-z]{2,}$";
+    private static final String EMAIL_REGEX = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
 
     // 이메일 발송
     public void sendEmail(EmailRequest emailRequest) {
