@@ -32,6 +32,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.project.ttokttok.domain.applicant.domain.enums.PhaseStatus.PASS;
+import static org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus.ACTIVE;
 import static org.project.ttokttok.domain.clubMember.domain.MemberRole.MEMBER;
 
 @Slf4j
@@ -52,7 +53,7 @@ public class ApplicantAdminService {
                 .orElseThrow(NotClubAdminException::new);
 
         // 2. 가장 최신의 지원 폼 찾기
-        ApplyForm mostRecentApplyForm = applyFormRepository.findTopByClubIdOrderByCreatedAtDesc(club.getId())
+        ApplyForm mostRecentApplyForm = applyFormRepository.findTopByClubIdAndStatusOrderByCreatedAtDesc(club.getId(), ACTIVE)
                 .orElseThrow(ApplyFormNotFoundException::new);
 
         // 3. 활성화된 지원 폼의 ID를 사용해 지원자 페이지 조회
@@ -109,7 +110,7 @@ public class ApplicantAdminService {
                 .orElseThrow(NotClubAdminException::new);
 
         // 2. 가장 최신의 지원 폼 찾기
-        ApplyForm mostRecentApplyForm = applyFormRepository.findTopByClubIdOrderByCreatedAtDesc(club.getId())
+        ApplyForm mostRecentApplyForm = applyFormRepository.findTopByClubIdAndStatusOrderByCreatedAtDesc(club.getId(), ACTIVE)
                 .orElseThrow(ApplyFormNotFoundException::new);
 
         // 3. 지원자 검색
@@ -132,7 +133,7 @@ public class ApplicantAdminService {
                 .orElseThrow(NotClubAdminException::new);
 
         // 2. 가장 최신의 지원 폼 찾기
-        ApplyForm mostRecentApplyForm = applyFormRepository.findTopByClubIdOrderByCreatedAtDesc(club.getId())
+        ApplyForm mostRecentApplyForm = applyFormRepository.findTopByClubIdAndStatusOrderByCreatedAtDesc(club.getId(), ACTIVE)
                 .orElseThrow(ApplyFormNotFoundException::new);
 
         // 3. 합격/불합격 상태에 따른 지원자 목록 조회
@@ -229,7 +230,7 @@ public class ApplicantAdminService {
     }
 
     private ApplyForm findActiveApplyForm(String clubId) {
-        return applyFormRepository.findByClubIdAndStatus(clubId, ApplyFormStatus.ACTIVE)
+        return applyFormRepository.findByClubIdAndStatus(clubId, ACTIVE)
                 .orElseThrow(ActiveApplyFormNotFoundException::new);
     }
 

@@ -10,14 +10,14 @@ VALUES
  NOW(), NOW()),
 
 (gen_random_uuid(), '예전 상명축구부 모집', '함께 안 뛸 선수를 찾습니다', 'INACTIVE',
- '2024-03-01', '2025-03-20', true, 5, 'club-002',
- '[{"questionId":"q3","title":"예에에에전 지원폼","subTitle":"예전 지원폼","questionType":"RADIO","isEssential":true,"content":["공격수","미드필더","수비수","골키퍼"]},{"questionId":"q4","title":"축구 경력","subTitle":"축구 경험에 대해 작성해주세요","questionType":"LONG_ANSWER","isEssential":false,"content":[]}]',
- NOW(), NOW()),
+  '2024-03-01', '2025-03-20', true, 5, 'club-002',
+'[{"questionId":"q3","title":"예에에에전 지원폼","subTitle":"예전 지원폼","questionType":"RADIO","isEssential":true,"content":["공격수","미드필더","수비수","골키퍼"]},{"questionId":"q4","title":"축구 경력","subTitle":"축구 경험에 대해 작성해주세요","questionType":"LONG_ANSWER","isEssential":false,"content":[]}]',
+NOW(), NOW()),
 
 (gen_random_uuid(), '상명축구부 모집', '함께 뛸 선수를 찾습니다', 'ACTIVE',
- '2025-03-01', '2025-03-20', true, 15, 'club-002',
- '[{"questionId":"q3","title":"포지션","subTitle":"선호하는 포지션을 선택해주세요","questionType":"RADIO","isEssential":true,"content":["공격수","미드필더","수비수","골키퍼"]},{"questionId":"q4","title":"축구 경력","subTitle":"축구 경험에 대해 작성해주세요","questionType":"LONG_ANSWER","isEssential":false,"content":[]}]',
- NOW(), NOW()),
+'2025-03-01', '2025-03-20', true, 15, 'club-002',
+'[{"questionId":"q3","title":"포지션","subTitle":"선호하는 포지션을 선택해주세요","questionType":"RADIO","isEssential":true,"content":["공격수","미드필더","수비수","골키퍼"]},{"questionId":"q4","title":"축구 경력","subTitle":"축구 경험에 대해 작성해주세요","questionType":"LONG_ANSWER","isEssential":false,"content":[]}]',
+NOW(), NOW()),
 
 (gen_random_uuid(), '코딩마스터 모집', '프로그래밍 실력을 키워요', 'ACTIVE',
  '2025-03-05', '2025-03-25', false, 12, 'club-003',
