@@ -8,9 +8,12 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ApplyFormRepository extends JpaRepository<ApplyForm, String> {
-    Optional<ApplyForm> findTopByClubIdOrderByCreatedAtDesc(String clubId);
+
+    Optional<ApplyForm> findTopByClubIdAndStatusOrderByCreatedAtDesc(String clubId, ApplyFormStatus status);
 
     List<ApplyForm> findByClubId(String clubId);
 
     Optional<ApplyForm> findByClubIdAndStatus(String clubId, ApplyFormStatus status);
+
+    Optional<ApplyForm> findTopByClubIdOrderByCreatedAtDesc(String clubId);
 }

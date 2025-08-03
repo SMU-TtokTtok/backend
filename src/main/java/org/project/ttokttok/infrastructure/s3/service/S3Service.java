@@ -51,11 +51,20 @@ public class S3Service {
         }
     }
 
-    public void deleteFile(String key) {
+    public void deleteFile(String cloudFrontUrl) {
+        String key = extractKeyFromUrl(cloudFrontUrl);
         s3Client.deleteObject(DeleteObjectRequest.builder()
                 .bucket(bucketName)
                 .key(key)
                 .build());
+    }
+
+    private String extractKeyFromUrl(String url) {
+        // CloudFront URL에서 도메인 부분을 제거하고 키만 추출
+        if (url.startsWith(fileCloudUrl + "/")) {
+            return url.substring(fileCloudUrl.length() + 1);
+        }
+        throw new IllegalArgumentException("Invalid CloudFront URL format");
     }
 
     private void validateFile(MultipartFile file) {
