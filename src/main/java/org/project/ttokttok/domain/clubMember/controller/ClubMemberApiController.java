@@ -82,7 +82,7 @@ public class ClubMemberApiController implements ClubMemberDocs {
         clubMemberService.changeRole(serviceRequest);
 
         return ResponseEntity.ok()
-                .build();
+                .body((Map.of("message", "부원 역할 변경 완료: " + memberId)));
     }
 
     @DeleteMapping("/{clubId}/{memberId}")
@@ -99,7 +99,7 @@ public class ClubMemberApiController implements ClubMemberDocs {
         clubMemberService.deleteMember(serviceRequest);
 
         return ResponseEntity.ok()
-                .build();
+                .body(Map.of("message", "부원 삭제 완료: " + memberId));
     }
 
     @GetMapping("/{clubId}/download")

@@ -149,7 +149,8 @@ public interface ClubMemberDocs {
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
-                    description = "멤버 삭제 성공"
+                    description = "멤버 삭제 성공",
+                    content = @Content(schema = @Schema(implementation = Map.class, example = "{\"message\": \"부원 삭제 완료: UUID\"}"))
             ),
             @ApiResponse(
                     responseCode = "401",
@@ -201,7 +202,8 @@ public interface ClubMemberDocs {
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
-                    description = "역할 변경 성공"
+                    description = "역할 변경 성공",
+                    content = @Content(schema = @Schema(implementation = Map.class, example = "{\"message\": \"부원 역할 변경 완료: UUID\"}"))
             ),
             @ApiResponse(
                     responseCode = "400",
