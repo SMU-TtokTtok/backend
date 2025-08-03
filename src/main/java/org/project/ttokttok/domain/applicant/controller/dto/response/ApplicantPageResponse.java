@@ -9,6 +9,7 @@ import java.util.List;
 
 @Builder
 public record ApplicantPageResponse(
+        boolean hasInterview,
         int currentPage,
         int totalPage,
         int totalCount,
@@ -16,6 +17,7 @@ public record ApplicantPageResponse(
 ) {
     public static ApplicantPageResponse from(ApplicantPageServiceResponse response) {
         return ApplicantPageResponse.builder()
+                .hasInterview(response.hasInterview())
                 .currentPage(response.currentPage())
                 .totalPage(response.totalPage())
                 .totalCount(response.totalCount())

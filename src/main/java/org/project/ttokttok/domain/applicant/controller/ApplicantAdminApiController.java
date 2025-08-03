@@ -3,13 +3,13 @@ package org.project.ttokttok.domain.applicant.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.project.ttokttok.domain.applicant.controller.docs.ApplicantAdminDocs;
+import org.project.ttokttok.domain.applicant.controller.dto.request.ApplicantStatusUpdateRequest;
 import org.project.ttokttok.domain.applicant.controller.dto.request.SendResultMailRequest;
 import org.project.ttokttok.domain.applicant.controller.dto.response.ApplicantDetailResponse;
 import org.project.ttokttok.domain.applicant.controller.dto.response.ApplicantFinalizeResponse;
 import org.project.ttokttok.domain.applicant.controller.dto.response.ApplicantPageResponse;
 import org.project.ttokttok.domain.applicant.controller.enums.Kind;
 import org.project.ttokttok.domain.applicant.controller.enums.Sort;
-import org.project.ttokttok.domain.applicant.domain.enums.PhaseStatus;
 import org.project.ttokttok.domain.applicant.service.ApplicantAdminService;
 import org.project.ttokttok.domain.applicant.service.dto.request.*;
 import org.project.ttokttok.domain.applicant.service.dto.response.ApplicantDetailServiceResponse;
@@ -143,17 +143,17 @@ public class ApplicantAdminApiController implements ApplicantAdminDocs {
     @PatchMapping("/evaluations/{applicantId}")
     public ResponseEntity<Map<String, String>> updateApplicantEvaluation(@AuthUserInfo String username,
                                                                          @PathVariable String applicantId,
-                                                                         @RequestBody PhaseStatus status,
+                                                                         @Valid @RequestBody ApplicantStatusUpdateRequest request,
                                                                          @RequestParam(required = false) Kind kind) {
 
-        StatusUpdateServiceRequest request = StatusUpdateServiceRequest.of(
+        StatusUpdateServiceRequest serviceRequest = StatusUpdateServiceRequest.of(
                 username,
                 applicantId,
-                status,
+                request.status(),
                 kind.name()
         );
 
-        applicantAdminService.updateApplicantStatus(request);
+        applicantAdminService.updateApplicantStatus(serviceRequest);
 
         return ResponseEntity.ok()
                 .body(Map.of("message", "지원자 상태가 성공적으로 업데이트되었습니다."));
