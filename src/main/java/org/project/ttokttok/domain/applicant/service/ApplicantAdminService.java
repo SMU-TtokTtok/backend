@@ -13,7 +13,6 @@ import org.project.ttokttok.domain.applicant.service.dto.response.ApplicantFinal
 import org.project.ttokttok.domain.applicant.service.dto.response.ApplicantPageServiceResponse;
 import org.project.ttokttok.domain.applicant.service.dto.response.MemoResponse;
 import org.project.ttokttok.domain.applyform.domain.ApplyForm;
-import org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus;
 import org.project.ttokttok.domain.applyform.exception.ActiveApplyFormNotFoundException;
 import org.project.ttokttok.domain.applyform.exception.ApplyFormNotFoundException;
 import org.project.ttokttok.domain.applyform.repository.ApplyFormRepository;
@@ -21,7 +20,6 @@ import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.exception.NotClubAdminException;
 import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.domain.clubMember.domain.ClubMember;
-import org.project.ttokttok.domain.clubMember.domain.MemberRole;
 import org.project.ttokttok.domain.clubMember.repository.ClubMemberRepository;
 import org.project.ttokttok.domain.user.repository.UserRepository;
 import org.project.ttokttok.infrastructure.email.service.EmailService;
@@ -57,7 +55,7 @@ public class ApplicantAdminService {
                 .orElseThrow(ApplyFormNotFoundException::new);
 
         // 3. 활성화된 지원 폼의 ID를 사용해 지원자 페이지 조회
-        return ApplicantPageServiceResponse.from(
+        return ApplicantPageServiceResponse.of(
                 applicantRepository.findApplicantsPageWithSortCriteria(
                         request.sortCriteria(),
                         request.isEvaluating(),
@@ -65,7 +63,8 @@ public class ApplicantAdminService {
                         request.size(),
                         mostRecentApplyForm.getId(),
                         request.kind()
-                ).toDto());
+                ).toDto(),
+                mostRecentApplyForm.isHasInterview());
     }
 
     @Transactional(readOnly = true)
@@ -114,7 +113,7 @@ public class ApplicantAdminService {
                 .orElseThrow(ApplyFormNotFoundException::new);
 
         // 3. 지원자 검색
-        return ApplicantPageServiceResponse.from(
+        return ApplicantPageServiceResponse.of(
                 applicantRepository.searchApplicantsByKeyword(
                         request.searchKeyword(),
                         request.sortCriteria(),
@@ -123,7 +122,8 @@ public class ApplicantAdminService {
                         request.size(),
                         mostRecentApplyForm.getId(),
                         request.kind()
-                ).toDto());
+                ).toDto(),
+                mostRecentApplyForm.isHasInterview());
     }
 
     @Transactional(readOnly = true)
@@ -137,14 +137,15 @@ public class ApplicantAdminService {
                 .orElseThrow(ApplyFormNotFoundException::new);
 
         // 3. 합격/불합격 상태에 따른 지원자 목록 조회
-        return ApplicantPageServiceResponse.from(
+        return ApplicantPageServiceResponse.of(
                 applicantRepository.findApplicantsByStatus(
                         request.isPassed(),
                         request.page(),
                         request.size(),
                         mostRecentApplyForm.getId(),
                         request.kind()
-                ).toDto());
+                ).toDto(),
+                mostRecentApplyForm.isHasInterview());
     }
 
     // ok

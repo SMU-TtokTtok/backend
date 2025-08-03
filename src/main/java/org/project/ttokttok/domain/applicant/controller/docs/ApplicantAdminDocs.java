@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.project.ttokttok.domain.applicant.controller.dto.request.ApplicantStatusUpdateRequest;
 import org.project.ttokttok.domain.applicant.controller.dto.request.SendResultMailRequest;
 import org.project.ttokttok.domain.applicant.controller.dto.response.ApplicantDetailResponse;
 import org.project.ttokttok.domain.applicant.controller.dto.response.ApplicantFinalizeResponse;
@@ -300,7 +301,7 @@ public interface ApplicantAdminDocs {
     ResponseEntity<Map<String, String>> updateApplicantEvaluation(
             @Parameter(hidden = true) String username,
             @Parameter(description = "지원자 ID", example = "UUID") String applicantId,
-            @Parameter(description = "변경할 상태", schema = @Schema(implementation = PhaseStatus.class), example = "PASS") PhaseStatus status,
+            @Parameter(description = "변경할 상태", schema = @Schema(implementation = ApplicantStatusUpdateRequest.class), example = "PASS / FAIL / EVALUATING") ApplicantStatusUpdateRequest request,
             @Parameter(description = "서류 / 면접 구분", schema = @Schema(implementation = Kind.class), example = "DOCUMENT / INTERVIEW") Kind kind
     );
 
