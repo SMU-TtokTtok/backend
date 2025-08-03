@@ -379,7 +379,7 @@ public class ApplicantAdminService {
                 if (isDocument)
                     applicant.failDocumentEvaluation();
                 else
-                    applicant.completeInterview();
+                    applicant.failInterview();
                 break;
             case EVALUATING:
                 if (isDocument)
