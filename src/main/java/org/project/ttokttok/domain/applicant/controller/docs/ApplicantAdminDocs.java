@@ -399,6 +399,7 @@ public interface ApplicantAdminDocs {
     ResponseEntity<Map<String, String>> sendEmailToApplicants(
             @Parameter(hidden = true) String username,
             @Parameter(description = "동아리 ID", example = "UUID") String clubId,
-            @Parameter(description = "이메일 발송 요청 정보") SendResultMailRequest request
+            @Parameter(description = "이메일 발송 요청 정보") SendResultMailRequest request,
+            @Parameter(description = "서류 / 면접 구분", schema = @Schema(implementation = Kind.class), example = "DOCUMENT / INTERVIEW") Kind kind
     );
 }

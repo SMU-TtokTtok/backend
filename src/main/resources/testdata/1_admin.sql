@@ -35,4 +35,6 @@ INSERT INTO admins (id, username, password, created_at, updated_at) VALUES
 ('admin-032', 'admin_mechanical', '$2a$10$dummyHashForPassword032', NOW(), NOW()),
 ('admin-033', 'admin_electronics', '$2a$10$dummyHashForPassword033', NOW(), NOW()),
 ('admin-034', 'admin_chemical', '$2a$10$dummyHashForPassword034', NOW(), NOW()),
-('admin-035', 'admin_lion', '$2a$12$yj.3DNVIoq9c3hNlKGWB8.lkNhbAxnfI2AuqujpSc0Y9lfqK2kZVi', NOW(), NOW());
+('admin-035', 'admin_lion', '$2a$12$yj.3DNVIoq9c3hNlKGWB8.lkNhbAxnfI2AuqujpSc0Y9lfqK2kZVi', NOW(), NOW()),
+('admin-036', 'admin_noform', '$2a$12$xPpbUzIR82Nav/K320e3LOERW8ZccPGTWumjR4fqGoxlgdXai2g76', NOW(), NOW());
+

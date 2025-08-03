@@ -147,6 +147,10 @@ public class Applicant extends BaseTimeEntity {
         this.interviewPhase.updateStatus(PhaseStatus.PASS);
     }
 
+    public void failInterview() {
+        this.interviewPhase.updateStatus(PhaseStatus.FAIL);
+    }
+
     // 편의 메서드들
     public boolean isInDocumentPhase() {
         return currentPhase == ApplicantPhase.DOCUMENT;

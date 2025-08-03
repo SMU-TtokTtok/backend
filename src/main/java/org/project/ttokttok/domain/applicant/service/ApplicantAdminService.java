@@ -187,7 +187,8 @@ public class ApplicantAdminService {
     @Transactional
     public void sendResultMailToApplicants(SendResultMailServiceRequest request,
                                            String username,
-                                           String clubId) {
+                                           String clubId,
+                                           String kind) {
         // 1. 동아리 관리자 검증
         validateClubAdmin(username);
 
@@ -379,7 +380,7 @@ public class ApplicantAdminService {
                 if (isDocument)
                     applicant.failDocumentEvaluation();
                 else
-                    applicant.completeInterview();
+                    applicant.failInterview();
                 break;
             case EVALUATING:
                 if (isDocument)
