@@ -181,12 +181,14 @@ public class ApplicantAdminApiController implements ApplicantAdminDocs {
     @PostMapping("/{clubId}/send-email")
     public ResponseEntity<Map<String, String>> sendEmailToApplicants(@AuthUserInfo String username,
                                                                      @PathVariable String clubId,
-                                                                     @Valid @RequestBody SendResultMailRequest request) {
+                                                                     @Valid @RequestBody SendResultMailRequest request,
+                                                                     @RequestParam Kind kind) {
 
         applicantAdminService.sendResultMailToApplicants(
                 request.toServiceRequest(),
                 username,
-                clubId
+                clubId,
+                kind.name()
         );
 
         return ResponseEntity.ok()
