@@ -15,11 +15,8 @@ import org.project.ttokttok.domain.clubMember.service.dto.request.ChangeRoleServ
 import org.project.ttokttok.domain.clubMember.service.dto.request.ClubMemberPageRequest;
 import org.project.ttokttok.domain.clubMember.service.dto.request.ClubMemberSearchRequest;
 import org.project.ttokttok.domain.clubMember.service.dto.request.DeleteMemberServiceRequest;
-import org.project.ttokttok.domain.clubMember.service.dto.response.ClubMemberCountServiceResponse;
-import org.project.ttokttok.domain.clubMember.service.dto.response.ClubMemberSearchServiceResponse;
 import org.project.ttokttok.domain.clubMember.service.dto.response.ExcelServiceResponse;
 import org.project.ttokttok.global.annotation.auth.AuthUserInfo;
-import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -28,7 +25,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import java.util.Map;
 
 @RestController

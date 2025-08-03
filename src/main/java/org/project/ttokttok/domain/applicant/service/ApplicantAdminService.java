@@ -184,6 +184,7 @@ public class ApplicantAdminService {
         return ApplicantFinalizeServiceResponse.of(passedApplicantCount, finalizedApplicantCount);
     }
 
+    @Transactional
     public void sendResultMailToApplicants(SendResultMailServiceRequest request,
                                            String username,
                                            String clubId) {
@@ -306,7 +307,7 @@ public class ApplicantAdminService {
                 .filter(applicant -> {
                     if (isDocument) {
                         return applicant.isInDocumentPhase() && applicant.getDocumentPhase().getStatus() == PASS;
-                    } else if (applicant.isInInterviewPhase()){
+                    } else if (applicant.isInInterviewPhase()) {
                         // 연산자 우선순위 이슈로 괄호 추가
                         return applicant.hasInterviewPhase() && applicant.getInterviewPhase().getStatus() == PASS;
                     }
