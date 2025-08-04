@@ -64,23 +64,21 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
         if (cookies != null) {
             String requestURI = request.getRequestURI();
 
-            // URI에 "/api/admin"이 포함된 경우 관리자용 쿠키에서 추출
             if (requestURI.contains(API_ADMIN.getValue())) {
-                return Arrays.stream(cookies)
-                        .filter(cookie -> ACCESS_TOKEN_COOKIE.getValue().equals(cookie.getName()))
-                        .map(Cookie::getValue)
-                        .findFirst()
-                        .orElse(null);
+                return getTokenFromCookies(cookies, ACCESS_TOKEN_COOKIE.getValue());
             } else if (requestURI.contains(API_USER.getValue())) {
-                // 그렇지 않은 경우 사용자용 쿠키에서 추출
-                return Arrays.stream(cookies)
-                        .filter(cookie -> USER_ACCESS_TOKEN_COOKIE.getValue().equals(cookie.getName()))
-                        .map(Cookie::getValue)
-                        .findFirst()
-                        .orElse(null);
+                return getTokenFromCookies(cookies, USER_ACCESS_TOKEN_COOKIE.getValue());
             }
         }
         return null;
+    }
+
+    private String getTokenFromCookies(Cookie[] cookies, String cookieName) {
+        return Arrays.stream(cookies)
+                .filter(cookie -> cookieName.equals(cookie.getName()))
+                .map(Cookie::getValue)
+                .findFirst()
+                .orElse(null);
     }
 
     // 특정 경로를 필터링하지 않도록 설정
@@ -91,5 +89,4 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
         return Arrays.stream(ALLOW_URLS.getEndPoints()).anyMatch(requestURI::startsWith) ||
                 Arrays.stream(SWAGGER_URLS.getEndPoints()).anyMatch(requestURI::startsWith);
     }
-
 }
