@@ -71,8 +71,8 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
                         .map(Cookie::getValue)
                         .findFirst()
                         .orElse(null);
-            } else if (requestURI.contains(API_USER.getValue())) {
-                // 그렇지 않은 경우 사용자용 쿠키에서 추출
+            } else {
+                // 그 외의 경우 사용자용 쿠키에서 추출 (favorites, clubs 등)
                 return Arrays.stream(cookies)
                         .filter(cookie -> USER_ACCESS_TOKEN_COOKIE.getValue().equals(cookie.getName()))
                         .map(Cookie::getValue)
