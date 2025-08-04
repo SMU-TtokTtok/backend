@@ -29,7 +29,6 @@ import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.UUID;
 
-import static org.project.ttokttok.global.entity.Role.ROLE_ADMIN;
 import static org.project.ttokttok.global.entity.Role.ROLE_USER;
 
 @Slf4j
@@ -190,7 +189,7 @@ public class UserAuthService {
         }
 
         // 5-2. 인증코드 검증
-        verifyEmail(request.email(), request.verificationCode());
+        checkVerificationCode(request.email(), request.verificationCode());
 
         // 5-3. 사용자 조회 및 비밀번호 업데이트
         User user = userRepository.findByEmail(request.email())
@@ -306,6 +305,12 @@ public class UserAuthService {
     private void validateTokenFromCookie(String refreshToken) {
         if (refreshToken == null) {
             throw new InvalidTokenFromCookieException();
+        }
+    }
+
+    private void checkVerificationCode(String email, String code) {
+        if (!emailVerificationRepository.existsByEmailAndCodeAndIsVerifiedTrue(email, code)) {
+            throw new IllegalArgumentException("인증 코드 성공 여부가 존재하지 않습니다.");
         }
     }
 }
