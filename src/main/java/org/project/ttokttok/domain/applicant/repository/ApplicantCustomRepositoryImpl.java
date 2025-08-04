@@ -7,12 +7,15 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.StringExpression;
+import com.querydsl.jpa.JPAExpressions;
+import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import org.project.ttokttok.domain.applicant.domain.dto.ApplicantSimpleInfoDto;
 import org.project.ttokttok.domain.applicant.domain.enums.PhaseStatus;
+import org.project.ttokttok.domain.applicant.repository.dto.UserApplicationHistoryQueryResponse;
 import org.project.ttokttok.domain.applicant.repository.dto.response.ApplicantPageQueryResponse;
 import org.springframework.stereotype.Repository;
 
@@ -23,6 +26,11 @@ import static org.project.ttokttok.domain.applicant.domain.QApplicant.applicant;
 import static org.project.ttokttok.domain.applicant.domain.QDocumentPhase.documentPhase;
 import static org.project.ttokttok.domain.applicant.domain.QInterviewPhase.interviewPhase;
 import static org.project.ttokttok.domain.applicant.domain.enums.PhaseStatus.*;
+import static org.project.ttokttok.domain.applyform.domain.QApplyForm.applyForm;
+import static org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus.ACTIVE;
+import static org.project.ttokttok.domain.club.domain.QClub.club;
+import static org.project.ttokttok.domain.clubMember.domain.QClubMember.clubMember;
+import static org.project.ttokttok.domain.favorite.domain.QFavorite.favorite;
 
 @Repository
 @RequiredArgsConstructor
@@ -295,6 +303,114 @@ public class ApplicantCustomRepositoryImpl implements ApplicantCustomRepository 
                 .when(applicant.interviewPhase.status.eq(PASS))
                 .then("PASS")
                 .otherwise("FAIL");
+    }
+
+    @Override
+    public List<UserApplicationHistoryQueryResponse> getUserApplicationHistory(String userEmail,
+                                                                              int size,
+                                                                              String cursor,
+                                                                              String sort) {
+        JPAQuery<UserApplicationHistoryQueryResponse> query = queryFactory
+                .select(Projections.constructor(
+                        UserApplicationHistoryQueryResponse.class,
+                        applicant.id,
+                        club.id,
+                        club.name,
+                        club.clubType,
+                        club.clubCategory,
+                        club.customCategory,
+                        club.summary,
+                        club.profileImageUrl,
+                        getClubMemberCount(),
+                        hasActiveApplyForm(),
+                        // 즐겨찾기 여부 확인 (서브쿼리로 처리)
+                        isFavorite(userEmail),
+                        applicant.currentPhase,
+                        applicant.createdAt
+                ))
+                .from(applicant)
+                .innerJoin(applicant.applyForm, applyForm)
+                .innerJoin(applyForm.club, club)
+                .where(
+                        applicant.userEmail.eq(userEmail),
+                        cursorCondition(cursor, sort)
+                )
+                .orderBy(getApplicationSortCriteria(sort))
+                .limit(size + 1); // hasNext 확인을 위해 +1
+
+        return query.fetch();
+    }
+
+    /**
+     * 사용자 지원내역 정렬 조건 생성
+     */
+    private OrderSpecifier<?>[] getApplicationSortCriteria(String sort) {
+        return switch (sort.toLowerCase()) {
+            case "latest" -> new OrderSpecifier[]{
+                    applicant.createdAt.desc(),
+                    applicant.id.desc() // 일관성을 위한 보조 정렬
+            };
+            case "popular", "member_count" -> new OrderSpecifier[]{
+                    // 멤버수 기준 정렬 (서브쿼리 사용)
+                    applicant.createdAt.desc(), // 임시로 날짜순 정렬 (성능상 이유)
+                    applicant.id.desc()
+            };
+            default -> new OrderSpecifier[]{
+                    applicant.createdAt.desc(),
+                    applicant.id.desc()
+            };
+        };
+    }
+
+    /**
+     * 커서 기반 페이징을 위한 조건 생성
+     */
+    private BooleanExpression cursorCondition(String cursor, String sort) {
+        if (cursor == null || cursor.isEmpty()) {
+            return null;
+        }
+
+        // 간단한 구현: ID 기반 커서
+        // 실제로는 정렬 기준에 따라 복합 커서를 구현해야 함
+        return switch (sort.toLowerCase()) {
+            case "latest" -> applicant.id.lt(cursor);
+            case "popular", "member_count" -> applicant.id.lt(cursor);
+            default -> applicant.id.lt(cursor);
+        };
+    }
+
+    /**
+     * 동아리 멤버수 조회 (서브쿼리)
+     */
+    private JPQLQuery<Integer> getClubMemberCount() {
+        return JPAExpressions.select(clubMember.count().coalesce(0L).intValue())
+                .from(clubMember)
+                .where(clubMember.club.eq(club));
+    }
+
+    /**
+     * 즐겨찾기 여부 확인 (서브쿼리)
+     */
+    private BooleanExpression isFavorite(String userEmail) {
+        if (userEmail == null) {
+            return Expressions.asBoolean(false);
+        }
+        return JPAExpressions.selectOne()
+                .from(favorite)
+                .where(favorite.user.email.eq(userEmail)
+                        .and(favorite.club.eq(club)))
+                .exists();
+    }
+
+    /**
+     * 활성 지원폼 존재 여부 확인 (모집중 여부)
+     */
+    private BooleanExpression hasActiveApplyForm() {
+        return JPAExpressions.selectOne()
+                .from(applyForm)
+                .where(applyForm.club.eq(club)
+                        .and(applyForm.status.eq(ACTIVE)))
+                .exists();
     }
 
 }

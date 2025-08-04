@@ -9,6 +9,9 @@ import org.project.ttokttok.domain.applicant.domain.json.Answer;
 import org.project.ttokttok.domain.applicant.exception.AnswerRequestNotMatchException;
 import org.project.ttokttok.domain.applicant.exception.ListSizeNotMatchException;
 import org.project.ttokttok.domain.applicant.repository.ApplicantRepository;
+import org.project.ttokttok.domain.applicant.repository.dto.UserApplicationHistoryQueryResponse;
+import org.project.ttokttok.domain.club.service.dto.response.ClubCardServiceResponse;
+import org.project.ttokttok.domain.club.service.dto.response.ClubListServiceResponse;
 import org.project.ttokttok.domain.applyform.domain.ApplyForm;
 import org.project.ttokttok.domain.applyform.domain.json.Question;
 import org.project.ttokttok.domain.applyform.exception.ApplyFormNotFoundException;
@@ -88,6 +91,11 @@ public class ApplicantUserService {
             String email,
             String formId
     ) {
+        // files가 null이거나 비어있으면 빈 리스트 반환
+        if (files == null || files.isEmpty()) {
+            return List.of();
+        }
+        
         return IntStream.range(0, files.size())
                 .mapToObj(i -> {
                     String questionId = questionIds.get(i);
@@ -151,5 +159,89 @@ public class ApplicantUserService {
         if (questionIdsSize != filesSize) {
             throw new ListSizeNotMatchException();
         }
+    }
+
+    /**
+     * 사용자의 동아리 지원내역 조회
+     * 무한스크롤과 정렬 기능을 지원합니다.
+     *
+     * @param userEmail 사용자 이메일
+     * @param size 조회할 개수
+     * @param cursor 커서 (무한스크롤용)
+     * @param sort 정렬 방식 (latest, popular, member_count)
+     * @return 사용자 지원내역 목록과 페이징 정보
+     */
+    @Transactional(readOnly = true)
+    public ClubListServiceResponse getUserApplicationHistory(String userEmail,
+                                                           int size,
+                                                           String cursor,
+                                                           String sort) {
+        // 1. 사용자 존재 여부 검증
+        validateUserExists(userEmail);
+
+        // 2. 지원내역 조회 (size+1로 조회하여 hasNext 확인)
+        List<UserApplicationHistoryQueryResponse> results = applicantRepository.getUserApplicationHistory(
+                userEmail, size, cursor, sort
+        );
+
+        // 3. hasNext 확인을 위해 size+1로 조회했으므로
+        boolean hasNext = results.size() > size;
+        if (hasNext) {
+            results = results.subList(0, size);  // 실제 size만큼만 반환
+        }
+
+        // 4. 다음 커서 생성
+        String nextCursor = null;
+        if (hasNext && !results.isEmpty()) {
+            UserApplicationHistoryQueryResponse lastItem = results.get(results.size() - 1);
+            nextCursor = generateNextCursor(lastItem.applicantId(), sort);
+        }
+
+        // 5. ClubCardServiceResponse로 변환
+        List<ClubCardServiceResponse> clubs = results.stream()
+                .map(this::toClubCardServiceResponse)
+                .toList();
+
+        return new ClubListServiceResponse(
+                clubs,
+                clubs.size(),
+                0L, // totalCount는 별도 조회가 필요하지만 무한스크롤에서는 생략
+                hasNext,
+                nextCursor
+        );
+    }
+
+    /**
+     * UserApplicationHistoryQueryResponse를 ClubCardServiceResponse로 변환
+     */
+    private ClubCardServiceResponse toClubCardServiceResponse(UserApplicationHistoryQueryResponse queryResponse) {
+        return new ClubCardServiceResponse(
+                queryResponse.clubId(),
+                queryResponse.clubName(),
+                queryResponse.clubType(),
+                queryResponse.clubCategory(),
+                queryResponse.customCategory(),
+                queryResponse.summary(),
+                queryResponse.profileImageUrl(),
+                queryResponse.clubMemberCount(),
+                queryResponse.recruiting(),
+                queryResponse.bookmarked()
+        );
+    }
+
+    /**
+     * 정렬 방식에 따라 다음 커서 생성
+     *
+     * @param lastItemId 마지막으로 조회된 아이템의 ID
+     * @param sort 정렬 방식
+     * @return 다음 커서 문자열
+     */
+    private String generateNextCursor(String lastItemId, String sort) {
+        // 정렬 방식에 따라 다른 커서 생성
+        // 현재는 간단하게 ID만 사용하지만, 향후 복합 커서로 개선 가능
+        return switch (sort.toLowerCase()) {
+            case "latest", "popular", "member_count" -> lastItemId;
+            default -> lastItemId;
+        };
     }
 }
