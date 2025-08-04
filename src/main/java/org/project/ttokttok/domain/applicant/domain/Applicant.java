@@ -143,7 +143,7 @@ public class Applicant extends BaseTimeEntity {
     }
 
     // 면접에 따라 합격 설정
-    public void completeInterview() {
+    public void passInterview() {
         this.interviewPhase.updateStatus(PhaseStatus.PASS);
     }
 

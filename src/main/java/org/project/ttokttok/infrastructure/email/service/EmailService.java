@@ -109,16 +109,28 @@ public class EmailService {
     // TODO: 성능이 너무 안 나올 경우, 배치 처리로 변경 필요
     // 동아리 지원 결과 안내 이메일 발송
     public void sendResultMail(List<String> emails, MailFormatRequest request) {
+        int successCount = 0;
+        int failureCount = 0;
+
         for (String email : emails) {
             if (!isValidEmail(email)) {
                 log.warn("유효하지 않은 이메일 주소: {}", email);
+                failureCount++;
                 continue;
             }
 
-            EmailRequest emailRequest = EmailRequest.createResultEmail(email, request.title(), request.body());
-            sendEmailAsync(emailRequest);
-            log.info("지원 결과 안내 이메일 발송 완료: {}", email);
+            try {
+                EmailRequest emailRequest = EmailRequest.createResultEmail(email, request.title(), request.body());
+                sendEmailAsync(emailRequest);
+                successCount++;
+                log.info("지원 결과 안내 이메일 발송 완료: {}", email);
+            } catch (Exception e) {
+                failureCount++;
+                log.error("이메일 발송 실패: {} - {}", email, e.getMessage());
+            }
         }
+
+        log.info("지원 결과 안내 이메일 발송 완료 - 성공: {}건, 실패: {}건", successCount, failureCount);
     }
 
     // 비동기 이메일 발송 - TODO: 추후 리팩토링

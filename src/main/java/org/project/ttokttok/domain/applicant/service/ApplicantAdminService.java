@@ -29,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Collections;
 import java.util.List;
 
+import static org.project.ttokttok.domain.applicant.domain.enums.PhaseStatus.FAIL;
 import static org.project.ttokttok.domain.applicant.domain.enums.PhaseStatus.PASS;
 import static org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus.ACTIVE;
 import static org.project.ttokttok.domain.clubMember.domain.MemberRole.MEMBER;
@@ -197,26 +198,19 @@ public class ApplicantAdminService {
         // 2. 현재 활성화된 지원 폼 조회
         ApplyForm currentApplyForm = findActiveApplyForm(clubId);
 
+        // 서류 또는 면접 단계인지 확인
+        boolean isDocument = Kind.isDocument(kind);
+
         // 3. 지원자 목록 조회
         // 합격자 이메일 목록
-        List<String> passedEmails = filterPassedApplicants(currentApplyForm.getId())
+        List<String> passedEmails = filterApplicantsByStatus(currentApplyForm.getId(), isDocument, PASS)
                 .stream()
                 .map(Applicant::getUserEmail)
                 .toList();
 
         // 불합격자 이메일 목록
-        List<String> failedEmails = applicantRepository.findByApplyFormId(currentApplyForm.getId())
+        List<String> failedEmails = filterApplicantsByStatus(currentApplyForm.getId(), isDocument, FAIL)
                 .stream()
-                .filter(applicant -> {
-                    if (applicant.isInDocumentPhase()) {
-                        return applicant.getDocumentPhase() != null &&
-                                applicant.getDocumentPhase().getStatus() == PhaseStatus.FAIL;
-                    } else if (applicant.isInInterviewPhase()) {
-                        return applicant.hasInterviewPhase() &&
-                                applicant.getInterviewPhase().getStatus() == PhaseStatus.FAIL;
-                    }
-                    return false;
-                })
                 .map(Applicant::getUserEmail)
                 .toList();
 
@@ -239,7 +233,7 @@ public class ApplicantAdminService {
     private int processApplicants(ApplyForm applyForm, Club club, boolean isDocument) {
         // 서류 단계면, 지원자와 연동된 interviewPhase 생성하고 저장.
         // 면접 단계면, 최종적으로 ClubMember 엔티티 생성하고 저장
-        List<Applicant> passedApplicants = filterPassedApplicants(applyForm.getId(), isDocument);
+        List<Applicant> passedApplicants = filterApplicantsByStatus(applyForm.getId(), isDocument, PASS);
 
         if (!passedApplicants.isEmpty() && !isDocument) {
             // 면접 단계인 경우, ClubMember로 변환하여 저장
@@ -275,44 +269,24 @@ public class ApplicantAdminService {
         if (isDocument && applicant.isInDocumentPhase()) {
             PhaseStatus status = applicant.getDocumentPhase() != null ?
                     applicant.getDocumentPhase().getStatus() : null;
-            return (status == PhaseStatus.FAIL) ? 1 : 0;
+            return (status == FAIL) ? 1 : 0;
         } else if (!isDocument && applicant.isInInterviewPhase()) {
             PhaseStatus status = applicant.hasInterviewPhase() ?
                     applicant.getInterviewPhase().getStatus() : null;
-            return (status == PhaseStatus.FAIL) ? 1 : 0;
+            return (status == FAIL) ? 1 : 0;
         }
         return null;
     }
 
-    // 합격한 지원자들만 필터링하는 메서드 (오버로드 버전 추가)
-    private List<Applicant> filterPassedApplicants(String applyFormId) {
-        return applicantRepository.findByApplyFormId(applyFormId)
-                .stream()
-                .filter(applicant -> {
-                    // 서류 합격자
-                    if (applicant.isInDocumentPhase() &&
-                            applicant.getDocumentPhase() != null &&
-                            applicant.getDocumentPhase().getStatus() == PASS) {
-                        return true;
-                    }
-                    // 면접 합격자
-                    return applicant.isInInterviewPhase() &&
-                            applicant.hasInterviewPhase() &&
-                            applicant.getInterviewPhase().getStatus() == PASS;
-                })
-                .toList();
-    }
-
-    // 합격한 지원자들만 필터링하는 메서드
-    private List<Applicant> filterPassedApplicants(String applyFormId, boolean isDocument) {
+    // 상태에 따라 지원자 목록을 필터링하는 메서드
+    private List<Applicant> filterApplicantsByStatus(String applyFormId, boolean isDocument, PhaseStatus status) {
         return applicantRepository.findByApplyFormId(applyFormId)
                 .stream()
                 .filter(applicant -> {
                     if (isDocument) {
-                        return applicant.isInDocumentPhase() && applicant.getDocumentPhase().getStatus() == PASS;
+                        return applicant.isInDocumentPhase() && applicant.getDocumentPhase().getStatus() == status;
                     } else if (applicant.isInInterviewPhase()) {
-                        // 연산자 우선순위 이슈로 괄호 추가
-                        return applicant.hasInterviewPhase() && applicant.getInterviewPhase().getStatus() == PASS;
+                        return applicant.hasInterviewPhase() && applicant.getInterviewPhase().getStatus() == status;
                     }
                     return false;
                 })
@@ -365,31 +339,41 @@ public class ApplicantAdminService {
         }
     }
 
-    // todo: 추후 리팩토링
-    // 사용자 지원 상태를 업데이트하는 로직 메서드
+    // 지원자의 상태를 업데이트하는 메서드
     private void updateApplicantPhaseStatus(Applicant applicant, PhaseStatus status, String kind) {
 
         boolean isDocument = Kind.isDocument(kind);
 
-        switch (status) {
-            case PASS:
-                if (isDocument)
-                    applicant.passDocumentEvaluation(); // 면접 날짜는 나중에 설정
-                else
-                    applicant.completeInterview();
-                break;
-            case FAIL:
-                if (isDocument)
-                    applicant.failDocumentEvaluation();
-                else
-                    applicant.failInterview();
-                break;
-            case EVALUATING:
-                if (isDocument)
-                    applicant.setDocumentEvaluating();
-                else
-                    applicant.setInterviewEvaluating();
-                break;
+        if (status == PASS) {
+            handlePassStatus(applicant, isDocument);
+        } else if (status == PhaseStatus.FAIL) {
+            handleFailStatus(applicant, isDocument);
+        } else if (status == PhaseStatus.EVALUATING) {
+            handleEvaluatingStatus(applicant, isDocument);
+        }
+    }
+
+    private void handlePassStatus(Applicant applicant, boolean isDocument) {
+        if (isDocument) {
+            applicant.passDocumentEvaluation();
+        } else {
+            applicant.passInterview();
+        }
+    }
+
+    private void handleFailStatus(Applicant applicant, boolean isDocument) {
+        if (isDocument) {
+            applicant.failDocumentEvaluation();
+        } else {
+            applicant.failInterview();
+        }
+    }
+
+    private void handleEvaluatingStatus(Applicant applicant, boolean isDocument) {
+        if (isDocument) {
+            applicant.setDocumentEvaluating();
+        } else {
+            applicant.setInterviewEvaluating();
         }
     }
 }
