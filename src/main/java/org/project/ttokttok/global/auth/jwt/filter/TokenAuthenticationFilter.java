@@ -66,7 +66,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 
             if (requestURI.contains(API_ADMIN.getValue())) {
                 return getTokenFromCookies(cookies, ACCESS_TOKEN_COOKIE.getValue());
-            } else if (requestURI.contains(API_USER.getValue())) {
+            } else {
                 return getTokenFromCookies(cookies, USER_ACCESS_TOKEN_COOKIE.getValue());
             }
         }
