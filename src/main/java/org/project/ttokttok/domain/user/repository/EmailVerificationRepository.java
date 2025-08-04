@@ -30,4 +30,6 @@ public interface EmailVerificationRepository extends JpaRepository<EmailVerifica
 
     // 특정 이메일의 인증 완료 여부 확인
     boolean existsByEmailAndIsVerifiedTrue(String email);
+
+    boolean existsByEmailAndCodeAndIsVerifiedTrue(String email, String code);
 }

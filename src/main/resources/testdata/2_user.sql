@@ -50,7 +50,7 @@ INSERT INTO users (id, email, password, name, is_email_verified, terms_agreed, c
 ('user-048', 'student048@sangmyung.kr', '$2a$10$dummyUserPassword048', '목현수', true, true, NOW(), NOW()),
 ('user-049', 'student049@sangmyung.kr', '$2a$10$dummyUserPassword049', '욕지민', true, true, NOW(), NOW()),
 ('user-050', 'student050@sangmyung.kr', '$2a$10$dummyUserPassword050', '값태영', true, true, NOW(), NOW()),
-('user-100', '202221593@sangmyung.kr', '$2a$10$dummyUserPassword050', '엄준식', true, true, NOW(), NOW()),
+('user-100', '202221593@sangmyung.kr', '$2a$12$M82Uj0Duqz1l32gRnYU2aO.lH99LDWeZtkVbe2d8.IdvCbeVBYp.G', '엄준식', true, true, NOW(), NOW()),
 ('user-101', '202021000@sangmyung.kr', '$2a$10$dummyUserPassword050', '가김원', true, true, NOW(), NOW()),
 
 ('user-051', 'user4@example.com', 'password', '최대현', true, true, NOW(), NOW()),
