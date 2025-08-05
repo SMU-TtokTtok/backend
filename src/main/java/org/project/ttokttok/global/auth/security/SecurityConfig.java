@@ -97,7 +97,7 @@ public class SecurityConfig {
                         "http://localhost:8080",
                          // 프론트엔드 배포 url
                          "https://frontend-i22b0zmmb-hyungjuns-projects-3c56c055.vercel.app",
-                         "https://frontend-dd8f04ylb-hyungjuns-projects-3c56c055.vercel.app/",
+                         "https://frontend-dd8f04ylb-hyungjuns-projects-3c56c055.vercel.app",
                          serverUrl
                 )
         );
