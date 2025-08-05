@@ -224,7 +224,7 @@ class AdminAuthApiControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(cookie().exists(ACCESS_TOKEN_COOKIE_NAME))
                 .andExpect(cookie().exists(REFRESH_TOKEN_COOKIE_NAME))
-                .andExpect(jsonPath("$").value("re-issue Success"));
+                .andExpect(jsonPath("$.message").value("토큰이 재발급되었습니다."));
     }
 
     @Test

@@ -128,8 +128,6 @@ public interface AdminAuthDocs {
             )
     })
     ResponseEntity<Map<String, String>> reissue(
-            @Parameter(description = "인증된 관리자 이름", hidden = true)
-            String adminName,
             @Parameter(description = "리프레시 토큰 (쿠키에서 자동 추출)")
             @CookieValue(value = "ttref", required = false) String refreshToken
     );

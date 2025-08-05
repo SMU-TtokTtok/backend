@@ -4,17 +4,16 @@ import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
-import org.project.ttokttok.global.entity.Role;
 import org.project.ttokttok.global.auth.jwt.dto.request.TokenRequest;
 import org.project.ttokttok.global.auth.jwt.dto.response.TokenResponse;
 import org.project.ttokttok.global.auth.jwt.dto.response.UserProfileResponse;
 import org.project.ttokttok.global.auth.jwt.exception.InvalidIssuerException;
+import org.project.ttokttok.global.entity.Role;
 import org.project.ttokttok.infrastructure.redis.service.RefreshTokenRedisService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.UUID;
 
@@ -99,10 +98,11 @@ public class TokenProvider {
     }
 
     // 토큰 재발급
-    public TokenResponse reissueToken(String username, Role role) {
-        TokenRequest request = TokenRequest.of(username, role);
+    public TokenResponse reissueToken(String refreshToken, Role role) {
+        // 토큰 값을 기반으로 사용자 이름 혹은 이메일을 조회
+        String username = refreshTokenRedisService.getUsernameFromRefreshToken(refreshToken);
 
-        return generateToken(request);
+        return generateToken(TokenRequest.of(username, role));
     }
 
     // 토큰에서 사용자 이름을 받아옴.

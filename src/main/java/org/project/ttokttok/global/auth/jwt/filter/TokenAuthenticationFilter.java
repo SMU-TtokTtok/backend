@@ -19,7 +19,6 @@ import java.util.Arrays;
 import static org.project.ttokttok.global.auth.jwt.TokenProperties.ACCESS_TOKEN_COOKIE;
 import static org.project.ttokttok.global.auth.jwt.TokenProperties.USER_ACCESS_TOKEN_COOKIE;
 import static org.project.ttokttok.global.auth.security.RootApiEndpoint.API_ADMIN;
-import static org.project.ttokttok.global.auth.security.RootApiEndpoint.API_USER;
 import static org.project.ttokttok.global.auth.security.SecurityWhiteList.ALLOW_URLS;
 import static org.project.ttokttok.global.auth.security.SecurityWhiteList.SWAGGER_URLS;
 

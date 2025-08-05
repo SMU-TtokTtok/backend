@@ -16,7 +16,6 @@ import org.project.ttokttok.domain.user.service.dto.response.UserReissueServiceR
 import org.project.ttokttok.domain.user.service.dto.response.UserServiceResponse;
 import org.project.ttokttok.global.auth.jwt.dto.request.TokenRequest;
 import org.project.ttokttok.global.auth.jwt.dto.response.TokenResponse;
-import org.project.ttokttok.global.auth.jwt.exception.InvalidRefreshTokenException;
 import org.project.ttokttok.global.auth.jwt.exception.InvalidTokenFromCookieException;
 import org.project.ttokttok.global.auth.jwt.service.TokenProvider;
 import org.project.ttokttok.infrastructure.email.service.EmailService;
@@ -237,11 +236,11 @@ public class UserAuthService {
      *
      * Redis에 저장된 리프레시 토큰을 삭제하고, 액세스 토큰을 블랙리스트에 추가하여 로그아웃을 처리합니다.
      *
-     * @param email 로그아웃할 사용자의 이메일
-     * @param accessToken 로그아웃할 액세스 토큰 (선택적)
+     * @param refreshToken 로그아웃할 리프레시 토큰
+     * @param accessToken 로그아웃할 액세스 토큰
      * @throws IllegalArgumentException 이미 로그아웃된 상태인 경우
      * */
-    public void logout(String email, String accessToken) {
+    public void logout(String refreshToken, String accessToken) {
         // 액세스 토큰의 만료 시간 계산
         long accessTokenExpiryTime = 0;
         if (accessToken != null) {
@@ -258,8 +257,8 @@ public class UserAuthService {
         }
 
         // Redis에서 리프레시 토큰 삭제 및 액세스 토큰 블랙리스트 추가
-        refreshTokenRedisService.logout(email, accessToken, accessTokenExpiryTime);
-        log.info("로그아웃 완료: {}", email);
+        refreshTokenRedisService.logout(refreshToken, accessToken, accessTokenExpiryTime);
+        //log.info("로그아웃 완료: {}", email);
     }
 
     /**
@@ -280,26 +279,14 @@ public class UserAuthService {
                 .getBody();
     }
 
-    public UserReissueServiceResponse reissue(String userEmail, String refreshToken) {
-        reissueValidate(userEmail, refreshToken);
+    @Transactional
+    public UserReissueServiceResponse reissue(String refreshToken) {
+        validateTokenFromCookie(refreshToken);
 
-        TokenResponse tokens = tokenProvider.reissueToken(userEmail, ROLE_USER);
-        Long ttl = refreshTokenRedisService.updateRefreshToken(userEmail, tokens.refreshToken());
+        TokenResponse tokens = tokenProvider.reissueToken(refreshToken, ROLE_USER);
+        Long ttl = refreshTokenRedisService.getRefreshTTL(tokens.refreshToken());
 
         return UserReissueServiceResponse.of(tokens, ttl);
-    }
-
-    private void reissueValidate(String username, String refreshToken) {
-        validateTokenFromCookie(refreshToken);
-        isRefreshSame(username, refreshToken);
-    }
-
-    private void isRefreshSame(String username, String refreshToken) {
-        String targetRefresh = refreshTokenRedisService.getRefreshToken(username);
-
-        if (!refreshToken.equals(targetRefresh)) {
-            throw new InvalidRefreshTokenException();
-        }
     }
 
     private void validateTokenFromCookie(String refreshToken) {

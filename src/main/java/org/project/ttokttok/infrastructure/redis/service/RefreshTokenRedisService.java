@@ -3,14 +3,12 @@ package org.project.ttokttok.infrastructure.redis.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.project.ttokttok.global.auth.jwt.exception.AlreadyLogoutException;
-import org.project.ttokttok.global.auth.jwt.exception.RefreshTokenAlreadyExistsException;
 import org.project.ttokttok.global.auth.jwt.exception.RefreshTokenExpiredException;
 import org.project.ttokttok.global.auth.jwt.exception.RefreshTokenNotFoundException;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.concurrent.TimeUnit;
 
 import static org.project.ttokttok.global.auth.jwt.TokenExpiry.REFRESH_TOKEN_EXPIRY_TIME;
@@ -36,26 +34,26 @@ public class RefreshTokenRedisService {
 //        }
 
         redisTemplate.opsForValue().set(
-                REFRESH_REDIS_KEY + username, // 레디스 키 설정(refresh:사용자명)
-                refreshToken, // 값 (리프레시 토큰)
+                REFRESH_REDIS_KEY + refreshToken, // 레디스 키 설정(refresh:리프레시 토큰)
+                username, // 값 (사용자 명, email)
                 Duration.ofMillis(REFRESH_TOKEN_EXPIRY_TIME.getExpiry())); // TTL(만료 시간 7일)
     }
 
     // 리프레시 토큰 조회
-    public String getRefreshToken(String username) {
-        if (isExistKey(username)) {
-            return redisTemplate.opsForValue().get(REFRESH_REDIS_KEY + username);
+    public String getUsernameFromRefreshToken(String refreshToken) {
+        if (isExistKey(refreshToken)) {
+            return redisTemplate.opsForValue().get(REFRESH_REDIS_KEY + refreshToken);
         }
 
         throw new RefreshTokenNotFoundException();
     }
 
     // 리프레시 토큰 삭제 로직 - 로그아웃 시
-    public void deleteRefreshToken(String username) {
+    public void deleteRefreshToken(String refreshToken) {
         // 추후 필요하다면, 액세스토큰 블랙리스트 로직 추가 고려하기
-        if (isExistKey(username)) {
-            redisTemplate.delete(REFRESH_REDIS_KEY + username);
-            log.info("로그아웃 완료: {}, logout at: {}", username, LocalDateTime.now());
+        if (isExistKey(refreshToken)) {
+            redisTemplate.delete(REFRESH_REDIS_KEY + refreshToken);
+            //log.info("로그아웃 완료: {}, logout at: {}", username, LocalDateTime.now());
             return;
         }
 
@@ -79,10 +77,11 @@ public class RefreshTokenRedisService {
     }
 
     // 로그아웃 시 리프레시 토큰 삭제 + 액세스 토큰 블랙리스트 추가
-    public void logout(String username, String accessToken, long accessTokenExpiryTime) {
+    public void logout(String refreshToken, String accessToken, long accessTokenExpiryTime) {
+
         // 리프레시 토큰 삭제
-        if (isExistKey(username)) {
-            redisTemplate.delete(REFRESH_REDIS_KEY + username);
+        if (isExistKey(refreshToken)) {
+            redisTemplate.delete(REFRESH_REDIS_KEY + refreshToken);
         }
 
         // 액세스 토큰 블랙리스트 추가
@@ -90,19 +89,16 @@ public class RefreshTokenRedisService {
             addAccessTokenToBlacklist(accessToken, accessTokenExpiryTime);
         }
 
-        log.info("로그아웃 완료: {}, logout at: {}", username, LocalDateTime.now());
+        //log.info("로그아웃 완료: {}, logout at: {}", username, LocalDateTime.now());
     }
 
     // 액세스 토큰 리이슈 시 사용
-    public Long updateRefreshToken(String username, String refreshToken) {
+    public Long getRefreshTTL(String refreshToken) {
         // 토큰 남은 시간
-        Long refreshTTL = redisTemplate.getExpire(REFRESH_REDIS_KEY + username, TimeUnit.MILLISECONDS);
+        Long refreshTTL = redisTemplate.getExpire(REFRESH_REDIS_KEY + refreshToken, TimeUnit.MILLISECONDS);
 
         // 토큰 시간 검증
         tokenAliveValidate(refreshTTL);
-
-        // 새로운 리프레시 토큰으로 다시 내려줌.
-        redisTemplate.opsForValue().set(REFRESH_REDIS_KEY + username, refreshToken, Duration.ofMillis(refreshTTL));
 
         return refreshTTL; // 리프레시 토큰의 남은 TTL 반환
     }
@@ -114,7 +110,7 @@ public class RefreshTokenRedisService {
     }
 
     // 유효한 키인지 검증
-    private boolean isExistKey(String username) {
-        return Boolean.TRUE.equals(redisTemplate.hasKey(REFRESH_REDIS_KEY + username));
+    private boolean isExistKey(String refreshToken) {
+        return Boolean.TRUE.equals(redisTemplate.hasKey(REFRESH_REDIS_KEY + refreshToken));
     }
 }

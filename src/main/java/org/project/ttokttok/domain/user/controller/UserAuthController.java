@@ -4,10 +4,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.project.ttokttok.domain.user.controller.dto.request.*;
 import org.project.ttokttok.domain.user.controller.dto.response.ApiResponse;
 import org.project.ttokttok.domain.user.controller.dto.response.LoginResponse;
@@ -16,26 +14,18 @@ import org.project.ttokttok.domain.user.service.UserAuthService;
 import org.project.ttokttok.domain.user.service.dto.response.LoginServiceResponse;
 import org.project.ttokttok.domain.user.service.dto.response.UserReissueServiceResponse;
 import org.project.ttokttok.domain.user.service.dto.response.UserServiceResponse;
-import org.project.ttokttok.global.annotation.auth.AuthUserInfo;
 import org.project.ttokttok.global.util.cookie.CookieUtil;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import org.springframework.web.bind.annotation.*;
+
+import java.time.Duration;
 
 import static org.project.ttokttok.global.auth.jwt.TokenExpiry.ACCESS_TOKEN_EXPIRY_TIME;
 import static org.project.ttokttok.global.auth.jwt.TokenExpiry.REFRESH_TOKEN_EXPIRY_TIME;
-import static org.project.ttokttok.global.auth.jwt.TokenProperties.USER_REFRESH_KEY;
 import static org.project.ttokttok.global.auth.jwt.TokenProperties.USER_ACCESS_TOKEN_COOKIE;
-import static org.project.ttokttok.global.util.cookie.CookieExpiry.TOKEN_COOKIE_EXPIRY_TIME;
-
-import java.time.Duration;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
+import static org.project.ttokttok.global.auth.jwt.TokenProperties.USER_REFRESH_KEY;
 
 @Slf4j
 @Tag(name = "[사용자] 사용자 인증", description = "회원가입, 로그인, 이메일 인증 등 사용자 인증 관련 API")
@@ -53,7 +43,7 @@ public class UserAuthController {
      *
      * @param request 이메일 인증 요청 정보 (이메일 주소 포함)
      * @return 인증코드 발송 결과
-     * */
+     */
     @Operation(
             summary = "이메일 인증코드 발송",
             description = "상명대학교 이메일로 6자리 인증코드를 발송합니다."
@@ -86,7 +76,7 @@ public class UserAuthController {
      *
      * @param request 이메일 인증 검증 요청 정보 (이메일 주소, 인증코드 포함)
      * @return 인증 검증 결과
-     * */
+     */
     @Operation(
             summary = "이메일 인증코드 검증",
             description = "발송된 6자리 인증코드를 검증합니다."
@@ -189,14 +179,14 @@ public class UserAuthController {
         ResponseCookie accessCookie = cookieUtil.createResponseCookie(
                 USER_ACCESS_TOKEN_COOKIE.getValue(),
                 serviceResponse.accessToken(),
-                Duration.ofMillis(TOKEN_COOKIE_EXPIRY_TIME.getExpiry())
+                Duration.ofMillis(ACCESS_TOKEN_EXPIRY_TIME.getExpiry())
         );
 
         // 리프레시 토큰 쿠키 생성 (사용자용)
         ResponseCookie refreshCookie = cookieUtil.createResponseCookie(
                 USER_REFRESH_KEY.getValue(),
                 serviceResponse.refreshToken(),
-                Duration.ofMillis(TOKEN_COOKIE_EXPIRY_TIME.getExpiry())
+                Duration.ofMillis(REFRESH_TOKEN_EXPIRY_TIME.getExpiry())
         );
 
         return ResponseEntity.ok()
@@ -211,8 +201,7 @@ public class UserAuthController {
      * 토큰 재발급 API
      * 리프레시 토큰으로 새로운 액세스 토큰을 발급받습니다.
      *
-     * @param userEmail 인증된 사용자 이메일 (쿠키에서 추출)
-     * @param refreshToken 인증된 사용자 이메일 (쿠키에서 추출)
+     * @param refreshToken 리프레시 토큰 (쿠키에서 추출)
      * @return 로그인 결과 및 토큰 정보
      */
     @Operation(
@@ -229,7 +218,11 @@ public class UserAuthController {
     @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "200",
-                    description = "로그인 성공, 액세스 토큰 쿠키로 반환"
+                    description = "로그인 성공, 액세스 토큰 쿠키로 반환",
+                    content = @io.swagger.v3.oas.annotations.media.Content(
+                            mediaType = "application/json",
+                            schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = LoginResponse.class)
+                    )
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "400",
@@ -245,27 +238,25 @@ public class UserAuthController {
             )
     })
     @PostMapping("/re-issue")
-    public ResponseEntity<ApiResponse<LoginResponse>> reIssue(
-            @Parameter(description = "액세스 토큰에서 추출한 사용자 이메일", hidden = true)
-            @AuthUserInfo String userEmail,
+    public ResponseEntity<ApiResponse<Void>> reIssue(
             @Parameter(description = "쿠키에 포함된 리프레시 토큰", hidden = true)
             @CookieValue(value = "ttref_user", required = false) String refreshToken
     ) {
 
-        UserReissueServiceResponse serviceResponse = userAuthService.reissue(userEmail, refreshToken);
+        UserReissueServiceResponse serviceResponse = userAuthService.reissue(refreshToken);
 
         // 액세스 토큰 쿠키 생성 (사용자용)
         ResponseCookie accessCookie = cookieUtil.createResponseCookie(
                 USER_ACCESS_TOKEN_COOKIE.getValue(),
                 serviceResponse.accessToken(),
-                Duration.ofMillis(TOKEN_COOKIE_EXPIRY_TIME.getExpiry())
+                Duration.ofMillis(ACCESS_TOKEN_EXPIRY_TIME.getExpiry())
         );
 
         // 리프레시 토큰 쿠키 생성 (사용자용)
         ResponseCookie refreshCookie = cookieUtil.createResponseCookie(
                 USER_REFRESH_KEY.getValue(),
                 serviceResponse.refreshToken(),
-                Duration.ofMillis(TOKEN_COOKIE_EXPIRY_TIME.getExpiry())
+                Duration.ofMillis(serviceResponse.ttl())
         );
 
         return ResponseEntity.ok()
@@ -354,8 +345,8 @@ public class UserAuthController {
      * 로그아웃 API
      * 사용자 로그아웃을 처리합니다. 토큰 쿠키가 만료 처리되고 Redis에 저장된 토큰 정보도 삭제됩니다.
      *
-     * @param userEmail 인증된 사용자 이메일
-     * @param request HTTP 요청 객체 (쿠키 추출용)
+     * @param pureRefreshToken 리프레시 토큰 (쿠키에서 추출)
+     * @param pureAccessToken  액세스 토큰 (쿠키에서 추출)
      * @return 로그아웃 결과
      */
     @Operation(
@@ -389,23 +380,24 @@ public class UserAuthController {
             )
     })
     @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<Void>> logout(@AuthUserInfo String userEmail, HttpServletRequest request) {
-        // 쿠키에서 액세스 토큰 추출 (사용자용)
-        String accessToken = null;
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if (USER_ACCESS_TOKEN_COOKIE.getValue().equals(cookie.getName())) {
-                    accessToken = cookie.getValue();
-                    log.info("로그아웃 - 액세스 토큰 추출: {}", accessToken);
-                    break;
-                }
-            }
-        } else {
-            log.warn("로그아웃 - 쿠키가 없습니다.");
-        }
+    public ResponseEntity<ApiResponse<Void>> logout(@CookieValue(value = "ttref_user", required = false) String pureRefreshToken,
+                                                    @CookieValue(value = "ttac_user", required = false) String pureAccessToken) {
+//        // 쿠키에서 액세스 토큰 추출 (사용자용)
+//        String accessToken = null;
+//        Cookie[] cookies = request.getCookies();
+//        if (cookies != null) {
+//            for (Cookie cookie : cookies) {
+//                if (USER_ACCESS_TOKEN_COOKIE.getValue().equals(cookie.getName())) {
+//                    accessToken = cookie.getValue();
+//                    log.info("로그아웃 - 액세스 토큰 추출: {}", accessToken);
+//                    break;
+//                }
+//            }
+//        } else {
+//            log.warn("로그아웃 - 쿠키가 없습니다.");
+//        }
 
-        userAuthService.logout(userEmail, accessToken);
+        userAuthService.logout(pureRefreshToken, pureAccessToken);
 
         // 사용자용 쿠키 모두 만료시키기
         ResponseCookie[] expiredCookies = cookieUtil.expireUserTokenCookies();

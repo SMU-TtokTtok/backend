@@ -92,9 +92,11 @@ public class SecurityConfig {
         //final String swaggerUrl = serverUrl + "/swagger-ui/index.html";
 
         config.setAllowedOriginPatterns(
-                //todo: 나중에 프론트 배포 링크로 바꿀 것
+
                 List.of("http://localhost:3000",
                         "http://localhost:8080",
+                         // 프론트엔드 배포 url
+                         "https://frontend-i22b0zmmb-hyungjuns-projects-3c56c055.vercel.app",
                          serverUrl
                 )
         );
