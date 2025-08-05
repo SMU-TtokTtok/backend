@@ -15,6 +15,7 @@ import org.project.ttokttok.domain.clubMember.repository.dto.ClubMemberPageQuery
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Objects;
 
 import static org.project.ttokttok.domain.clubMember.domain.MemberRole.*;
 import static org.project.ttokttok.domain.clubMember.domain.QClubMember.clubMember;
@@ -62,10 +63,10 @@ public class ClubMemberCustomRepositoryImpl implements ClubMemberCustomRepositor
 
         return ClubMemberCountQueryResponse.builder()
                 .totalCount((int) getTotalCount(clubId))
-                .firstGradeCount(data.get(0, Long.class).intValue())
-                .secondGradeCount(data.get(1, Long.class).intValue())
-                .thirdGradeCount(data.get(2, Long.class).intValue())
-                .fourthGradeCount(data.get(3, Long.class).intValue())
+                .firstGradeCount(data.get(0, Long.class) != null ? data.get(0, Long.class).intValue() : 0)
+                .secondGradeCount(data.get(1, Long.class) != null ? data.get(1, Long.class).intValue() : 0)
+                .thirdGradeCount(data.get(2, Long.class) != null ? data.get(2, Long.class).intValue() : 0)
+                .fourthGradeCount(data.get(3, Long.class) != null ? data.get(3, Long.class).intValue() : 0)
                 .build();
     }
 
