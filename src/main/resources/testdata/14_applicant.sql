@@ -191,4 +191,20 @@ VALUES
 
 ('applicant-040', 'user40@example.com', '오지훈', 21, '체육학과', 'applicant40@gmail.com', '010-4006-3456', 'ENROLLED',
  'THIRD_GRADE', 'MALE', 'DOCUMENT',
- (SELECT id FROM applyforms WHERE club_id = 'club-002' AND status = 'ACTIVE' LIMIT 1), NOW(), NOW());
+ (SELECT id FROM applyforms WHERE club_id = 'club-002' AND status = 'ACTIVE' LIMIT 1), NOW(), NOW()),
+
+-- 테스트 사용자(test@sangmyung.kr)의 지원 내역 추가
+('test-applicant-001', 'test@sangmyung.kr', '테스트 사용자', 22, '컴퓨터공학과', 'test@sangmyung.kr', '010-1234-5678',
+ 'ENROLLED', 'THIRD_GRADE', 'MALE', 'DOCUMENT',
+ (SELECT id FROM applyforms WHERE club_id = 'club-035' AND status = 'ACTIVE' LIMIT 1),
+ '2024-08-04 10:00:00', '2024-08-04 10:00:00'),
+
+('test-applicant-002', 'test@sangmyung.kr', '테스트 사용자', 22, '컴퓨터공학과', 'test@sangmyung.kr', '010-1234-5678',
+ 'ENROLLED', 'THIRD_GRADE', 'MALE', 'DOCUMENT',
+ (SELECT id FROM applyforms WHERE club_id = 'club-034' AND status = 'ACTIVE' LIMIT 1),
+ '2024-08-03 15:30:00', '2024-08-03 15:30:00'),
+
+('test-applicant-003', 'test@sangmyung.kr', '테스트 사용자', 22, '컴퓨터공학과', 'test@sangmyung.kr', '010-1234-5678',
+ 'ENROLLED', 'THIRD_GRADE', 'MALE', 'DOCUMENT',
+ (SELECT id FROM applyforms WHERE club_id = 'club-033' AND status = 'ACTIVE' LIMIT 1),
+ '2024-08-02 09:15:00', '2024-08-02 09:15:00');

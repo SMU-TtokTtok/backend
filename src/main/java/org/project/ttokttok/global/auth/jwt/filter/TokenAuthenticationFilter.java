@@ -86,6 +86,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
         String requestURI = request.getRequestURI();
 
         return Arrays.stream(ALLOW_URLS.getEndPoints()).anyMatch(requestURI::startsWith) ||
-                Arrays.stream(SWAGGER_URLS.getEndPoints()).anyMatch(requestURI::startsWith);
+                Arrays.stream(SWAGGER_URLS.getEndPoints()).anyMatch(requestURI::startsWith) ||
+                requestURI.startsWith("/api/clubs/"); // 동아리 조회 API는 JWT 필터 제외
     }
 }
