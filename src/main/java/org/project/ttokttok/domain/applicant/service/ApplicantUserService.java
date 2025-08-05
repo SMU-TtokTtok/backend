@@ -47,10 +47,13 @@ public class ApplicantUserService {
                         List<MultipartFile> files,
                         String clubId) {
 
-        // 1. questionIds와 files의 유효성 검사
+        // 1. 중복 지원 검증
+        validateApplicantExists(email, clubId);
+
+        // 2. questionIds와 files의 유효성 검사
         validateQuestionIdsAndFiles(questionIds, files);
 
-        // 2. 타겟 사용자 검증
+        // 3. 타겟 사용자 검증
         validateUserExists(email);
 
         ApplyForm form = applyFormRepository.findByClubIdAndStatus(clubId, ACTIVE)
@@ -92,7 +95,6 @@ public class ApplicantUserService {
         if (applicantRepository.existsByUserEmailAndApplyFormId(email, formId)) {
             throw new AlreadyApplicantExistsException();
         }
-    }
 
     private List<Answer> getFileAnswers(
             List<String> questionIds,
