@@ -137,7 +137,7 @@ class AdminAuthServiceTest {
         String nullRefreshToken = null;
 
         // When & Then
-        assertThatThrownBy(() -> adminAuthService.reissue(username, nullRefreshToken))
+        assertThatThrownBy(() -> adminAuthService.reissue(nullRefreshToken))
                 .isInstanceOf(InvalidTokenFromCookieException.class);
     }
 
@@ -149,11 +149,11 @@ class AdminAuthServiceTest {
         String refreshToken = "some-token";
 
         // When
-        when(refreshTokenRedisService.getRefreshToken(username))
+        when(refreshTokenRedisService.getUsernameFromRefreshToken(username))
                 .thenThrow(new RefreshTokenNotFoundException());
 
         // Then
-        assertThatThrownBy(() -> adminAuthService.reissue(username, refreshToken))
+        assertThatThrownBy(() -> adminAuthService.reissue(refreshToken))
                 .isInstanceOf(RefreshTokenNotFoundException.class);
     }
 
@@ -166,11 +166,11 @@ class AdminAuthServiceTest {
         String storedToken = "different-token";
 
         // When
-        when(refreshTokenRedisService.getRefreshToken(username))
+        when(refreshTokenRedisService.getUsernameFromRefreshToken(username))
                 .thenReturn(storedToken);
 
         // Then
-        assertThatThrownBy(() -> adminAuthService.reissue(username, requestToken))
+        assertThatThrownBy(() -> adminAuthService.reissue(requestToken))
                 .isInstanceOf(InvalidRefreshTokenException.class);
     }
 
@@ -189,16 +189,16 @@ class AdminAuthServiceTest {
         TokenResponse mockTokenResponse = new TokenResponse(newAccessToken, newRefreshToken);
 
         // Redis에서 동일한 refreshToken 존재함
-        when(refreshTokenRedisService.getRefreshToken(username)).thenReturn(refreshToken);
+        when(refreshTokenRedisService.getUsernameFromRefreshToken(username)).thenReturn(refreshToken);
 
         // 토큰 재발급
         when(tokenProvider.reissueToken(username, Role.ROLE_ADMIN)).thenReturn(mockTokenResponse);
 
         // Redis TTL 갱신
-        when(refreshTokenRedisService.updateRefreshToken(username, newRefreshToken)).thenReturn(mockTtl);
+        when(refreshTokenRedisService.getRefreshTTL(newRefreshToken)).thenReturn(mockTtl);
 
         // when
-        ReissueServiceResponse result = adminAuthService.reissue(username, refreshToken);
+        ReissueServiceResponse result = adminAuthService.reissue(refreshToken);
 
         // then
         assertNotNull(result);
@@ -207,8 +207,8 @@ class AdminAuthServiceTest {
         assertEquals(mockTtl, result.refreshTTL());
 
         // verify 호출 순서까지 확인
-        verify(refreshTokenRedisService).getRefreshToken(username);
+        verify(refreshTokenRedisService).getUsernameFromRefreshToken(username);
         verify(tokenProvider).reissueToken(username, Role.ROLE_ADMIN);
-        verify(refreshTokenRedisService).updateRefreshToken(username, newRefreshToken);
+        verify(refreshTokenRedisService).getRefreshTTL(newRefreshToken);
     }
 }

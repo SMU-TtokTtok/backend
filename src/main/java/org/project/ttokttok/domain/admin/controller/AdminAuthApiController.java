@@ -20,9 +20,10 @@ import org.springframework.web.bind.annotation.*;
 import java.time.Duration;
 import java.util.Map;
 
+import static org.project.ttokttok.global.auth.jwt.TokenExpiry.ACCESS_TOKEN_EXPIRY_TIME;
+import static org.project.ttokttok.global.auth.jwt.TokenExpiry.REFRESH_TOKEN_EXPIRY_TIME;
 import static org.project.ttokttok.global.auth.jwt.TokenProperties.ACCESS_TOKEN_COOKIE;
 import static org.project.ttokttok.global.auth.jwt.TokenProperties.REFRESH_KEY;
-import static org.project.ttokttok.global.util.cookie.CookieExpiry.TOKEN_COOKIE_EXPIRY_TIME;
 
 @RestController
 @RequiredArgsConstructor
@@ -40,14 +41,14 @@ public class AdminAuthApiController implements AdminAuthDocs {
         ResponseCookie accessCookie = cookieUtil.createResponseCookie(
                 ACCESS_TOKEN_COOKIE.getValue(),
                 response.accessToken(),
-                Duration.ofMillis(TOKEN_COOKIE_EXPIRY_TIME.getExpiry())
+                Duration.ofMillis(ACCESS_TOKEN_EXPIRY_TIME.getExpiry())
         );
 
         // 리프레시 토큰 쿠키 생성
         ResponseCookie refreshCookie = cookieUtil.createResponseCookie(
                 REFRESH_KEY.getValue(),
                 response.refreshToken(),
-                Duration.ofMillis(TOKEN_COOKIE_EXPIRY_TIME.getExpiry())
+                Duration.ofMillis(REFRESH_TOKEN_EXPIRY_TIME.getExpiry())
         );
 
         return ResponseEntity.ok()
@@ -75,17 +76,16 @@ public class AdminAuthApiController implements AdminAuthDocs {
 
     @PostMapping("/re-issue")
     public ResponseEntity<Map<String, String>> reissue(
-            @AuthUserInfo String adminName,
             @CookieValue(value = "ttref", required = false) String refreshToken) {
 
-        ReissueServiceResponse response = adminAuthService.reissue(adminName, refreshToken);
+        ReissueServiceResponse response = adminAuthService.reissue(refreshToken);
 
         // 새 액세스 토큰 쿠키 생성
         ResponseCookie accessCookie = cookieUtil.createResponseCookie(
                 ACCESS_TOKEN_COOKIE.getValue(),
                 response.accessToken(),
                 // 일단, 리프레시 토큰 만료와 함께 사라지도록 설정.
-                Duration.ofMillis(response.refreshTTL())
+                Duration.ofMillis(ACCESS_TOKEN_EXPIRY_TIME.getExpiry())
         );
 
         // 새 리프레시 토큰 쿠키 생성 (남은 TTL 사용)

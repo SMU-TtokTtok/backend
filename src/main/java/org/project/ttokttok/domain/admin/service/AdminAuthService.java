@@ -12,7 +12,6 @@ import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.global.auth.jwt.dto.request.TokenRequest;
 import org.project.ttokttok.global.auth.jwt.dto.response.TokenResponse;
-import org.project.ttokttok.global.auth.jwt.exception.InvalidRefreshTokenException;
 import org.project.ttokttok.global.auth.jwt.exception.InvalidTokenFromCookieException;
 import org.project.ttokttok.infrastructure.redis.service.RefreshTokenRedisService;
 import org.project.ttokttok.global.auth.jwt.service.TokenProvider;
@@ -53,11 +52,11 @@ public class AdminAuthService {
     }
 
     @Transactional
-    public ReissueServiceResponse reissue(String username, String refreshToken) {
-        reissueValidate(username, refreshToken);
+    public ReissueServiceResponse reissue(String refreshToken) {
+        validateTokenFromCookie(refreshToken);
 
-        TokenResponse tokens = tokenProvider.reissueToken(username, ROLE_ADMIN);
-        Long ttl = refreshTokenRedisService.updateRefreshToken(username, tokens.refreshToken());
+        TokenResponse tokens = tokenProvider.reissueToken(refreshToken, ROLE_ADMIN);
+        Long ttl = refreshTokenRedisService.getRefreshTTL(tokens.refreshToken());
 
         return ReissueServiceResponse.of(tokens, ttl);
     }
@@ -70,19 +69,6 @@ public class AdminAuthService {
                 .getId();
     }
 
-    private void reissueValidate(String username, String refreshToken) {
-        validateTokenFromCookie(refreshToken);
-        isRefreshSame(username, refreshToken);
-    }
-
-    private void isRefreshSame(String username, String refreshToken) {
-        String targetRefresh = refreshTokenRedisService.getRefreshToken(username);
-
-        if (!refreshToken.equals(targetRefresh)) {
-            throw new InvalidRefreshTokenException();
-        }
-    }
-
     private void validateTokenFromCookie(String refreshToken) {
         if (refreshToken == null) {
             throw new InvalidTokenFromCookieException();
@@ -90,7 +76,10 @@ public class AdminAuthService {
     }
 
     private TokenResponse getTokenResponse(String username) {
-        TokenResponse tokenResponse = tokenProvider.generateToken(TokenRequest.of(username, ROLE_ADMIN));
+        TokenResponse tokenResponse = tokenProvider.generateToken(
+                TokenRequest.of(username, ROLE_ADMIN)
+        );
+
         refreshTokenRedisService.save(username, tokenResponse.refreshToken());
 
         return tokenResponse;
