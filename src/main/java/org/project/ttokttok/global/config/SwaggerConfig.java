@@ -23,17 +23,19 @@ public class SwaggerConfig {
     public OpenAPI boardAPI() {
         Info info = createSwaggerInfo();
 
-        // Bearer Token 인증 설정 (관리자 및 사용자 공통)
-        SecurityScheme bearerAuth = new SecurityScheme()
+        // Access Token 인증 설정 (일반 API 호출용)
+        SecurityScheme accessTokenAuth = new SecurityScheme()
                 .type(SecurityScheme.Type.HTTP)
                 .scheme("bearer")
                 .bearerFormat("JWT")
                 .description("""
-                        로그인 후 받은 AccessToken을 입력하세요. (Bearer 접두사는 자동 추가됩니다)
+                        <b>일반 API 호출용 AccessToken</b>을 입력하세요. (Bearer 접두사는 자동 추가됩니다)
                         <br/><br/>
+                        <b>⏰ 토큰 유효시간:</b> 30분<br/>
+                        <br/>
                         <b>📋 사용 방법:</b><br/>
                         <b>1️⃣</b> 관리자 테스트: /api/admin/auth/login 호출 → accessToken 복사 → 여기에 입력<br/>
-                        <b>2️⃣</b> 사용자 테스트: /api/auth/login 호출 → accessToken 복사 → 여기에 입력<br/>
+                        <b>2️⃣</b> 사용자 테스트: /api/user/auth/login 호출 → accessToken 복사 → 여기에 입력<br/>
                         <b>3️⃣</b> 역할 전환: 다른 계정으로 로그인 → 새 토큰으로 교체<br/>
                         <br/>
                         <b>⚠️ 주의:</b> 토큰에 따라 접근 가능한 API가 다릅니다.<br/>
@@ -41,9 +43,39 @@ public class SwaggerConfig {
                         • 사용자 토큰: /api/admin/** 접근 불가 (403 Forbidden)
                         """);
 
+        // Refresh Token 인증 설정 (토큰 재발급용)
+        SecurityScheme refreshTokenAuth = new SecurityScheme()
+                .type(SecurityScheme.Type.HTTP)
+                .scheme("bearer")
+                .bearerFormat("JWT")
+                .description("""
+                        <b>토큰 재발급용 RefreshToken</b>을 입력하세요. (Bearer 접두사는 자동 추가됩니다)
+                        <br/><br/>
+                        <b>⏰ 토큰 유효시간:</b> 7일<br/>
+                        <br/>
+                        <b>📋 사용 방법:</b><br/>
+                        <b>1️⃣</b> 로그인 API 호출 후 응답에서 <code>refreshToken</code> 값을 복사<br/>
+                        <b>2️⃣</b> 여기에 refreshToken 값만 입력 (Bearer 접두사 제외)<br/>
+                        <b>3️⃣</b> /api/user/auth/re-issue 또는 /api/admin/auth/re-issue API 호출<br/>
+                        <br/>
+                        <b>⚠️ 중요:</b> 이 토큰은 <b>오직 토큰 재발급 API에만</b> 사용됩니다.<br/>
+                        • 일반 API 호출에는 사용할 수 없습니다<br/>
+                        • 평상시에는 비워두고 제발제발제발 accessToken이 만료되었을 때만 사용하세요<br/>
+                        <br/>
+                        <b>🔄 토큰 재발급 과정:</b><br/>
+                        <b>1️⃣</b> accessTokenAuth 로그아웃<br/>
+                        <b>2️⃣</b> refreshTokenAuth에 refreshToken 입력<br/>
+                        <b>3️⃣</b> re-issue API 호출<br/>
+                        <b>4️⃣</b> 응답에서 새로운 accessToken 복사<br/>
+                        <b>5️⃣</b> refreshTokenAuth 로그아웃<br/>
+                        <b>6️⃣</b> accessTokenAuth에 새 accessToken 입력
+                        """);
+
         // 보안 요구사항 설정
-        SecurityRequirement securityRequirement = new SecurityRequirement()
-                .addList("bearerAuth");
+        SecurityRequirement accessTokenRequirement = new SecurityRequirement()
+                .addList("accessTokenAuth");
+        SecurityRequirement refreshTokenRequirement = new SecurityRequirement()
+                .addList("refreshTokenAuth");
 
         // 환경별 서버 설정
         List<Server> servers = createServersByEnvironment();
@@ -52,8 +84,9 @@ public class SwaggerConfig {
                 .info(info)
                 .servers(servers)
                 .components(new Components()
-                        .addSecuritySchemes("bearerAuth", bearerAuth))
-                .security(Collections.singletonList(securityRequirement));
+                        .addSecuritySchemes("accessTokenAuth", accessTokenAuth)
+                        .addSecuritySchemes("refreshTokenAuth", refreshTokenAuth))
+                .security(List.of(accessTokenRequirement, refreshTokenRequirement));
     }
 
     private List<Server> createServersByEnvironment() {
