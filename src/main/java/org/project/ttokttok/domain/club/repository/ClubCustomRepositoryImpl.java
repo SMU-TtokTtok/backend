@@ -176,8 +176,7 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
                     memberCountSubQuery, favoriteCountSubQuery);
             
             // 인기도순 정렬: 인기도 점수 내림차순, ID 내림차순
-            // 중복 방지를 위해 ID를 주요 정렬 기준으로 사용
-            query.orderBy(club.id.desc());
+            query.orderBy(popularityScore.desc(), club.id.desc());
         } else if ("member_count".equals(sort)) {
             // 멤버많은순: 서브쿼리를 사용하여 JOIN 복잡성 제거
             JPQLQuery<Long> memberCountSubQuery = JPAExpressions
@@ -186,8 +185,8 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
                     .where(clubMember.club.id.eq(club.id));
             
             // 멤버많은순 정렬: 멤버 수 내림차순, ID 내림차순
-            // 중복 방지를 위해 ID를 주요 정렬 기준으로 사용
-            query.orderBy(club.id.desc());
+            NumberExpression<Integer> memberCountExpression = Expressions.numberTemplate(Integer.class, "({0})", memberCountSubQuery);
+            query.orderBy(memberCountExpression.desc(), club.id.desc());
         } else {
             // 최신순 정렬: 생성일 내림차순, ID 내림차순
             query.orderBy(club.createdAt.desc(), club.id.desc());
@@ -353,11 +352,12 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
                 );
 
         if ("popular".equals(sort)) {
-            // 인기도순 정렬: 중복 방지를 위해 ID 기반 정렬로 변경
-            query.orderBy(club.id.desc());
+            // 인기도순 정렬: 인기도 점수 내림차순, ID 내림차순
+            query.orderBy(popularityScore.desc(), club.id.desc());
         } else if ("member_count".equals(sort)) {
-            // 멤버많은순 정렬: 중복 방지를 위해 ID 기반 정렬로 변경
-            query.orderBy(club.id.desc());
+            // 멤버많은순 정렬: 멤버 수 내림차순, ID 내림차순
+            NumberExpression<Integer> memberCountExpression = Expressions.numberTemplate(Integer.class, "({0})", memberCountSubQuery);
+            query.orderBy(memberCountExpression.desc(), club.id.desc());
         } else { // "latest"
             query.orderBy(club.createdAt.desc(), club.id.desc());
         }

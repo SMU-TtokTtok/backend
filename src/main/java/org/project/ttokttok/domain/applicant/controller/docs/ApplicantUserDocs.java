@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.project.ttokttok.domain.applicant.controller.dto.request.ApplyFormRequest;
+import org.project.ttokttok.domain.club.controller.dto.response.ClubListResponse;
 import org.project.ttokttok.global.exception.dto.ErrorResponse;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -128,5 +129,71 @@ public interface ApplicantUserDocs {
                     description = "파일 응답 형식의 질문에 대한 파일 리스트"
             )
             List<MultipartFile> files
+    );
+
+    @Operation(
+            summary = "사용자 동아리 지원내역 조회",
+            description = """
+                    사용자가 지원한 동아리 목록을 조회합니다.
+                    
+                    **기능**:
+                    - 무한스크롤 지원 (cursor 기반 페이징)
+                    - 정렬 기능 (최신순, 인기도순, 멤버많은순)
+                    - 카드 리스트 형태 응답
+                    
+                    **정렬 옵션**:
+                    - `latest`: 최신 지원순 (기본값)
+                    - `popular`: 인기도순 (멤버수 기준)
+                    - `member_count`: 멤버많은순
+                    
+                    **무한스크롤**:
+                    - 첫 요청: cursor 없이 요청
+                    - 다음 요청: 응답의 nextCursor 값을 사용
+                    """
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "지원내역 조회 성공",
+                            content = @Content(schema = @Schema(implementation = ClubListResponse.class))
+                    ),
+                    @ApiResponse(
+                            responseCode = "401",
+                            description = "인증되지 않은 사용자",
+                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "사용자를 찾을 수 없음",
+                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    ),
+                    @ApiResponse(
+                            responseCode = "500",
+                            description = "서버 오류",
+                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    )
+            })
+    ResponseEntity<ClubListResponse> getUserApplicationHistory(
+            @Parameter(hidden = true)
+            String email,
+
+            @Parameter(
+                    description = "조회할 개수",
+                    example = "20"
+            )
+            int size,
+
+            @Parameter(
+                    description = "커서 (무한스크롤용, 첫 요청시에는 생략)"
+            )
+            String cursor,
+
+            @Parameter(
+                    description = "정렬 방식",
+                    example = "latest",
+                    schema = @Schema(allowableValues = {"latest", "popular", "member_count"})
+            )
+            String sort
     );
 }
