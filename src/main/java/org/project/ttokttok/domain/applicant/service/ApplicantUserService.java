@@ -95,6 +95,7 @@ public class ApplicantUserService {
         if (applicantRepository.existsByUserEmailAndApplyFormId(email, formId)) {
             throw new AlreadyApplicantExistsException();
         }
+    }
 
     private List<Answer> getFileAnswers(
             List<String> questionIds,

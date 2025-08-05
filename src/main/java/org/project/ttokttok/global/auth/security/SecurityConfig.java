@@ -93,14 +93,15 @@ public class SecurityConfig {
 
         config.setAllowedOriginPatterns(
 
-                List.of("http://localhost:3000",
-                        "http://localhost:8080",
-                         // 프론트엔드 배포 url - production 환경 등
-                         "https://frontend-i22b0zmmb-hyungjuns-projects-3c56c055.vercel.app",
-                         "https://frontend-dd8f04ylb-hyungjuns-projects-3c56c055.vercel.app",
-                         "https://frontend-snowy-nu-45.vercel.app",
-                         serverUrl
-                )
+//                List.of("http://localhost:3000",
+//                        "http://localhost:8080",
+//                         // 프론트엔드 배포 url - production 환경 등
+//                         "https://frontend-i22b0zmmb-hyungjuns-projects-3c56c055.vercel.app",
+//                         "https://frontend-dd8f04ylb-hyungjuns-projects-3c56c055.vercel.app",
+//                         "https://frontend-snowy-nu-45.vercel.app",
+//                         serverUrl
+//                )
+                List.of("*") // 모든 오리진 허용 (테스트용)
         );
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")); //허용 HTTP 메서드
         config.setAllowCredentials(true); // 쿠키 등 허용 설정
