@@ -16,4 +16,6 @@ public interface ApplyFormRepository extends JpaRepository<ApplyForm, String> {
     Optional<ApplyForm> findByClubIdAndStatus(String clubId, ApplyFormStatus status);
 
     Optional<ApplyForm> findTopByClubIdOrderByCreatedAtDesc(String clubId);
+
+    boolean existsByClubIdAndStatus(String clubId, ApplyFormStatus applyFormStatus);
 }

@@ -101,8 +101,9 @@ public class TokenProvider {
     public TokenResponse reissueToken(String refreshToken, Role role) {
         // 토큰 값을 기반으로 사용자 이름 혹은 이메일을 조회
         String username = refreshTokenRedisService.getUsernameFromRefreshToken(refreshToken);
+        String accessToken = generateAccessToken(username, role);
 
-        return generateToken(TokenRequest.of(username, role));
+        return TokenResponse.of(accessToken, refreshToken);
     }
 
     // 토큰에서 사용자 이름을 받아옴.

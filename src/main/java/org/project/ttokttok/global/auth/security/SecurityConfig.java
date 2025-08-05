@@ -95,8 +95,10 @@ public class SecurityConfig {
 
                 List.of("http://localhost:3000",
                         "http://localhost:8080",
-                         // 프론트엔드 배포 url
+                         // 프론트엔드 배포 url - production 환경 등
                          "https://frontend-i22b0zmmb-hyungjuns-projects-3c56c055.vercel.app",
+                         "https://frontend-dd8f04ylb-hyungjuns-projects-3c56c055.vercel.app",
+                         "https://frontend-snowy-nu-45.vercel.app",
                          serverUrl
                 )
         );

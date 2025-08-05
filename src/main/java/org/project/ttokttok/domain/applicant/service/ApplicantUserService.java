@@ -6,6 +6,7 @@ import org.project.ttokttok.domain.applicant.controller.dto.request.AnswerReques
 import org.project.ttokttok.domain.applicant.controller.dto.request.ApplyFormRequest;
 import org.project.ttokttok.domain.applicant.domain.Applicant;
 import org.project.ttokttok.domain.applicant.domain.json.Answer;
+import org.project.ttokttok.domain.applicant.exception.AlreadyApplicantExistsException;
 import org.project.ttokttok.domain.applicant.exception.AnswerRequestNotMatchException;
 import org.project.ttokttok.domain.applicant.exception.ListSizeNotMatchException;
 import org.project.ttokttok.domain.applicant.repository.ApplicantRepository;
@@ -55,6 +56,9 @@ public class ApplicantUserService {
         ApplyForm form = applyFormRepository.findByClubIdAndStatus(clubId, ACTIVE)
                 .orElseThrow(ApplyFormNotFoundException::new);
 
+        // 3. 중복 지원 검증
+        validateApplicantExists(email, form.getId());
+
         List<Question> questions = form.getFormJson();
 
         List<Answer> answers = Stream.concat(
@@ -82,6 +86,12 @@ public class ApplicantUserService {
 
         return applicantRepository.save(applicant)
                 .getId();
+    }
+
+    private void validateApplicantExists(String email, String formId) {
+        if (applicantRepository.existsByUserEmailAndApplyFormId(email, formId)) {
+            throw new AlreadyApplicantExistsException();
+        }
     }
 
     private List<Answer> getFileAnswers(

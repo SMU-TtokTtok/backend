@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.project.ttokttok.domain.applyform.domain.ApplyForm;
 import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
 import org.project.ttokttok.domain.applyform.domain.json.Question;
+import org.project.ttokttok.domain.applyform.exception.AlreadyActiveApplyFormExistsException;
 import org.project.ttokttok.domain.applyform.exception.ApplyFormNotFoundException;
 import org.project.ttokttok.domain.applyform.exception.InvalidDateRangeException;
 import org.project.ttokttok.domain.applyform.repository.ApplyFormRepository;
@@ -46,6 +47,9 @@ public class ApplyFormAdminService {
         // 날짜 범위 검증
         validateDateRange(request.recruitStartDate(), request.recruitEndDate());
 
+        // 활성화된 폼이 존재하는지 파악.
+        validateActiveFormExists(request.clubId());
+
         // 숫자 입력으로 들어온 set을 ApplicableGrade로 변환
         Set<ApplicableGrade> applicableGrades = request.applicableGrades()
                 .stream()
@@ -69,6 +73,12 @@ public class ApplyFormAdminService {
 
         return applyFormRepository.save(applyForm)
                 .getId();
+    }
+
+    private void validateActiveFormExists(String clubId) {
+        if (applyFormRepository.existsByClubIdAndStatus(clubId, ACTIVE)) {
+            throw new AlreadyActiveApplyFormExistsException();
+        }
     }
 
     // 지원 폼 수정 메서드

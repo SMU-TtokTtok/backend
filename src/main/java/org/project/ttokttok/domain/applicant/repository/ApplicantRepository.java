@@ -18,4 +18,6 @@ public interface ApplicantRepository extends JpaRepository<Applicant, String>, A
             "LEFT JOIN FETCH dp.memos " +
             "WHERE a.id = :applicantId")
     Optional<Applicant> findByIdWithDocumentPhase(@Param("applicantId") String applicantId);
+
+    boolean existsByUserEmailAndApplyFormId(String email, String formId);
 }
