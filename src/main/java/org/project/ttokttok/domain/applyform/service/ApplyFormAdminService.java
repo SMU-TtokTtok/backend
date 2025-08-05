@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.project.ttokttok.domain.applyform.domain.ApplyForm;
 import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
 import org.project.ttokttok.domain.applyform.domain.json.Question;
+import org.project.ttokttok.domain.applyform.exception.AlreadyActiveApplyFormExistsException;
 import org.project.ttokttok.domain.applyform.exception.ApplyFormNotFoundException;
 import org.project.ttokttok.domain.applyform.exception.InvalidDateRangeException;
 import org.project.ttokttok.domain.applyform.repository.ApplyFormRepository;
@@ -76,7 +77,7 @@ public class ApplyFormAdminService {
 
     private void validateActiveFormExists(String clubId) {
         if (applyFormRepository.existByClubIdAndStatus(clubId, ACTIVE)) {
-            throw new ApplyFormNotFoundException();
+            throw new AlreadyActiveApplyFormExistsException();
         }
     }
 
