@@ -14,6 +14,7 @@ import org.project.ttokttok.domain.favorite.service.dto.request.FavoriteToggleSe
 import org.project.ttokttok.domain.favorite.service.dto.response.FavoriteListServiceResponse;
 import org.project.ttokttok.domain.favorite.service.dto.response.FavoriteToggleServiceResponse;
 import org.project.ttokttok.domain.user.domain.User;
+import org.project.ttokttok.domain.user.exception.UserNotFoundException;
 import org.project.ttokttok.domain.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -54,7 +55,7 @@ public class FavoriteService {
 
         // 사용자 존재 확인
         User user = userRepository.findByEmail(request.userEmail())
-                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new UserNotFoundException());
 
         // 기존 즐겨찾기 확인
         Optional<Favorite> existingFavorite = favoriteRepository.findByUserEmailAndClubId(

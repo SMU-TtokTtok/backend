@@ -144,7 +144,7 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
                         JPAExpressions.select(clubMember.count().intValue())
                                 .from(clubMember)
                                 .where(clubMember.club.id.eq(club.id)),
-                        // ApplyForm이 ACTIVE 상태인지 확인
+                        // ApplyForm 모집 상태 확인 (ACTIVE면 true, 그 외는 false)
                         JPAExpressions.select(applyForm.count().gt(0))
                                 .from(applyForm)
                                 .where(applyForm.club.id.eq(club.id)
@@ -212,13 +212,21 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
         if (recruiting == null) {
             return null; // 전체 선택 시 필터링하지 않음
         }
-        // recruiting은 ApplyForm의 status로 관리되므로 ACTIVE/INACTIVE로 확인
-        ApplyFormStatus targetStatus = recruiting ? ApplyFormStatus.ACTIVE : ApplyFormStatus.INACTIVE;
-        return JPAExpressions.selectOne()
+        
+        // 모집상태는 ACTIVE ApplyForm의 존재 여부로만 판단
+        BooleanExpression hasActiveApplyForm = JPAExpressions.selectOne()
                 .from(applyForm)
                 .where(applyForm.club.id.eq(club.id)
-                        .and(applyForm.status.eq(targetStatus)))
+                        .and(applyForm.status.eq(ApplyFormStatus.ACTIVE)))
                 .exists();
+        
+        if (recruiting) {
+            // recruiting=true: ACTIVE ApplyForm이 있는 동아리
+            return hasActiveApplyForm;
+        } else {
+            // recruiting=false: ACTIVE ApplyForm이 없는 동아리 (모집마감)
+            return hasActiveApplyForm.not();
+        }
     }
 
     private BooleanExpression gradesEq(List<ApplicableGrade> grades) {
@@ -490,4 +498,6 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
                 clubResult.get(8, String.class)            // content
         );
     }
+
+
 }

@@ -57,7 +57,13 @@ public class AuthUserInfoResolver implements HandlerMethodArgumentResolver {
                 .orElse(null);
 
         if (token != null) {
-            return tokenProvider.getUsernameFromToken(token);
+            try {
+                return tokenProvider.getUsernameFromToken(token);
+            } catch (Exception e) {
+                // 토큰이 만료되었거나 잘못된 경우 null 반환
+                // (컨트롤러에서 null 체크하여 401 처리)
+                return null;
+            }
         }
 
         return null;
