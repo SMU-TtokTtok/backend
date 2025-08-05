@@ -11,19 +11,14 @@ import org.project.ttokttok.domain.admin.service.AdminAuthService;
 import org.project.ttokttok.domain.admin.service.dto.response.AdminLoginServiceResponse;
 import org.project.ttokttok.domain.admin.service.dto.response.ReissueServiceResponse;
 import org.project.ttokttok.global.annotation.auth.AuthUserInfo;
-import org.project.ttokttok.global.util.cookie.CookieUtil;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.Duration;
+
 import java.util.Map;
 
-import static org.project.ttokttok.global.auth.jwt.TokenExpiry.ACCESS_TOKEN_EXPIRY_TIME;
-import static org.project.ttokttok.global.auth.jwt.TokenExpiry.REFRESH_TOKEN_EXPIRY_TIME;
-import static org.project.ttokttok.global.auth.jwt.TokenProperties.ACCESS_TOKEN_COOKIE;
-import static org.project.ttokttok.global.auth.jwt.TokenProperties.REFRESH_KEY;
+
 
 @RestController
 @RequiredArgsConstructor
@@ -31,33 +26,18 @@ import static org.project.ttokttok.global.auth.jwt.TokenProperties.REFRESH_KEY;
 public class AdminAuthApiController implements AdminAuthDocs {
 
     private final AdminAuthService adminAuthService;
-    private final CookieUtil cookieUtil;
 
     @PostMapping("/login")
     public ResponseEntity<AdminLoginResponse> login(@RequestBody @Valid AdminLoginRequest request) {
         AdminLoginServiceResponse response = adminAuthService.login(request.toServiceRequest());
 
-        // 액세스 토큰 쿠키 생성
-        ResponseCookie accessCookie = cookieUtil.createResponseCookie(
-                ACCESS_TOKEN_COOKIE.getValue(),
-                response.accessToken(),
-                Duration.ofMillis(ACCESS_TOKEN_EXPIRY_TIME.getExpiry())
-        );
-
-        // 리프레시 토큰 쿠키 생성
-        ResponseCookie refreshCookie = cookieUtil.createResponseCookie(
-                REFRESH_KEY.getValue(),
-                response.refreshToken(),
-                Duration.ofMillis(REFRESH_TOKEN_EXPIRY_TIME.getExpiry())
-        );
-
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
-                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
                 .body(
                         AdminLoginResponse.of(
                                 response.clubId(),
-                                response.clubName())
+                                response.clubName(),
+                                response.accessToken(),
+                                response.refreshToken())
                 );
     }
 
@@ -65,40 +45,28 @@ public class AdminAuthApiController implements AdminAuthDocs {
     public ResponseEntity<Map<String, String>> logout(@AuthUserInfo String adminName) {
         adminAuthService.logout(adminName);
 
-        // 두 쿠키 모두 만료시키기
-        ResponseCookie[] expiredCookies = cookieUtil.expireBothTokenCookies();
-
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, expiredCookies[0].toString())
-                .header(HttpHeaders.SET_COOKIE, expiredCookies[1].toString())
                 .body(Map.of("message", "로그아웃이 완료되었습니다."));
     }
 
     @PostMapping("/re-issue")
-    public ResponseEntity<Map<String, String>> reissue(
-            @CookieValue(value = "ttref", required = false) String refreshToken) {
+    public ResponseEntity<Map<String, Object>> reissue(
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+
+        // Bearer 토큰에서 refresh token 추출
+        String refreshToken = null;
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            refreshToken = authHeader.substring(7);
+        }
 
         ReissueServiceResponse response = adminAuthService.reissue(refreshToken);
 
-        // 새 액세스 토큰 쿠키 생성
-        ResponseCookie accessCookie = cookieUtil.createResponseCookie(
-                ACCESS_TOKEN_COOKIE.getValue(),
-                response.accessToken(),
-                // 일단, 리프레시 토큰 만료와 함께 사라지도록 설정.
-                Duration.ofMillis(ACCESS_TOKEN_EXPIRY_TIME.getExpiry())
-        );
-
-        // 새 리프레시 토큰 쿠키 생성 (남은 TTL 사용)
-        ResponseCookie refreshCookie = cookieUtil.createResponseCookie(
-                REFRESH_KEY.getValue(),
-                response.refreshToken(),
-                Duration.ofMillis(response.refreshTTL())
-        );
-
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
-                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
-                .body(Map.of("message", "토큰이 재발급되었습니다."));
+                .body(Map.of(
+                        "message", "토큰이 재발급되었습니다.",
+                        "accessToken", response.accessToken(),
+                        "refreshToken", response.refreshToken()
+                ));
     }
 
     // todo: 추후 삭제 - 관리자 가입 메서드

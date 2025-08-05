@@ -14,18 +14,13 @@ import org.project.ttokttok.domain.user.service.UserAuthService;
 import org.project.ttokttok.domain.user.service.dto.response.LoginServiceResponse;
 import org.project.ttokttok.domain.user.service.dto.response.UserReissueServiceResponse;
 import org.project.ttokttok.domain.user.service.dto.response.UserServiceResponse;
-import org.project.ttokttok.global.util.cookie.CookieUtil;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.Duration;
+import java.util.Map;
 
-import static org.project.ttokttok.global.auth.jwt.TokenExpiry.ACCESS_TOKEN_EXPIRY_TIME;
-import static org.project.ttokttok.global.auth.jwt.TokenExpiry.REFRESH_TOKEN_EXPIRY_TIME;
-import static org.project.ttokttok.global.auth.jwt.TokenProperties.USER_ACCESS_TOKEN_COOKIE;
-import static org.project.ttokttok.global.auth.jwt.TokenProperties.USER_REFRESH_KEY;
+
 
 @Slf4j
 @Tag(name = "[사용자] 사용자 인증", description = "회원가입, 로그인, 이메일 인증 등 사용자 인증 관련 API")
@@ -35,7 +30,6 @@ import static org.project.ttokttok.global.auth.jwt.TokenProperties.USER_REFRESH_
 public class UserAuthController {
 
     private final UserAuthService userAuthService;
-    private final CookieUtil cookieUtil;
 
     /**
      * 이메일 인증코드 발송 API
@@ -175,23 +169,7 @@ public class UserAuthController {
         LoginServiceResponse serviceResponse = userAuthService.login(request.toServiceRequest());
         LoginResponse loginResponse = LoginResponse.from(serviceResponse);
 
-        // 액세스 토큰 쿠키 생성 (사용자용)
-        ResponseCookie accessCookie = cookieUtil.createResponseCookie(
-                USER_ACCESS_TOKEN_COOKIE.getValue(),
-                serviceResponse.accessToken(),
-                Duration.ofMillis(ACCESS_TOKEN_EXPIRY_TIME.getExpiry())
-        );
-
-        // 리프레시 토큰 쿠키 생성 (사용자용)
-        ResponseCookie refreshCookie = cookieUtil.createResponseCookie(
-                USER_REFRESH_KEY.getValue(),
-                serviceResponse.refreshToken(),
-                Duration.ofMillis(REFRESH_TOKEN_EXPIRY_TIME.getExpiry())
-        );
-
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
-                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
                 .body(
                         ApiResponse.success("로그인 성공", loginResponse)
                 );
@@ -238,32 +216,27 @@ public class UserAuthController {
             )
     })
     @PostMapping("/re-issue")
-    public ResponseEntity<ApiResponse<Void>> reIssue(
-            @Parameter(description = "쿠키에 포함된 리프레시 토큰", hidden = true)
-            @CookieValue(value = "ttref_user", required = false) String refreshToken
+    public ResponseEntity<ApiResponse<Map<String, String>>> reIssue(
+            @Parameter(description = "Authorization 헤더의 리프레시 토큰")
+            @RequestHeader(value = "Authorization", required = false) String authHeader
     ) {
+
+        // Bearer 토큰에서 refresh token 추출
+        String refreshToken = null;
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            refreshToken = authHeader.substring(7);
+        }
 
         UserReissueServiceResponse serviceResponse = userAuthService.reissue(refreshToken);
 
-        // 액세스 토큰 쿠키 생성 (사용자용)
-        ResponseCookie accessCookie = cookieUtil.createResponseCookie(
-                USER_ACCESS_TOKEN_COOKIE.getValue(),
-                serviceResponse.accessToken(),
-                Duration.ofMillis(ACCESS_TOKEN_EXPIRY_TIME.getExpiry())
-        );
-
-        // 리프레시 토큰 쿠키 생성 (사용자용)
-        ResponseCookie refreshCookie = cookieUtil.createResponseCookie(
-                USER_REFRESH_KEY.getValue(),
-                serviceResponse.refreshToken(),
-                Duration.ofMillis(serviceResponse.ttl())
+        Map<String, String> tokenData = Map.of(
+                "accessToken", serviceResponse.accessToken(),
+                "refreshToken", serviceResponse.refreshToken()
         );
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
-                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
                 .body(
-                        ApiResponse.success("토큰 재발급 성공")
+                        ApiResponse.success("토큰 재발급 성공", tokenData)
                 );
     }
 
@@ -380,32 +353,18 @@ public class UserAuthController {
             )
     })
     @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<Void>> logout(@CookieValue(value = "ttref_user", required = false) String pureRefreshToken,
-                                                    @CookieValue(value = "ttac_user", required = false) String pureAccessToken) {
-//        // 쿠키에서 액세스 토큰 추출 (사용자용)
-//        String accessToken = null;
-//        Cookie[] cookies = request.getCookies();
-//        if (cookies != null) {
-//            for (Cookie cookie : cookies) {
-//                if (USER_ACCESS_TOKEN_COOKIE.getValue().equals(cookie.getName())) {
-//                    accessToken = cookie.getValue();
-//                    log.info("로그아웃 - 액세스 토큰 추출: {}", accessToken);
-//                    break;
-//                }
-//            }
-//        } else {
-//            log.warn("로그아웃 - 쿠키가 없습니다.");
-//        }
+    public ResponseEntity<ApiResponse<Void>> logout(
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
 
-        userAuthService.logout(pureRefreshToken, pureAccessToken);
+        // Bearer 토큰에서 토큰 추출 (refresh token 또는 access token)
+        String token = null;
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7);
+        }
 
-        // 사용자용 쿠키 모두 만료시키기
-        ResponseCookie[] expiredCookies = cookieUtil.expireUserTokenCookies();
-        log.info("로그아웃 - 사용자 쿠키 만료 설정: {}", expiredCookies[0].toString());
+        userAuthService.logout(token, token);
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, expiredCookies[0].toString())
-                .header(HttpHeaders.SET_COOKIE, expiredCookies[1].toString())
                 .body(ApiResponse.success("로그아웃이 완료되었습니다."));
     }
 }
