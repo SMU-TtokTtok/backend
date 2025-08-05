@@ -57,7 +57,8 @@ public class RefreshTokenRedisService {
             return;
         }
 
-        throw new AlreadyLogoutException();
+        // 이미 로그아웃 되어있으면 그냥 ok 리턴
+        //throw new AlreadyLogoutException();
     }
 
     // 액세스 토큰 블랙리스트 추가 - 로그아웃 시
