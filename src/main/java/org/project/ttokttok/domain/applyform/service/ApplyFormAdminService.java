@@ -46,6 +46,9 @@ public class ApplyFormAdminService {
         // 날짜 범위 검증
         validateDateRange(request.recruitStartDate(), request.recruitEndDate());
 
+        // 활성화된 폼이 존재하는지 파악.
+        validateActiveFormExists(request.clubId());
+
         // 숫자 입력으로 들어온 set을 ApplicableGrade로 변환
         Set<ApplicableGrade> applicableGrades = request.applicableGrades()
                 .stream()
@@ -69,6 +72,12 @@ public class ApplyFormAdminService {
 
         return applyFormRepository.save(applyForm)
                 .getId();
+    }
+
+    private void validateActiveFormExists(String clubId) {
+        if (applyFormRepository.existByClubIdAndStatus(clubId, ACTIVE)) {
+            throw new ApplyFormNotFoundException();
+        }
     }
 
     // 지원 폼 수정 메서드

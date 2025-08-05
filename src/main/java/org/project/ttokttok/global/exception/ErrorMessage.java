@@ -47,6 +47,7 @@ public enum ErrorMessage {
     APPLY_FORM_NOT_FOUND("지원 폼을 찾을 수 없거나, 활성화된 지원 폼이 없습니다.", HttpStatus.NOT_FOUND),
     APPLY_FORM_INVALID_DATE_RANGE("시작 날짜는 종료 날짜보다 이전이어야 합니다.", HttpStatus.BAD_REQUEST),
     ACTIVE_APPLY_FORM_NOT_FOUND("활성화된 지원 폼을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+    ALREADY_ACTIVE_APPLY_FORM_EXISTS("이미 활성화된 지원폼이 존재합니다.", HttpStatus.BAD_REQUEST),
 
     // 지원자 에러 메시지
     APPLICANT_NOT_FOUND("지원자를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
