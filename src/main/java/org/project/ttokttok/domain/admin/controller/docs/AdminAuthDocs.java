@@ -104,7 +104,8 @@ public interface AdminAuthDocs {
                     Authorization 헤더의 리프레시 토큰을 사용하여 새로운 액세스 토큰과 리프레시 토큰을 발급받습니다.
                     Redis에 저장된 리프레시 토큰과 비교하여 유효성을 검증합니다.
                     토큰이 만료된 경우, 다시 로그인을 시도해야 합니다.
-                    """
+                    """,
+            security = @io.swagger.v3.oas.annotations.security.SecurityRequirement(name = "refreshTokenAuth")
     )
     @ApiResponses(value = {
             @ApiResponse(

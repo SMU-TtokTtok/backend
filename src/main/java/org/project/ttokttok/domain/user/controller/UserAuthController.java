@@ -191,7 +191,8 @@ public class UserAuthController {
                     테스트 로그인 계정:
                     - 이메일: test@sangmyung.kr
                     - 비밀번호 : TestPass123!
-                    """
+                    """,
+            security = @io.swagger.v3.oas.annotations.security.SecurityRequirement(name = "refreshTokenAuth")
     )
     @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
