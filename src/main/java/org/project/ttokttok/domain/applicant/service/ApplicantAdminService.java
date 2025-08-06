@@ -54,7 +54,11 @@ public class ApplicantAdminService {
 
         // 2. 가장 최신의 지원 폼 찾기
         ApplyForm mostRecentApplyForm = applyFormRepository.findTopByClubIdAndStatusOrderByCreatedAtDesc(club.getId(), ACTIVE)
-                .orElseThrow(ApplyFormNotFoundException::new);
+                .orElse(null);
+
+        if (mostRecentApplyForm == null) {
+            return ApplicantPageServiceResponse.toEmpty();
+        }
 
         // 3. 활성화된 지원 폼의 ID를 사용해 지원자 페이지 조회
         return ApplicantPageServiceResponse.of(
