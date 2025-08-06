@@ -83,7 +83,8 @@ public class ClubAdminService {
 
         if (form.isPresent()) {
             // 활성화된 폼이 존재한다면, 모집 상태를 토글함.
-            form.get().updateFormStatus();
+            //form.get().updateFormStatus();
+            form.get().toggleRecruiting();
             log.info("Current apply form status toggled for club: {}, status: {}", clubId, form.get().getStatus());
         } else if (form.isEmpty()) {
             // 활성화된 폼이 없다면, 가장 최근에 생성된 지원 폼을 찾아 활성화시킴.
