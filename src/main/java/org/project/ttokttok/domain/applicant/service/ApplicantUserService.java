@@ -12,6 +12,7 @@ import org.project.ttokttok.domain.applicant.exception.ListSizeNotMatchException
 import org.project.ttokttok.domain.applicant.exception.QuestionParseFailException;
 import org.project.ttokttok.domain.applicant.repository.ApplicantRepository;
 import org.project.ttokttok.domain.applicant.repository.dto.UserApplicationHistoryQueryResponse;
+import org.project.ttokttok.domain.applyform.domain.enums.QuestionType;
 import org.project.ttokttok.domain.club.service.dto.response.ClubCardServiceResponse;
 import org.project.ttokttok.domain.club.service.dto.response.ClubListServiceResponse;
 import org.project.ttokttok.domain.applyform.domain.ApplyForm;
@@ -25,11 +26,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus.ACTIVE;
+import static org.project.ttokttok.domain.applyform.domain.enums.QuestionType.FILE;
 
 @Slf4j
 @Service
@@ -62,10 +65,13 @@ public class ApplicantUserService {
 
         List<Question> questions = form.getFormJson();
 
-        List<Answer> answers = Stream.concat(
-                getAnswers(request.answers(), questions).stream(),
-                getFileAnswers(questionIds, files, questions, request.email(), request.applyFormId()).stream()
-        ).toList();
+        List<Answer> answers = getAnswers(
+                request.answers(),
+                questionIds,
+                files,
+                questions,
+                email
+        );
 
         Applicant applicant = Applicant.createApplicant(
                 email,
@@ -93,50 +99,61 @@ public class ApplicantUserService {
         }
     }
 
-    private List<Answer> getFileAnswers(
+    // FIXME: 리팩토링 필수
+    private List<Answer> getAnswers(
+            List<AnswerRequest> answers,
             List<String> questionIds,
             List<MultipartFile> files,
             List<Question> questions,
-            String email,
-            String formId
+            String email
     ) {
-        // files가 null이거나 비어있으면 빈 리스트 반환
-        if (files == null || files.isEmpty()) {
-            return List.of();
-        }
-        
-        return IntStream.range(0, files.size())
-                .mapToObj(i -> {
-                    String questionId = questionIds.get(i);
-                    MultipartFile file = files.get(i);
-                    Question question = questions.stream()
-                            .filter(q -> q.questionId().equals(questionId))
-                            .findFirst()
-                            .orElseThrow(QuestionParseFailException::new);
-                    String fileKey = s3Service.uploadFile(file, "/applicant/" + email + "/" + formId);
-                    return new Answer(
-                            question.title(),
-                            question.subTitle(),
-                            question.questionType(),
-                            question.isEssential(),
-                            question.content(),
-                            fileKey
-                    );
-                })
-                .toList();
-    }
-
-    private List<Answer> getAnswers(List<AnswerRequest> answers, List<Question> questions) {
         return answers.stream()
-                .map(answerRequest -> answerParseLogic(questions, answerRequest))
+                .map(answerRequest ->
+                        answerParseLogic(
+                                questions,
+                                answerRequest,
+                                questionIds,
+                                files,
+                                email
+                        )
+                )
                 .toList();
     }
 
-    private Answer answerParseLogic(List<Question> questions, AnswerRequest answerRequest) {
+    //TODO: 복잡도가 높아 리팩토링 필요
+    private Answer answerParseLogic(List<Question> questions,
+                                    AnswerRequest answerRequest,
+                                    List<String> questionIds,
+                                    List<MultipartFile> files,
+                                    String email) {
+
+        // 1. 질문이 파일 타입인 경우,
+        // files에서 questionId와 일치하는 인덱스를 가진 파일을 찾아 업로드
         Question question = questions.stream()
                 .filter(q -> q.questionId().equals(answerRequest.questionId()))
                 .findFirst()
                 .orElseThrow(QuestionParseFailException::new);
+
+        if (question.questionType() == FILE) {
+            // questionIds에서 현재 questionId의 인덱스를 찾음
+            int fileIndex = questionIds.indexOf(answerRequest.questionId());
+            if (fileIndex == -1) {
+                throw new QuestionParseFailException();
+            }
+
+            // 해당 인덱스의 파일을 가져와서 S3에 업로드
+            MultipartFile file = files.get(fileIndex);
+
+            String fileUrl = s3Service.uploadFile(file, "applicant/" + email + "/");
+
+            // 파일 URL을 답변에 포함시키기 위해 AnswerRequest를 수정된 값으로 생성
+            AnswerRequest fileAnswerRequest = new AnswerRequest(
+                    answerRequest.questionId(),
+                    fileUrl
+            );
+
+            return fileAnswerRequest.toAnswer(question);
+        }
 
         return answerRequest.toAnswer(question);
     }

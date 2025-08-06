@@ -90,7 +90,7 @@ VALUES ('2',
                 "title": "자기소개를 작성해주세요.",
                 "subTitle": "경험, 장점, 관심사를 중심으로 작성해주세요.",
                 "questionType": "LONG_ANSWER",
-                "isEssential": true,
+                "isEssential": false,
                 "content": null
             },
             {
@@ -106,7 +106,7 @@ VALUES ('2',
                 "title": "성별을 선택해주세요.",
                 "subTitle": "",
                 "questionType": "RADIO",
-                "isEssential": true,
+                "isEssential": false,
                 "content": ["남성", "여성", "기타", "응답하지 않음"]
             },
             {
