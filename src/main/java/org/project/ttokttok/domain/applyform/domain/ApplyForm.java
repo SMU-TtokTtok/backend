@@ -50,6 +50,9 @@ public class ApplyForm extends BaseTimeEntity {
     @Column(nullable = false)
     private Integer maxApplyCount;
 
+    @Column(nullable = false)
+    private boolean isRecruiting;
+
     @ElementCollection
     @Enumerated(EnumType.STRING)
     @CollectionTable(
