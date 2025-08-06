@@ -94,6 +94,7 @@ public class ApplyForm extends BaseTimeEntity {
         this.subTitle = subTitle;
         this.status = ApplyFormStatus.ACTIVE;
         this.formJson = formJson;
+        this.isRecruiting = true; // 기본값은 true로 설정
     }
 
     public static ApplyForm createApplyForm(Club club,
@@ -162,5 +163,9 @@ public class ApplyForm extends BaseTimeEntity {
         } else if (this.status == ApplyFormStatus.INACTIVE) {
             this.status = ApplyFormStatus.ACTIVE;
         }
+    }
+
+    public void toggleRecruiting() {
+        this.isRecruiting = !this.isRecruiting;
     }
 }
