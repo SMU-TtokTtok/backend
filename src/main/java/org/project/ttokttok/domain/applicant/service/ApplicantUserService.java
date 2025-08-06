@@ -48,20 +48,17 @@ public class ApplicantUserService {
                         List<MultipartFile> files,
                         String clubId) {
 
-        // 1. 중복 지원 검증
-        validateApplicantExists(email, clubId);
-
-        // 2. questionIds와 files의 유효성 검사
-        validateQuestionIdsAndFiles(questionIds, files);
-
-        // 3. 타겟 사용자 검증
+        // 1. 타겟 사용자 검증
         validateUserExists(email);
 
         ApplyForm form = applyFormRepository.findByClubIdAndStatus(clubId, ACTIVE)
                 .orElseThrow(ApplyFormNotFoundException::new);
 
-        // 3. 중복 지원 검증
+        // 2. 중복 지원 검증
         validateApplicantExists(email, form.getId());
+
+        // 3. questionIds와 files의 유효성 검사
+        validateQuestionIdsAndFiles(questionIds, files);
 
         List<Question> questions = form.getFormJson();
 
@@ -69,9 +66,6 @@ public class ApplicantUserService {
                 getAnswers(request.answers(), questions).stream(),
                 getFileAnswers(questionIds, files, questions, request.email(), request.applyFormId()).stream()
         ).toList();
-
-        // 파일 업로드하고 key값을 반환
-        // key값 반환하고, 파일인 응답에 매핑
 
         Applicant applicant = Applicant.createApplicant(
                 email,
@@ -86,6 +80,7 @@ public class ApplicantUserService {
                 form
         );
 
+        // 4. 답변 제출 (서류 전형 생성)
         applicant.submitDocument(answers);
 
         return applicantRepository.save(applicant)
@@ -142,6 +137,7 @@ public class ApplicantUserService {
                 .filter(q -> q.questionId().equals(answerRequest.questionId()))
                 .findFirst()
                 .orElseThrow(QuestionParseFailException::new);
+
         return answerRequest.toAnswer(question);
     }
 
