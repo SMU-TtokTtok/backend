@@ -9,10 +9,10 @@ import java.util.List;
 
 @Builder
 public record ApplicantPageResponse(
-        boolean hasInterview,
-        int currentPage,
-        int totalPage,
-        int totalCount,
+        Boolean hasInterview,
+        Integer currentPage,
+        Integer totalPage,
+        Integer totalCount,
         List<ApplicantSimpleResponse> applicants
 ) {
     public static ApplicantPageResponse from(ApplicantPageServiceResponse response) {
