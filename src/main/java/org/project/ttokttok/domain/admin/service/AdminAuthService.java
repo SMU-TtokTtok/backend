@@ -92,7 +92,9 @@ public class AdminAuthService {
 
         return AdminLoginResponse.of(
                 findClub.getId(),
-                findClub.getName()
+                findClub.getName(),
+                null, // 테스트용이므로 토큰은 null
+                null  // 테스트용이므로 토큰은 null
         );
     }
 }

@@ -13,6 +13,7 @@ import org.project.ttokttok.domain.favorite.controller.dto.response.FavoriteTogg
 import org.project.ttokttok.domain.favorite.service.FavoriteService;
 import org.project.ttokttok.domain.favorite.service.dto.request.FavoriteListServiceRequest;
 import org.project.ttokttok.domain.favorite.service.dto.request.FavoriteToggleServiceRequest;
+import org.project.ttokttok.domain.favorite.service.dto.response.FavoriteToggleServiceResponse;
 import org.project.ttokttok.global.annotation.auth.AuthUserInfo;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -65,16 +66,32 @@ public class FavoriteController {
             @Parameter(description = "동아리 ID", required = true)
             @PathVariable String clubId) {
 
-        if (userEmail == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        log.info("[즐겨찾기 토글] 요청 시작 - clubId: {}, userEmail: {}", clubId, userEmail);
+        
+        try {
+            if (userEmail == null) {
+                log.warn("[즐겨찾기 토글] 인증 실패 - userEmail이 null");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+            log.debug("[즐겨찾기 토글] 서비스 요청 생성 - userEmail: {}, clubId: {}", userEmail, clubId);
+            FavoriteToggleServiceRequest request = FavoriteToggleServiceRequest.of(userEmail, clubId);
+            
+            log.debug("[즐겨찾기 토글] 서비스 메서드 호출 시작");
+            FavoriteToggleServiceResponse serviceResponse = favoriteService.toggleFavorite(request);
+            
+            log.debug("[즐겨찾기 토글] 서비스 응답 생성 - favorited: {}", serviceResponse.favorited());
+            FavoriteToggleResponse response = FavoriteToggleResponse.from(serviceResponse);
+
+            log.info("[즐겨찾기 토글] 요청 완료 - clubId: {}, userEmail: {}, result: {}", 
+                    clubId, userEmail, serviceResponse.favorited() ? "추가" : "제거");
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            log.error("[즐겨찾기 토글] 예외 발생 - clubId: {}, userEmail: {}, error: {}", 
+                    clubId, userEmail, e.getMessage(), e);
+            throw e; // 예외를 다시 던져서 GlobalExceptionHandler가 처리하도록
         }
-
-        FavoriteToggleServiceRequest request = FavoriteToggleServiceRequest.of(userEmail, clubId);
-        FavoriteToggleResponse response = FavoriteToggleResponse.from(
-                favoriteService.toggleFavorite(request)
-        );
-
-        return ResponseEntity.ok(response);
     }
 
     /**
