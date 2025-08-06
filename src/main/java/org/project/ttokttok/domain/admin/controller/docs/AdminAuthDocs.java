@@ -11,7 +11,7 @@ import org.project.ttokttok.domain.admin.controller.dto.request.AdminLoginReques
 import org.project.ttokttok.domain.admin.controller.dto.response.AdminLoginResponse;
 import org.project.ttokttok.global.exception.dto.ErrorResponse;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.RequestHeader;
 
 import java.util.Map;
 
@@ -101,10 +101,11 @@ public interface AdminAuthDocs {
     @Operation(
             summary = "토큰 재발급",
             description = """
-                    리프레시 토큰을 사용하여 새로운 액세스 토큰과 리프레시 토큰을 발급받습니다.
+                    Authorization 헤더의 리프레시 토큰을 사용하여 새로운 액세스 토큰과 리프레시 토큰을 발급받습니다.
                     Redis에 저장된 리프레시 토큰과 비교하여 유효성을 검증합니다.
                     토큰이 만료된 경우, 다시 로그인을 시도해야 합니다.
-                    """
+                    """,
+            security = @io.swagger.v3.oas.annotations.security.SecurityRequirement(name = "refreshTokenAuth")
     )
     @ApiResponses(value = {
             @ApiResponse(
@@ -127,8 +128,8 @@ public interface AdminAuthDocs {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             )
     })
-    ResponseEntity<Map<String, String>> reissue(
-            @Parameter(description = "리프레시 토큰 (쿠키에서 자동 추출)")
-            @CookieValue(value = "ttref", required = false) String refreshToken
+    ResponseEntity<Map<String, Object>> reissue(
+            @Parameter(description = "Authorization 헤더의 리프레시 토큰")
+            @RequestHeader(value = "Authorization", required = false) String authHeader
     );
 }

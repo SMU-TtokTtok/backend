@@ -196,7 +196,7 @@ VALUES
 -- 테스트 사용자(test@sangmyung.kr)의 지원 내역 추가
 ('test-applicant-001', 'test@sangmyung.kr', '테스트 사용자', 22, '컴퓨터공학과', 'test@sangmyung.kr', '010-1234-5678',
  'ENROLLED', 'THIRD_GRADE', 'MALE', 'DOCUMENT',
- (SELECT id FROM applyforms WHERE club_id = 'club-035' AND status = 'ACTIVE' LIMIT 1),
+ (SELECT id FROM applyforms WHERE club_id = 'club-030' AND status = 'ACTIVE' LIMIT 1),
  '2024-08-04 10:00:00', '2024-08-04 10:00:00'),
 
 ('test-applicant-002', 'test@sangmyung.kr', '테스트 사용자', 22, '컴퓨터공학과', 'test@sangmyung.kr', '010-1234-5678',

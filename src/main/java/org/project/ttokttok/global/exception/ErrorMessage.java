@@ -59,6 +59,7 @@ public enum ErrorMessage {
     INVALID_PHASE_STATUS("잘못된 STATUS 입력입니다.", HttpStatus.BAD_REQUEST),
     NO_INTERVIEW_PHASE("인터뷰 단계가 존재하지 않습니다.", HttpStatus.BAD_REQUEST),
     ALREADY_APPLICANT_EXISTS("이미 지원한 동아리입니다.", HttpStatus.CONFLICT),
+    QUESTION_PARSE_FAIL("질문을 받아오는데 실패했습니다.", HttpStatus.BAD_REQUEST),
 
     // 메모 에러 메시지
     MEMO_NOT_FOUND("메모를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),

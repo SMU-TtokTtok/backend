@@ -2,7 +2,7 @@ package org.project.ttokttok.global.auth.jwt.filter;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -16,9 +16,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.Arrays;
 
-import static org.project.ttokttok.global.auth.jwt.TokenProperties.ACCESS_TOKEN_COOKIE;
-import static org.project.ttokttok.global.auth.jwt.TokenProperties.USER_ACCESS_TOKEN_COOKIE;
-import static org.project.ttokttok.global.auth.security.RootApiEndpoint.API_ADMIN;
+
+
 import static org.project.ttokttok.global.auth.security.SecurityWhiteList.ALLOW_URLS;
 import static org.project.ttokttok.global.auth.security.SecurityWhiteList.SWAGGER_URLS;
 
@@ -40,8 +39,8 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 
         log.debug("[JWT 인증 필터 실행] URI: {}", request.getRequestURI());
 
-        // 쿠키에서 액세스 토큰 추출
-        final String token = getAccessTokenFromCookie(request);
+        // Authorization 헤더에서 액세스 토큰 추출
+        final String token = getAccessTokenFromHeader(request);
 
         // 토큰이 존재하고 올바른 토큰일 시, 스프링 시큐리티 컨텍스트에 인증 설정.
         if (token != null && tokenProvider.validateToken(token)) {
@@ -57,27 +56,20 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    // 쿠키에서 액세스 토큰 추출 (관리자용 또는 사용자용)
-    private String getAccessTokenFromCookie(HttpServletRequest request) {
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            String requestURI = request.getRequestURI();
-
-            if (requestURI.contains(API_ADMIN.getValue())) {
-                return getTokenFromCookies(cookies, ACCESS_TOKEN_COOKIE.getValue());
-            } else {
-                return getTokenFromCookies(cookies, USER_ACCESS_TOKEN_COOKIE.getValue());
-            }
+    // Authorization 헤더에서 액세스 토큰 추출
+    private String getAccessTokenFromHeader(HttpServletRequest request) {
+        String authorization = request.getHeader("Authorization");
+        
+        log.debug("[JWT 필터] Authorization 헤더: {}", authorization);
+        
+        if (authorization != null && authorization.startsWith("Bearer ")) {
+            String token = authorization.substring(7); // "Bearer " 제거
+            log.debug("[JWT 필터] 추출된 토큰 (앞 20자): {}...", token.length() > 20 ? token.substring(0, 20) : token);
+            return token;
         }
+        
+        log.debug("[JWT 필터] Authorization 헤더가 없거나 Bearer로 시작하지 않음");
         return null;
-    }
-
-    private String getTokenFromCookies(Cookie[] cookies, String cookieName) {
-        return Arrays.stream(cookies)
-                .filter(cookie -> cookieName.equals(cookie.getName()))
-                .map(Cookie::getValue)
-                .findFirst()
-                .orElse(null);
     }
 
     // 특정 경로를 필터링하지 않도록 설정

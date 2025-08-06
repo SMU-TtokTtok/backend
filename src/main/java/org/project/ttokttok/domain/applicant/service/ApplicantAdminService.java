@@ -26,6 +26,7 @@ import org.project.ttokttok.infrastructure.email.service.EmailService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -82,7 +83,7 @@ public class ApplicantAdminService {
         validateApplicantAccess(applicant.getApplyForm().getClub().getId(), club.getId());
 
         // 4. 메모 정보 추출 (DocumentPhase에서)
-        List<MemoResponse> memos = Collections.emptyList();
+        List<MemoResponse> memos = new ArrayList<>();
 
         if (applicant.getDocumentPhase() != null) {
             memos = MemoResponse.fromList(applicant.getDocumentPhase().getMemos());

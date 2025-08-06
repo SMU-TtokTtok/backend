@@ -1,5 +1,6 @@
 package org.project.ttokttok.domain.applicant.controller.dto.request;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.project.ttokttok.domain.applicant.domain.enums.Gender;
@@ -43,6 +44,7 @@ public record ApplyFormRequest(
          * 지원폼의 질문에 대한 답변들
          * 파일이 아닌 텍스트 답변들만 포함
          */
+        @Valid
         List<AnswerRequest> answers
 ) {
 }

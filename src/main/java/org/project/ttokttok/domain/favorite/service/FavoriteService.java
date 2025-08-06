@@ -49,32 +49,73 @@ public class FavoriteService {
      */
     @Transactional
     public FavoriteToggleServiceResponse toggleFavorite(FavoriteToggleServiceRequest request) {
-        // 동아리 존재 확인
-        Club club = clubRepository.findById(request.clubId())
-                .orElseThrow(ClubNotFoundException::new);
+        log.info("[즐겨찾기 서비스] 토글 요청 시작 - userEmail: {}, clubId: {}", request.userEmail(), request.clubId());
+        
+        try {
+            // 입력값 검증
+            if (request.userEmail() == null || request.userEmail().trim().isEmpty()) {
+                log.error("[즐겨찾기 서비스] userEmail이 null 또는 빈 값");
+                throw new IllegalArgumentException("사용자 이메일이 필요합니다.");
+            }
+            
+            if (request.clubId() == null || request.clubId().trim().isEmpty()) {
+                log.error("[즐겨찾기 서비스] clubId가 null 또는 빈 값");
+                throw new IllegalArgumentException("동아리 ID가 필요합니다.");
+            }
+            
+            log.debug("[즐겨찾기 서비스] 동아리 조회 시작 - clubId: {}", request.clubId());
+            // 동아리 존재 확인
+            Club club = clubRepository.findById(request.clubId())
+                    .orElseThrow(() -> {
+                        log.error("[즐겨찾기 서비스] 동아리를 찾을 수 없음 - clubId: {}", request.clubId());
+                        return new ClubNotFoundException();
+                    });
+            log.debug("[즐겨찾기 서비스] 동아리 조회 완료 - clubId: {}, clubName: {}", club.getId(), club.getName());
 
-        // 사용자 존재 확인
-        User user = userRepository.findByEmail(request.userEmail())
-                .orElseThrow(() -> new UserNotFoundException());
+            log.debug("[즐겨찾기 서비스] 사용자 조회 시작 - userEmail: {}", request.userEmail());
+            // 사용자 존재 확인
+            User user = userRepository.findByEmail(request.userEmail())
+                    .orElseThrow(() -> {
+                        log.error("[즐겨찾기 서비스] 사용자를 찾을 수 없음 - userEmail: {}", request.userEmail());
+                        return new UserNotFoundException();
+                    });
+            log.debug("[즐겨찾기 서비스] 사용자 조회 완료 - userEmail: {}, userId: {}", user.getEmail(), user.getId());
 
-        // 기존 즐겨찾기 확인
-        Optional<Favorite> existingFavorite = favoriteRepository.findByUserEmailAndClubId(
-                request.userEmail(), request.clubId());
+            log.debug("[즐겨찾기 서비스] 기존 즐겨찾기 조회 시작");
+            // 기존 즐겨찾기 확인
+            Optional<Favorite> existingFavorite = favoriteRepository.findByUserEmailAndClubId(
+                    request.userEmail(), request.clubId());
+            log.debug("[즐겨찾기 서비스] 기존 즐겨찾기 조회 완료 - 존재여부: {}", existingFavorite.isPresent());
 
-        if (existingFavorite.isPresent()) {
-            // 즐겨찾기 제거
-            favoriteRepository.delete(existingFavorite.get());
-            log.info("즐겨찾기 제거 완료: 사용자={}, 동아리={}", request.userEmail(), request.clubId());
-            return FavoriteToggleServiceResponse.of(request.clubId(), false);
-        } else {
-            // 즐겨찾기 추가
-            Favorite favorite = Favorite.builder()
-                    .user(user)
-                    .club(club)
-                    .build();
-            favoriteRepository.save(favorite);
-            log.info("즐겨찾기 추가 완료: 사용자={}, 동아리={}", request.userEmail(), request.clubId());
-            return FavoriteToggleServiceResponse.of(request.clubId(), true);
+            if (existingFavorite.isPresent()) {
+                // 즐겨찾기 제거
+                log.debug("[즐겨찾기 서비스] 즐겨찾기 제거 시작 - favoriteId: {}", existingFavorite.get().getId());
+                favoriteRepository.delete(existingFavorite.get());
+                log.info("[즐겨찾기 서비스] 즐겨찾기 제거 완료 - 사용자: {}, 동아리: {}", request.userEmail(), request.clubId());
+                return FavoriteToggleServiceResponse.of(request.clubId(), false);
+            } else {
+                // 즐겨찾기 추가
+                log.debug("[즐겨찾기 서비스] 즐겨찾기 추가 시작");
+                Favorite favorite = Favorite.builder()
+                        .user(user)
+                        .club(club)
+                        .build();
+                Favorite savedFavorite = favoriteRepository.save(favorite);
+                log.info("[즐겨찾기 서비스] 즐겨찾기 추가 완료 - 사용자: {}, 동아리: {}, favoriteId: {}", 
+                        request.userEmail(), request.clubId(), savedFavorite.getId());
+                return FavoriteToggleServiceResponse.of(request.clubId(), true);
+            }
+            
+        } catch (ClubNotFoundException e) {
+            log.error("[즐겨찾기 서비스] ClubNotFoundException 발생 - clubId: {}", request.clubId(), e);
+            throw e;
+        } catch (UserNotFoundException e) {
+            log.error("[즐겨찾기 서비스] UserNotFoundException 발생 - userEmail: {}", request.userEmail(), e);
+            throw e;
+        } catch (Exception e) {
+            log.error("[즐겨찾기 서비스] 예상치 못한 예외 발생 - userEmail: {}, clubId: {}, error: {}", 
+                    request.userEmail(), request.clubId(), e.getMessage(), e);
+            throw new RuntimeException("즐겨찾기 처리 중 오류가 발생했습니다.", e);
         }
     }
 
