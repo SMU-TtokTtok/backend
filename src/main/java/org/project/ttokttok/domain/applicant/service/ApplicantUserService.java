@@ -9,6 +9,7 @@ import org.project.ttokttok.domain.applicant.domain.json.Answer;
 import org.project.ttokttok.domain.applicant.exception.AlreadyApplicantExistsException;
 import org.project.ttokttok.domain.applicant.exception.AnswerRequestNotMatchException;
 import org.project.ttokttok.domain.applicant.exception.ListSizeNotMatchException;
+import org.project.ttokttok.domain.applicant.exception.QuestionParseFailException;
 import org.project.ttokttok.domain.applicant.repository.ApplicantRepository;
 import org.project.ttokttok.domain.applicant.repository.dto.UserApplicationHistoryQueryResponse;
 import org.project.ttokttok.domain.club.service.dto.response.ClubCardServiceResponse;
@@ -116,7 +117,7 @@ public class ApplicantUserService {
                     Question question = questions.stream()
                             .filter(q -> q.questionId().equals(questionId))
                             .findFirst()
-                            .orElseThrow(ApplyFormNotFoundException::new);
+                            .orElseThrow(QuestionParseFailException::new);
                     String fileKey = s3Service.uploadFile(file, "/applicant/" + email + "/" + formId);
                     return new Answer(
                             question.title(),
@@ -140,7 +141,7 @@ public class ApplicantUserService {
         Question question = questions.stream()
                 .filter(q -> q.questionId().equals(answerRequest.questionId()))
                 .findFirst()
-                .orElseThrow(ApplyFormNotFoundException::new);
+                .orElseThrow(QuestionParseFailException::new);
         return answerRequest.toAnswer(question);
     }
 
