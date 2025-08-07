@@ -138,7 +138,6 @@ public class ClubAdminService {
 
     // 요청에 지원 폼 업데이트 요청이 있는지 확인
     private boolean hasApplyFormUpdate(ClubContentUpdateServiceRequest request) {
-        // request.recruiting().isPresent(); - ApplyForm에서 관리하므로 제거
         return request.applyStartDate().isPresent() || request.applyEndDate().isPresent() ||
                 request.grades().isPresent() || request.maxApplyCount().isPresent();
     }
@@ -148,8 +147,9 @@ public class ClubAdminService {
         ApplyForm applyForm = applyFormRepository.findByClubIdAndStatus(club.getId(), ACTIVE)
                 .orElseThrow(ApplyFormNotFoundException::new);
 
-        // 모집 시작일과 종료일이 모두 존재할 경우, 시작일이 종료일보다 이후인지 검증
-        if (request.applyStartDate().isPresent() && request.applyEndDate().isPresent()) {
+        // 모집 시작일과 종료일이 모두 존재할 경우, 종료일이 시작일보다 이후인지 검증
+        if (isDatePresent(Optional.ofNullable(request.applyStartDate().get())) &&
+                isDatePresent(Optional.ofNullable(request.applyEndDate().get()))) {
             validateApplyPeriod(request.applyStartDate().get(), request.applyEndDate().get());
         }
 
@@ -179,5 +179,10 @@ public class ClubAdminService {
     private void validateAdmin(String username, String targetAdminUsername) {
         if (!username.equals(targetAdminUsername))
             throw new NotClubAdminException();
+    }
+
+    // 날짜 입력이 존재하는지 확인
+    private boolean isDatePresent(Optional<LocalDate> date) {
+        return date.isPresent();
     }
 }

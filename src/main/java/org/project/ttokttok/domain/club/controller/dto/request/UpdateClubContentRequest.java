@@ -83,7 +83,7 @@ public record UpdateClubContentRequest(
                 type = "string",
                 format = "date"
         )
-        JsonNullable<LocalDate> applyEndDate,
+        JsonNullable<LocalDate> applyDeadLine,
 
         @Schema(
                 description = "모집 대상 학년",
@@ -113,7 +113,7 @@ public record UpdateClubContentRequest(
                 .profileImage(profileImage)
                 .content(content)
                 .applyStartDate(applyStartDate)
-                .applyEndDate(applyEndDate)
+                .applyEndDate(applyDeadLine)
                 .grades(grades)
                 .maxApplyCount(maxApplyCount)
                 .build();

@@ -28,7 +28,7 @@ public record ApplicantPageServiceResponse(
                 null,
                 null,
                 null,
-                null
+                List.of()
         );
     }
 }

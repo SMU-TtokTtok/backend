@@ -116,7 +116,11 @@ public class ApplicantAdminService {
 
         // 2. 가장 최신의 지원 폼 찾기
         ApplyForm mostRecentApplyForm = applyFormRepository.findTopByClubIdAndStatusOrderByCreatedAtDesc(club.getId(), ACTIVE)
-                .orElseThrow(ApplyFormNotFoundException::new);
+                .orElse(null);
+
+        if (mostRecentApplyForm == null) {
+            return ApplicantPageServiceResponse.toEmpty();
+        }
 
         // 3. 지원자 검색
         return ApplicantPageServiceResponse.of(
@@ -132,6 +136,7 @@ public class ApplicantAdminService {
                 mostRecentApplyForm.isHasInterview());
     }
 
+    // todo: 비어있으면 null 혹은 빈 배열 반환
     @Transactional(readOnly = true)
     public ApplicantPageServiceResponse getApplicantsByStatus(ApplicantStatusServiceRequest request) {
         // 1. username으로 관리하는 동아리 찾기
@@ -140,7 +145,11 @@ public class ApplicantAdminService {
 
         // 2. 가장 최신의 지원 폼 찾기
         ApplyForm mostRecentApplyForm = applyFormRepository.findTopByClubIdAndStatusOrderByCreatedAtDesc(club.getId(), ACTIVE)
-                .orElseThrow(ApplyFormNotFoundException::new);
+                .orElse(null);
+
+        if (mostRecentApplyForm == null) {
+            return ApplicantPageServiceResponse.toEmpty();
+        }
 
         // 3. 합격/불합격 상태에 따른 지원자 목록 조회
         return ApplicantPageServiceResponse.of(
