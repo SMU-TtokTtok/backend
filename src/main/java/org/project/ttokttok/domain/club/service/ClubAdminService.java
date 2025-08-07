@@ -3,6 +3,7 @@ package org.project.ttokttok.domain.club.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.project.ttokttok.domain.applyform.domain.ApplyForm;
+import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
 import org.project.ttokttok.domain.applyform.exception.ApplyFormNotFoundException;
 import org.project.ttokttok.domain.applyform.exception.InvalidDateRangeException;
 import org.project.ttokttok.domain.applyform.repository.ApplyFormRepository;
@@ -22,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus.ACTIVE;
 import static org.project.ttokttok.infrastructure.s3.enums.S3FileDirectory.INTRODUCTION_IMAGE;
@@ -142,30 +144,30 @@ public class ClubAdminService {
                 request.grades().isPresent() || request.maxApplyCount().isPresent();
     }
 
+    // TODO: 추후 날짜 정합성 관련 로직 추가.
     // 지원 폼 업데이트 로직
     private void updateApplyForm(Club club, ClubContentUpdateServiceRequest request) {
         ApplyForm applyForm = applyFormRepository.findByClubIdAndStatus(club.getId(), ACTIVE)
                 .orElseThrow(ApplyFormNotFoundException::new);
 
-        // 모집 시작일과 종료일이 모두 존재할 경우, 종료일이 시작일보다 이후인지 검증
-        if (isDatePresent(Optional.ofNullable(request.applyStartDate().get())) &&
-                isDatePresent(Optional.ofNullable(request.applyEndDate().get()))) {
-            validateApplyPeriod(request.applyStartDate().get(), request.applyEndDate().get());
-        }
+        Optional<LocalDate> startDate = request.applyStartDate().isPresent() ?
+                Optional.of(request.applyStartDate().get()) : Optional.empty();
+
+        Optional<LocalDate> endDate = request.applyEndDate().isPresent() ?
+                Optional.of(request.applyEndDate().get()) : Optional.empty();
+
+        Optional<Integer> maxCount = request.maxApplyCount().isPresent() ?
+                Optional.of(request.maxApplyCount().get()) : Optional.empty();
+
+        Optional<Set<ApplicableGrade>> grades = request.grades().isPresent() ?
+                Optional.of(request.grades().get()) : Optional.empty();
 
         applyForm.updateApplyInfo(
-                request.applyStartDate().orElse(null),
-                request.applyEndDate().orElse(null),
-                request.maxApplyCount().orElse(null),
-                request.grades().orElse(null)
-                // request.recruiting().orElse(null) - ApplyForm에서 관리
+                startDate.orElse(null),
+                endDate.orElse(null),
+                maxCount.orElse(null),
+                grades.orElse(null)
         );
-    }
-
-    private void validateApplyPeriod(LocalDate startDate, LocalDate endDate) {
-        if (startDate.isAfter(endDate)) {
-            throw new InvalidDateRangeException();
-        }
     }
 
     // 기존 프로필 이미지가 있다면 삭제
@@ -179,10 +181,5 @@ public class ClubAdminService {
     private void validateAdmin(String username, String targetAdminUsername) {
         if (!username.equals(targetAdminUsername))
             throw new NotClubAdminException();
-    }
-
-    // 날짜 입력이 존재하는지 확인
-    private boolean isDatePresent(Optional<LocalDate> date) {
-        return date.isPresent();
     }
 }
