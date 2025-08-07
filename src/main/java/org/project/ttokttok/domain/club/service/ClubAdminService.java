@@ -150,10 +150,17 @@ public class ClubAdminService {
         ApplyForm applyForm = applyFormRepository.findByClubIdAndStatus(club.getId(), ACTIVE)
                 .orElseThrow(ApplyFormNotFoundException::new);
 
-        Optional<LocalDate> startDate = Optional.ofNullable(request.applyStartDate().get());
-        Optional<LocalDate> endDate = Optional.ofNullable(request.applyEndDate().get());
-        Optional<Integer> maxCount = Optional.ofNullable(request.maxApplyCount().get());
-        Optional<Set<ApplicableGrade>> grades = Optional.ofNullable(request.grades().get());
+        Optional<LocalDate> startDate = request.applyStartDate().isPresent() ?
+                Optional.of(request.applyStartDate().get()) : Optional.empty();
+
+        Optional<LocalDate> endDate = request.applyEndDate().isPresent() ?
+                Optional.of(request.applyEndDate().get()) : Optional.empty();
+
+        Optional<Integer> maxCount = request.maxApplyCount().isPresent() ?
+                Optional.of(request.maxApplyCount().get()) : Optional.empty();
+
+        Optional<Set<ApplicableGrade>> grades = request.grades().isPresent() ?
+                Optional.of(request.grades().get()) : Optional.empty();
 
         applyForm.updateApplyInfo(
                 startDate.orElse(null),
