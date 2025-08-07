@@ -1,7 +1,7 @@
 -- 2. 동아리 데이터 30개 (다양한 카테고리, 타입, 모집상태, 모집대상)
 INSERT INTO clubs (id, name, profile_img, summary, club_type, club_category, club_univ, custom_category, content, admin_id, created_at, updated_at) VALUES
 ('club-001', '그림사랑', 'https://example.com/art1.jpg', '미술을 사랑하는 사람들의 모임', 'CENTRAL', 'CULTURE', 'ARTS', '회화', '함께 그림을 그리고 전시회도 개최하는 동아리입니다.', 'admin-001', NOW(), NOW()),
-('club-002', '상명축구부', 'https://example.com/soccer.jpg', '축구를 통한 건강한 대학생활', 'CENTRAL', 'SPORTS', 'ENGINEERING', '축구', '매주 정기적인 훈련과 대회 참가를 통해 실력을 키웁니다.', 'admin-002', NOW(), NOW()),
+('club-002', '상명축구부', null, '축구를 통한 건강한 대학생활', 'CENTRAL', 'SPORTS', 'ENGINEERING', '축구', '매주 정기적인 훈련과 대회 참가를 통해 실력을 키웁니다.', 'admin-002', NOW(), NOW()),
 ('club-003', '코딩마스터', 'https://example.com/code.jpg', '프로그래밍 실력 향상을 위한 스터디', 'DEPARTMENT', 'ACADEMIC', 'CONVERGENCE_TECHNOLOGY', '프로그래밍', '다양한 프로그래밍 언어를 배우고 프로젝트를 진행합니다.', 'admin-003', NOW(), NOW()),
 ('club-004', '나눔봉사단', 'https://example.com/volunteer.jpg', '사회에 보탬이 되는 봉사활동', 'UNION', 'VOLUNTEER', 'GLOBAL_AREA', '사회봉사', '지역사회를 위한 다양한 봉사활동을 함께 합니다.', 'admin-004', NOW(), NOW()),
 ('club-005', '연극반', 'https://example.com/drama.jpg', '무대 위에서 펼치는 우리들의 이야기', 'CENTRAL', 'CULTURE', 'ARTS', '연극', '연기, 연출, 무대제작 등 연극의 모든 것을 배웁니다.', 'admin-005', NOW(), NOW()),
