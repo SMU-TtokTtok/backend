@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
@@ -29,10 +31,14 @@ public class ClubAdminApiController implements ClubAdminApiDocs {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Map<String, String>> updateClubContent(@AuthUserInfo String username,
                                                                  @PathVariable String clubId,
-                                                                 @Valid @RequestPart UpdateClubContentRequest request,
+                                                                 @Valid @RequestPart(required = false) UpdateClubContentRequest request,
                                                                  @RequestPart(required = false) MultipartFile profileImage) {
+
         clubAdminService.updateContent(
-                username, request.toServiceRequest(clubId, JsonNullable.of(profileImage))
+                username,
+                clubId,
+                request != null ? request.toServiceRequest() : null,
+                Optional.ofNullable(profileImage)
         );
 
         return ResponseEntity.ok()

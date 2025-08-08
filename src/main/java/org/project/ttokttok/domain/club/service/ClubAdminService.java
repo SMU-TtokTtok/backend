@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.project.ttokttok.domain.applyform.domain.ApplyForm;
 import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
 import org.project.ttokttok.domain.applyform.exception.ApplyFormNotFoundException;
-import org.project.ttokttok.domain.applyform.exception.InvalidDateRangeException;
 import org.project.ttokttok.domain.applyform.repository.ApplyFormRepository;
 import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.exception.ClubNotFoundException;
@@ -41,21 +40,24 @@ public class ClubAdminService {
 
     // todo: 나중에 무조건 분할 들어가야 함.
     @Transactional
-    public void updateContent(String username, ClubContentUpdateServiceRequest request) {
-        Club club = clubRepository.findById(request.clubId())
+    public void updateContent(String username,
+                              String clubId,
+                              ClubContentUpdateServiceRequest request,
+                              Optional<MultipartFile> profileImage) {
+
+        Club club = clubRepository.findById(clubId)
                 .orElseThrow(ClubNotFoundException::new);
 
         validateAdmin(username, club.getAdmin().getUsername());
 
-        if (hasProfileImage(request)) {
-            updateProfileImage(club, request.profileImage().get());
+        if (hasProfileImage(profileImage)) {
+            updateProfileImage(club, profileImage.get());
         }
 
-        if (hasApplyFormUpdate(request)) {
-            updateApplyForm(club, request);
+        if (isRequestNotNull(request)) {
+            updateFormSafety(request, club);
+            club.updateFrom(request.toClubPatchRequest());
         }
-
-        club.updateFrom(request.toClubPatchRequest());
     }
 
     @Transactional
@@ -124,9 +126,7 @@ public class ClubAdminService {
     }
 
     // 요청에 프로필 이미지 업데이트 요청이 있는지 확인
-    private boolean hasProfileImage(ClubContentUpdateServiceRequest request) {
-        Optional<MultipartFile> profileImage = Optional.ofNullable(request.profileImage().get());
-
+    private boolean hasProfileImage(Optional<MultipartFile> profileImage) {
         return profileImage.isPresent();
     }
 
@@ -175,6 +175,16 @@ public class ClubAdminService {
         if (club.getProfileImageUrl() != null && !club.getProfileImageUrl().equals(profileImgKey)) {
             s3Service.deleteFile(club.getProfileImageUrl());
         }
+    }
+
+    // 요청이 null이 아니고, 지원 폼 업데이트 요청이 있는지 확인
+    private boolean isRequestNotNull(ClubContentUpdateServiceRequest request) {
+        return request != null;
+    }
+
+    private void updateFormSafety(ClubContentUpdateServiceRequest request, Club club) {
+        if (hasApplyFormUpdate(request))
+            updateApplyForm(club, request);
     }
 
     // 동아리 관리자 검증

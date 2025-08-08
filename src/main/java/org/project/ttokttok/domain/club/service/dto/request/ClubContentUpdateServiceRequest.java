@@ -15,14 +15,12 @@ import java.util.Set;
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record ClubContentUpdateServiceRequest(
-        String clubId,
         JsonNullable<String> name,
         JsonNullable<ClubType> clubType,
         JsonNullable<ClubCategory> clubCategory,
         JsonNullable<ClubUniv> clubUniv,
         JsonNullable<String> customCategory,
         JsonNullable<String> summary,
-        JsonNullable<MultipartFile> profileImage,
         JsonNullable<String> content,
         // recruiting은 ApplyForm에서 관리
         JsonNullable<LocalDate> applyStartDate,

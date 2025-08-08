@@ -42,7 +42,7 @@ public record ApplyFormCreateRequest(
         String subTitle,
 
         @NotNull(message = "지원 폼 내용은 Null일 수 없습니다.")
-        List<Question> questions
+        List<QuestionRequestDto> questions
 ) {
     public ApplyFormCreateServiceRequest toServiceRequest(String username, String clubId) {
         return ApplyFormCreateServiceRequest.builder()
@@ -57,7 +57,9 @@ public record ApplyFormCreateRequest(
                 .interviewEndDate(interviewEndDate)
                 .title(title)
                 .subTitle(subTitle)
-                .questions(questions)
+                .questions(questions.stream()
+                        .map(QuestionRequestDto::toQuestion)
+                        .toList())
                 .build();
     }
 }

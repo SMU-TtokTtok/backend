@@ -101,16 +101,14 @@ public record UpdateClubContentRequest(
         )
         JsonNullable<Integer> maxApplyCount
 ) {
-    public ClubContentUpdateServiceRequest toServiceRequest(String clubId, JsonNullable<MultipartFile> profileImage) {
+    public ClubContentUpdateServiceRequest toServiceRequest() {
         return ClubContentUpdateServiceRequest.builder()
-                .clubId(clubId)
                 .name(name)
                 .clubType(clubType)
                 .clubCategory(clubCategory)
                 .clubUniv(clubUniv)
                 .customCategory(customCategory)
                 .summary(summary)
-                .profileImage(profileImage)
                 .content(content)
                 .applyStartDate(applyStartDate)
                 .applyEndDate(applyDeadLine)
