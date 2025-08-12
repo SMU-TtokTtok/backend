@@ -169,22 +169,23 @@ public class ApplicantUserService {
     }
 
     private void validateQuestionIdsAndFiles(List<String> questionIds, List<MultipartFile> files, List<Question> questions) {
-        // 1. 둘 다 null이거나 빈 리스트인 경우 통과
+        // 1. 둘 다 null이거나 빈 리스트인 경우
         if ((questionIds == null || questionIds.isEmpty()) && 
             (files == null || files.isEmpty())) {
-            return;
+            
+            // 파일 질문 중 필수인 것이 있는지 확인
+            boolean hasRequiredFileQuestions = questions.stream()
+                    .anyMatch(q -> q.questionType() == FILE && q.isEssential());
+            
+            // 필수 파일 질문이 있으면 예외 발생
+            if (hasRequiredFileQuestions) {
+                throw new AnswerRequestNotMatchException();
+            }
+            
+            return; // 필수 파일 질문이 없으면 통과
         }
 
-        // 2. 파일 질문이 있는지 확인
-        boolean hasFileQuestions = questions.stream()
-                .anyMatch(q -> q.questionType() == FILE);
-
-        // 3. 파일 질문이 없으면 questionIds와 files가 일치할 필요 없음
-        if (!hasFileQuestions) {
-            return;
-        }
-
-        // 4. 파일 질문이 있으면 questionIds와 files의 일관성 검사
+        // 2. 둘 중 하나라도 값이 있으면 일관성 검사
         if (questionIds != null && !questionIds.isEmpty()) {
             // 파일 질문 ID만 추출
             List<String> fileQuestionIds = questionIds.stream()
