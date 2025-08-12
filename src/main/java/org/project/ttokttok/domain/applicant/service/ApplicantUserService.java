@@ -60,10 +60,10 @@ public class ApplicantUserService {
         // 2. 중복 지원 검증
         validateApplicantExists(email, form.getId());
 
-        // 3. questionIds와 files의 유효성 검사
-        validateQuestionIdsAndFiles(questionIds, files);
-
         List<Question> questions = form.getFormJson();
+
+        // 3. questionIds와 files의 유효성 검사 (질문 타입 고려)
+        validateQuestionIdsAndFiles(questionIds, files, questions);
 
         List<Answer> answers = getAnswers(
                 request.answers(),
@@ -135,24 +135,29 @@ public class ApplicantUserService {
                 .orElseThrow(QuestionParseFailException::new);
 
         if (question.questionType() == FILE) {
-            // questionIds에서 현재 questionId의 인덱스를 찾음
-            int fileIndex = questionIds.indexOf(answerRequest.questionId());
-            if (fileIndex == -1) {
-                throw new QuestionParseFailException();
+            // 파일 질문인데 파일이 없는 경우 처리
+            if (questionIds == null || files == null || 
+                questionIds.isEmpty() || files.isEmpty()) {
+                // 파일이 필수가 아닌 경우 빈 값으로 처리
+                return new AnswerRequest(answerRequest.questionId(), "").toAnswer(question);
             }
 
-            // 해당 인덱스의 파일을 가져와서 S3에 업로드
+            // questionIds에서 현재 questionId의 인덱스를 찾음
+            int fileIndex = questionIds.indexOf(answerRequest.questionId());
+            if (fileIndex == -1 || fileIndex >= files.size()) {
+                // 파일이 필수가 아닌 경우 빈 값으로 처리
+                return new AnswerRequest(answerRequest.questionId(), "").toAnswer(question);
+            }
+
+            // 파일 업로드 처리
             MultipartFile file = files.get(fileIndex);
+            if (file == null || file.isEmpty()) {
+                // 파일이 필수가 아닌 경우 빈 값으로 처리
+                return new AnswerRequest(answerRequest.questionId(), "").toAnswer(question);
+            }
 
             String fileUrl = s3Service.uploadFile(file, "applicant/" + email + "/");
-
-            // 파일 URL을 답변에 포함시키기 위해 AnswerRequest를 수정된 값으로 생성
-            AnswerRequest fileAnswerRequest = new AnswerRequest(
-                    answerRequest.questionId(),
-                    fileUrl
-            );
-
-            return fileAnswerRequest.toAnswer(question);
+            return new AnswerRequest(answerRequest.questionId(), fileUrl).toAnswer(question);
         }
 
         return answerRequest.toAnswer(question);
@@ -163,28 +168,41 @@ public class ApplicantUserService {
             throw new UserNotFoundException();
     }
 
-    private void validateQuestionIdsAndFiles(List<String> questionIds, List<MultipartFile> files) {
-        // 1. 둘 다 null인지 확인
-        if (questionIds == null && files == null) {
-            return; // 둘 다 null이면 유효성 검사 통과
+    private void validateQuestionIdsAndFiles(List<String> questionIds, List<MultipartFile> files, List<Question> questions) {
+        // 1. 둘 다 null이거나 빈 리스트인 경우 통과
+        if ((questionIds == null || questionIds.isEmpty()) && 
+            (files == null || files.isEmpty())) {
+            return;
         }
 
-        // 2. 둘 중 하나라도 null이 아니면 유효성 검사 실패
-        nullListCheck(questionIds, files);
+        // 2. 파일 질문이 있는지 확인
+        boolean hasFileQuestions = questions.stream()
+                .anyMatch(q -> q.questionType() == FILE);
 
-        // 3. questionIds와 files의 크기가 일치하는지 확인
-        ListSizeCheck(questionIds.size(), files.size());
-    }
-
-    private void nullListCheck(List<String> questionIds, List<MultipartFile> files) {
-        if (questionIds == null || files == null) {
-            throw new AnswerRequestNotMatchException();
+        // 3. 파일 질문이 없으면 questionIds와 files가 일치할 필요 없음
+        if (!hasFileQuestions) {
+            return;
         }
-    }
 
-    private void ListSizeCheck(int questionIdsSize, int filesSize) {
-        if (questionIdsSize != filesSize) {
-            throw new ListSizeNotMatchException();
+        // 4. 파일 질문이 있으면 questionIds와 files의 일관성 검사
+        if (questionIds != null && !questionIds.isEmpty()) {
+            // 파일 질문 ID만 추출
+            List<String> fileQuestionIds = questionIds.stream()
+                    .filter(id -> questions.stream()
+                            .anyMatch(q -> q.questionId().equals(id) && q.questionType() == FILE))
+                    .toList();
+
+            // 파일 질문이 있으면 files도 있어야 함
+            if (!fileQuestionIds.isEmpty()) {
+                if (files == null || files.isEmpty()) {
+                    throw new AnswerRequestNotMatchException();
+                }
+                
+                // 파일 질문 개수와 파일 개수가 일치해야 함
+                if (fileQuestionIds.size() != files.size()) {
+                    throw new ListSizeNotMatchException();
+                }
+            }
         }
     }
 
