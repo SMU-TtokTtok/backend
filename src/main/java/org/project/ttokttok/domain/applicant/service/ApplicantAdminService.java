@@ -219,13 +219,13 @@ public class ApplicantAdminService {
         // 합격자 이메일 목록
         List<String> passedEmails = filterApplicantsByStatus(currentApplyForm.getId(), isDocument, PASS)
                 .stream()
-                .map(Applicant::getUserEmail)
+                .map(Applicant::getEmail)
                 .toList();
 
         // 불합격자 이메일 목록
         List<String> failedEmails = filterApplicantsByStatus(currentApplyForm.getId(), isDocument, FAIL)
                 .stream()
-                .map(Applicant::getUserEmail)
+                .map(Applicant::getEmail)
                 .toList();
 
         // 4. 이메일 전송
