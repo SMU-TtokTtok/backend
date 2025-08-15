@@ -155,6 +155,7 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
                         bookmarkedSubQuery
                 ))
                 .from(club)
+                .distinct()  // ✅ DISTINCT 추가로 중복 제거
                 .where(
                         categoryEq(category),
                         typeEq(type),
@@ -359,6 +360,7 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
                         bookmarkedSubQuery
                 ))
                 .from(club)
+                .distinct()  // ✅ DISTINCT 추가로 중복 제거
                 .where(
                         popularityScore.goe(minScore),
                         cursorCondition(cursor, sort)
@@ -409,6 +411,7 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
                         bookmarkedSubQuery
                 ))
                 .from(club)
+                .distinct()  // ✅ DISTINCT 추가로 중복 제거
                 .where(
                         club.name.containsIgnoreCase(keyword)
                                 .or(club.summary.containsIgnoreCase(keyword))
