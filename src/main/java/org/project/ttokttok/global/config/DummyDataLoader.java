@@ -27,6 +27,7 @@ public class DummyDataLoader implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) throws Exception {
          //임시로 더미 데이터 로딩 비활성화
+        // logDatabaseConnectionInfo();
         log.info("더미 데이터 로딩 비활성화됨");
         return;
 
@@ -216,4 +217,34 @@ public class DummyDataLoader implements ApplicationRunner {
 
         log.info("InterviewPhase 데이터 로딩 완료");
     }
+
+    // 새로 추가할 메서드
+//    private void logDatabaseConnectionInfo() {
+//        try {
+//            // 현재 데이터베이스 정보 조회
+//            String currentDb = jdbcTemplate.queryForObject("SELECT current_database()", String.class);
+//            String currentUser = jdbcTemplate.queryForObject("SELECT current_user", String.class);
+//            String serverAddr = jdbcTemplate.queryForObject("SELECT inet_server_addr()", String.class);
+//            String serverPort = jdbcTemplate.queryForObject("SELECT inet_server_port()", String.class);
+//
+//            log.info("=== 데이터베이스 연결 정보 ===");
+//            log.info("현재 데이터베이스: {}", currentDb);
+//            log.info("현재 사용자: {}", currentUser);
+//            log.info("서버 주소: {}", serverAddr);
+//            log.info("서버 포트: {}", serverPort);
+//            log.info("================================");
+//
+//            // 테이블 개수도 확인
+//            Long adminCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM admins", Long.class);
+//            Long clubCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM clubs", Long.class);
+//
+//            log.info("=== 현재 테이블 데이터 개수 ===");
+//            log.info("Admin 테이블: {}개", adminCount);
+//            log.info("Club 테이블: {}개", clubCount);
+//            log.info("================================");
+//
+//        } catch (Exception e) {
+//            log.error("데이터베이스 연결 정보 조회 중 오류 발생", e);
+//        }
+//    }
 }
