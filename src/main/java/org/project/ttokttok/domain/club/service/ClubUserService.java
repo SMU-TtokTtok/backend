@@ -208,7 +208,7 @@ public class ClubUserService {
         // 정렬 방식에 따라 다른 커서 생성
         switch (sort) {
             case "latest":
-                // 최신순은 createdAt 기준으로 정렬되므로 ID만 사용
+                // 최신순은 ID 기준으로 정렬되므로 ID 사용
                 return lastItemId;
             case "popular":
             case "member_count":

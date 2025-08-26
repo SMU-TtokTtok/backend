@@ -191,8 +191,10 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
             NumberExpression<Integer> memberCountExpression = Expressions.numberTemplate(Integer.class, "({0})", memberCountSubQuery);
             query.orderBy(memberCountExpression.desc(), club.id.desc());
         } else {
-            // 최신순 정렬: 생성일 내림차순, ID 내림차순
-            query.orderBy(club.createdAt.desc(), club.id.desc());
+            // 최신순 정렬: ID 내림차순, 생성일 내림차순
+            // ID가 UUID이므로 생성 순서와 문자열 순서가 다를 수 있지만, 
+            // 커서 페이지네이션의 일관성을 위해 ID를 1차 기준으로 사용
+            query.orderBy(club.id.desc(), club.createdAt.desc());
         }
 
         query.limit(size + 1);
@@ -254,7 +256,7 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
         String currentSort = (sort == null) ? "latest" : sort;
         switch (currentSort) {
             case "latest":
-                // 최신순은 createdAt 기준 정렬이므로 ID 기반 커서 사용
+                // 최신순은 ID 기준 정렬이므로 ID 기반 커서 사용
                 return club.id.lt(cursor);
             case "popular":
             case "member_count":
@@ -372,7 +374,8 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
             NumberExpression<Integer> memberCountExpression = Expressions.numberTemplate(Integer.class, "({0})", memberCountSubQuery);
             query.orderBy(memberCountExpression.desc(), club.id.desc());
         } else { // "latest"
-            query.orderBy(club.createdAt.desc(), club.id.desc());
+            // 최신순 정렬: ID 내림차순, 생성일 내림차순
+            query.orderBy(club.id.desc(), club.createdAt.desc());
         }
 
         query.limit(size + 1);
@@ -435,7 +438,8 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
                 break;
             case "latest":
             default:
-                query.orderBy(club.createdAt.desc(), club.id.desc());
+                // 최신순 정렬: ID 내림차순, 생성일 내림차순
+                query.orderBy(club.id.desc(), club.createdAt.desc());
                 break;
         }
 
