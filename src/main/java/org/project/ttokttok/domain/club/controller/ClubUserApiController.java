@@ -270,18 +270,18 @@ public class ClubUserApiController {
 
     /**
      * 동아리 검색 API
-     * 동아리 이름, 소개, 카테고리 등을 기준으로 검색합니다.
+     * 동아리 이름을 기준으로 검색합니다.
      * 검색 결과는 커서 기반 페이지네이션을 지원합니다.
-     * 검색 키워드에 따라 동아리 이름, 소개글, 카테고리 등을 포함한 결과를 반환합니다.
+     * 검색 키워드가 동아리 이름에 포함되는 결과를 반환합니다.
      *
-     * @param keyword 검색 키워드 (동아리 이름, 소개글 등)
+     * @param keyword 검색 키워드 (동아리 이름)
      * @param sort 정렬 기준 (latest, member, popular)
      * @param cursor 커서 기반 페이지네이션을 위한 기준 ID
      * @param size 페이지당 로드할 개수 (기본값 20)
      */
     @Operation(
             summary = "동아리 검색",
-            description = "동아리 이름, 소개, 카테고리 등을 기준으로 검색합니다."
+            description = "동아리 이름을 기준으로 검색합니다."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "검색 성공"),

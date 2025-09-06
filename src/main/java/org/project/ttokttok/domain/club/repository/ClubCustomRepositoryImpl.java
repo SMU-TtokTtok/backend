@@ -413,9 +413,7 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
                 ))
                 .from(club)
                 .where(
-                        club.name.containsIgnoreCase(keyword)
-                                .or(club.summary.containsIgnoreCase(keyword))
-                                .or(club.content.containsIgnoreCase(keyword)),
+                        club.name.containsIgnoreCase(keyword),
                         cursorCondition(cursor, sort)
                 );
 
@@ -454,8 +452,6 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
                 .from(club)
                 .where(
                         club.name.containsIgnoreCase(keyword)
-                                .or(club.summary.containsIgnoreCase(keyword))
-                                .or(club.content.containsIgnoreCase(keyword))
                 )
                 .fetchOne();
     }
