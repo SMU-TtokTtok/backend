@@ -49,8 +49,6 @@ public class ClubUserApiController {
      * @param clubId 조회할 동아리 ID
      * @return 동아리 상세 정보 (소개, 지원 정보, 멤버 수 등)
      */
-    private final ClubUserService clubService;
-
     @Operation(
             summary = "동아리 소개글 조회",
             description = "동아리 타고 들어갔을때의 소개글과 모집인원, 지원가능 학년 등을 조회합니다."

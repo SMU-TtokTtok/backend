@@ -54,6 +54,9 @@ public class Club extends BaseTimeEntity {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 
+    @Column(name = "view_count", nullable = false)
+    private long viewCount = 0L;
+
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "admin_id", nullable = false)
     private Admin admin;
@@ -94,5 +97,9 @@ public class Club extends BaseTimeEntity {
         if (nullable != null && nullable.isPresent()) {
             setter.accept(nullable.get());
         }
+    }
+
+    public void updateViewCount() {
+        viewCount += 1;
     }
 }

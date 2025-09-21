@@ -1,5 +1,6 @@
 package org.project.ttokttok.domain.club.service;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
 import org.project.ttokttok.domain.club.domain.Club;
@@ -44,9 +45,12 @@ public class ClubUserService {
      * @return 동아리 상세 정보
      * @throws ClubNotFoundException 동아리를 찾을 수 없는 경우
      */
+    @Transactional
     public ClubDetailServiceResponse getClubIntroduction(String username, String clubId) {
-        if (!clubRepository.existsById(clubId))
-            throw new ClubNotFoundException();
+        Club targetClub = clubRepository.findById(clubId)
+                .orElseThrow(ClubNotFoundException::new);
+
+        targetClub.updateViewCount();
 
         return ClubDetailServiceResponse.from(clubRepository.getClubIntroduction(clubId, username));
     }
