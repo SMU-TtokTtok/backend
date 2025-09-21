@@ -299,11 +299,12 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
                         club.summary,
                         club.profileImageUrl,
                         Expressions.numberTemplate(Integer.class, "({0})", memberCountSubQuery),
-                        // ApplyForm이 ACTIVE 상태인지 확인
+                        // ApplyForm이 활성화되어있고, 모집 중 상태인지 확인
                         JPAExpressions.select(applyForm.count().gt(0))
                                 .from(applyForm)
                                 .where(applyForm.club.id.eq(club.id)
-                                        .and(applyForm.status.eq(ACTIVE))),
+                                        .and(applyForm.status.eq(ACTIVE))
+                                        .and(applyForm.isRecruiting.eq(true))),
                         bookmarkedSubQuery
                 ))
                 .from(club)
