@@ -3,11 +3,7 @@ package org.project.ttokttok.domain.user.domain;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import org.project.ttokttok.domain.clubMember.domain.ClubMember;
 import org.project.ttokttok.global.entity.BaseTimeEntity;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -35,7 +31,4 @@ public class User extends BaseTimeEntity {
 
     // 약관 동의
     private boolean termsAgreed = false;  // 새로 추가
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<ClubMember> clubMembers = new ArrayList<>();
 }

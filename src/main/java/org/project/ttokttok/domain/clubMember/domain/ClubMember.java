@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 import org.project.ttokttok.domain.applicant.domain.enums.Gender;
 import org.project.ttokttok.domain.applicant.domain.enums.Grade;
 import org.project.ttokttok.domain.club.domain.Club;
-import org.project.ttokttok.domain.user.domain.User;
 import org.project.ttokttok.global.entity.BaseTimeEntity;
 
 @Entity
@@ -26,23 +25,19 @@ public class ClubMember extends BaseTimeEntity {
     @JoinColumn(name = "club_id", nullable = false)
     private Club club;
 
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "member_id", nullable = false)
-//    private User user;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private MemberRole role;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Grade grade; // TODO: 추후 의존 위치 바꾸던가 할 것
+    private Grade grade;
 
     @Column(nullable = false)
     private String major;
 
     // ---- 추가된 필드 ----
-    @Column(name = "member_name", nullable =  false)
+    @Column(name = "member_name", nullable = false)
     private String memberName;
 
     @Column(nullable = false)
@@ -53,11 +48,11 @@ public class ClubMember extends BaseTimeEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Gender gender; // 부원 추가 시 입력한 성별 -> TODO: 추후 의존 위치 바꾸던가 할 것
+    private Gender gender; // 부원 추가 시 입력한 성별
 
     @Builder
     private ClubMember(Club club,
-                       User user,
+                       String memberName,
                        MemberRole role,
                        Grade grade,
                        String major,
@@ -65,7 +60,7 @@ public class ClubMember extends BaseTimeEntity {
                        String phoneNumber,
                        Gender gender) {
         this.club = club;
-        this.user = user;
+        this.memberName = memberName;
         this.role = role != null ? role : MemberRole.MEMBER;
         this.grade = grade != null ? grade : Grade.FIRST_GRADE; // 기본값은 1학년
         this.major = major != null ? major : "N/A"; // 학과 값 에러 시
@@ -75,7 +70,7 @@ public class ClubMember extends BaseTimeEntity {
     }
 
     public static ClubMember create(Club club,
-                                    User user,
+                                    String memberName,
                                     MemberRole role,
                                     Grade grade,
                                     String major,
@@ -85,7 +80,7 @@ public class ClubMember extends BaseTimeEntity {
 
         return ClubMember.builder()
                 .club(club)
-                .user(user)
+                .memberName(memberName)
                 .role(role)
                 .grade(grade)
                 .major(major)
