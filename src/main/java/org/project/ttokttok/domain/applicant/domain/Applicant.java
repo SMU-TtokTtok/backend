@@ -26,11 +26,11 @@ public class Applicant extends BaseTimeEntity {
     private String id;
 
     // 지원자 기본 정보 (변하지 않는 정보)
-    private String userEmail;
+    private String userEmail; // 학교 이메일
     private String name;
     private Integer age;
     private String major;
-    private String email;
+    private String email; // 지원서에서 받은 이메일
     private String phone;
 
     @Enumerated(EnumType.STRING)

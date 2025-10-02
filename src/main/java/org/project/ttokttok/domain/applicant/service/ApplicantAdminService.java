@@ -44,7 +44,6 @@ public class ApplicantAdminService {
     private final ApplyFormRepository applyFormRepository;
     private final ClubRepository clubRepository;
     private final ClubMemberRepository clubMemberRepository;
-    private final UserRepository userRepository;
     private final EmailService emailService;
 
     public ApplicantPageServiceResponse getApplicantPage(ApplicantPageServiceRequest request) {
@@ -314,9 +313,9 @@ public class ApplicantAdminService {
                 .filter(applicant -> {
                     // 이미 ClubMember로 등록된 지원자 제외
                     boolean alreadyMember = clubMemberRepository
-                            .existsByClubIdAndUserEmail(club.getId(), applicant.getUserEmail());
+                            .existsByClubIdAndEmail(club.getId(), applicant.getEmail());
                     if (alreadyMember) {
-                        log.warn("지원자 {}는 이미 동아리 부원으로 등록되어 있습니다.", applicant.getUserEmail());
+                        log.warn("지원자 {}는 이미 동아리 부원으로 등록되어 있습니다.", applicant.getEmail());
                         return false;
                     }
                     return true;
@@ -335,8 +334,7 @@ public class ApplicantAdminService {
     private ClubMember convertToClubMember(Applicant applicant, Club club) {
         return ClubMember.create(
                 club,
-                userRepository.findByEmail(applicant.getUserEmail())
-                        .orElseThrow(ApplicantNotFoundException::new),
+                applicant.getName(), // User에서 가져오는 대신 Applicant의 이름 사용
                 MEMBER,
                 applicant.getGrade(),
                 applicant.getMajor(),

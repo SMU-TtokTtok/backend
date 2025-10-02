@@ -14,14 +14,12 @@ public interface ClubMemberRepository extends JpaRepository<ClubMember, String>,
     Optional<ClubMember> findByClubIdAndRole(String clubId, MemberRole role);
 
     @Query("SELECT new org.project.ttokttok.domain.clubMember.service.dto.response." +
-            "ClubMemberInExcelResponse(cm.grade, cm.user.name, cm.major, cm.role) " +
+            "ClubMemberInExcelResponse(cm.grade, cm.memberName, cm.major, cm.role) " +
            "FROM ClubMember cm WHERE cm.club.id = :clubId")
     List<ClubMemberInExcelResponse> findByClubId(String clubId);
 
-    @Query("SELECT cm FROM ClubMember cm WHERE cm.club.id = :clubId AND cm.user.name LIKE %:keyword%")
+    @Query("SELECT cm FROM ClubMember cm WHERE cm.club.id = :clubId AND cm.memberName LIKE %:keyword%")
     List<ClubMember> findByClubIdAndKeyword(String clubId, String keyword);
 
-    boolean existsByClubIdAndUserId(String clubId, String userId);
-
-    boolean existsByClubIdAndUserEmail(String id, String userEmail);
+    boolean existsByClubIdAndEmail(String clubId, String email);
 }

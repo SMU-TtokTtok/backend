@@ -18,9 +18,6 @@ import org.project.ttokttok.domain.clubMember.repository.ClubMemberRepository;
 import org.project.ttokttok.domain.clubMember.repository.dto.ClubMemberPageQueryResponse;
 import org.project.ttokttok.domain.clubMember.service.dto.request.*;
 import org.project.ttokttok.domain.clubMember.service.dto.response.*;
-import org.project.ttokttok.domain.user.domain.User;
-import org.project.ttokttok.domain.user.exception.UserNotFoundException;
-import org.project.ttokttok.domain.user.repository.UserRepository;
 import org.project.ttokttok.global.excel.ExcelService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,7 +34,6 @@ public class ClubMemberService {
 
     private final ClubMemberRepository clubMemberRepository;
     private final ClubRepository clubRepository;
-    private final UserRepository userRepository;
     private final ExcelService excelService;
 
     // 상명대 이메일 접미사
@@ -105,7 +101,7 @@ public class ClubMemberService {
                 .map(member -> ClubMemberSearchServiceResponse.of(
                         member.getId(),
                         member.getGrade(),
-                        member.getUser().getName(),
+                        member.getMemberName(),
                         member.getMajor(),
                         member.getRole()
                 ))
@@ -136,31 +132,28 @@ public class ClubMemberService {
 
         String targetEmail = getTargetEmail(request.studentNum());
 
-        User user = userRepository.findByEmail(targetEmail)
-                .orElseThrow(UserNotFoundException::new);
-
         Club club = validateClubExists(clubId);
 
         MemberRole memberRole = executeOrMember(role);
 
         return createClubMember(
-                user,
                 club,
-                request.major(),
-                request.grade(),
+                request.name(), // User에서 가져오는 대신 요청에서 직접 이름 사용
                 memberRole,
-                request.email(),
+                request.grade(),
+                request.major(),
+                targetEmail,
                 request.phoneNumber(),
                 request.gender())
                 .getId();
     }
 
-    // TODO: 나중에 메서드 분리
-    private ClubMember createClubMember(User user,
-                                        Club club,
-                                        String major,
-                                        Grade grade,
+    // ClubMember 생성 메서드 수정 - User 파라미터 제거
+    private ClubMember createClubMember(Club club,
+                                        String memberName,
                                         MemberRole role,
+                                        Grade grade,
+                                        String major,
                                         String email,
                                         String phoneNumber,
                                         Gender gender) {
@@ -172,14 +165,14 @@ public class ClubMemberService {
                     });
         }
 
-        // 겹치는 사용자가 존재하는지 검증
-        if (clubMemberRepository.existsByClubIdAndUserId(club.getId(), user.getId())) {
+        // 겹치는 이메일이 존재하는지 검증 (User ID 대신 email 사용)
+        if (clubMemberRepository.existsByClubIdAndEmail(club.getId(), email)) {
             throw new AlreadyClubMemberException();
         }
 
         ClubMember clubMember = ClubMember.create(
                 club,
-                user,
+                memberName,
                 role,
                 grade,
                 major,

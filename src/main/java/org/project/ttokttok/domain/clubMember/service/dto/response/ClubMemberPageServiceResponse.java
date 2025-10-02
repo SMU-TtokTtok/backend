@@ -28,7 +28,7 @@ public record ClubMemberPageServiceResponse(
         return response.clubMembers().stream()
                 .map(member -> new ClubMemberListResponse(
                         member.getId(),
-                        member.getUser().getName(),
+                        member.getMemberName(), // member.getUser().getName() 대신 memberName 사용
                         member.getGrade(),
                         member.getMajor(),
                         member.getRole()))
