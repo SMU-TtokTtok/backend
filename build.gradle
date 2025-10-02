@@ -75,6 +75,10 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-batch'
 	testImplementation 'org.springframework.batch:spring-batch-test'
 
+    // Flyway
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.flywaydb:flyway-database-postgresql'
+
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

@@ -46,6 +46,9 @@ out/
 .env.prod
 .env.test
 
+# DB Seed 파일들 (테스트용 데이터)
+/src/main/resources/db/seed/
+/src/test/resources/db/seed/
 
 ### NetBeans ###
 /nbproject/private/
