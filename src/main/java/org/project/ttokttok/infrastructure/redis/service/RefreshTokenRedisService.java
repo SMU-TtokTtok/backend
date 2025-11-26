@@ -1,17 +1,15 @@
 package org.project.ttokttok.infrastructure.redis.service;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.project.ttokttok.global.auth.jwt.exception.AlreadyLogoutException;
+import static org.project.ttokttok.global.auth.jwt.TokenExpiry.REFRESH_TOKEN_EXPIRY_TIME;
+import java.time.Duration;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import org.project.ttokttok.global.auth.jwt.exception.RefreshTokenExpiredException;
 import org.project.ttokttok.global.auth.jwt.exception.RefreshTokenNotFoundException;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
-
-import java.time.Duration;
-import java.util.concurrent.TimeUnit;
-
-import static org.project.ttokttok.global.auth.jwt.TokenExpiry.REFRESH_TOKEN_EXPIRY_TIME;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
@@ -28,10 +26,10 @@ public class RefreshTokenRedisService {
     private static final String ACCESS_BLACKLIST_KEY = "blacklist:access:";
 
     // 리프레시 토큰 저장 로직
+    // 로그인에 성공한 사용자의 리프레시토큰을 보관하는 규칙
     public void save(String username, String refreshToken) {
-//        if (isExistKey(username)) { // 리프레시 토큰이 존재하면 예외 발생
-//            throw new RefreshTokenAlreadyExistsException();
-//        }
+        Objects.requireNonNull(username, "username에 설정된 값이 null 일 수 없습니다.");
+        Objects.requireNonNull(refreshToken, "refreshToken에 설정된 값이 null 일 수 없습니다.");
 
         redisTemplate.opsForValue().set(
                 REFRESH_REDIS_KEY + refreshToken, // 레디스 키 설정(refresh:리프레시 토큰)
@@ -56,9 +54,6 @@ public class RefreshTokenRedisService {
             //log.info("로그아웃 완료: {}, logout at: {}", username, LocalDateTime.now());
             return;
         }
-
-        // 이미 로그아웃 되어있으면 그냥 ok 리턴
-        //throw new AlreadyLogoutException();
     }
 
     // 액세스 토큰 블랙리스트 추가 - 로그아웃 시
@@ -89,8 +84,6 @@ public class RefreshTokenRedisService {
         if (accessToken != null) {
             addAccessTokenToBlacklist(accessToken, accessTokenExpiryTime);
         }
-
-        //log.info("로그아웃 완료: {}, logout at: {}", username, LocalDateTime.now());
     }
 
     // 액세스 토큰 리이슈 시 사용

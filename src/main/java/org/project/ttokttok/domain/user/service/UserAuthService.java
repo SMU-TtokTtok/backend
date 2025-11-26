@@ -1,9 +1,10 @@
 package org.project.ttokttok.domain.user.service;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import static org.project.ttokttok.global.entity.Role.ROLE_USER;
+import java.time.LocalDateTime;
+import java.util.Date;
+import java.util.Objects;
+import java.util.UUID;
 import org.project.ttokttok.domain.user.domain.EmailVerification;
 import org.project.ttokttok.domain.user.domain.User;
 import org.project.ttokttok.domain.user.repository.EmailVerificationRepository;
@@ -23,12 +24,10 @@ import org.project.ttokttok.infrastructure.redis.service.RefreshTokenRedisServic
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.Date;
-import java.util.UUID;
-
-import static org.project.ttokttok.global.entity.Role.ROLE_USER;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
@@ -70,7 +69,7 @@ public class UserAuthService {
                 .expiresAt(LocalDateTime.now().plusMinutes(5))
                 .build();
 
-        emailVerificationRepository.save(verification);
+        emailVerificationRepository.save(Objects.requireNonNull(verification, "verification에 설정된 값이 null 일 수 없습니다."));
         log.info("인증코드 발송 및 저장 완료 : {}", email);
     }
 
@@ -227,7 +226,7 @@ public class UserAuthService {
                 .expiresAt(LocalDateTime.now().plusMinutes(5))
                 .build();
 
-        emailVerificationRepository.save(verification);
+        emailVerificationRepository.save(Objects.requireNonNull(verification, "verification에 설정된 값이 null 일 수 없습니다."));
         log.info("비밀번호 재설정 코드 발송 완료: {}", email);
     }
 
@@ -258,7 +257,6 @@ public class UserAuthService {
 
         // Redis에서 리프레시 토큰 삭제 및 액세스 토큰 블랙리스트 추가
         refreshTokenRedisService.logout(refreshToken, accessToken, accessTokenExpiryTime);
-        //log.info("로그아웃 완료: {}", email);
     }
 
     /**

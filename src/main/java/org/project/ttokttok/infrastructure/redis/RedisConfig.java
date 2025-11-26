@@ -65,6 +65,7 @@ public class RedisConfig {
         redisTemplate.setConnectionFactory(redisConnectionFactory());
 
         // 문자열 직렬화 설정
+        // 레디스 키와 값은 모두 문자열 타입이므로, 문자열 *직렬화 설정을 사용
         redisTemplate.setKeySerializer(new StringRedisSerializer());
         redisTemplate.setValueSerializer(new StringRedisSerializer());
 
