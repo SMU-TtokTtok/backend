@@ -1,6 +1,7 @@
 package org.project.ttokttok.infrastructure.redis;
 
-import lombok.RequiredArgsConstructor;
+import java.time.Duration;
+import java.util.Objects;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,8 +12,7 @@ import org.springframework.data.redis.connection.lettuce.LettuceClientConfigurat
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
-
-import java.time.Duration;
+import lombok.RequiredArgsConstructor;
 
 @Configuration
 @RequiredArgsConstructor
@@ -40,7 +40,7 @@ public class RedisConfig {
         RedisStandaloneConfiguration redisConfig = new RedisStandaloneConfiguration();
 
         // Redis 연결 설정
-        redisConfig.setHostName(redisHost);
+        redisConfig.setHostName(Objects.requireNonNull(redisHost, "redisHost에 설정된 값이 null 입니다."));
         redisConfig.setPort(redisPort);
 
         if (isProdProfile() && !redisPassword.isEmpty()) {
@@ -49,7 +49,7 @@ public class RedisConfig {
 
         // Redis 클라이언트 설정
         LettuceClientConfiguration lettuceClientConfig = LettuceClientConfiguration.builder()
-                .commandTimeout(Duration.ofSeconds(5))
+                .commandTimeout(Duration.ofSeconds(5))  // 명시적으로 설정된 5가 null이 될 수는 없으니 예외처리 패스
                 .build();
 
         return new LettuceConnectionFactory(redisConfig, lettuceClientConfig);
