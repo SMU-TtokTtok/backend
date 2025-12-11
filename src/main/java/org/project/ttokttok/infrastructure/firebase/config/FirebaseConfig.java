@@ -3,6 +3,7 @@ package org.project.ttokttok.infrastructure.firebase.config;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
+import com.google.firebase.messaging.FirebaseMessaging;
 import java.io.IOException;
 import java.io.InputStream;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,5 +32,10 @@ public class FirebaseConfig {
 
             return FirebaseApp.getInstance();
         }
+    }
+
+    @Bean
+    public FirebaseMessaging firebaseMessaging() {
+        return FirebaseMessaging.getInstance();
     }
 }
