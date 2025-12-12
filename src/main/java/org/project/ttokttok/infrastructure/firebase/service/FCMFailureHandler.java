@@ -43,6 +43,6 @@ public class FCMFailureHandler {
     }
 
     public void handleInvalidTokens(List<String> invalidTokens) {
-
+        // TODO: 실패한 토큰 처리 로직 추가
     }
 }

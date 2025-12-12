@@ -1,6 +1,7 @@
 package org.project.ttokttok.infrastructure.firebase.service;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -107,12 +108,6 @@ class FCMServiceTest {
     }
 
     @Test
-    @DisplayName("예외처리 케이스 확인 - 핸들러 호출 여부")
-    void sendNotificationWithFirebaseExceptionTest() throws Exception {
-        // TODO: 실패 핸들러 호출 여부 작성하기
-    }
-
-    @Test
     @DisplayName("여러 토큰 중 일부만 실패해도 계속 전송을 시도한다")
     void sendNotificationWithPartialFailureTest() throws Exception {
         // given
@@ -139,6 +134,32 @@ class FCMServiceTest {
         // 모든 토큰에 대해 전송 시도했는지 검증
         verify(firebaseMessaging, times(4))
                 .sendEachForMulticast(any(MulticastMessage.class));
+    }
+
+    @Test
+    @DisplayName("실패한 토큰 목록이 존재하면, 실패 토큰 처리 로직을 실행한다.")
+    void sendNotificationWithFirebaseExceptionTest() throws Exception {
+        // given
+        List<String> tokens = createTokenList(TOKEN_BATCH_SIZE); // 파티션 4개
+        FCMRequest request = createFCMRequest(tokens);
+        List<String> failedTokens = List.of("failedToken1", "failedToken2");
+
+        setupPartitionerMock(tokens, List.of(tokens));
+        setupFirebaseMessagingMock(TOKEN_BATCH_SIZE / 2, TOKEN_BATCH_SIZE / 2);
+
+        given(failureHandler.collectFailedTokens(any(BatchResponse.class), anyList()))
+                .willReturn(failedTokens);
+
+        // when - 비동기 처리(CompletableFuture로 감싸서 완료 대기)
+        CompletableFuture<Void> future = CompletableFuture.runAsync(() ->
+                fcmService.sendNotification(request)
+        );
+        future.get(2, TimeUnit.SECONDS);
+
+        verify(failureHandler, times(1))
+                .collectFailedTokens(any(BatchResponse.class), anyList());
+        verify(failureHandler, times(1))
+                .handleInvalidTokens(anyList());
     }
 
     // 테스트용 DTO를 생성하는 메서드
