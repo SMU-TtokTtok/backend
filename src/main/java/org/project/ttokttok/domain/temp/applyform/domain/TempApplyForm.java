@@ -17,6 +17,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -26,6 +28,7 @@ import org.project.ttokttok.global.entity.BaseTimeEntity;
 
 @Entity
 @Table(name = "temp_applyforms")
+@Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class TempApplyForm extends BaseTimeEntity {
 
@@ -69,4 +72,63 @@ public class TempApplyForm extends BaseTimeEntity {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
     private List<Question> formJson = new ArrayList<>();
+
+    @Builder
+    private TempApplyForm(String clubId, String title, String subTitle,
+                         LocalDate applyStartDate, LocalDate applyEndDate,
+                         boolean hasInterview, LocalDate interviewStartDate,
+                         LocalDate interviewEndDate, Integer maxApplyCount,
+                         Set<ApplicableGrade> grades, List<Question> formJson) {
+        this.clubId = clubId;
+        this.title = title;
+        this.subTitle = subTitle;
+        this.applyStartDate = applyStartDate;
+        this.applyEndDate = applyEndDate;
+        this.hasInterview = hasInterview;
+        this.interviewStartDate = interviewStartDate;
+        this.interviewEndDate = interviewEndDate;
+        this.maxApplyCount = maxApplyCount;
+        this.grades = grades != null ? grades : new HashSet<>();
+        this.formJson = formJson != null ? formJson : new ArrayList<>();
+    }
+
+    public static TempApplyForm create(String clubId, String title, String subTitle,
+                                     LocalDate applyStartDate, LocalDate applyEndDate,
+                                     boolean hasInterview, LocalDate interviewStartDate,
+                                     LocalDate interviewEndDate, Integer maxApplyCount,
+                                     Set<ApplicableGrade> grades, List<Question> formJson) {
+        return TempApplyForm.builder()
+                .clubId(clubId)
+                .title(title)
+                .subTitle(subTitle)
+                .applyStartDate(applyStartDate)
+                .applyEndDate(applyEndDate)
+                .hasInterview(hasInterview)
+                .interviewStartDate(interviewStartDate)
+                .interviewEndDate(interviewEndDate)
+                .maxApplyCount(maxApplyCount)
+                .grades(grades)
+                .formJson(formJson)
+                .build();
+    }
+
+    /**
+     * 임시 지원폼 정보를 업데이트합니다.
+     */
+    public void update(String title, String subTitle, LocalDate applyStartDate,
+                      LocalDate applyEndDate, boolean hasInterview,
+                      LocalDate interviewStartDate, LocalDate interviewEndDate,
+                      Integer maxApplyCount, Set<ApplicableGrade> grades,
+                      List<Question> formJson) {
+        this.title = title;
+        this.subTitle = subTitle;
+        this.applyStartDate = applyStartDate;
+        this.applyEndDate = applyEndDate;
+        this.hasInterview = hasInterview;
+        this.interviewStartDate = interviewStartDate;
+        this.interviewEndDate = interviewEndDate;
+        this.maxApplyCount = maxApplyCount;
+        this.grades = grades != null ? grades : new HashSet<>();
+        this.formJson = formJson != null ? formJson : new ArrayList<>();
+    }
 }
