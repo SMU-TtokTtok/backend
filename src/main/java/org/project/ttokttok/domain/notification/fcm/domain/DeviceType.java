@@ -4,5 +4,15 @@ public enum DeviceType {
     WEB,
     ANDROID,
     IOS,
-    UNKNOWN
+    UNKNOWN;
+
+    public static DeviceType fromString(String deviceType) {
+        try {
+            return DeviceType.valueOf(
+                    deviceType.toUpperCase()
+            );
+        } catch (IllegalArgumentException e) {
+            return UNKNOWN;
+        }
+    }
 }

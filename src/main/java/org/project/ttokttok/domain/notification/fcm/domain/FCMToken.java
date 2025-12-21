@@ -38,9 +38,8 @@ public class FCMToken extends BaseTimeEntity {
     private String token;
 
     @Builder
-    public static FCMToken create(String id, DeviceType deviceType, String email, String token) {
+    public static FCMToken create(DeviceType deviceType, String email, String token) {
         return FCMToken.builder()
-                .id(id)
                 .deviceType(deviceType != null ? deviceType : DeviceType.UNKNOWN)
                 .email(email)
                 .token(token)
