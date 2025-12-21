@@ -13,16 +13,5 @@ CREATE TABLE temp_applicants (
     gender VARCHAR(50),
     answers JSONB,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
-
--- Create indexes for better query performance
-CREATE INDEX idx_temp_applicants_form_id ON temp_applicants(form_id);
-CREATE INDEX idx_temp_applicants_user_email ON temp_applicants(user_email);
-CREATE INDEX idx_temp_applicants_email ON temp_applicants(email);
-CREATE INDEX idx_temp_applicants_name ON temp_applicants(name);
-CREATE INDEX idx_temp_applicants_user_form ON temp_applicants(user_email, form_id);
-CREATE INDEX idx_temp_applicants_grade ON temp_applicants(grade);
-CREATE INDEX idx_temp_applicants_student_status ON temp_applicants(student_status);
-CREATE INDEX idx_temp_applicants_created_at ON temp_applicants(created_at);
-
