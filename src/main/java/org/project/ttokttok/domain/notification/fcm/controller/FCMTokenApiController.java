@@ -2,6 +2,7 @@ package org.project.ttokttok.domain.notification.fcm.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.project.ttokttok.domain.notification.fcm.controller.docs.FCMTokenDocs;
 import org.project.ttokttok.domain.notification.fcm.controller.dto.request.FCMTokenDeleteRequest;
 import org.project.ttokttok.domain.notification.fcm.controller.dto.request.FCMTokenSaveRequest;
 import org.project.ttokttok.domain.notification.fcm.controller.dto.response.FCMTokenResponse;
@@ -19,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/users/fcm/token")
-public class FCMTokenApiController {
+public class FCMTokenApiController implements FCMTokenDocs {
 
     private final FCMTokenService fcmTokenService;
 
