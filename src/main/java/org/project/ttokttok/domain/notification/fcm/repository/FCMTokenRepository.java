@@ -15,7 +15,7 @@ public interface FCMTokenRepository extends JpaRepository<FCMToken, String> {
 
     Optional<FCMToken> findByEmailAndDeviceType(String email, DeviceType deviceType);
 
-    // 즐겨찾기한 사용자의
+    // 동아리를 즐겨찾기한 사용자의 FCM 토큰 목록을 받아옴
     @Query("SELECT f.token FROM FCMToken f INNER JOIN Favorite fa "
             + "ON fa.user.email = f.email "
             + "WHERE fa.club.id = :clubId")
