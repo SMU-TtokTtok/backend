@@ -32,15 +32,15 @@ jobs:
           mkdir -p ./src/main/resources
           
           # Generate application.yml
-          printf '%s' "${{ secrets.APPLICATION_YML}}" | base64 -d > ./src/main/resources/application.yml
+          echo "${{ secrets.APPLICATION_YML}}" | base64 -d > ./src/main/resources/application.yml
           
           # Generate application-prod.yml
-          PROD_YML_CONTENT=$(printf '%s' "${{ secrets.APPLICATION_PROD_YAML }}" | base64 -d)
+          PROD_YML_CONTENT=$(echo "${{ secrets.APPLICATION_PROD_YAML }}" | base64 -d)
           echo "$PROD_YML_CONTENT" | envsubst > ./src/main/resources/application-prod.yml
           
           # Generate Firebase JSON file
           if [ -n "$FIREBASE_JSON" ] && [ -n "$FIREBASE_JSON_NAME" ]; then
-            printf '%s' "$FIREBASE_JSON" | base64 -d > "./src/main/resources/$FIREBASE_JSON_NAME"
+            echo "$FIREBASE_JSON" | base64 -d > "./src/main/resources/$FIREBASE_JSON_NAME"
             echo "Firebase JSON file created: $FIREBASE_JSON_NAME"
             # Verify the file was created
             if [ -f "./src/main/resources/$FIREBASE_JSON_NAME" ]; then
