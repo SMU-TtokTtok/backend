@@ -27,4 +27,8 @@ public interface FCMTokenRepository extends JpaRepository<FCMToken, String> {
     @Modifying(clearAutomatically = true)
     @Query("DELETE FROM FCMToken f WHERE f.updatedAt < :cutoffDate")
     int deleteTokensOlderThan(@Param("cutoffDate") LocalDateTime cutoffDate);
+
+    @Modifying(clearAutomatically = true)
+    @Query("DELETE FROM FCMToken f WHERE f.token IN :tokens")
+    int deleteFCMTokenByTokens(@Param("tokens") List<String> tokens);
 }

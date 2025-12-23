@@ -13,15 +13,20 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.project.ttokttok.domain.notification.fcm.repository.FCMTokenRepository;
 
+@ExtendWith(MockitoExtension.class)
 class FCMFailureHandlerTest {
 
-    private FCMFailureHandler handler;
+    @Mock
+    private FCMTokenRepository fcmTokenRepository;
 
-    @BeforeEach
-    void setUp() {
-        this.handler = new FCMFailureHandler();
-    }
+    @InjectMocks
+    private FCMFailureHandler handler;
 
     @Test
     @DisplayName("collectFailedTokens(): 토큰 리스트가 비어있다면 빈 리스트를 반환한다.")
