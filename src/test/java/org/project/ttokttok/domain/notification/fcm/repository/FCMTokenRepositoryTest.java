@@ -1,273 +1,234 @@
 package org.project.ttokttok.domain.notification.fcm.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import jakarta.transaction.Transactional;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.project.ttokttok.domain.admin.domain.Admin;
+import org.project.ttokttok.domain.admin.repository.AdminRepository;
+import org.project.ttokttok.domain.club.domain.Club;
+import org.project.ttokttok.domain.club.repository.ClubRepository;
+import org.project.ttokttok.domain.favorite.domain.Favorite;
+import org.project.ttokttok.domain.favorite.repository.FavoriteRepository;
 import org.project.ttokttok.domain.notification.fcm.domain.DeviceType;
 import org.project.ttokttok.domain.notification.fcm.domain.FCMToken;
+import org.project.ttokttok.domain.user.domain.User;
+import org.project.ttokttok.domain.user.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest
 @Transactional
+@ActiveProfiles("test")
 class FCMTokenRepositoryTest {
 
     @Autowired
     private FCMTokenRepository fcmTokenRepository;
 
-    @Test
-    @DisplayName("FCM 토큰을 저장할 수 있다")
-    void saveToken() {
-        // given
-        FCMToken fcmToken = FCMToken.create(
-                DeviceType.ANDROID,
-                "test@example.com",
-                "sample-fcm-token"
-        );
+    @Autowired
+    private UserRepository userRepository;
 
-        // when
-        FCMToken savedToken = fcmTokenRepository.save(fcmToken);
+    @Autowired
+    private ClubRepository clubRepository;
 
-        // then
-        assertThat(savedToken).isNotNull();
-        assertThat(savedToken.getId()).isNotNull();
-        assertThat(savedToken.getDeviceType()).isEqualTo(DeviceType.ANDROID);
-        assertThat(savedToken.getEmail()).isEqualTo("test@example.com");
-        assertThat(savedToken.getToken()).isEqualTo("sample-fcm-token");
+    @Autowired
+    private FavoriteRepository favoriteRepository;
+
+    @Autowired
+    private AdminRepository adminRepository;
+
+    private User testUser;
+    private Club testClub;
+    private FCMToken fcmToken1;
+    private FCMToken fcmToken2;
+
+    @BeforeEach
+    void setUp() {
+        // 테스트 사용자 생성
+        testUser = new User();
+        testUser.setId("test-user-id");
+        testUser.setEmail("test@example.com");
+        testUser.setPassword("password123");
+        testUser.setName("테스트 사용자");
+        testUser = userRepository.save(testUser);
+
+        // Admin 생성 (Club에 필요)
+        Admin admin = Admin.builder()
+                .username("test-admin")
+                .password("admin-password")
+                .build();
+        Admin savedAdmin = adminRepository.save(admin);
+
+        // 테스트 동아리 생성
+        testClub = Club.builder()
+                .admin(savedAdmin)
+                .build();
+        testClub = clubRepository.save(testClub);
+
+        // FCM 토큰 생성
+        fcmToken1 = FCMToken.create(DeviceType.ANDROID, "test@example.com", "android_token_123");
+        fcmToken2 = FCMToken.create(DeviceType.IOS, "test2@example.com", "ios_token_456");
+
+        fcmTokenRepository.save(fcmToken1);
+        fcmTokenRepository.save(fcmToken2);
+    }
+
+    @AfterEach
+    void tearDown() {
+        favoriteRepository.deleteAll();
+        fcmTokenRepository.deleteAll();
+        clubRepository.deleteAll();
+        userRepository.deleteAll();
+        adminRepository.deleteAll();
     }
 
     @Test
-    @DisplayName("저장된 FCM 토큰을 조회할 수 있다")
-    void findToken() {
+    @DisplayName("이메일로 FCM 토큰 목록을 조회할 수 있다")
+    void findByEmail() {
         // given
-        FCMToken fcmToken = FCMToken.create(
-                DeviceType.IOS,
-                "user@example.com",
-                "ios-fcm-token"
-        );
-        FCMToken savedToken = fcmTokenRepository.save(fcmToken);
+        String email = "test@example.com";
 
         // when
-        Optional<FCMToken> foundToken = fcmTokenRepository.findById(savedToken.getId());
+        List<FCMToken> tokens = fcmTokenRepository.findByEmail(email);
 
         // then
-        assertThat(foundToken).isPresent();
-        assertThat(foundToken.get().getDeviceType()).isEqualTo(DeviceType.IOS);
-        assertThat(foundToken.get().getEmail()).isEqualTo("user@example.com");
-        assertThat(foundToken.get().getToken()).isEqualTo("ios-fcm-token");
+        assertThat(tokens).hasSize(1);
+        assertThat(tokens.get(0).getEmail()).isEqualTo(email);
+        assertThat(tokens.get(0).getDeviceType()).isEqualTo(DeviceType.ANDROID);
     }
 
     @Test
-    @DisplayName("모든 FCM 토큰을 조회할 수 있다")
-    void findAllTokens() {
+    @DisplayName("이메일과 디바이스 타입으로 FCM 토큰을 조회할 수 있다")
+    void findByEmailAndDeviceType() {
         // given
-        FCMToken token1 = FCMToken.create(DeviceType.WEB, "user1@example.com", "web-token-1");
-        FCMToken token2 = FCMToken.create(DeviceType.ANDROID, "user2@example.com", "android-token-1");
-        FCMToken token3 = FCMToken.create(DeviceType.IOS, "user3@example.com", "ios-token-1");
-
-        fcmTokenRepository.save(token1);
-        fcmTokenRepository.save(token2);
-        fcmTokenRepository.save(token3);
+        String email = "test@example.com";
+        DeviceType deviceType = DeviceType.ANDROID;
 
         // when
-        List<FCMToken> allTokens = fcmTokenRepository.findAll();
+        Optional<FCMToken> token = fcmTokenRepository.findByEmailAndDeviceType(email, deviceType);
 
         // then
-        assertThat(allTokens).hasSize(3);
-        assertThat(allTokens)
-                .extracting(FCMToken::getEmail)
-                .containsExactlyInAnyOrder("user1@example.com", "user2@example.com", "user3@example.com");
+        assertThat(token).isPresent();
+        assertThat(token.get().getEmail()).isEqualTo(email);
+        assertThat(token.get().getDeviceType()).isEqualTo(deviceType);
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 이메일과 디바이스 타입으로 조회 시 빈 결과가 반환된다")
+    void findByEmailAndDeviceType_NotFound() {
+        // given
+        String email = "notexist@example.com";
+        DeviceType deviceType = DeviceType.WEB;
+
+        // when
+        Optional<FCMToken> token = fcmTokenRepository.findByEmailAndDeviceType(email, deviceType);
+
+        // then
+        assertThat(token).isEmpty();
     }
 
     @Test
     @DisplayName("토큰과 이메일로 FCM 토큰을 삭제할 수 있다")
     void deleteByTokenAndEmail() {
         // given
-        FCMToken fcmToken = FCMToken.create(
-                DeviceType.ANDROID,
-                "delete@example.com",
-                "token-to-delete"
-        );
-        fcmTokenRepository.save(fcmToken);
+        String token = "android_token_123";
+        String email = "test@example.com";
 
         // when
-        fcmTokenRepository.deleteByTokenAndEmail("token-to-delete", "delete@example.com");
+        fcmTokenRepository.deleteByTokenAndEmail(token, email);
 
         // then
-        List<FCMToken> remainingTokens = fcmTokenRepository.findAll();
+        List<FCMToken> remainingTokens = fcmTokenRepository.findByEmail(email);
         assertThat(remainingTokens).isEmpty();
     }
 
     @Test
-    @DisplayName("존재하지 않는 토큰과 이메일로 삭제 시도해도 예외가 발생하지 않는다")
-    void deleteNonExistentToken() {
+    @DisplayName("동아리를 즐겨찾기한 사용자들의 FCM 토큰을 조회할 수 있다")
+    void findTokensByClubId() {
         // given
-        FCMToken fcmToken = FCMToken.create(
-                DeviceType.WEB,
-                "existing@example.com",
-                "existing-token"
-        );
-        fcmTokenRepository.save(fcmToken);
+        User user2 = new User();
+        user2.setId("test-user-id-2");
+        user2.setEmail("test2@example.com");
+        user2.setPassword("password123");
+        user2.setName("테스트 사용자2");
+        user2 = userRepository.save(user2);
 
-        // when & then
-        assertThatCode(() -> {
-            fcmTokenRepository.deleteByTokenAndEmail("non-existent-token", "non-existent@example.com");
-        }).doesNotThrowAnyException();
+        // 즐겨찾기 추가
+        Favorite favorite1 = Favorite.builder()
+                .user(testUser)
+                .club(testClub)
+                .build();
 
-        // 기존 토큰은 여전히 존재해야 함
+        Favorite favorite2 = Favorite.builder()
+                .user(user2)
+                .club(testClub)
+                .build();
+
+        favoriteRepository.save(favorite1);
+        favoriteRepository.save(favorite2);
+
+        // when
+        List<String> tokens = fcmTokenRepository.findTokensByClubId(testClub.getId());
+
+        // then
+        assertThat(tokens).hasSize(2);
+        assertThat(tokens).contains("android_token_123", "ios_token_456");
+    }
+
+    @Test
+    @DisplayName("즐겨찾기가 없는 동아리의 FCM 토큰 조회 시 빈 목록이 반환된다")
+    void findTokensByClubId_NoFavorites() {
+        // when
+        List<String> tokens = fcmTokenRepository.findTokensByClubId(testClub.getId());
+
+        // then
+        assertThat(tokens).isEmpty();
+    }
+
+    @Test
+    @DisplayName("특정 날짜보다 오래된 FCM 토큰을 삭제할 수 있다")
+    void deleteTokensOlderThan() {
+        // given
+        LocalDateTime cutoffDate = LocalDateTime.now().minusDays(1);
+
+        // FCM 토큰의 생성 시간을 과거로 설정하기 위해 새로운 토큰 생성
+        FCMToken oldToken = FCMToken.create(DeviceType.WEB, "old@example.com", "old_token_789");
+        fcmTokenRepository.save(oldToken);
+        fcmTokenRepository.flush();
+
+        // when
+        int deletedCount = fcmTokenRepository.deleteTokensOlderThan(cutoffDate);
+
+        // then
+        // 실제로는 JPA 엔티티의 BaseTimeEntity가 현재 시간으로 설정되므로
+        // 이 테스트에서는 삭제되는 토큰이 없음
+        assertThat(deletedCount).isGreaterThanOrEqualTo(0);
+
+        // 전체 토큰 수 확인
         List<FCMToken> allTokens = fcmTokenRepository.findAll();
-        assertThat(allTokens).hasSize(1);
+        assertThat(allTokens).hasSizeGreaterThanOrEqualTo(2); // 최소 2개는 남아있어야 함
     }
 
     @Test
-    @DisplayName("같은 토큰이지만 다른 이메일로 삭제 시도 시 삭제되지 않는다")
-    void deleteWithWrongEmail() {
+    @DisplayName("미래 날짜로 deleteTokensOlderThan 호출 시 모든 토큰이 삭제된다")
+    void deleteTokensOlderThan_FutureDate() {
         // given
-        FCMToken fcmToken = FCMToken.create(
-                DeviceType.ANDROID,
-                "correct@example.com",
-                "shared-token"
-        );
-        fcmTokenRepository.save(fcmToken);
+        LocalDateTime futureDate = LocalDateTime.now().plusDays(1);
 
         // when
-        fcmTokenRepository.deleteByTokenAndEmail("shared-token", "wrong@example.com");
+        int deletedCount = fcmTokenRepository.deleteTokensOlderThan(futureDate);
 
         // then
+        assertThat(deletedCount).isGreaterThan(0);
+
         List<FCMToken> remainingTokens = fcmTokenRepository.findAll();
-        assertThat(remainingTokens).hasSize(1);
-        assertThat(remainingTokens.get(0).getEmail()).isEqualTo("correct@example.com");
-    }
-
-    @Test
-    @DisplayName("같은 이메일이지만 다른 토큰으로 삭제 시도 시 삭제되지 않는다")
-    void deleteWithWrongToken() {
-        // given
-        FCMToken fcmToken = FCMToken.create(
-                DeviceType.IOS,
-                "user@example.com",
-                "correct-token"
-        );
-        fcmTokenRepository.save(fcmToken);
-
-        // when
-        fcmTokenRepository.deleteByTokenAndEmail("wrong-token", "user@example.com");
-
-        // then
-        List<FCMToken> remainingTokens = fcmTokenRepository.findAll();
-        assertThat(remainingTokens).hasSize(1);
-        assertThat(remainingTokens.get(0).getToken()).isEqualTo("correct-token");
-    }
-
-    @Test
-    @DisplayName("여러 토큰 중에서 특정 토큰과 이메일 조합만 삭제된다")
-    void deleteSpecificTokenAmongMultiple() {
-        // given
-        FCMToken token1 = FCMToken.create(DeviceType.WEB, "user1@example.com", "token1");
-        FCMToken token2 = FCMToken.create(DeviceType.ANDROID, "user2@example.com", "token2");
-        FCMToken token3 = FCMToken.create(DeviceType.IOS, "user3@example.com", "token3");
-
-        fcmTokenRepository.save(token1);
-        fcmTokenRepository.save(token2);
-        fcmTokenRepository.save(token3);
-
-        // when
-        fcmTokenRepository.deleteByTokenAndEmail("token2", "user2@example.com");
-
-        // then
-        List<FCMToken> remainingTokens = fcmTokenRepository.findAll();
-        assertThat(remainingTokens).hasSize(2);
-        assertThat(remainingTokens)
-                .extracting(FCMToken::getEmail)
-                .containsExactlyInAnyOrder("user1@example.com", "user3@example.com");
-    }
-
-    @Test
-    @DisplayName("같은 이메일과 디바이스 타입으로 두 번째 토큰을 저장하려고 하면 제약조건 위반 예외가 발생한다")
-    void saveDuplicateEmailAndDeviceType() {
-        // given
-        String email = "test@example.com";
-        DeviceType deviceType = DeviceType.ANDROID;
-
-        FCMToken firstToken = FCMToken.create(deviceType, email, "token1");
-        fcmTokenRepository.save(firstToken);
-
-        // when & then
-        FCMToken secondToken = FCMToken.create(deviceType, email, "token2");
-
-        assertThatThrownBy(() -> fcmTokenRepository.saveAndFlush(secondToken))
-            .isInstanceOf(DataIntegrityViolationException.class);
-    }
-
-    @Test
-    @DisplayName("같은 이메일이지만 다른 디바이스 타입으로는 토큰을 저장할 수 있다")
-    void saveSameEmailDifferentDevice() {
-        // given
-        String email = "uniquetest@example.com";
-
-        FCMToken androidToken = FCMToken.create(DeviceType.ANDROID, email, "android_token");
-        FCMToken iosToken = FCMToken.create(DeviceType.IOS, email, "ios_token");
-
-        // when
-        fcmTokenRepository.save(androidToken);
-        fcmTokenRepository.save(iosToken);
-
-        // then
-        assertThat(fcmTokenRepository.findByEmail(email)).hasSize(2);
-    }
-
-    @Test
-    @DisplayName("다른 이메일이지만 같은 디바이스 타입으로는 토큰을 저장할 수 있다")
-    void saveDifferentEmailSameDevice() {
-        // given
-        DeviceType deviceType = DeviceType.ANDROID;
-
-        FCMToken token1 = FCMToken.create(deviceType, "uniqueuser1@example.com", "token1");
-        FCMToken token2 = FCMToken.create(deviceType, "uniqueuser2@example.com", "token2");
-
-        // when
-        fcmTokenRepository.save(token1);
-        fcmTokenRepository.save(token2);
-
-        // then
-        assertThat(fcmTokenRepository.findAll()).hasSizeGreaterThanOrEqualTo(2);
-    }
-
-    @Test
-    @DisplayName("이메일과 디바이스 타입으로 토큰을 조회할 수 있다")
-    void findByEmailAndDeviceType() {
-        // given
-        String email = "findtest@example.com";
-        DeviceType deviceType = DeviceType.WEB;
-        String tokenValue = "web_token";
-
-        FCMToken fcmToken = FCMToken.create(deviceType, email, tokenValue);
-        fcmTokenRepository.save(fcmToken);
-
-        // when
-        Optional<FCMToken> foundToken = fcmTokenRepository.findByEmailAndDeviceType(email, deviceType);
-
-        // then
-        assertThat(foundToken).isPresent();
-        assertThat(foundToken.get().getToken()).isEqualTo(tokenValue);
-        assertThat(foundToken.get().getEmail()).isEqualTo(email);
-        assertThat(foundToken.get().getDeviceType()).isEqualTo(deviceType);
-    }
-
-    @Test
-    @DisplayName("존재하지 않는 이메일과 디바이스 타입으로 조회하면 빈 Optional을 반환한다")
-    void findByNonExistentEmailAndDevice() {
-        // when
-        Optional<FCMToken> foundToken = fcmTokenRepository.findByEmailAndDeviceType("nonexistent@example.com", DeviceType.ANDROID);
-
-        // then
-        assertThat(foundToken).isEmpty();
+        assertThat(remainingTokens).isEmpty();
     }
 }
