@@ -33,7 +33,7 @@ public class FCMTokenApiController implements FCMTokenDocs {
                 .deviceType(request.deviceType())
                 .build();
 
-        fcmTokenService.save(serviceRequest);
+        fcmTokenService.saveOrUpdate(serviceRequest);
 
         return ResponseEntity.ok()
                 .body(

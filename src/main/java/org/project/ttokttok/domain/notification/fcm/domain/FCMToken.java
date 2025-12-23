@@ -11,17 +11,23 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.project.ttokttok.global.entity.BaseTimeEntity;
-import org.project.ttokttok.global.exception.ErrorMessage;
 
 @Entity
 @Getter
-@Table(name = "fcm_token")
+@Table(name = "fcm_token",
+       uniqueConstraints = {
+           @UniqueConstraint(
+               name = "uk_fcm_token_email_device",
+               columnNames = {"email", "device_type"}
+           )
+       })
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class FCMToken extends BaseTimeEntity {
@@ -38,7 +44,7 @@ public class FCMToken extends BaseTimeEntity {
     @Column(nullable = false, updatable = false)
     private String email;
 
-    @Column(nullable = false, unique = true, length = 500)
+    @Column(nullable = false, length = 500)
     private String token;
 
     @Builder
@@ -57,6 +63,11 @@ public class FCMToken extends BaseTimeEntity {
                 .email(email)
                 .token(token)
                 .build();
+    }
+
+    public void updateToken(String newToken) {
+        validateToken(newToken);
+        this.token = newToken;
     }
 
     private static void validateEmail(String email) {

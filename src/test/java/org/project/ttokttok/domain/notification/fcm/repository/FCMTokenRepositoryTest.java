@@ -2,6 +2,7 @@ package org.project.ttokttok.domain.notification.fcm.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import jakarta.transaction.Transactional;
 import java.util.List;
@@ -12,6 +13,7 @@ import org.project.ttokttok.domain.notification.fcm.domain.DeviceType;
 import org.project.ttokttok.domain.notification.fcm.domain.FCMToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.DataIntegrityViolationException;
 
 @SpringBootTest
 @Transactional
@@ -185,5 +187,87 @@ class FCMTokenRepositoryTest {
         assertThat(remainingTokens)
                 .extracting(FCMToken::getEmail)
                 .containsExactlyInAnyOrder("user1@example.com", "user3@example.com");
+    }
+
+    @Test
+    @DisplayName("같은 이메일과 디바이스 타입으로 두 번째 토큰을 저장하려고 하면 제약조건 위반 예외가 발생한다")
+    void saveDuplicateEmailAndDeviceType() {
+        // given
+        String email = "test@example.com";
+        DeviceType deviceType = DeviceType.ANDROID;
+
+        FCMToken firstToken = FCMToken.create(deviceType, email, "token1");
+        fcmTokenRepository.save(firstToken);
+
+        // when & then
+        FCMToken secondToken = FCMToken.create(deviceType, email, "token2");
+
+        assertThatThrownBy(() -> fcmTokenRepository.saveAndFlush(secondToken))
+            .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Test
+    @DisplayName("같은 이메일이지만 다른 디바이스 타입으로는 토큰을 저장할 수 있다")
+    void saveSameEmailDifferentDevice() {
+        // given
+        String email = "uniquetest@example.com";
+
+        FCMToken androidToken = FCMToken.create(DeviceType.ANDROID, email, "android_token");
+        FCMToken iosToken = FCMToken.create(DeviceType.IOS, email, "ios_token");
+
+        // when
+        fcmTokenRepository.save(androidToken);
+        fcmTokenRepository.save(iosToken);
+
+        // then
+        assertThat(fcmTokenRepository.findByEmail(email)).hasSize(2);
+    }
+
+    @Test
+    @DisplayName("다른 이메일이지만 같은 디바이스 타입으로는 토큰을 저장할 수 있다")
+    void saveDifferentEmailSameDevice() {
+        // given
+        DeviceType deviceType = DeviceType.ANDROID;
+
+        FCMToken token1 = FCMToken.create(deviceType, "uniqueuser1@example.com", "token1");
+        FCMToken token2 = FCMToken.create(deviceType, "uniqueuser2@example.com", "token2");
+
+        // when
+        fcmTokenRepository.save(token1);
+        fcmTokenRepository.save(token2);
+
+        // then
+        assertThat(fcmTokenRepository.findAll()).hasSizeGreaterThanOrEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("이메일과 디바이스 타입으로 토큰을 조회할 수 있다")
+    void findByEmailAndDeviceType() {
+        // given
+        String email = "findtest@example.com";
+        DeviceType deviceType = DeviceType.WEB;
+        String tokenValue = "web_token";
+
+        FCMToken fcmToken = FCMToken.create(deviceType, email, tokenValue);
+        fcmTokenRepository.save(fcmToken);
+
+        // when
+        Optional<FCMToken> foundToken = fcmTokenRepository.findByEmailAndDeviceType(email, deviceType);
+
+        // then
+        assertThat(foundToken).isPresent();
+        assertThat(foundToken.get().getToken()).isEqualTo(tokenValue);
+        assertThat(foundToken.get().getEmail()).isEqualTo(email);
+        assertThat(foundToken.get().getDeviceType()).isEqualTo(deviceType);
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 이메일과 디바이스 타입으로 조회하면 빈 Optional을 반환한다")
+    void findByNonExistentEmailAndDevice() {
+        // when
+        Optional<FCMToken> foundToken = fcmTokenRepository.findByEmailAndDeviceType("nonexistent@example.com", DeviceType.ANDROID);
+
+        // then
+        assertThat(foundToken).isEmpty();
     }
 }

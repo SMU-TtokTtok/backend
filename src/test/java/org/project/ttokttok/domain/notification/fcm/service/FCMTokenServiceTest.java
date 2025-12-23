@@ -12,6 +12,9 @@ import org.project.ttokttok.domain.notification.fcm.repository.FCMTokenRepositor
 import org.project.ttokttok.domain.notification.fcm.service.dto.FCMTokenDeleteServiceRequest;
 import org.project.ttokttok.domain.notification.fcm.service.dto.FCMTokenSaveServiceRequest;
 
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -32,7 +35,7 @@ class FCMTokenServiceTest {
         FCMTokenSaveServiceRequest request = createSaveRequest("test@example.com", "sample-fcm-token", "ANDROID");
 
         // when
-        fcmTokenService.save(request);
+        fcmTokenService.saveOrUpdate(request);
 
         // then
         verify(fcmTokenRepository, times(1)).save(any(FCMToken.class));
@@ -45,7 +48,7 @@ class FCMTokenServiceTest {
         FCMTokenSaveServiceRequest request = createSaveRequest("test@example.com", "sample-fcm-token", "ios");
 
         // when
-        fcmTokenService.save(request);
+        fcmTokenService.saveOrUpdate(request);
 
         // then
         verifySaveWithToken(DeviceType.IOS, "test@example.com", "sample-fcm-token");
@@ -58,7 +61,7 @@ class FCMTokenServiceTest {
         FCMTokenSaveServiceRequest request = createSaveRequest("test@example.com", "sample-fcm-token", "INVALID_TYPE");
 
         // when
-        fcmTokenService.save(request);
+        fcmTokenService.saveOrUpdate(request);
 
         // then
         verifySaveWithToken(DeviceType.UNKNOWN, "test@example.com", "sample-fcm-token");
@@ -71,7 +74,7 @@ class FCMTokenServiceTest {
         FCMTokenSaveServiceRequest request = createSaveRequest("test@example.com", "sample-fcm-token", null);
 
         // when
-        fcmTokenService.save(request);
+        fcmTokenService.saveOrUpdate(request);
 
         // then
         verifySaveWithToken(DeviceType.UNKNOWN, "test@example.com", "sample-fcm-token");
@@ -84,7 +87,7 @@ class FCMTokenServiceTest {
         FCMTokenSaveServiceRequest request = createSaveRequest("web@example.com", "web-fcm-token", "WEB");
 
         // when
-        fcmTokenService.save(request);
+        fcmTokenService.saveOrUpdate(request);
 
         // then
         verifySaveWithToken(DeviceType.WEB, "web@example.com", "web-fcm-token");
@@ -111,8 +114,8 @@ class FCMTokenServiceTest {
         FCMTokenSaveServiceRequest request2 = createSaveRequest("user2@example.com", "token2", "IOS");
 
         // when
-        fcmTokenService.save(request1);
-        fcmTokenService.save(request2);
+        fcmTokenService.saveOrUpdate(request1);
+        fcmTokenService.saveOrUpdate(request2);
 
         // then
         verify(fcmTokenRepository, times(2)).save(any(FCMToken.class));
@@ -144,7 +147,7 @@ class FCMTokenServiceTest {
         FCMTokenSaveServiceRequest request = createSaveRequest("", "sample-token", "ANDROID");
 
         // when & then
-        assertThatThrownBy(() -> fcmTokenService.save(request))
+        assertThatThrownBy(() -> fcmTokenService.saveOrUpdate(request))
                 .isInstanceOf(IllegalArgumentException.class);
 
 
@@ -159,7 +162,7 @@ class FCMTokenServiceTest {
         FCMTokenSaveServiceRequest request = createSaveRequest("test@example.com", "", "IOS");
 
         // when & then
-        assertThatThrownBy(() -> fcmTokenService.save(request))
+        assertThatThrownBy(() -> fcmTokenService.saveOrUpdate(request))
                 .isInstanceOf(IllegalArgumentException.class);
 
 
@@ -174,10 +177,53 @@ class FCMTokenServiceTest {
         FCMTokenSaveServiceRequest request = createSaveRequest("test@example.com", "sample-token", "AnDrOiD");
 
         // when
-        fcmTokenService.save(request);
+        fcmTokenService.saveOrUpdate(request);
 
         // then
         verifySaveWithToken(DeviceType.ANDROID, "test@example.com", "sample-token");
+    }
+
+    @Test
+    @DisplayName("기존 토큰이 없으면 새 토큰을 생성한다")
+    void saveNewToken() {
+        // given
+        String email = "newtest@example.com";
+        String deviceType = "ANDROID";
+        String token = "new_token";
+
+        FCMTokenSaveServiceRequest request = createSaveRequest(email, token, deviceType);
+
+        when(fcmTokenRepository.findByEmailAndDeviceType(email, DeviceType.ANDROID))
+                .thenReturn(Optional.empty());
+
+        // when
+        fcmTokenService.saveOrUpdate(request);
+
+        // then
+        verify(fcmTokenRepository).save(any(FCMToken.class));
+    }
+
+    @Test
+    @DisplayName("기존 토큰이 있으면 토큰을 업데이트한다")
+    void updateExistingToken() {
+        // given
+        String email = "updatetest@example.com";
+        String deviceType = "IOS";
+        String oldToken = "old_token";
+        String newToken = "new_token";
+
+        FCMToken existingToken = FCMToken.create(DeviceType.IOS, email, oldToken);
+        FCMTokenSaveServiceRequest request = createSaveRequest(email, newToken, deviceType);
+
+        when(fcmTokenRepository.findByEmailAndDeviceType(email, DeviceType.IOS))
+                .thenReturn(Optional.of(existingToken));
+
+        // when
+        fcmTokenService.saveOrUpdate(request);
+
+        // then
+        assertThat(existingToken.getToken()).isEqualTo(newToken);
+        verify(fcmTokenRepository, never()).save(any(FCMToken.class));
     }
 
     /* 헬퍼 메서드 */
@@ -199,15 +245,15 @@ class FCMTokenServiceTest {
     private void verifySaveWithToken(DeviceType expectedDeviceType, String expectedEmail, String expectedToken) {
         verify(fcmTokenRepository, times(1)).save(argThat(fcmToken ->
                 fcmToken.getDeviceType() == expectedDeviceType &&
-                fcmToken.getEmail().equals(expectedEmail) &&
-                fcmToken.getToken().equals(expectedToken)
+                        fcmToken.getEmail().equals(expectedEmail) &&
+                        fcmToken.getToken().equals(expectedToken)
         ));
     }
 
     private void verifySaveWithEmailAndDevice(String expectedEmail, DeviceType expectedDeviceType) {
         verify(fcmTokenRepository).save(argThat(fcmToken ->
                 fcmToken.getEmail().equals(expectedEmail) &&
-                fcmToken.getDeviceType() == expectedDeviceType
+                        fcmToken.getDeviceType() == expectedDeviceType
         ));
     }
 }
