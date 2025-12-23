@@ -12,7 +12,7 @@ CREATE TABLE temp_applyforms (
     max_apply_count INTEGER NOT NULL,
     form_json JSONB,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Create temp_applyform_grades table for grades collection
@@ -21,3 +21,18 @@ CREATE TABLE temp_applyform_grades (
     grades VARCHAR(50) NOT NULL,
     FOREIGN KEY (temp_applyform_id) REFERENCES temp_applyforms(id) ON DELETE CASCADE
 );
+
+-- updated_at 자동 업데이트를 위한 트리거 함수 생성
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+    RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- temp_applyform 테이블에 updated_at 자동 업데이트 트리거 추가
+CREATE TRIGGER update_temp_applyforms_updated_at
+    BEFORE UPDATE ON temp_applyforms
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
