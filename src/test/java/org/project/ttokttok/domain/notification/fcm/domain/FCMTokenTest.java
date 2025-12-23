@@ -29,12 +29,11 @@ class FCMTokenTest {
     @DisplayName("null DeviceType으로 FCMToken 생성 시 UNKNOWN으로 설정된다")
     void createFCMTokenWithNullDeviceType() {
         // given
-        DeviceType deviceType = null;
         String email = "test@example.com";
         String token = "sample-fcm-token";
 
         // when
-        FCMToken fcmToken = FCMToken.create(deviceType, email, token);
+        FCMToken fcmToken = FCMToken.create(null, email, token);
 
         // then
         assertThat(fcmToken).isNotNull();
