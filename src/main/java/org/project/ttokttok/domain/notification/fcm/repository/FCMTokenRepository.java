@@ -5,6 +5,8 @@ import java.util.Optional;
 import org.project.ttokttok.domain.notification.fcm.domain.DeviceType;
 import org.project.ttokttok.domain.notification.fcm.domain.FCMToken;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface FCMTokenRepository extends JpaRepository<FCMToken, String> {
     void deleteByTokenAndEmail(String token, String email);
@@ -13,5 +15,9 @@ public interface FCMTokenRepository extends JpaRepository<FCMToken, String> {
 
     Optional<FCMToken> findByEmailAndDeviceType(String email, DeviceType deviceType);
 
-    boolean existsByEmailAndDeviceType(String email, DeviceType deviceType);
+    // 즐겨찾기한 사용자의
+    @Query("SELECT f.token FROM FCMToken f INNER JOIN Favorite fa "
+            + "ON fa.user.email = f.email "
+            + "WHERE fa.club.id = :clubId")
+    List<String> findTokensByClubId(@Param("clubId") String clubId);
 }
