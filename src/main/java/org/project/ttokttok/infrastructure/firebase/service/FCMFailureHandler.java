@@ -8,10 +8,15 @@ import com.google.firebase.messaging.MessagingErrorCode;
 import com.google.firebase.messaging.SendResponse;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
+import org.project.ttokttok.domain.notification.fcm.repository.FCMTokenRepository;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class FCMFailureHandler {
+
+    private final FCMTokenRepository fcmTokenRepository;
 
     public List<String> collectFailedTokens(BatchResponse batchResponse, final List<String> originalTokens) {
 
@@ -43,6 +48,6 @@ public class FCMFailureHandler {
     }
 
     public void handleInvalidTokens(List<String> invalidTokens) {
-        // TODO: 실패한 토큰 처리 로직 추가
+        fcmTokenRepository.deleteFCMTokenByTokens(invalidTokens);
     }
 }
