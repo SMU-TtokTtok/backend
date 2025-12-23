@@ -1,5 +1,7 @@
 package org.project.ttokttok.domain.notification.fcm.service;
 
+import static org.project.ttokttok.global.exception.ErrorMessage.FCM_FIELD_BLANK;
+
 import lombok.RequiredArgsConstructor;
 import org.project.ttokttok.domain.notification.fcm.domain.DeviceType;
 import org.project.ttokttok.domain.notification.fcm.domain.FCMToken;
@@ -20,12 +22,21 @@ public class FCMTokenService {
                 request.deviceType()
         );
 
+        validateBlank(request.token());
+        validateBlank(request.email());
+
         FCMToken fcmToken = FCMToken.create(deviceType,
                 request.email(),
                 request.token()
         );
 
         fcmTokenRepository.save(fcmToken);
+    }
+
+    private void validateBlank(String field) {
+        if (field == null || field.isBlank()) {
+            throw new IllegalArgumentException(FCM_FIELD_BLANK.getMessage());
+        }
     }
 
     // FCM 토큰 삭제

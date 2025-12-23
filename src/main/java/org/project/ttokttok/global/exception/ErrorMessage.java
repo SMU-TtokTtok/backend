@@ -74,7 +74,12 @@ public enum ErrorMessage {
     ALREADY_CLUB_MEMBER("이미 동아리에 가입된 사용자입니다.", HttpStatus.CONFLICT),
 
     // S3 에러 메시지
-    S3_FILE_UPLOAD_ERROR("S3 파일 업로드 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
+    S3_FILE_UPLOAD_ERROR("S3 파일 업로드 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
+
+    // FCM 에러 메시지
+    FCM_FIELD_BLANK("FCM 토큰에 저장할 필드가 비어 있습니다.", HttpStatus.BAD_REQUEST),
+    FCM_EMAIL_BLANK("FCM 토큰 내 저장 시도된 이메일이 비어 있습니다.", HttpStatus.BAD_REQUEST),
+    FCM_TOKEN_BLANK("FCM 토큰 내 저장 시도된 토큰 값이 비어 있습니다.", HttpStatus.BAD_REQUEST);
 
     private final String message;
     private final HttpStatus status;
