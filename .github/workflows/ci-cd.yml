@@ -30,14 +30,24 @@ jobs:
           FIREBASE_JSON_NAME: ${{ secrets.FIREBASE_JSON_NAME }}
         run: |
           mkdir -p ./src/main/resources
-          echo "${{ secrets.APPLICATION_YML}}" | base64 --decode > ./src/main/resources/application.yml
           
-          PROD_YML_CONTENT=$(echo "${{ secrets.APPLICATION_PROD_YAML }}" | base64 --decode)
+          # Generate application.yml
+          printf '%s' "${{ secrets.APPLICATION_YML}}" | base64 -d > ./src/main/resources/application.yml
+          
+          # Generate application-prod.yml
+          PROD_YML_CONTENT=$(printf '%s' "${{ secrets.APPLICATION_PROD_YAML }}" | base64 -d)
           echo "$PROD_YML_CONTENT" | envsubst > ./src/main/resources/application-prod.yml
           
           # Generate Firebase JSON file
           if [ -n "$FIREBASE_JSON" ] && [ -n "$FIREBASE_JSON_NAME" ]; then
-            echo "$FIREBASE_JSON" | base64 --decode > "./src/main/resources/$FIREBASE_JSON_NAME"
+            printf '%s' "$FIREBASE_JSON" | base64 -d > "./src/main/resources/$FIREBASE_JSON_NAME"
+            echo "Firebase JSON file created: $FIREBASE_JSON_NAME"
+            # Verify the file was created
+            if [ -f "./src/main/resources/$FIREBASE_JSON_NAME" ]; then
+              echo "File size: $(wc -c < "./src/main/resources/$FIREBASE_JSON_NAME") bytes"
+            fi
+          else
+            echo "Firebase JSON not configured or missing environment variables"
           fi
 
       - name: Debug - Show generated application-prod.yml content
