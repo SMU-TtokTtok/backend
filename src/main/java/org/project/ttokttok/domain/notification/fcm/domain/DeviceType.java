@@ -11,7 +11,7 @@ public enum DeviceType {
             return DeviceType.valueOf(
                     deviceType.toUpperCase()
             );
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException | NullPointerException e) {
             return UNKNOWN;
         }
     }
