@@ -39,13 +39,6 @@ out/
 /src/main/resources/application-prod.yml
 /src/main/resources/application-test.yml
 
-# 환경변수 파일들
-.env
-.env.local
-.env.dev
-.env.prod
-.env.test
-
 # DB Seed 파일들 (테스트용 데이터)
 /src/main/resources/db/seed/
 /src/test/resources/db/seed/
@@ -61,3 +54,6 @@ out/
 .vscode/
 
 .gemini
+
+# Firebase 서비스 계정 키 파일
+ttokttok-push*.json
