@@ -56,12 +56,6 @@ jobs:
             echo "Warning: Firebase JSON secrets are missing. Skipping."
           fi
 
-      - name: Debug - Show generated application-prod.yml content
-        run: |
-          echo "--- Content of src/main/resources/application-prod.yml ---"
-          cat ./src/main/resources/application-prod.yml
-          echo "---------------------------------------------------------"
-
       - name: Build with Gradle
         run: ./gradlew clean build -x test
 
@@ -86,12 +80,6 @@ jobs:
           cd deploy
           zip -r ../deploy.zip .
           cd ..
-
-      - name: Debug - Show application-prod.yml in deploy package
-        run: |
-          echo "--- Content of application-prod.yml in deploy.zip ---"
-          unzip -p deploy.zip application-prod.yml
-          echo "-----------------------------------------------------"
 
       - name: Set version label
         id: version
