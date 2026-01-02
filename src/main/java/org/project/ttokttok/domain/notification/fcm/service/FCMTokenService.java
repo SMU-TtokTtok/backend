@@ -48,6 +48,7 @@ public class FCMTokenService {
     }
 
     // FCM 토큰 삭제
+    @Transactional
     public void delete(FCMTokenDeleteServiceRequest request) {
         fcmTokenRepository.deleteByTokenAndEmail(
                 request.token(),
