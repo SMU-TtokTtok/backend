@@ -16,6 +16,7 @@ import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.exception.ClubNotFoundException;
 import org.project.ttokttok.domain.club.exception.NotClubAdminException;
 import org.project.ttokttok.domain.club.repository.ClubRepository;
+import org.project.ttokttok.domain.temp.applyform.repository.TempApplyFormRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +35,7 @@ public class ApplyFormAdminService {
 
     private final ApplyFormRepository applyFormRepository;
     private final ClubRepository clubRepository;
+    private final TempApplyFormRepository tempApplyFormRepository;
 
     // 지원 폼 생성 메서드
     @Transactional
@@ -55,6 +57,10 @@ public class ApplyFormAdminService {
                 .stream()
                 .map(ApplicableGrade::from)
                 .collect(Collectors.toSet());
+
+        // 임시저장한 지원폼이 존재하면 삭제
+        tempApplyFormRepository.findByClubId(club.getId())
+                .ifPresent(tempApplyFormRepository::delete);
 
         // 지원 폼 생성
         ApplyForm applyForm = ApplyForm.createApplyForm(
