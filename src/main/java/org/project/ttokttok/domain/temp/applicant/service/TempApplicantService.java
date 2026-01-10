@@ -21,13 +21,12 @@ public class TempApplicantService {
     private final TempApplicantRepository tempApplicantRepository;
 
     /**
-     * 임시 지원서를 저장합니다.
-     * 기존 임시 지원서가 있다면 업데이트하고, 없다면 새로 생성합니다.
+     * 임시 지원서를 저장합니다. 기존 임시 지원서가 있다면 업데이트하고, 없다면 새로 생성합니다.
      */
     public String saveTempApplicant(String userEmail, TempApplicantSaveRequest request) {
         // 기존 임시 지원서가 있는지 확인
         Optional<TempApplicant> existingTempApplicant =
-            tempApplicantRepository.findByUserEmailAndFormId(userEmail, request.formId());
+                tempApplicantRepository.findByUserEmailAndFormId(userEmail, request.formId());
 
         List<Answer> answers = convertToAnswers(request.answers());
 
@@ -36,25 +35,25 @@ public class TempApplicantService {
             TempApplicant tempApplicant = existingTempApplicant.get();
             updateTempApplicant(tempApplicant, request, answers);
             return tempApplicant.getId();
-        } else {
-            // 새로운 임시 지원서 생성
-            TempApplicant newTempApplicant = TempApplicant.create(
-                    request.formId(),
-                    userEmail,
-                    request.name(),
-                    request.age(),
-                    request.major(),
-                    request.email(),
-                    request.phone(),
-                    request.studentStatus(),
-                    request.grade(),
-                    request.gender(),
-                    answers
-            );
-
-            TempApplicant saved = tempApplicantRepository.save(newTempApplicant);
-            return saved.getId();
         }
+
+        // 새로운 임시 지원서 생성
+        TempApplicant newTempApplicant = TempApplicant.create(
+                request.formId(),
+                userEmail,
+                request.name(),
+                request.age(),
+                request.major(),
+                request.email(),
+                request.phone(),
+                request.studentStatus(),
+                request.grade(),
+                request.gender(),
+                answers
+        );
+
+        TempApplicant saved = tempApplicantRepository.save(newTempApplicant);
+        return saved.getId();
     }
 
     private List<Answer> convertToAnswers(List<AnswerRequest> answerRequests) {
@@ -64,19 +63,19 @@ public class TempApplicantService {
 
         return answerRequests.stream()
                 .map(request -> new Answer(
-                    null, // title - 임시 저장에서는 불필요
-                    null, // subTitle - 임시 저장에서는 불필요
-                    null, // questionType - 임시 저장에서는 불필요
-                    false, // isEssential - 임시 저장에서는 불필요
-                    List.of(request.questionId()), // content에 questionId 저장
-                    request.value()
+                        null, // title - 임시 저장에서는 불필요
+                        null, // subTitle - 임시 저장에서는 불필요
+                        null, // questionType - 임시 저장에서는 불필요
+                        false, // isEssential - 임시 저장에서는 불필요
+                        List.of(request.questionId()), // content에 questionId 저장
+                        request.value()
                 ))
                 .collect(Collectors.toList());
     }
 
     private void updateTempApplicant(TempApplicant tempApplicant,
-                                   TempApplicantSaveRequest request,
-                                   List<Answer> answers) {
+                                     TempApplicantSaveRequest request,
+                                     List<Answer> answers) {
         tempApplicant.update(
                 request.name(),
                 request.age(),
