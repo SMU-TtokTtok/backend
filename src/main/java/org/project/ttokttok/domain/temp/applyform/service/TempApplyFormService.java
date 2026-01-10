@@ -23,7 +23,7 @@ public class TempApplyFormService {
     public String saveTempApplyForm(TempApplyFormSaveRequest request) {
 
         // 기존 임시 지원폼이 있는지 확인하고 있으면 업데이트
-        String tempApplyFormId = tempApplyFormRepository.findByClubId(request.clubId())
+        return tempApplyFormRepository.findByClubId(request.clubId())
                 .map(temp -> {
                     updateTempApplyForm(temp, request);
                     return temp.getId();
@@ -32,8 +32,6 @@ public class TempApplyFormService {
                     return tempApplyFormRepository.save(
                             createTempApplyForm(request)).getId();
                 });
-
-        return tempApplyFormId;
     }
 
     private void updateTempApplyForm(TempApplyForm tempApplyForm,

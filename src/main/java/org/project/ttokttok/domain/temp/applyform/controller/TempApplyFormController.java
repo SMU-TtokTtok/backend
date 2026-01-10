@@ -2,22 +2,18 @@ package org.project.ttokttok.domain.temp.applyform.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.project.ttokttok.domain.temp.applyform.controller.docs.TempApplyFormDocs;
 import org.project.ttokttok.domain.temp.applyform.controller.dto.request.TempApplyFormSaveRequest;
 import org.project.ttokttok.domain.temp.applyform.controller.dto.response.TempApplyFormSaveResponse;
-import org.project.ttokttok.domain.temp.applyform.domain.TempApplyForm;
 import org.project.ttokttok.domain.temp.applyform.service.TempApplyFormService;
 import org.project.ttokttok.global.annotation.auth.AuthUserInfo;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/admin/temp-applyform")
-public class TempApplyFormController {
+public class TempApplyFormController implements TempApplyFormDocs {
 
     private final TempApplyFormService tempApplyFormService;
 
