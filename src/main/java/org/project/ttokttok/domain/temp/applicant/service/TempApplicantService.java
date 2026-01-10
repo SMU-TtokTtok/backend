@@ -57,24 +57,6 @@ public class TempApplicantService {
         }
     }
 
-    /**
-     * 특정 사용자의 임시 지원서를 조회합니다.
-     */
-    @Transactional(readOnly = true)
-    public Optional<TempApplicant> getTempApplicant(String userEmail, String formId) {
-        return tempApplicantRepository.findByUserEmailAndFormId(userEmail, formId);
-    }
-
-    /**
-     * 임시 지원서를 삭제합니다.
-     */
-    public void deleteTempApplicant(String userEmail, String formId) {
-        Optional<TempApplicant> tempApplicant =
-            tempApplicantRepository.findByUserEmailAndFormId(userEmail, formId);
-
-        tempApplicant.ifPresent(tempApplicantRepository::delete);
-    }
-
     private List<Answer> convertToAnswers(List<AnswerRequest> answerRequests) {
         if (answerRequests == null) {
             return List.of();

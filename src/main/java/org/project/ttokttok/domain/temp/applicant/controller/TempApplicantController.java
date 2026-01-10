@@ -36,34 +36,4 @@ public class TempApplicantController {
                         "tempApplicantId", tempApplicantId
                 ));
     }
-
-    /**
-     * 특정 지원폼에 대한 임시 지원서를 조회합니다.
-     */
-    @GetMapping("/{formId}")
-    public ResponseEntity<TempApplicant> getTempApplicant(
-            @AuthUserInfo String userEmail,
-            @PathVariable String formId) {
-
-        Optional<TempApplicant> tempApplicant =
-                tempApplicantService.getTempApplicant(userEmail, formId);
-
-        return tempApplicant
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-    /**
-     * 임시 지원서를 삭제합니다.
-     */
-    @DeleteMapping("/{formId}")
-    public ResponseEntity<Map<String, String>> deleteTempApplicant(
-            @AuthUserInfo String userEmail,
-            @PathVariable String formId) {
-
-        tempApplicantService.deleteTempApplicant(userEmail, formId);
-
-        return ResponseEntity.ok()
-                .body(Map.of("message", "임시 지원서가 삭제되었습니다."));
-    }
 }
