@@ -3,6 +3,7 @@ package org.project.ttokttok.domain.temp.applicant.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.project.ttokttok.domain.temp.applicant.controller.dto.request.TempApplicantSaveRequest;
+import org.project.ttokttok.domain.temp.applicant.controller.dto.response.TempApplicantSaveResponse;
 import org.project.ttokttok.domain.temp.applicant.domain.TempApplicant;
 import org.project.ttokttok.domain.temp.applicant.service.TempApplicantService;
 import org.project.ttokttok.global.annotation.auth.AuthUserInfo;
@@ -24,16 +25,13 @@ public class TempApplicantController {
      * 임시 지원서를 저장합니다.
      */
     @PostMapping
-    public ResponseEntity<Map<String, String>> saveTempApplicant(
+    public ResponseEntity<TempApplicantSaveResponse> saveTempApplicant(
             @AuthUserInfo String userEmail,
             @Valid @RequestBody TempApplicantSaveRequest request) {
 
         String tempApplicantId = tempApplicantService.saveTempApplicant(userEmail, request);
 
         return ResponseEntity.ok()
-                .body(Map.of(
-                        "message", "임시 지원서가 저장되었습니다.",
-                        "tempApplicantId", tempApplicantId
-                ));
+                .body(new TempApplicantSaveResponse(tempApplicantId));
     }
 }
