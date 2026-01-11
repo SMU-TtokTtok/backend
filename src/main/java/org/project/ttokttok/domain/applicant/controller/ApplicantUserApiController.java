@@ -30,9 +30,9 @@ public class ApplicantUserApiController implements ApplicantUserDocs {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
     public ResponseEntity<Map<String, String>> apply(@AuthUserInfo String email,
-                                                     @PathVariable("clubId") String clubId, // 지원폼 ID
+                                                     @PathVariable String clubId, // 지원폼 ID
                                                      @Valid @RequestPart ApplyFormRequest request, // json으로 명시 필요
-                                                     @RequestPart(required = false) List<String> questionIds, // json으로 명시 필요
+                                                     @RequestPart(required = false) List<String> questionIds,// json으로 명시 필요
                                                      @RequestPart(required = false) List<MultipartFile> files) {
 
         String ApplicantId = applicantUserService.apply(email, request, questionIds, files, clubId);
