@@ -9,6 +9,4 @@ import java.util.Optional;
 
 public interface TempApplicantRepository extends JpaRepository<TempApplicant, String> {
     Optional<TempApplicant> findByUserEmailAndFormId(String userEmail, String formId);
-
-    List<TempApplicant> findAllByUserEmail(String userEmail);
 }

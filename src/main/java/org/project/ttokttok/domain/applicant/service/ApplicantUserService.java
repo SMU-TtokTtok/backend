@@ -19,6 +19,7 @@ import org.project.ttokttok.domain.applyform.domain.ApplyForm;
 import org.project.ttokttok.domain.applyform.domain.json.Question;
 import org.project.ttokttok.domain.applyform.exception.ApplyFormNotFoundException;
 import org.project.ttokttok.domain.applyform.repository.ApplyFormRepository;
+import org.project.ttokttok.domain.temp.applicant.repository.TempApplicantRepository;
 import org.project.ttokttok.domain.user.exception.UserNotFoundException;
 import org.project.ttokttok.domain.user.repository.UserRepository;
 import org.project.ttokttok.infrastructure.s3.service.S3Service;
@@ -43,6 +44,7 @@ public class ApplicantUserService {
     private final UserRepository userRepository;
     private final ApplicantRepository applicantRepository;
     private final ApplyFormRepository applyFormRepository;
+    private final TempApplicantRepository tempApplicantRepository;
     private final S3Service s3Service;
 
     @Transactional
@@ -89,6 +91,10 @@ public class ApplicantUserService {
 
         // 4. 답변 제출 (서류 전형 생성)
         applicant.submitDocument(answers);
+
+        // 임시 지원폼 존재 여부 확인 후 삭제
+        tempApplicantRepository.findByUserEmailAndFormId(email, form.getId())
+                .ifPresent(tempApplicantRepository::delete);
 
         return applicantRepository.save(applicant)
                 .getId();
