@@ -2,6 +2,7 @@ package org.project.ttokttok.domain.temp.applicant.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.project.ttokttok.domain.temp.applicant.controller.docs.TempApplicantDocs;
 import org.project.ttokttok.domain.temp.applicant.controller.dto.request.TempApplicantSaveRequest;
 import org.project.ttokttok.domain.temp.applicant.controller.dto.response.TempApplicantSaveResponse;
 import org.project.ttokttok.domain.temp.applicant.domain.TempApplicant;
@@ -17,7 +18,7 @@ import java.util.Optional;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/user/temp-applicant")
-public class TempApplicantController {
+public class TempApplicantController implements TempApplicantDocs {
 
     private final TempApplicantService tempApplicantService;
 
