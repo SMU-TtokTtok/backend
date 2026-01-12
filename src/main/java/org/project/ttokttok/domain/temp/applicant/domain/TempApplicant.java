@@ -31,6 +31,7 @@ public class TempApplicant extends BaseTimeEntity {
     private String formId;
 
     // 학교 이메일
+    @Column(name = "user_email", nullable = false)
     private String userEmail;
 
 //    @Convert(converter = AnswerListConverter.class)
