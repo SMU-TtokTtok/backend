@@ -17,11 +17,13 @@ public class ApplyFormUserController implements ApplyFormUserDocs {
 
     private final ApplyFormUserService applyFormUserService;
 
-    // TODO: 임시 지원서가 남아있다면 조회
     @GetMapping("/{clubId}")
-    public ResponseEntity<ActiveApplyFormResponse> getActiveApplyForm(@PathVariable String clubId) {
+    public ResponseEntity<ActiveApplyFormResponse> getActiveApplyForm(
+            @AuthUserInfo String userEmail,
+            @PathVariable String clubId
+    ) {
         ActiveApplyFormResponse response = ActiveApplyFormResponse.from(
-                applyFormUserService.getActiveApplyForm(clubId)
+                applyFormUserService.getActiveApplyForm(userEmail, clubId)
         );
 
         return ResponseEntity.ok()
