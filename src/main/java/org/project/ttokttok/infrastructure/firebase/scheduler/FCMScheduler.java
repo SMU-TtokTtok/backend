@@ -1,5 +1,6 @@
 package org.project.ttokttok.infrastructure.firebase.scheduler;
 
+import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +17,7 @@ public class FCMScheduler {
 
     // 매일 새벽 4시에 실행 (초 분 시 일 월 요일)
     @Scheduled(cron = "0 0 4 * * *")
+    @Transactional
     public void cleanupStaleTokens() {
         // 1. 기준 시간 설정 (오늘로부터 2달 전)
         LocalDateTime cutoffDate = LocalDateTime.now().minusMonths(2);
