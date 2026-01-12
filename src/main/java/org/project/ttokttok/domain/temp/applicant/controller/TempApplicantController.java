@@ -8,6 +8,7 @@ import org.project.ttokttok.domain.temp.applicant.controller.dto.response.TempAp
 import org.project.ttokttok.domain.temp.applicant.domain.TempApplicant;
 import org.project.ttokttok.domain.temp.applicant.service.TempApplicantService;
 import org.project.ttokttok.global.annotation.auth.AuthUserInfo;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,7 +33,7 @@ public class TempApplicantController implements TempApplicantDocs {
 
         String tempApplicantId = tempApplicantService.saveTempApplicant(userEmail, request);
 
-        return ResponseEntity.ok()
+        return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new TempApplicantSaveResponse(tempApplicantId));
     }
 }

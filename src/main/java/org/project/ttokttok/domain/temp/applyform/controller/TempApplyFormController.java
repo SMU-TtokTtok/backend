@@ -7,6 +7,8 @@ import org.project.ttokttok.domain.temp.applyform.controller.dto.request.TempApp
 import org.project.ttokttok.domain.temp.applyform.controller.dto.response.TempApplyFormSaveResponse;
 import org.project.ttokttok.domain.temp.applyform.service.TempApplyFormService;
 import org.project.ttokttok.global.annotation.auth.AuthUserInfo;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,7 +29,7 @@ public class TempApplyFormController implements TempApplyFormDocs {
 
         String tempApplyFormId = tempApplyFormService.saveTempApplyForm(request);
 
-        return ResponseEntity.ok()
+        return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new TempApplyFormSaveResponse(tempApplyFormId));
     }
 }

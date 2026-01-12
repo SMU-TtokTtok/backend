@@ -34,7 +34,7 @@ public interface TempApplyFormDocs {
     )
     @ApiResponses(value = {
             @ApiResponse(
-                    responseCode = "200",
+                    responseCode = "201",
                     description = "임시 지원폼 저장 성공",
                     content = @Content(schema = @Schema(implementation = TempApplyFormSaveResponse.class))
             ),
