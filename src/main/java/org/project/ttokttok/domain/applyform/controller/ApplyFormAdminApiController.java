@@ -62,7 +62,9 @@ public class ApplyFormAdminApiController implements ApplyFormAdminDocs {
         );
 
         return ResponseEntity.ok()
-                .body(Map.of("message", "지원 폼이 성공적으로 수정되었습니다."));
+                .body(
+                        Map.of("message", "지원 폼이 성공적으로 수정되었습니다.")
+                );
     }
 
     // 이전에 만들어둔 지원 폼 질문 형태 받아오기
@@ -75,5 +77,16 @@ public class ApplyFormAdminApiController implements ApplyFormAdminDocs {
 
         return ResponseEntity.ok()
                 .body(response);
+    }
+
+    @PostMapping("/finish/{formId}")
+    public ResponseEntity<Map<String, String>> finishEvaluating(@AuthUserInfo String username,
+                                                                @PathVariable String formId) {
+        applyFormAdminService.finishEvaluation(username, formId);
+
+        return ResponseEntity.ok()
+                .body(
+                        Map.of("message", "지원자 평가 종료가 성공적으로 완료되었습니다.")
+                );
     }
 }
