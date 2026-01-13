@@ -1,13 +1,12 @@
 package org.project.ttokttok.domain.applyform.repository;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.project.ttokttok.domain.applyform.domain.ApplyForm;
 import org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus;
-import org.project.ttokttok.domain.temp.applicant.domain.TempApplicant;
 import org.springframework.data.jpa.repository.JpaRepository;
-
-import java.util.List;
-import java.util.Optional;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 public interface ApplyFormRepository extends JpaRepository<ApplyForm, String> {
@@ -27,4 +26,12 @@ public interface ApplyFormRepository extends JpaRepository<ApplyForm, String> {
             + "ON t.formId = a.id "
             + "WHERE a.club.id = :clubId AND t.userEmail = :userEmail")
     Map<String, Object> findTempData(String userEmail, String clubId);
+
+    @Modifying(clearAutomatically = true)
+    @Query("DELETE FROM Applicant a WHERE a.applyForm.id = :formId")
+    int deleteAllApplicantByFormId(String formId);
+
+    @Modifying(clearAutomatically = true)
+    @Query("DELETE FROM TempApplicant t WHERE t.formId = :formId")
+    int deleteAllTempApplicantByFormId(String formId);
 }

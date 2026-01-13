@@ -1,6 +1,7 @@
 package org.project.ttokttok.domain.applyform.service;
 
 import lombok.RequiredArgsConstructor;
+import org.project.ttokttok.domain.applicant.repository.ApplicantRepository;
 import org.project.ttokttok.domain.applyform.domain.ApplyForm;
 import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
 import org.project.ttokttok.domain.applyform.domain.json.Question;
@@ -166,6 +167,26 @@ public class ApplyFormAdminService {
 
         // 질문 목록 반환
         return applyForm.getFormJson();
+    }
+
+    // 이번 분기 지원을 종료
+    @Transactional
+    public void finishEvaluation(String adminName, String formId) {
+        ApplyForm applyForm = applyFormRepository.findById(formId)
+                .orElseThrow(ApplyFormNotFoundException::new);
+
+        // 관리자 권한 검증
+        validateAdmin(applyForm.getClub().getAdmin().getUsername(), adminName);
+
+        // 분기 모집 종료 시 ->
+        // 1. 모든 임시 지원자 데이터 삭제
+        applyFormRepository.deleteAllTempApplicantByFormId(formId);
+
+        // 2. 모든 지원자들에 대한 정보 삭제 (DocumentPhase, InterviewPhase는 CASCADE로 자동 삭제)
+        applyFormRepository.deleteAllApplicantByFormId(formId);
+
+        // 3. 지원 폼 삭제
+        applyFormRepository.deleteById(formId);
     }
 
     private void validateAdmin(String adminName, String requestAdminName) {
