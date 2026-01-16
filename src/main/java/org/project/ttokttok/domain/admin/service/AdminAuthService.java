@@ -68,15 +68,16 @@ public class AdminAuthService {
                 passwordEncoder.encode(request.password())
         );
 
-        // FIXME: 동아리 생성자 방식을 수정해야 함.
         Club club = Club.builder()
                 .admin(admin)
+                .clubName(request.clubName())
+                .clubUniv(request.clubUniv())
                 .build();
 
+        Admin saved = adminRepository.save(admin);
         clubRepository.save(club);
 
-        return adminRepository.save(admin)
-                .getId();
+        return saved.getId();
     }
 
     private void validateTokenFromCookie(String refreshToken) {
