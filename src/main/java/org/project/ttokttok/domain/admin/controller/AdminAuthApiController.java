@@ -72,7 +72,9 @@ public class AdminAuthApiController implements AdminAuthDocs {
     // todo: 추후 삭제 - 관리자 가입 메서드
     @PostMapping("/join")
     public ResponseEntity<AdminJoinResponse> join(@RequestBody @Valid AdminJoinRequest request) {
-        String adminId = adminAuthService.join(request.username(), request.password());
+        String adminId = adminAuthService.join(
+                request.toServiceRequest()
+        );
 
         AdminJoinResponse response = AdminJoinResponse.of(adminId);
 

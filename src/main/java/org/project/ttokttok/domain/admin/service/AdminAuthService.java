@@ -5,6 +5,7 @@ import org.project.ttokttok.domain.admin.controller.dto.response.AdminLoginRespo
 import org.project.ttokttok.domain.admin.domain.Admin;
 import org.project.ttokttok.domain.admin.exception.AdminNotFoundException;
 import org.project.ttokttok.domain.admin.repository.AdminRepository;
+import org.project.ttokttok.domain.admin.service.dto.request.AdminJoinServiceRequest;
 import org.project.ttokttok.domain.admin.service.dto.request.AdminLoginServiceRequest;
 import org.project.ttokttok.domain.admin.service.dto.response.AdminLoginServiceResponse;
 import org.project.ttokttok.domain.admin.service.dto.response.ReissueServiceResponse;
@@ -61,9 +62,18 @@ public class AdminAuthService {
         return ReissueServiceResponse.of(tokens, ttl);
     }
 
-    // FIXME: 관리자 가입 메서드, 추후 삭제 예정
-    public String join(String username, String password) {
-        Admin admin = Admin.adminJoin(username, passwordEncoder.encode(password));
+    public String join(AdminJoinServiceRequest request) {
+        Admin admin = Admin.adminJoin(
+                request.username(),
+                passwordEncoder.encode(request.password())
+        );
+
+        // FIXME: 동아리 생성자 방식을 수정해야 함.
+        Club club = Club.builder()
+                .admin(admin)
+                .build();
+
+        clubRepository.save(club);
 
         return adminRepository.save(admin)
                 .getId();
