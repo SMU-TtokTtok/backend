@@ -66,14 +66,14 @@ public class Club extends BaseTimeEntity {
 
     // todo: 추후에 안내 메시지 등으로 변경 필요.
     @Builder
-    private Club(Admin admin) {
+    private Club(Admin admin, String clubName, ClubUniv clubUniv) {
         this.admin = admin;
-        this.name = "동아리 이름";
+        this.name = clubName;
         this.profileImageUrl = null;
         this.summary = "동아리 한줄 소개를 적어주세요.";
         this.clubType = null;
         this.clubCategory = null;
-        this.clubUniv = null;
+        this.clubUniv = clubUniv;
         this.customCategory = "";
         this.content = "동아리 소개를 적어주세요.";
     }

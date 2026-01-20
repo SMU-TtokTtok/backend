@@ -1,5 +1,6 @@
 package org.project.ttokttok.domain.applyform.repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -8,6 +9,7 @@ import org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface ApplyFormRepository extends JpaRepository<ApplyForm, String> {
 
@@ -34,4 +36,7 @@ public interface ApplyFormRepository extends JpaRepository<ApplyForm, String> {
     @Modifying(clearAutomatically = true)
     @Query("DELETE FROM TempApplicant t WHERE t.formId = :formId")
     int deleteAllTempApplicantByFormId(String formId);
+
+    @Query("SELECT a FROM ApplyForm a WHERE a.status = 'ACTIVE' AND a.applyEndDate < :currentDate")
+    List<ApplyForm> findExpiredApplyForms(@Param("currentDate") LocalDate currentDate);
 }
