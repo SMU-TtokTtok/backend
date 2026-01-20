@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.project.ttokttok.domain.admin.controller.dto.response.AdminLoginResponse;
 import org.project.ttokttok.domain.admin.domain.Admin;
 import org.project.ttokttok.domain.admin.exception.AdminNotFoundException;
+import org.project.ttokttok.domain.admin.exception.AdminUsernameConflictException;
 import org.project.ttokttok.domain.admin.repository.AdminRepository;
 import org.project.ttokttok.domain.admin.service.dto.request.AdminJoinServiceRequest;
 import org.project.ttokttok.domain.admin.service.dto.request.AdminLoginServiceRequest;
@@ -63,6 +64,8 @@ public class AdminAuthService {
     }
 
     public String join(AdminJoinServiceRequest request) {
+        validateConflict(request);
+
         Admin admin = Admin.adminJoin(
                 request.username(),
                 passwordEncoder.encode(request.password())
@@ -78,6 +81,12 @@ public class AdminAuthService {
         clubRepository.save(club);
 
         return saved.getId();
+    }
+
+    private void validateConflict(AdminJoinServiceRequest request) {
+        if (adminRepository.existsByUsername(request.username())) {
+            throw new AdminUsernameConflictException();
+        }
     }
 
     private void validateTokenFromCookie(String refreshToken) {
@@ -96,7 +105,6 @@ public class AdminAuthService {
         return tokenResponse;
     }
 
-    // FIXME: 프론트 테스트용, 추후 삭제
     public AdminLoginResponse getAdminInfo(String adminName) {
         Club findClub = clubRepository.findByAdminUsername(adminName)
                 .orElseThrow(AdminNotFoundException::new);

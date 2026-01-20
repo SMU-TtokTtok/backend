@@ -19,6 +19,7 @@ public enum ErrorMessage {
     ADMIN_NOT_FOUND("관리자를 찾을 수 없음.", HttpStatus.NOT_FOUND),
     ADMIN_PASSWORD_NOT_MATCH("비밀번호가 틀렸습니다.", HttpStatus.UNAUTHORIZED),
     INVALID_ADMIN("잘못된 관리자명입니다.", HttpStatus.NOT_FOUND),
+    ADMIN_ALREADY_EXIST_NAME("이미 존재하는 아이디입니다.", HttpStatus.CONFLICT),
 
     //토큰 에러 메시지
     INVALID_TOKEN_ISSUER("유효하지 않은 토큰 발급자입니다.", HttpStatus.UNAUTHORIZED),

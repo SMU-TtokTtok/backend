@@ -8,7 +8,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.project.ttokttok.domain.admin.controller.dto.request.AdminLoginRequest;
+import org.project.ttokttok.domain.admin.controller.dto.request.AdminJoinRequest;
 import org.project.ttokttok.domain.admin.controller.dto.response.AdminLoginResponse;
+import org.project.ttokttok.domain.admin.controller.dto.response.AdminJoinResponse;
 import org.project.ttokttok.global.exception.dto.ErrorResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -17,6 +19,46 @@ import java.util.Map;
 
 @Tag(name = "[관리자] 관리자 인증 API", description = "관리자 인증 / 인가 관련 API 입니다.")
 public interface AdminAuthDocs {
+
+    @Operation(
+            summary = "관리자 회원가입",
+            description = """
+                    새로운 관리자 계정을 생성합니다.
+                    관리자 아이디, 비밀번호, 동아리 정보를 입력받아 관리자 계정을 생성합니다.
+                    성공 시 생성된 관리자의 기본 정보가 반환됩니다.
+                    
+                    *주의사항*
+                    - 관리자 아이디는 최소 8글자 입력입니다.
+                    - 비밀번호는 최소 12글자 입력입니다.
+                    - 동일한 아이디로 중복 가입은 불가능합니다.
+                    """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "201",
+                    description = "회원가입 성공",
+                    content = @Content(schema = @Schema(implementation = AdminJoinResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 요청 (아이디/비밀번호 형식 오류, 필수 정보 누락)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "이미 존재하는 관리자 아이디",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "서버 내부 작동 오류",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    ResponseEntity<AdminJoinResponse> join(
+            @Parameter(description = "관리자 회원가입 요청 (아이디, 비밀번호, 동아리 정보)")
+            AdminJoinRequest request
+    );
 
     @Operation(
             summary = "관리자 로그인",

@@ -1,6 +1,7 @@
 package org.project.ttokttok.domain.admin.controller;
 
 import jakarta.validation.Valid;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.project.ttokttok.domain.admin.controller.docs.AdminAuthDocs;
 import org.project.ttokttok.domain.admin.controller.dto.request.AdminJoinRequest;
@@ -11,14 +12,13 @@ import org.project.ttokttok.domain.admin.service.AdminAuthService;
 import org.project.ttokttok.domain.admin.service.dto.response.AdminLoginServiceResponse;
 import org.project.ttokttok.domain.admin.service.dto.response.ReissueServiceResponse;
 import org.project.ttokttok.global.annotation.auth.AuthUserInfo;
-
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-
-import java.util.Map;
-
-
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
@@ -69,7 +69,6 @@ public class AdminAuthApiController implements AdminAuthDocs {
                 ));
     }
 
-    // todo: 추후 삭제 - 관리자 가입 메서드
     @PostMapping("/join")
     public ResponseEntity<AdminJoinResponse> join(@RequestBody @Valid AdminJoinRequest request) {
         String adminId = adminAuthService.join(
