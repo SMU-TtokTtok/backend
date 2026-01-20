@@ -1,6 +1,7 @@
 package org.project.ttokttok.domain.applyform.service;
 
 import lombok.RequiredArgsConstructor;
+import org.project.ttokttok.domain.applicant.repository.ApplicantRepository;
 import org.project.ttokttok.domain.applyform.domain.ApplyForm;
 import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
 import org.project.ttokttok.domain.applyform.domain.json.Question;
@@ -16,6 +17,7 @@ import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.exception.ClubNotFoundException;
 import org.project.ttokttok.domain.club.exception.NotClubAdminException;
 import org.project.ttokttok.domain.club.repository.ClubRepository;
+import org.project.ttokttok.domain.temp.applyform.repository.TempApplyFormRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +36,7 @@ public class ApplyFormAdminService {
 
     private final ApplyFormRepository applyFormRepository;
     private final ClubRepository clubRepository;
+    private final TempApplyFormRepository tempApplyFormRepository;
 
     // 지원 폼 생성 메서드
     @Transactional
@@ -55,6 +58,10 @@ public class ApplyFormAdminService {
                 .stream()
                 .map(ApplicableGrade::from)
                 .collect(Collectors.toSet());
+
+        // 임시저장한 지원폼이 존재하면 삭제
+        tempApplyFormRepository.findByClubId(club.getId())
+                .ifPresent(tempApplyFormRepository::delete);
 
         // 지원 폼 생성
         ApplyForm applyForm = ApplyForm.createApplyForm(
@@ -108,8 +115,23 @@ public class ApplyFormAdminService {
         // 관리자 권한 검증
         validateAdmin(club.getAdmin().getUsername(), username);
 
-        // 활성화된 지원 폼 조회 -> 없을 경우, 그냥 null 반환
+        // 활성화된 지원 폼 조회 -> 없을 경우 임시 지원폼을 조회하는 방식으로 변경.
         Optional<ApplyForm> applyForm = applyFormRepository.findByClubIdAndStatus(clubId, ACTIVE);
+
+        // 활성화된 지원 폼이 존재하지 않는다면, 
+        if (applyForm.isEmpty()) {
+            return tempApplyFormRepository.findByClubId(clubId)
+                    .map(tempForm -> ApplyFormDetailServiceResponse.of(
+                            tempForm.getId(),
+                            tempForm.getTitle(),
+                            tempForm.getSubTitle(),
+                            tempForm.getFormJson(),
+                            getBeforeForms(clubId)
+                    ))
+                    .orElse(ApplyFormDetailServiceResponse.of(
+                            null, null, null, List.of(), getBeforeForms(clubId)
+                    ));
+        }
 
         // 이전에 사용했던 질문 목록 리스트 조회
         List<BeforeApplyFormServiceResponse> beforeForms = getBeforeForms(clubId);
@@ -145,6 +167,26 @@ public class ApplyFormAdminService {
 
         // 질문 목록 반환
         return applyForm.getFormJson();
+    }
+
+    // 이번 분기 지원을 종료
+    @Transactional
+    public void finishEvaluation(String adminName, String formId) {
+        ApplyForm applyForm = applyFormRepository.findById(formId)
+                .orElseThrow(ApplyFormNotFoundException::new);
+
+        // 관리자 권한 검증
+        validateAdmin(applyForm.getClub().getAdmin().getUsername(), adminName);
+
+        // 분기 모집 종료 시 ->
+        // 1. 모든 임시 지원자 데이터 삭제
+        applyFormRepository.deleteAllTempApplicantByFormId(formId);
+
+        // 2. 모든 지원자들에 대한 정보 삭제 (DocumentPhase, InterviewPhase는 CASCADE로 자동 삭제)
+        applyFormRepository.deleteAllApplicantByFormId(formId);
+
+        // 3. 지원 폼 삭제
+        applyFormRepository.deleteById(formId);
     }
 
     private void validateAdmin(String adminName, String requestAdminName) {

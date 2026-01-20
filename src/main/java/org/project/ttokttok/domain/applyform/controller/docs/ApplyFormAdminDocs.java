@@ -32,6 +32,8 @@ public interface ApplyFormAdminDocs {
                     - 해당 동아리의 관리자만 조회 가능합니다.
                     - 현재 활성화된 지원폼만 조회됩니다.
                     - 질문 목록과 설정 정보가 포함됩니다.
+                    - 임시 지원폼이 존재할 경우, 일부 필드가 **null**로 내려갈 수 있습니다.
+                    - 아무런 정보도 존재하지 않을 경우, formJson 필드는 빈 배열, 다른 필드는 null이 반환됩니다.
                     """
     )
     @ApiResponses(value = {
@@ -80,6 +82,7 @@ public interface ApplyFormAdminDocs {
                     - 질문 형태는 JSON 배열로 구성됩니다.
                     - 모집 시작일과 종료일을 정확히 설정해야 합니다.
                     - 모집 마감일은 모집 시작일 이후여야 하며, 모집 시작일 이전으로 설정할 수 없습니다.
+                    - 기존에 임시저장했던 임시 지원 폼이 존재한다면, 삭제하고 지원 폼으로 변환 생성됩니다.
                     """
     )
     @ApiResponses(value = {
@@ -226,6 +229,58 @@ public interface ApplyFormAdminDocs {
             @Parameter(description = "인증된 관리자 이름", hidden = true)
             String username,
             @Parameter(description = "이전 지원폼 ID", required = true, example = "UUID")
+            String formId
+    );
+
+    @Operation(
+            summary = "지원자 평가 종료",
+            description = """
+                    지원자 평가를 완전히 종료합니다.
+                    이 작업은 되돌릴 수 없으므로 신중하게 사용해야 합니다.
+                    
+                    *실행되는 작업*
+                    1. 모든 임시 지원자 데이터 삭제
+                    2. 모든 지원자 및 관련 평가 정보 삭제 (서류전형, 면접전형 포함)
+                    3. 지원폼 자체 삭제
+                    
+                    *주의사항*
+                    - 해당 동아리의 관리자만 실행 가능합니다.
+                    - 삭제된 데이터는 복구할 수 없습니다.
+                    - 모든 지원자의 정보가 영구적으로 삭제됩니다.
+                    - CASCADE 옵션으로 연관된 모든 데이터가 자동 삭제됩니다.
+                    """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "지원자 평가 종료 성공",
+                    content = @Content(schema = @Schema(implementation = Map.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "인증되지 않은 사용자",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "해당 지원폼에 대한 관리자 권한이 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "존재하지 않는 지원폼",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "서버 내부 오류 (데이터 삭제 중 오류 발생)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    ResponseEntity<Map<String, String>> finishEvaluating(
+            @Parameter(description = "인증된 관리자 이름", hidden = true)
+            String username,
+            @Parameter(description = "종료할 지원폼 ID", required = true, example = "UUID")
             String formId
     );
 }

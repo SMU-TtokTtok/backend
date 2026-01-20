@@ -4,7 +4,9 @@ import lombok.RequiredArgsConstructor;
 import org.project.ttokttok.domain.admin.controller.dto.response.AdminLoginResponse;
 import org.project.ttokttok.domain.admin.domain.Admin;
 import org.project.ttokttok.domain.admin.exception.AdminNotFoundException;
+import org.project.ttokttok.domain.admin.exception.AdminUsernameConflictException;
 import org.project.ttokttok.domain.admin.repository.AdminRepository;
+import org.project.ttokttok.domain.admin.service.dto.request.AdminJoinServiceRequest;
 import org.project.ttokttok.domain.admin.service.dto.request.AdminLoginServiceRequest;
 import org.project.ttokttok.domain.admin.service.dto.response.AdminLoginServiceResponse;
 import org.project.ttokttok.domain.admin.service.dto.response.ReissueServiceResponse;
@@ -61,12 +63,30 @@ public class AdminAuthService {
         return ReissueServiceResponse.of(tokens, ttl);
     }
 
-    // FIXME: 관리자 가입 메서드, 추후 삭제 예정
-    public String join(String username, String password) {
-        Admin admin = Admin.adminJoin(username, passwordEncoder.encode(password));
+    public String join(AdminJoinServiceRequest request) {
+        validateConflict(request);
 
-        return adminRepository.save(admin)
-                .getId();
+        Admin admin = Admin.adminJoin(
+                request.username(),
+                passwordEncoder.encode(request.password())
+        );
+
+        Club club = Club.builder()
+                .admin(admin)
+                .clubName(request.clubName())
+                .clubUniv(request.clubUniv())
+                .build();
+
+        Admin saved = adminRepository.save(admin);
+        clubRepository.save(club);
+
+        return saved.getId();
+    }
+
+    private void validateConflict(AdminJoinServiceRequest request) {
+        if (adminRepository.existsByUsername(request.username())) {
+            throw new AdminUsernameConflictException();
+        }
     }
 
     private void validateTokenFromCookie(String refreshToken) {
@@ -85,7 +105,6 @@ public class AdminAuthService {
         return tokenResponse;
     }
 
-    // FIXME: 프론트 테스트용, 추후 삭제
     public AdminLoginResponse getAdminInfo(String adminName) {
         Club findClub = clubRepository.findByAdminUsername(adminName)
                 .orElseThrow(AdminNotFoundException::new);
