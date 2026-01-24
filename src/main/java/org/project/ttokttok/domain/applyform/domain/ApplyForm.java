@@ -1,5 +1,7 @@
 package org.project.ttokttok.domain.applyform.domain;
 
+import static org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus.*;
+
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -92,7 +94,7 @@ public class ApplyForm extends BaseTimeEntity {
         this.grades = grades != null ? grades : new HashSet<>();
         this.title = title;
         this.subTitle = subTitle;
-        this.status = ApplyFormStatus.ACTIVE;
+        this.status = ACTIVE;
         this.formJson = formJson;
         this.isRecruiting = true; // 기본값은 true로 설정
     }
@@ -150,14 +152,10 @@ public class ApplyForm extends BaseTimeEntity {
         }
     }
 
-    // FIXME: 모집일자의 예외 처리가 필요합니다.
-    // EX: DEADLINE이 지난 경우, 자동으로 모집 마감 처리 등
     public void updateFormStatus() {
-        if (this.status == ApplyFormStatus.ACTIVE) {
-            this.status = ApplyFormStatus.INACTIVE;
-        } else if (this.status == ApplyFormStatus.INACTIVE) {
-            this.status = ApplyFormStatus.ACTIVE;
-        }
+        this.status = (this.status == ACTIVE)
+                ? INACTIVE
+                : ACTIVE;
     }
 
     public void toggleRecruiting() {
