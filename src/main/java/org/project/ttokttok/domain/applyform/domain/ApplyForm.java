@@ -161,4 +161,9 @@ public class ApplyForm extends BaseTimeEntity {
     public void toggleRecruiting() {
         this.isRecruiting = !this.isRecruiting;
     }
+
+
+    public void endRecruiting() {
+        this.isRecruiting = false;
+    }
 }

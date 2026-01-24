@@ -37,7 +37,7 @@ public class ApplyFormScheduler {
             // 마감된 지원 폼들의 상태를 비활성화로 변경
             int updatedCount = 0;
             for (ApplyForm applyForm : expiredApplyForms) {
-                applyForm.toggleRecruiting(); // 모집상태를 false로 변경
+                applyForm.endRecruiting(); // 모집상태를 false로 변경
                 updatedCount++;
 
                 log.debug("지원 폼 상태 변경: ID={}, 제목={}, 마감일={}",

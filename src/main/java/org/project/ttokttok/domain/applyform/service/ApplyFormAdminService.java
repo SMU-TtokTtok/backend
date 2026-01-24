@@ -187,6 +187,7 @@ public class ApplyFormAdminService {
         applyFormRepository.deleteAllTempApplicantByFormId(formId);
 
         // 3. 모든 지원자들에 대한 정보 삭제 (DocumentPhase, InterviewPhase는 CASCADE로 자동 삭제)
+        // DB 레벨에도 CASCADE 옵션이 걸려있는 상태.
         applyFormRepository.deleteAllApplicantByFormId(formId);
     }
 
