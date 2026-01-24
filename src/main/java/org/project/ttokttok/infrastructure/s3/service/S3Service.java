@@ -8,33 +8,24 @@ import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
-import software.amazon.awssdk.services.s3.presigner.S3Presigner;
-import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 
 import java.io.IOException;
-import java.time.Duration;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class S3Service {
 
     private final S3Client s3Client;
-    private final S3Presigner s3Presigner;
     private final ContentValidatable validator;
+    private final S3KeyUrlGenerator keyUrlGenerator;
 
     @Value("${cloud.aws.s3.bucket}")
     private String bucketName;
 
-    @Value("${file-cloud.url}")
-    private String fileCloudUrl;
-
     public String uploadFile(MultipartFile file, String dirName) {
-
         validateFile(file);
 
-        String key = dirName + UUID.randomUUID() + "_" + file.getOriginalFilename();
-        String url = createFileUrl(key);
+        String key = keyUrlGenerator.generateKey(dirName, file.getOriginalFilename());
 
         try {
             s3Client.putObject(
@@ -45,26 +36,18 @@ public class S3Service {
                             .build(),
                     RequestBody.fromInputStream(file.getInputStream(), file.getSize())
             );
-            return url;
+            return keyUrlGenerator.createUrl(key);
         } catch (IOException e) {
             throw new S3FileUploadException();
         }
     }
 
     public void deleteFile(String cloudFrontUrl) {
-        String key = extractKeyFromUrl(cloudFrontUrl);
+        String key = keyUrlGenerator.extractKeyFromUrl(cloudFrontUrl);
         s3Client.deleteObject(DeleteObjectRequest.builder()
                 .bucket(bucketName)
                 .key(key)
                 .build());
-    }
-
-    private String extractKeyFromUrl(String url) {
-        // CloudFront URL에서 도메인 부분을 제거하고 키만 추출
-        if (url.startsWith(fileCloudUrl + "/")) {
-            return url.substring(fileCloudUrl.length() + 1);
-        }
-        throw new IllegalArgumentException("Invalid CloudFront URL format");
     }
 
     private void validateFile(MultipartFile file) {
@@ -72,9 +55,5 @@ public class S3Service {
         validator.validateSize(file.getSize());
         validator.validateType(file.getContentType());
         validator.validateFileName(file.getOriginalFilename());
-    }
-
-    private String createFileUrl(String key) {
-        return fileCloudUrl + "/" + key;
     }
 }
