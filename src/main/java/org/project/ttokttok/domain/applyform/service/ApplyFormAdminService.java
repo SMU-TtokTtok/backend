@@ -179,14 +179,16 @@ public class ApplyFormAdminService {
         validateAdmin(applyForm.getClub().getAdmin().getUsername(), adminName);
 
         // 분기 모집 종료 시 ->
-        // 1. 모든 임시 지원자 데이터 삭제
+        // 1. 지원 폼 비활성화
+        applyForm.updateFormStatus();
+        applyFormRepository.saveAndFlush(applyForm);
+
+        // 2. 모든 임시 지원자 데이터 삭제
         applyFormRepository.deleteAllTempApplicantByFormId(formId);
 
-        // 2. 모든 지원자들에 대한 정보 삭제 (DocumentPhase, InterviewPhase는 CASCADE로 자동 삭제)
+        // 3. 모든 지원자들에 대한 정보 삭제 (DocumentPhase, InterviewPhase는 CASCADE로 자동 삭제)
+        // DB 레벨에도 CASCADE 옵션이 걸려있는 상태.
         applyFormRepository.deleteAllApplicantByFormId(formId);
-
-        // 3. 지원 폼 삭제
-        applyFormRepository.deleteById(formId);
     }
 
     private void validateAdmin(String adminName, String requestAdminName) {
