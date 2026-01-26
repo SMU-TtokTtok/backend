@@ -12,8 +12,7 @@ public record ActiveApplyFormResponse(
         String formId,
         String title,
         String subTitle,
-        List<Question> questions,
-        Map<String, Object> tempData
+        List<Question> questions
 ) {
     public static ActiveApplyFormResponse from(ActiveApplyFormServiceResponse response) {
         return ActiveApplyFormResponse.builder()
@@ -21,7 +20,6 @@ public record ActiveApplyFormResponse(
                 .title(response.title())
                 .subTitle(response.subTitle())
                 .questions(response.questions())
-                .tempData(response.tempData())
                 .build();
     }
 }
