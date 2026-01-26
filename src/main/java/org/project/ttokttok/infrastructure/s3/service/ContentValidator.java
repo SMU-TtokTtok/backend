@@ -1,5 +1,6 @@
 package org.project.ttokttok.infrastructure.s3.service;
 
+import org.project.ttokttok.infrastructure.s3.exception.S3FileMaxSizeOverException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -39,7 +40,7 @@ public class ContentValidator implements ContentValidatable {
     @Override
     public void validateSize(long size) {
         if (size > MAX_CONTENT_SIZE) {
-            throw new IllegalArgumentException("파일 크기가 5MB를 초과할 수 없습니다.");
+            throw new S3FileMaxSizeOverException();
         }
     }
 
