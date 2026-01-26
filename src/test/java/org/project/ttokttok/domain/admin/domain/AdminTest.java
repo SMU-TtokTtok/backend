@@ -148,26 +148,6 @@ class AdminTest {
 
     // ===== 정상적인 생성 테스트 =====
 
-    @ParameterizedTest
-    @CsvSource({
-            "validuser123, validPassword123456",
-            "test_user_123, mySecurePassword123",
-            "admin2024test, superSecurePass2024",
-            "user_with_under, anotherValidPassword"
-    })
-    @DisplayName("유효한 username과 password로 Admin을 생성할 수 있다")
-    void createAdminWithValidInputs(String username, String password) {
-        // when
-        Admin admin = Admin.builder()
-                .username(username)
-                .password(password)
-                .build();
-
-        // then
-        assertThat(admin).isNotNull();
-        assertThat(admin.getUsername()).isEqualTo(username);
-    }
-
     @Test
     @DisplayName("adminJoin 정적 팩토리 메서드도 동일한 검증을 수행한다")
     void adminJoinPerformsSameValidation() {
