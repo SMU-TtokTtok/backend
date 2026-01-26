@@ -25,8 +25,6 @@ public interface ApplyFormUserDocs {
                     - 활성화된 지원폼이 없는 경우 404 에러가 발생합니다.
                     - clubId는 유효한 동아리 ID여야 합니다.
                     - 반환되는 질문들은 JSONB 형태로 저장된 데이터입니다.
-                    - 임시저장 데이터가 존재할 경우, JSON 형태로 반환됩니다.
-                    - 임시저장 데이터가 없을 경우, tempData 필드는 null로 반환됩니다.
                     """
     )
     @ApiResponses(value = {
@@ -57,9 +55,6 @@ public interface ApplyFormUserDocs {
             )
     })
     ResponseEntity<ActiveApplyFormResponse> getActiveApplyForm(
-            @Parameter(description = "인증된 사용자 이메일", hidden = true)
-            @AuthUserInfo String userEmail,
-
             @Parameter(description = "동아리 ID", example = "UUID")
             String clubId
     );
