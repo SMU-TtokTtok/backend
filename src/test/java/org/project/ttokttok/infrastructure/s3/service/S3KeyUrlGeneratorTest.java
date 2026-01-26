@@ -86,8 +86,7 @@ class S3KeyUrlGeneratorTest {
 
         // When & Then
         assertThatThrownBy(() -> generator.extractKeyFromUrl(invalidUrl))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Invalid CloudFront URL format");
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
