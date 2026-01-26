@@ -12,18 +12,17 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/forms") // 임시, 추후 변경 가능성 있음.
+@RequestMapping("/api/forms")
 public class ApplyFormUserController implements ApplyFormUserDocs {
 
     private final ApplyFormUserService applyFormUserService;
 
     @GetMapping("/{clubId}")
     public ResponseEntity<ActiveApplyFormResponse> getActiveApplyForm(
-            @AuthUserInfo String userEmail,
             @PathVariable String clubId
     ) {
         ActiveApplyFormResponse response = ActiveApplyFormResponse.from(
-                applyFormUserService.getActiveApplyForm(userEmail, clubId)
+                applyFormUserService.getActiveApplyForm(clubId)
         );
 
         return ResponseEntity.ok()

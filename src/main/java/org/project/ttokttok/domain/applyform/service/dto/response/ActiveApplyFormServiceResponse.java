@@ -11,21 +11,18 @@ public record ActiveApplyFormServiceResponse(
         String formId,
         String title,
         String subTitle,
-        List<Question> questions,
-        Map<String, Object> tempData
+        List<Question> questions
 ) {
     public static ActiveApplyFormServiceResponse of(String formId,
                                                     String title,
                                                     String subTitle,
-                                                    List<Question> questions,
-                                                    Map<String, Object> tempData
+                                                    List<Question> questions
     ) {
         return ActiveApplyFormServiceResponse.builder()
                 .formId(formId)
                 .title(title)
                 .subTitle(subTitle)
                 .questions(questions)
-                .tempData(tempData)
                 .build();
     }
 }
