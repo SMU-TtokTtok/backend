@@ -24,7 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/user/temp-applicant")
+@RequestMapping("/api/user/temp-applicant/{formId}")
 public class TempApplicantController implements TempApplicantDocs {
 
     private final TempApplicantService tempApplicantService;
@@ -33,7 +33,6 @@ public class TempApplicantController implements TempApplicantDocs {
      * 임시 지원서를 저장합니다.
      */
     @PostMapping(
-            value = "/{formId}",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
     public ResponseEntity<TempApplicantSaveResponse> saveTempApplicant(
@@ -57,7 +56,7 @@ public class TempApplicantController implements TempApplicantDocs {
                 .body(new TempApplicantSaveResponse(tempApplicantId));
     }
 
-    @GetMapping("/{formId}")
+    @GetMapping
     public ResponseEntity<TempApplicantDataResponse> getTempApplicant(
             @AuthUserInfo String userEmail,
             @PathVariable String formId) {
