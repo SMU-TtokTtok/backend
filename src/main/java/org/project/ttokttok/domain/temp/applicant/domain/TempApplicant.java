@@ -1,6 +1,8 @@
 package org.project.ttokttok.domain.temp.applicant.domain;
 
+import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -13,6 +15,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import org.project.ttokttok.domain.temp.applicant.domain.converter.TempAnswerListConverter;
 import org.project.ttokttok.global.entity.BaseTimeEntity;
 
 @Entity
@@ -34,11 +37,7 @@ public class TempApplicant extends BaseTimeEntity {
     @Column(name = "user_email", nullable = false)
     private String userEmail;
 
-//    @Convert(converter = AnswerListConverter.class)
-//    @JdbcTypeCode(SqlTypes.JSON)
-//    @Column(columnDefinition = "jsonb")
-//    private List<Answer> answers;
-//
+    @Convert(converter = TempAnswerListConverter.class)
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
     private Map<String, Object> tempData;

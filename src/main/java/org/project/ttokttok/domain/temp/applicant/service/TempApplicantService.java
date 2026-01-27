@@ -80,7 +80,7 @@ public class TempApplicantService {
 
         // 텍스트 답변 추가 로직
         for (TempAnswer answer : request.data().answers()) {
-            if (!request.questionIds().contains(answer.questionId())) {
+            if (request.questionIds() == null || !request.questionIds().contains(answer.questionId())) {
                 tempAnswer.add(answer);
             }
         }
@@ -88,14 +88,12 @@ public class TempApplicantService {
         // 파일 질문 추가 로직
         if (request.files() != null && request.questionIds() != null && !request.files().isEmpty()) {
             for (int i = 0; i < request.files().size(); i++) {
-                String questionIdFromReq = request.data().answers().get(i).questionId();
                 String fileTypeQuestionId = request.questionIds().get(i);
 
-                // 파일 질문이면 S3에 업로드 후 URL 저장
-                if (questionIdFromReq.equals(fileTypeQuestionId)) {
-                    String uploadedUrl = s3Service.uploadFile(request.files().get(i), "temp-applicants/" + request.email() + "/");
-                    tempAnswer.add(new TempAnswer(fileTypeQuestionId, uploadedUrl));
-                }
+                // 파일 저장 및 업로드 처리
+                String uploadedUrl = s3Service.uploadFile(request.files().get(i),
+                        "temp-applicants/" + request.email() + "/");
+                tempAnswer.add(new TempAnswer(fileTypeQuestionId, uploadedUrl));
             }
         }
 
