@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -23,7 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/user/temp-applicant")
+@RequestMapping("/api/user/temp-applicant/{formId}")
 public class TempApplicantController implements TempApplicantDocs {
 
     private final TempApplicantService tempApplicantService;
@@ -36,7 +37,7 @@ public class TempApplicantController implements TempApplicantDocs {
     )
     public ResponseEntity<TempApplicantSaveResponse> saveTempApplicant(
             @AuthUserInfo String email,
-            @RequestParam String formId,
+            @PathVariable String formId,
             @Valid @RequestPart TempApplicantSaveRequest request,
             @RequestPart(required = false) List<String> questionIds,
             @RequestPart(required = false) List<MultipartFile> files) {
@@ -58,7 +59,7 @@ public class TempApplicantController implements TempApplicantDocs {
     @GetMapping
     public ResponseEntity<TempApplicantDataResponse> getTempApplicant(
             @AuthUserInfo String userEmail,
-            @RequestParam String formId) {
+            @PathVariable String formId) {
 
         TempApplicantDataResponse response = TempApplicantDataResponse.from(
                 tempApplicantService.getTempApplicantData(
