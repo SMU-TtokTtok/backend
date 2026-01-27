@@ -86,7 +86,7 @@ public interface TempApplicantDocs {
             String email,
 
             @Parameter(
-                    description = "임시 저장한 지원폼의 아이디", hidden = true
+                    description = "임시 저장한 지원폼의 아이디"
             )
             String formId,
 
