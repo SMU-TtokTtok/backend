@@ -86,13 +86,16 @@ public interface TempApplicantDocs {
             String email,
 
             @Parameter(
-                    description = "임시 저장한 지원폼의 아이디"
+                    description = "임시 저장한 지원폼의 아이디",
+                    required = true,
+                    example = "UUID"
             )
             String formId,
 
             @Parameter(
                     description = "임시 지원서 저장 요청 데이터",
-                    content = @Content(schema = @Schema(implementation = TempApplicantSaveRequest.class))
+                    content = @Content(schema = @Schema(implementation = TempApplicantSaveRequest.class)),
+                    required = true
             )
             TempApplicantSaveRequest request,
 
