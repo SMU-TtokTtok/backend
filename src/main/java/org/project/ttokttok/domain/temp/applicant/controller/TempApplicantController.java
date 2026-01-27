@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -32,11 +33,12 @@ public class TempApplicantController implements TempApplicantDocs {
      * 임시 지원서를 저장합니다.
      */
     @PostMapping(
+            value = "/{formId}",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
     public ResponseEntity<TempApplicantSaveResponse> saveTempApplicant(
             @AuthUserInfo String email,
-            @RequestParam String formId,
+            @PathVariable String formId,
             @Valid @RequestPart TempApplicantSaveRequest request,
             @RequestPart(required = false) List<String> questionIds,
             @RequestPart(required = false) List<MultipartFile> files) {
@@ -55,10 +57,10 @@ public class TempApplicantController implements TempApplicantDocs {
                 .body(new TempApplicantSaveResponse(tempApplicantId));
     }
 
-    @GetMapping
+    @GetMapping("/{formId}")
     public ResponseEntity<TempApplicantDataResponse> getTempApplicant(
             @AuthUserInfo String userEmail,
-            @RequestParam String formId) {
+            @PathVariable String formId) {
 
         TempApplicantDataResponse response = TempApplicantDataResponse.from(
                 tempApplicantService.getTempApplicantData(
