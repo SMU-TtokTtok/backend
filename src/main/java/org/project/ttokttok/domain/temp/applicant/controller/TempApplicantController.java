@@ -9,7 +9,6 @@ import org.project.ttokttok.domain.temp.applicant.controller.dto.response.TempAp
 import org.project.ttokttok.domain.temp.applicant.controller.dto.response.TempApplicantSaveResponse;
 import org.project.ttokttok.domain.temp.applicant.service.TempApplicantService;
 import org.project.ttokttok.domain.temp.applicant.service.dto.request.TempApplicantSaveServiceRequest;
-import org.project.ttokttok.domain.temp.applicant.service.dto.response.TempApplicantDataServiceResponse;
 import org.project.ttokttok.global.annotation.auth.AuthUserInfo;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -25,7 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/user/temp-applicant")
+@RequestMapping("/api/user/temp-applicant/{formId}")
 public class TempApplicantController implements TempApplicantDocs {
 
     private final TempApplicantService tempApplicantService;
@@ -60,7 +59,7 @@ public class TempApplicantController implements TempApplicantDocs {
     @GetMapping
     public ResponseEntity<TempApplicantDataResponse> getTempApplicant(
             @AuthUserInfo String userEmail,
-            @RequestParam String formId) {
+            @PathVariable String formId) {
 
         TempApplicantDataResponse response = TempApplicantDataResponse.from(
                 tempApplicantService.getTempApplicantData(
