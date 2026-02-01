@@ -64,18 +64,17 @@ public class Club extends BaseTimeEntity {
     @OneToMany(mappedBy = "club", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<ClubMember> clubMembers = new ArrayList<>();
 
-    // todo: 추후에 안내 메시지 등으로 변경 필요.
     @Builder
     private Club(Admin admin, String clubName, ClubUniv clubUniv) {
         this.admin = admin;
         this.name = clubName;
         this.profileImageUrl = null;
-        this.summary = "동아리 한줄 소개를 적어주세요.";
-        this.clubType = null;
-        this.clubCategory = null;
+        this.summary = "아직 동아리 소개가 없어요 🙂";
+        this.clubType = ClubType.CENTRAL;
+        this.clubCategory = ClubCategory.ACADEMIC;
         this.clubUniv = clubUniv;
         this.customCategory = "";
-        this.content = "동아리 소개를 적어주세요.";
+        this.content = "동아리 소개가 아직 작성되지 않았어요!";
     }
 
     public void updateProfileImgUrl(String imageUrl) {
