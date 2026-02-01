@@ -1,6 +1,7 @@
 package org.project.ttokttok.domain.admin.controller.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import org.project.ttokttok.domain.admin.service.dto.request.AdminJoinServiceRequest;
 import org.project.ttokttok.domain.club.domain.enums.ClubUniv;
@@ -17,7 +18,7 @@ public record AdminJoinRequest(
         @NotBlank(message = "동아리 명이 비어있습니다.")
         String clubName,
 
-        @NotBlank(message = "동아리 학부가 비어있습니다.")
+        @NotNull(message = "동아리 학부가 비어있습니다.")
         ClubUniv clubUniv
 ) {
     public AdminJoinServiceRequest toServiceRequest() {
