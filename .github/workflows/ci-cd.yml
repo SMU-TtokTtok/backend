@@ -32,43 +32,42 @@ jobs:
         run: |
           mkdir -p ./src/main/resources
           
-          # Generate application.yml
-          echo "${{ secrets.APPLICATION_YML}}" | base64 -d > ./src/main/resources/application.yml
-          
-          # Generate application-prod.yml
-          PROD_YML_CONTENT=$(echo "${{ secrets.APPLICATION_PROD_YAML }}" | base64 -d)
-          echo "$PROD_YML_CONTENT" | envsubst > ./src/main/resources/application-prod.yml
-          
-          # Generate Firebase JSON file
-          if [ -n "$FIREBASE_JSON" ] && [ -n "$FIREBASE_JSON_NAME" ]; then
-            echo "$FIREBASE_JSON" | base64 -d > "./src/main/resources/$FIREBASE_JSON_NAME"
-            echo "Firebase JSON file created: $FIREBASE_JSON_NAME"
-            # Verify the file was created
-            if [ -f "./src/main/resources/$FIREBASE_JSON_NAME" ]; then
-              echo "File size: $(wc -c < "./src/main/resources/$FIREBASE_JSON_NAME") bytes"
-            fi
+          echo "Processing application.yml..."
+          if [ -n "${{ secrets.APPLICATION_YML }}" ]; then
+            echo "${{ secrets.APPLICATION_YML }}" | tr -d '\n' | base64 --decode > ./src/main/resources/application.yml
           else
-            echo "Firebase JSON not configured or missing environment variables"
+            echo "::error::APPLICATION_YML secret is empty!"
+            exit 1
           fi
           
-          # Generate proxy.conf file for Elastic Beanstalk nginx configuration
+          echo "Processing application-prod.yml..."
+          if [ -n "${{ secrets.APPLICATION_PROD_YAML }}" ]; then
+            # 변수에 담지 않고 바로 처리 (메모리/포맷 에러 방지)
+            echo "${{ secrets.APPLICATION_PROD_YAML }}" | tr -d '\n' | base64 --decode | envsubst > ./src/main/resources/application-prod.yml
+          else
+            echo "::error::APPLICATION_PROD_YAML secret is empty!"
+            exit 1
+          fi
+          
+          echo "Processing Firebase JSON..."
+          if [ -n "$FIREBASE_JSON" ] && [ -n "$FIREBASE_JSON_NAME" ]; then
+            echo "$FIREBASE_JSON" | tr -d '\n' | base64 --decode > "./src/main/resources/$FIREBASE_JSON_NAME"
+            echo "Firebase JSON file created successfully."
+          else
+            echo "Warning: Firebase JSON secrets are missing. Skipping."
+          fi
+          
+          echo "Processing proxy.conf for Nginx..."
           if [ -n "$PROXY_CONF" ]; then
             mkdir -p ./.platform/nginx/conf.d
-            echo "$PROXY_CONF" | base64 -d > ./.platform/nginx/conf.d/proxy.conf
-            echo "proxy.conf file created at .platform/nginx/conf.d/proxy.conf"
-            # Verify the file was created
+            echo "$PROXY_CONF" | tr -d '\n' | base64 --decode > ./.platform/nginx/conf.d/proxy.conf
+            echo "proxy.conf file created successfully at .platform/nginx/conf.d/proxy.conf"
             if [ -f "./.platform/nginx/conf.d/proxy.conf" ]; then
               echo "File size: $(wc -c < "./.platform/nginx/conf.d/proxy.conf") bytes"
             fi
           else
-            echo "PROXY_CONF not configured in GitHub Secrets"
+            echo "Warning: PROXY_CONF secret is missing. Skipping nginx configuration."
           fi
-
-      - name: Debug - Show generated application-prod.yml content
-        run: |
-          echo "--- Content of src/main/resources/application-prod.yml ---"
-          cat ./src/main/resources/application-prod.yml
-          echo "---------------------------------------------------------"
 
       - name: Build with Gradle
         run: ./gradlew clean build -x test
@@ -91,17 +90,14 @@ jobs:
             cp "src/main/resources/${{ secrets.FIREBASE_JSON_NAME }}" deploy/
           fi
           # Copy .platform directory for nginx configuration
-          if [ -d .platform ]; then cp -r .platform deploy/; fi
+          if [ -d .platform ]; then 
+            cp -r .platform deploy/
+            echo ".platform directory copied to deployment package"
+          fi
           if [ -d .ebextensions ]; then cp -r .ebextensions deploy/; fi
           cd deploy
           zip -r ../deploy.zip .
           cd ..
-
-      - name: Debug - Show application-prod.yml in deploy package
-        run: |
-          echo "--- Content of application-prod.yml in deploy.zip ---"
-          unzip -p deploy.zip application-prod.yml
-          echo "-----------------------------------------------------"
 
       - name: Set version label
         id: version
