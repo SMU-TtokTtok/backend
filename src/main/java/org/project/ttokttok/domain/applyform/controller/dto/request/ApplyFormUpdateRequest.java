@@ -12,7 +12,7 @@ public record ApplyFormUpdateRequest(
         JsonNullable<String> title,
 
         @Schema(description = "선택적 필드 (null 가능)", nullable = true, example = "값 또는 null")
-        JsonNullable<String> subtitle,
+        JsonNullable<String> subTitle,
 
         @Schema(description = "선택적 필드 (null 가능)", nullable = true, example = "값 또는 null")
         JsonNullable<List<QuestionRequestDto>> questions
@@ -22,7 +22,7 @@ public record ApplyFormUpdateRequest(
                 .username(username)
                 .applyFormId(formId)
                 .title(title)
-                .subtitle(subtitle)
+                .subTitle(subTitle)
                 .questions(questionRequestPresent(questions))
                 .build();
     }

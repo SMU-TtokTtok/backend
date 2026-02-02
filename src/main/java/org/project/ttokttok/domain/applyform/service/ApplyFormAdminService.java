@@ -99,7 +99,7 @@ public class ApplyFormAdminService {
 
         // JsonNullable 값 추출
         String title = request.title().isPresent() ? request.title().get() : null;
-        String subtitle = request.subtitle().isPresent() ? request.subtitle().get() : null;
+        String subtitle = request.subTitle().isPresent() ? request.subTitle().get() : null;
         List<Question> questions = request.questions().isPresent() ? request.questions().get() : null;
 
         // 지원 폼 수정
