@@ -12,6 +12,7 @@ public enum SecurityWhiteList {
     // 토큰을 못쓰는 요청들에만 넣어넣으면 됨
     ALLOW_URLS(new String[]{
             "/api/admin/auth/login",
+            "/api/admin/auth/reset-password",
             "/api/user/auth/send-verification",
             "/api/user/auth/verify-email",
             "/api/user/auth/signup",
@@ -21,7 +22,7 @@ public enum SecurityWhiteList {
             "/api/user/auth/re-issue",
             "/api/admin/auth/re-issue",
             "/health",
-            "/api/admin/auth/join" // todo: 추후 삭제 예정 - 관리자 가입 API 엔드포인트
+            "/api/admin/auth/join"
     }),
 
     SWAGGER_URLS(new String[]{

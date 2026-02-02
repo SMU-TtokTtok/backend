@@ -28,6 +28,7 @@ jobs:
           PROD_AWS_SECRET_KEY: ${{ secrets.PROD_AWS_SECRET_KEY }}
           FIREBASE_JSON: ${{ secrets.FIREBASE_JSON }}
           FIREBASE_JSON_NAME: ${{ secrets.FIREBASE_JSON_NAME }}
+          PROXY_CONF: ${{ secrets.PROXY_CONF }}
         run: |
           mkdir -p ./src/main/resources
           
@@ -55,6 +56,18 @@ jobs:
           else
             echo "Warning: Firebase JSON secrets are missing. Skipping."
           fi
+          
+          echo "Processing proxy.conf for Nginx..."
+          if [ -n "$PROXY_CONF" ]; then
+            mkdir -p ./.platform/nginx/conf.d
+            echo "$PROXY_CONF" | tr -d '\n' | base64 --decode > ./.platform/nginx/conf.d/proxy.conf
+            echo "proxy.conf file created successfully at .platform/nginx/conf.d/proxy.conf"
+            if [ -f "./.platform/nginx/conf.d/proxy.conf" ]; then
+              echo "File size: $(wc -c < "./.platform/nginx/conf.d/proxy.conf") bytes"
+            fi
+          else
+            echo "Warning: PROXY_CONF secret is missing. Skipping nginx configuration."
+          fi
 
       - name: Build with Gradle
         run: ./gradlew clean build -x test
@@ -75,6 +88,11 @@ jobs:
           # Copy Firebase JSON file if it exists
           if [ -n "${{ secrets.FIREBASE_JSON_NAME }}" ] && [ -f "src/main/resources/${{ secrets.FIREBASE_JSON_NAME }}" ]; then
             cp "src/main/resources/${{ secrets.FIREBASE_JSON_NAME }}" deploy/
+          fi
+          # Copy .platform directory for nginx configuration
+          if [ -d .platform ]; then 
+            cp -r .platform deploy/
+            echo ".platform directory copied to deployment package"
           fi
           if [ -d .ebextensions ]; then cp -r .ebextensions deploy/; fi
           cd deploy
