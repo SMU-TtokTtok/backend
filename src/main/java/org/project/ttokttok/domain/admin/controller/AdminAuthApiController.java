@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.project.ttokttok.domain.admin.controller.docs.AdminAuthDocs;
 import org.project.ttokttok.domain.admin.controller.dto.request.AdminJoinRequest;
 import org.project.ttokttok.domain.admin.controller.dto.request.AdminLoginRequest;
+import org.project.ttokttok.domain.admin.controller.dto.request.AdminResetPasswordRequest;
 import org.project.ttokttok.domain.admin.controller.dto.response.AdminJoinResponse;
 import org.project.ttokttok.domain.admin.controller.dto.response.AdminLoginResponse;
 import org.project.ttokttok.domain.admin.service.AdminAuthService;
@@ -86,5 +87,15 @@ public class AdminAuthApiController implements AdminAuthDocs {
     public ResponseEntity<AdminLoginResponse> getAdminInfo(@AuthUserInfo String adminName) {
         return ResponseEntity.ok()
                 .body(adminAuthService.getAdminInfo(adminName));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Map<String, String>> resetPassword(
+            @RequestBody @Valid AdminResetPasswordRequest request) {
+
+        adminAuthService.resetPassword(request.toServiceRequest());
+
+        return ResponseEntity.ok()
+                .body(Map.of("message", "비밀번호가 성공적으로 변경되었습니다."));
     }
 }

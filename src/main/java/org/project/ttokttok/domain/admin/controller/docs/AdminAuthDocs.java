@@ -7,15 +7,15 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.project.ttokttok.domain.admin.controller.dto.request.AdminLoginRequest;
+import java.util.Map;
 import org.project.ttokttok.domain.admin.controller.dto.request.AdminJoinRequest;
-import org.project.ttokttok.domain.admin.controller.dto.response.AdminLoginResponse;
+import org.project.ttokttok.domain.admin.controller.dto.request.AdminLoginRequest;
+import org.project.ttokttok.domain.admin.controller.dto.request.AdminResetPasswordRequest;
 import org.project.ttokttok.domain.admin.controller.dto.response.AdminJoinResponse;
+import org.project.ttokttok.domain.admin.controller.dto.response.AdminLoginResponse;
 import org.project.ttokttok.global.exception.dto.ErrorResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestHeader;
-
-import java.util.Map;
 
 @Tag(name = "[관리자] 관리자 인증 API", description = "관리자 인증 / 인가 관련 API 입니다.")
 public interface AdminAuthDocs {
@@ -173,5 +173,44 @@ public interface AdminAuthDocs {
     ResponseEntity<Map<String, Object>> reissue(
             @Parameter(description = "Authorization 헤더의 리프레시 토큰")
             @RequestHeader(value = "Authorization", required = false) String authHeader
+    );
+
+    @Operation(
+            summary = "관리자 비밀번호 재설정",
+            description = """
+                    관리자의 비밀번호를 재설정합니다.
+                    로그인하지 않은 상태에서 사용할 수 있습니다.
+                    관리자 아이디, 새 비밀번호, 비밀번호 확인만으로 간단하게 재설정할 수 있습니다.
+                    
+                    *주의사항*
+                    - 새 비밀번호는 최소 12글자여야 합니다.
+                    - 새 비밀번호와 새 비밀번호 확인이 일치해야 합니다.
+                    - 추후 이메일 인증 등의 보안 기능이 추가될 예정입니다.
+                    """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "비밀번호 재설정 성공"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 요청 (비밀번호 형식 오류, 새 비밀번호 불일치)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "관리자를 찾을 수 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "서버 내부 작동 오류",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    ResponseEntity<Map<String, String>> resetPassword(
+            @Parameter(description = "비밀번호 재설정 요청 (관리자 아이디, 새 비밀번호, 새 비밀번호 확인)")
+            AdminResetPasswordRequest request
     );
 }
