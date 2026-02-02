@@ -338,7 +338,7 @@ public class ApplicantAdminService {
                 MEMBER,
                 applicant.getGrade(),
                 applicant.getMajor(),
-                applicant.getUserEmail(),
+                applicant.getEmail(),
                 applicant.getPhone(),
                 applicant.getGender()
         );
