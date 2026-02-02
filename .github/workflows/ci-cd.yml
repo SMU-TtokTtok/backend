@@ -28,6 +28,7 @@ jobs:
           PROD_AWS_SECRET_KEY: ${{ secrets.PROD_AWS_SECRET_KEY }}
           FIREBASE_JSON: ${{ secrets.FIREBASE_JSON }}
           FIREBASE_JSON_NAME: ${{ secrets.FIREBASE_JSON_NAME }}
+          PROXY_CONF: ${{ secrets.PROXY_CONF }}
         run: |
           mkdir -p ./src/main/resources
           
@@ -48,6 +49,19 @@ jobs:
             fi
           else
             echo "Firebase JSON not configured or missing environment variables"
+          fi
+          
+          # Generate proxy.conf file for Elastic Beanstalk nginx configuration
+          if [ -n "$PROXY_CONF" ]; then
+            mkdir -p ./.platform/nginx/conf.d
+            echo "$PROXY_CONF" | base64 -d > ./.platform/nginx/conf.d/proxy.conf
+            echo "proxy.conf file created at .platform/nginx/conf.d/proxy.conf"
+            # Verify the file was created
+            if [ -f "./.platform/nginx/conf.d/proxy.conf" ]; then
+              echo "File size: $(wc -c < "./.platform/nginx/conf.d/proxy.conf") bytes"
+            fi
+          else
+            echo "PROXY_CONF not configured in GitHub Secrets"
           fi
 
       - name: Debug - Show generated application-prod.yml content
@@ -76,6 +90,8 @@ jobs:
           if [ -n "${{ secrets.FIREBASE_JSON_NAME }}" ] && [ -f "src/main/resources/${{ secrets.FIREBASE_JSON_NAME }}" ]; then
             cp "src/main/resources/${{ secrets.FIREBASE_JSON_NAME }}" deploy/
           fi
+          # Copy .platform directory for nginx configuration
+          if [ -d .platform ]; then cp -r .platform deploy/; fi
           if [ -d .ebextensions ]; then cp -r .ebextensions deploy/; fi
           cd deploy
           zip -r ../deploy.zip .

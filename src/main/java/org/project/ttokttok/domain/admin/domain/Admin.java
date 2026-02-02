@@ -51,6 +51,11 @@ public class Admin extends BaseTimeEntity {
             throw new AdminPasswordNotMatchException();
     }
 
+    // ------- 비즈니스 로직 메서드 -------
+    public void resetPassword(String newPasswordEncoded) {
+        this.password = newPasswordEncoded;
+    }
+
     // ------- 내부 검증 메서드 -------
     private void validateUsernameFormat(String username) {
         if (username == null || username.trim().isEmpty()) {

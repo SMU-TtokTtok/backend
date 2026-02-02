@@ -1,5 +1,7 @@
 package org.project.ttokttok.domain.admin.service;
 
+import static org.project.ttokttok.global.entity.Role.ROLE_ADMIN;
+
 import lombok.RequiredArgsConstructor;
 import org.project.ttokttok.domain.admin.controller.dto.response.AdminLoginResponse;
 import org.project.ttokttok.domain.admin.domain.Admin;
@@ -8,6 +10,7 @@ import org.project.ttokttok.domain.admin.exception.AdminUsernameConflictExceptio
 import org.project.ttokttok.domain.admin.repository.AdminRepository;
 import org.project.ttokttok.domain.admin.service.dto.request.AdminJoinServiceRequest;
 import org.project.ttokttok.domain.admin.service.dto.request.AdminLoginServiceRequest;
+import org.project.ttokttok.domain.admin.service.dto.request.AdminResetPasswordServiceRequest;
 import org.project.ttokttok.domain.admin.service.dto.response.AdminLoginServiceResponse;
 import org.project.ttokttok.domain.admin.service.dto.response.ReissueServiceResponse;
 import org.project.ttokttok.domain.club.domain.Club;
@@ -15,13 +18,11 @@ import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.global.auth.jwt.dto.request.TokenRequest;
 import org.project.ttokttok.global.auth.jwt.dto.response.TokenResponse;
 import org.project.ttokttok.global.auth.jwt.exception.InvalidTokenFromCookieException;
-import org.project.ttokttok.infrastructure.redis.service.RefreshTokenRedisService;
 import org.project.ttokttok.global.auth.jwt.service.TokenProvider;
+import org.project.ttokttok.infrastructure.redis.service.RefreshTokenRedisService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import static org.project.ttokttok.global.entity.Role.ROLE_ADMIN;
 
 @Service
 @RequiredArgsConstructor
@@ -115,5 +116,20 @@ public class AdminAuthService {
                 null, // 테스트용이므로 토큰은 null
                 null  // 테스트용이므로 토큰은 null
         );
+    }
+
+    @Transactional
+    public void resetPassword(AdminResetPasswordServiceRequest request) {
+        // 새 비밀번호와 확인 비밀번호 일치 검증
+        if (!request.newPassword().equals(request.newPasswordConfirm())) {
+            throw new IllegalArgumentException("새 비밀번호와 새 비밀번호 확인이 일치하지 않습니다.");
+        }
+
+        // 관리자 조회
+        Admin admin = adminRepository.findByUsername(request.username())
+                .orElseThrow(AdminNotFoundException::new);
+
+        // 비밀번호 재설정
+        admin.resetPassword(passwordEncoder.encode(request.newPassword()));
     }
 }
