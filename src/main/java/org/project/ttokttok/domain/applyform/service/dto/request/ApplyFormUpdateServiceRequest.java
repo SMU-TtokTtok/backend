@@ -12,7 +12,7 @@ public record ApplyFormUpdateServiceRequest(
     String clubId,
     String applyFormId,
     JsonNullable<String> title,
-    JsonNullable<String> subtitle,
+    JsonNullable<String> subTitle,
     JsonNullable<List<Question>> questions
 ) {
 }
