@@ -113,13 +113,30 @@ class AdminAuthServiceTest {
     class LogoutTest {
 
         @Test
-        @DisplayName("로그아웃하면 RefreshToken이 삭제된다")
+        @DisplayName("로그아웃하면 RefreshToken 삭제가 호출된다")
         void logoutDeletesRefreshToken() {
             // given
+            final String username = "testadmin123";
 
             // when
+            adminAuthService.logout(username);
 
             // then
+            verify(refreshTokenRedisService).deleteRefreshToken(username);
+        }
+
+        @Test
+        @DisplayName("로그아웃 시 올바른 사용자명으로 토큰 삭제가 호출된다")
+        void logoutCallsDeleteWithCorrectUsername() {
+            // given
+            final String username = "anotheradmin";
+
+            // when
+            adminAuthService.logout(username);
+
+            // then
+            verify(refreshTokenRedisService, times(1)).deleteRefreshToken(eq(username));
+            verifyNoMoreInteractions(refreshTokenRedisService);
         }
     }
 
@@ -128,44 +145,83 @@ class AdminAuthServiceTest {
     @DisplayName("reissue 메서드")
     class ReissueTest {
 
+        private static final String VALID_REFRESH_TOKEN = "valid-refresh-token";
+        private static final String NEW_ACCESS_TOKEN = "new-access-token";
+        private static final String NEW_REFRESH_TOKEN = "new-refresh-token";
+        private static final Long REFRESH_TTL = 604800L;
+
         @Test
         @DisplayName("유효한 리프레시 토큰으로 토큰을 재발급받을 수 있다")
         void reissueWithValidRefreshToken() {
             // given
+            TokenResponse mockTokenResponse = TokenResponse.of(NEW_ACCESS_TOKEN, NEW_REFRESH_TOKEN);
+            when(tokenProvider.reissueToken(VALID_REFRESH_TOKEN, Role.ROLE_ADMIN))
+                    .thenReturn(mockTokenResponse);
+            when(refreshTokenRedisService.getRefreshTTL(NEW_REFRESH_TOKEN))
+                    .thenReturn(REFRESH_TTL);
 
             // when
+            ReissueServiceResponse result = adminAuthService.reissue(VALID_REFRESH_TOKEN);
 
             // then
+            assertThat(result).isNotNull();
+            assertThat(result.accessToken()).isEqualTo(NEW_ACCESS_TOKEN);
+            assertThat(result.refreshToken()).isEqualTo(NEW_REFRESH_TOKEN);
+            assertThat(result.refreshTTL()).isEqualTo(REFRESH_TTL);
+            verify(tokenProvider).reissueToken(VALID_REFRESH_TOKEN, Role.ROLE_ADMIN);
+            verify(refreshTokenRedisService).getRefreshTTL(NEW_REFRESH_TOKEN);
         }
 
         @Test
         @DisplayName("리프레시 토큰이 null이면 InvalidTokenFromCookieException이 발생한다")
         void reissueWithNullRefreshToken() {
             // given
+            final String nullRefreshToken = null;
 
-            // when
+            // when & then
+            assertThatThrownBy(() -> adminAuthService.reissue(nullRefreshToken))
+                    .isInstanceOf(InvalidTokenFromCookieException.class);
 
-            // then
+            verify(tokenProvider, never()).reissueToken(anyString(), any(Role.class));
+            verify(refreshTokenRedisService, never()).getRefreshTTL(anyString());
         }
 
         @Test
-        @DisplayName("Redis에 저장된 토큰이 없으면 RefreshTokenNotFoundException이 발생한다")
-        void reissueWithTokenNotFoundInRedis() {
+        @DisplayName("tokenProvider.reissueToken 호출 시 올바른 Role이 전달된다")
+        void reissuePassesCorrectRole() {
             // given
+            TokenResponse mockTokenResponse = TokenResponse.of(NEW_ACCESS_TOKEN, NEW_REFRESH_TOKEN);
+            when(tokenProvider.reissueToken(VALID_REFRESH_TOKEN, Role.ROLE_ADMIN))
+                    .thenReturn(mockTokenResponse);
+            when(refreshTokenRedisService.getRefreshTTL(NEW_REFRESH_TOKEN))
+                    .thenReturn(REFRESH_TTL);
 
             // when
+            ReissueServiceResponse result = adminAuthService.reissue(VALID_REFRESH_TOKEN);
 
             // then
+            verify(tokenProvider).reissueToken(eq(VALID_REFRESH_TOKEN), eq(Role.ROLE_ADMIN));
+
+            assertThat(result).isNotNull();
+            assertThat(result.accessToken()).isEqualTo(NEW_ACCESS_TOKEN);
+            assertThat(result.refreshToken()).isEqualTo(NEW_REFRESH_TOKEN);
         }
 
         @Test
-        @DisplayName("Redis에 저장된 토큰과 다르면 InvalidRefreshTokenException이 발생한다")
-        void reissueWithTokenMismatch() {
+        @DisplayName("재발급된 토큰으로 TTL 조회가 수행된다")
+        void reissueCallsGetRefreshTTLWithNewToken() {
             // given
+            TokenResponse mockTokenResponse = TokenResponse.of(NEW_ACCESS_TOKEN, NEW_REFRESH_TOKEN);
+            when(tokenProvider.reissueToken(VALID_REFRESH_TOKEN, Role.ROLE_ADMIN))
+                    .thenReturn(mockTokenResponse);
+            when(refreshTokenRedisService.getRefreshTTL(NEW_REFRESH_TOKEN))
+                    .thenReturn(REFRESH_TTL);
 
             // when
+            adminAuthService.reissue(VALID_REFRESH_TOKEN);
 
             // then
+            verify(refreshTokenRedisService).getRefreshTTL(NEW_REFRESH_TOKEN);
         }
     }
 
