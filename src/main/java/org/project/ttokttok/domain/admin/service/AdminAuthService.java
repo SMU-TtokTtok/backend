@@ -56,7 +56,7 @@ public class AdminAuthService {
 
     @Transactional
     public ReissueServiceResponse reissue(String refreshToken) {
-        validateTokenFromCookie(refreshToken);
+        validateRefreshToken(refreshToken);
 
         TokenResponse tokens = tokenProvider.reissueToken(refreshToken, ROLE_ADMIN);
         Long ttl = refreshTokenRedisService.getRefreshTTL(tokens.refreshToken());
@@ -90,7 +90,7 @@ public class AdminAuthService {
         }
     }
 
-    private void validateTokenFromCookie(String refreshToken) {
+    private void validateRefreshToken(String refreshToken) {
         if (refreshToken == null) {
             throw new InvalidRefreshTokenException();
         }
