@@ -130,6 +130,6 @@ public class AdminAuthService {
                 .orElseThrow(AdminNotFoundException::new);
 
         // 비밀번호 재설정
-        admin.resetPassword(passwordEncoder.encode(request.newPassword()));
+        admin.resetPassword(request.newPassword(), passwordEncoder);
     }
 }

@@ -204,4 +204,96 @@ class AdminTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("관리자 명은 8자 이상 20자 이하여야 합니다.");
     }
+
+    // ===== 비밀번호 업데이트(resetPassword) 테스트 =====
+
+    @Test
+    @DisplayName("resetPassword 호출 시 PasswordEncoder.encode가 호출된다")
+    void resetPasswordCallsPasswordEncoderEncode() {
+        // given
+        Admin admin = Admin.builder()
+                .username(VALID_USERNAME)
+                .password(ENCODED_PASSWORD)
+                .build();
+
+        final String newRawPassword = "newPassword456";
+        final String newEncodedPassword = "encodedNewPassword456";
+        when(passwordEncoder.encode(newRawPassword)).thenReturn(newEncodedPassword);
+
+        // when
+        admin.resetPassword(newRawPassword, passwordEncoder);
+
+        // then
+        verify(passwordEncoder).encode(newRawPassword);
+    }
+
+    @Test
+    @DisplayName("resetPassword 후 새 비밀번호로 검증하면 성공한다")
+    void resetPasswordSuccessfully() {
+        // given
+        Admin admin = Admin.builder()
+                .username(VALID_USERNAME)
+                .password(ENCODED_PASSWORD)
+                .build();
+
+        final String newRawPassword = "newPassword456";
+        final String newEncodedPassword = "encodedNewPassword456";
+        when(passwordEncoder.encode(newRawPassword)).thenReturn(newEncodedPassword);
+        when(passwordEncoder.matches(newRawPassword, newEncodedPassword)).thenReturn(true);
+
+        // when
+        admin.resetPassword(newRawPassword, passwordEncoder);
+
+        // then
+        assertThatNoException()
+                .isThrownBy(() -> admin.validatePassword(newRawPassword, passwordEncoder));
+    }
+
+    @Test
+    @DisplayName("resetPassword 후 기존 비밀번호로 검증하면 실패한다")
+    void resetPasswordInvalidatesOldPassword() {
+        // given
+        Admin admin = Admin.builder()
+                .username(VALID_USERNAME)
+                .password(ENCODED_PASSWORD)
+                .build();
+
+        final String newRawPassword = "newPassword456";
+        final String newEncodedPassword = "encodedNewPassword456";
+        when(passwordEncoder.encode(newRawPassword)).thenReturn(newEncodedPassword);
+
+        admin.resetPassword(newRawPassword, passwordEncoder);
+
+        // when & then
+        when(passwordEncoder.matches(VALID_PASSWORD, newEncodedPassword)).thenReturn(false);
+        assertThatThrownBy(() -> admin.validatePassword(VALID_PASSWORD, passwordEncoder))
+                .isInstanceOf(AdminPasswordNotMatchException.class);
+    }
+
+    @Test
+    @DisplayName("resetPassword를 여러 번 호출해도 마지막 비밀번호가 적용된다")
+    void resetPasswordMultipleTimes() {
+        // given
+        Admin admin = Admin.builder()
+                .username(VALID_USERNAME)
+                .password(ENCODED_PASSWORD)
+                .build();
+
+        final String firstNewPassword = "firstPassword123";
+        final String secondNewPassword = "secondPassword456";
+        final String firstEncoded = "encodedFirst";
+        final String secondEncoded = "encodedSecond";
+
+        when(passwordEncoder.encode(firstNewPassword)).thenReturn(firstEncoded);
+        when(passwordEncoder.encode(secondNewPassword)).thenReturn(secondEncoded);
+        when(passwordEncoder.matches(secondNewPassword, secondEncoded)).thenReturn(true);
+
+        // when
+        admin.resetPassword(firstNewPassword, passwordEncoder);
+        admin.resetPassword(secondNewPassword, passwordEncoder);
+
+        // then
+        assertThatNoException()
+                .isThrownBy(() -> admin.validatePassword(secondNewPassword, passwordEncoder));
+    }
 }

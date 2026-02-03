@@ -52,8 +52,8 @@ public class Admin extends BaseTimeEntity {
     }
 
     // ------- 비즈니스 로직 메서드 -------
-    public void resetPassword(String newPasswordEncoded) {
-        this.password = newPasswordEncoded;
+    public void resetPassword(String newPassword, PasswordEncoder pe) {
+        this.password = pe.encode(newPassword);
     }
 
     // ------- 내부 검증 메서드 -------
