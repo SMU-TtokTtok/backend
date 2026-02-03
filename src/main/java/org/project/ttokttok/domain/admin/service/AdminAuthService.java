@@ -17,7 +17,7 @@ import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.global.auth.jwt.dto.request.TokenRequest;
 import org.project.ttokttok.global.auth.jwt.dto.response.TokenResponse;
-import org.project.ttokttok.global.auth.jwt.exception.InvalidTokenFromCookieException;
+import org.project.ttokttok.global.auth.jwt.exception.InvalidRefreshTokenException;
 import org.project.ttokttok.global.auth.jwt.service.TokenProvider;
 import org.project.ttokttok.infrastructure.redis.service.RefreshTokenRedisService;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -92,7 +92,7 @@ public class AdminAuthService {
 
     private void validateTokenFromCookie(String refreshToken) {
         if (refreshToken == null) {
-            throw new InvalidTokenFromCookieException();
+            throw new InvalidRefreshTokenException();
         }
     }
 
@@ -113,8 +113,8 @@ public class AdminAuthService {
         return AdminLoginResponse.of(
                 findClub.getId(),
                 findClub.getName(),
-                null, // 테스트용이므로 토큰은 null
-                null  // 테스트용이므로 토큰은 null
+                null,
+                null
         );
     }
 

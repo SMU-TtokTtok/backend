@@ -1,5 +1,19 @@
 package org.project.ttokttok.domain.admin.service.auth;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+
+import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -24,19 +38,12 @@ import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.global.auth.jwt.dto.request.TokenRequest;
 import org.project.ttokttok.global.auth.jwt.dto.response.TokenResponse;
 import org.project.ttokttok.global.auth.jwt.exception.InvalidRefreshTokenException;
-import org.project.ttokttok.global.auth.jwt.exception.InvalidTokenFromCookieException;
-import org.project.ttokttok.global.auth.jwt.exception.RefreshTokenNotFoundException;
 import org.project.ttokttok.global.auth.jwt.service.TokenProvider;
 import org.project.ttokttok.global.entity.Role;
 import org.project.ttokttok.infrastructure.redis.service.RefreshTokenRedisService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 @Transactional
 @ActiveProfiles("test")
@@ -272,14 +279,14 @@ class AdminAuthServiceTest {
         }
 
         @Test
-        @DisplayName("리프레시 토큰이 null이면 InvalidTokenFromCookieException이 발생한다")
+        @DisplayName("리프레시 토큰이 null이면 InvalidRefreshTokenException이 발생한다")
         void reissueWithNullRefreshToken() {
             // given
             final String nullRefreshToken = null;
 
             // when & then
             assertThatThrownBy(() -> adminAuthService.reissue(nullRefreshToken))
-                    .isInstanceOf(InvalidTokenFromCookieException.class);
+                    .isInstanceOf(InvalidRefreshTokenException.class);
 
             verify(tokenProvider, never()).reissueToken(anyString(), any(Role.class));
             verify(refreshTokenRedisService, never()).getRefreshTTL(anyString());

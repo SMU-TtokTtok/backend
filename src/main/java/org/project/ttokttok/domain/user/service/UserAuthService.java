@@ -16,7 +16,7 @@ import org.project.ttokttok.domain.user.service.dto.response.UserReissueServiceR
 import org.project.ttokttok.domain.user.service.dto.response.UserServiceResponse;
 import org.project.ttokttok.global.auth.jwt.dto.request.TokenRequest;
 import org.project.ttokttok.global.auth.jwt.dto.response.TokenResponse;
-import org.project.ttokttok.global.auth.jwt.exception.InvalidTokenFromCookieException;
+import org.project.ttokttok.global.auth.jwt.exception.InvalidRefreshTokenException;
 import org.project.ttokttok.global.auth.jwt.service.TokenProvider;
 import org.project.ttokttok.infrastructure.email.service.EmailService;
 import org.project.ttokttok.infrastructure.redis.service.RefreshTokenRedisService;
@@ -291,7 +291,7 @@ public class UserAuthService {
 
     private void validateTokenFromCookie(String refreshToken) {
         if (refreshToken == null) {
-            throw new InvalidTokenFromCookieException();
+            throw new InvalidRefreshTokenException();
         }
     }
 
