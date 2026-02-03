@@ -281,11 +281,8 @@ class AdminAuthServiceTest {
         @Test
         @DisplayName("리프레시 토큰이 null이면 InvalidRefreshTokenException이 발생한다")
         void reissueWithNullRefreshToken() {
-            // given
-            final String nullRefreshToken = null;
-
             // when & then
-            assertThatThrownBy(() -> adminAuthService.reissue(nullRefreshToken))
+            assertThatThrownBy(() -> adminAuthService.reissue(null))
                     .isInstanceOf(InvalidRefreshTokenException.class);
 
             verify(tokenProvider, never()).reissueToken(anyString(), any(Role.class));
