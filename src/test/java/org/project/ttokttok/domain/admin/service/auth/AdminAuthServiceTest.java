@@ -66,44 +66,143 @@ class AdminAuthServiceTest {
     @DisplayName("login 메서드")
     class LoginTest {
 
+        private static final String VALID_USERNAME = "testadmin123";
+        private static final String VALID_PASSWORD = "password123";
+        private static final String ACCESS_TOKEN = "mock-access-token";
+        private static final String REFRESH_TOKEN = "mock-refresh-token";
+        private static final String CLUB_ID = "club-uuid-123";
+        private static final String CLUB_NAME = "테스트 동아리";
+
         @Test
         @DisplayName("유효한 자격 증명으로 로그인하면 토큰과 클럽 정보가 반환된다")
         void loginWithValidCredentials() {
             // given
+            final AdminLoginServiceRequest request = createLoginRequest(VALID_USERNAME, VALID_PASSWORD);
+            final Admin mockAdmin = setupAdminMock(VALID_USERNAME);
+            setupTokenMock();
+            setupClubMock(VALID_USERNAME);
 
             // when
+            final AdminLoginServiceResponse result = adminAuthService.login(request);
 
             // then
+            assertThat(result).isNotNull();
+            assertThat(result.accessToken()).isEqualTo(ACCESS_TOKEN);
+            assertThat(result.refreshToken()).isEqualTo(REFRESH_TOKEN);
+            assertThat(result.clubId()).isEqualTo(CLUB_ID);
+            assertThat(result.clubName()).isEqualTo(CLUB_NAME);
+
+            verify(adminRepository).findByUsername(VALID_USERNAME);
+            verify(mockAdmin).validatePassword(VALID_PASSWORD, passwordEncoder);
+            verify(tokenProvider).generateToken(any(TokenRequest.class));
+            verify(refreshTokenRedisService).save(VALID_USERNAME, REFRESH_TOKEN);
+            verify(clubRepository).findByAdminUsername(VALID_USERNAME);
         }
 
         @Test
         @DisplayName("존재하지 않는 사용자명으로 로그인하면 AdminNotFoundException이 발생한다")
         void loginWithNonExistentUsername() {
             // given
+            final String nonExistentUsername = "nonexistent";
+            final AdminLoginServiceRequest request = createLoginRequest(nonExistentUsername, VALID_PASSWORD);
 
-            // when
+            when(adminRepository.findByUsername(nonExistentUsername)).thenReturn(Optional.empty());
 
-            // then
+            // when & then
+            assertThatThrownBy(() -> adminAuthService.login(request))
+                    .isInstanceOf(AdminNotFoundException.class);
+
+            verify(adminRepository).findByUsername(nonExistentUsername);
+            verify(tokenProvider, never()).generateToken(any(TokenRequest.class));
+            verify(clubRepository, never()).findByAdminUsername(anyString());
         }
 
         @Test
         @DisplayName("잘못된 비밀번호로 로그인하면 AdminPasswordNotMatchException이 발생한다")
         void loginWithWrongPassword() {
             // given
+            final String wrongPassword = "wrongPassword";
+            final AdminLoginServiceRequest request = createLoginRequest(VALID_USERNAME, wrongPassword);
 
-            // when
+            final Admin mockAdmin = mock(Admin.class);
+            when(adminRepository.findByUsername(VALID_USERNAME)).thenReturn(Optional.of(mockAdmin));
+            doThrow(new AdminPasswordNotMatchException())
+                    .when(mockAdmin).validatePassword(wrongPassword, passwordEncoder);
 
-            // then
+            // when & then
+            assertThatThrownBy(() -> adminAuthService.login(request))
+                    .isInstanceOf(AdminPasswordNotMatchException.class);
+
+            verify(adminRepository).findByUsername(VALID_USERNAME);
+            verify(mockAdmin).validatePassword(wrongPassword, passwordEncoder);
+            verify(tokenProvider, never()).generateToken(any(TokenRequest.class));
+            verify(clubRepository, never()).findByAdminUsername(anyString());
         }
 
         @Test
         @DisplayName("관리자에게 연결된 클럽이 없으면 AdminNotFoundException이 발생한다")
         void loginWithNoAssociatedClub() {
             // given
+            final AdminLoginServiceRequest request = createLoginRequest(VALID_USERNAME, VALID_PASSWORD);
+            setupAdminMock(VALID_USERNAME);
+            setupTokenMock();
+
+            when(clubRepository.findByAdminUsername(VALID_USERNAME)).thenReturn(Optional.empty());
+
+            // when & then
+            assertThatThrownBy(() -> adminAuthService.login(request))
+                    .isInstanceOf(AdminNotFoundException.class);
+
+            verify(adminRepository).findByUsername(VALID_USERNAME);
+            verify(tokenProvider).generateToken(any(TokenRequest.class));
+            verify(clubRepository).findByAdminUsername(VALID_USERNAME);
+        }
+
+        @Test
+        @DisplayName("로그인 성공 시 RefreshToken이 Redis에 저장된다")
+        void loginSavesRefreshTokenToRedis() {
+            // given
+            final AdminLoginServiceRequest request = createLoginRequest(VALID_USERNAME, VALID_PASSWORD);
+            setupSuccessfulLoginMocks(VALID_USERNAME);
 
             // when
+            adminAuthService.login(request);
 
             // then
+            verify(refreshTokenRedisService).save(eq(VALID_USERNAME), eq(REFRESH_TOKEN));
+        }
+
+        private AdminLoginServiceRequest createLoginRequest(final String username, final String password) {
+            return AdminLoginServiceRequest.builder()
+                    .username(username)
+                    .password(password)
+                    .build();
+        }
+
+        private Admin setupAdminMock(final String username) {
+            final Admin mockAdmin = mock(Admin.class);
+            when(mockAdmin.getUsername()).thenReturn(username);
+            when(adminRepository.findByUsername(username)).thenReturn(Optional.of(mockAdmin));
+            return mockAdmin;
+        }
+
+        private void setupTokenMock() {
+            final TokenResponse mockTokenResponse = TokenResponse.of(ACCESS_TOKEN, REFRESH_TOKEN);
+            when(tokenProvider.generateToken(any(TokenRequest.class))).thenReturn(mockTokenResponse);
+        }
+
+        private void setupClubMock(final String username) {
+            final Club mockClub = mock(Club.class);
+            when(mockClub.getId()).thenReturn(CLUB_ID);
+            when(mockClub.getName()).thenReturn(CLUB_NAME);
+            when(clubRepository.findByAdminUsername(username))
+                    .thenReturn(Optional.of(mockClub));
+        }
+
+        private void setupSuccessfulLoginMocks(final String username) {
+            setupAdminMock(username);
+            setupTokenMock();
+            setupClubMock(username);
         }
     }
 
@@ -148,7 +247,7 @@ class AdminAuthServiceTest {
         private static final String VALID_REFRESH_TOKEN = "valid-refresh-token";
         private static final String NEW_ACCESS_TOKEN = "new-access-token";
         private static final String NEW_REFRESH_TOKEN = "new-refresh-token";
-        private static final Long REFRESH_TTL = 604800L;
+        private static final Long REFRESH_TTL = 604800L; // 7일 -> 초 단위로
 
         @Test
         @DisplayName("유효한 리프레시 토큰으로 토큰을 재발급받을 수 있다")
