@@ -15,12 +15,11 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.project.ttokttok.domain.admin.controller.dto.request.AdminJoinRequest;
 import org.project.ttokttok.domain.admin.controller.dto.request.AdminLoginRequest;
 import org.project.ttokttok.domain.admin.controller.dto.request.AdminResetPasswordRequest;
-import org.project.ttokttok.domain.admin.repository.AdminRepository;
 import org.project.ttokttok.domain.admin.service.AdminAuthService;
 import org.project.ttokttok.domain.admin.service.dto.request.AdminJoinServiceRequest;
+import org.project.ttokttok.domain.admin.service.dto.request.AdminLoginServiceRequest;
 import org.project.ttokttok.domain.admin.service.dto.response.AdminLoginServiceResponse;
 import org.project.ttokttok.domain.club.domain.enums.ClubUniv;
-import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -46,12 +45,6 @@ class AdminAuthApiControllerTest {
 
     @Autowired
     private AdminAuthService adminAuthService;
-
-    @Autowired
-    private AdminRepository adminRepository;
-
-    @Autowired
-    private ClubRepository clubRepository;
 
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
@@ -212,10 +205,10 @@ class AdminAuthApiControllerTest {
     @DisplayName("POST /api/admin/auth/logout")
     class LogoutTest {
 
-        @Test
-        @DisplayName("Redis에 있는 리프레시 토큰을 삭제하고 로그아웃에 성공한다")
-        void logoutSuccess() throws Exception {
-            // given
+        private String accessToken;
+
+        @BeforeEach
+        void setupAdminAndLogin() {
             final AdminJoinServiceRequest joinRequest = new AdminJoinServiceRequest(
                     VALID_USERNAME,
                     VALID_PASSWORD,
@@ -225,12 +218,18 @@ class AdminAuthApiControllerTest {
             adminAuthService.join(joinRequest);
 
             final AdminLoginServiceResponse loginResponse = adminAuthService.login(
-                    new org.project.ttokttok.domain.admin.service.dto.request.AdminLoginServiceRequest(
+                    new AdminLoginServiceRequest(
                             VALID_USERNAME,
                             VALID_PASSWORD
                     )
             );
-            final String accessToken = loginResponse.accessToken();
+            accessToken = loginResponse.accessToken();
+        }
+
+        @Test
+        @DisplayName("Redis에 있는 리프레시 토큰을 삭제하고 로그아웃에 성공한다")
+        void logoutSuccess() throws Exception {
+            // given - BeforeEach에서 설정됨
 
             // when
             final ResultActions result = mockMvc.perform(post(LOGOUT_ENDPOINT)
@@ -247,23 +246,6 @@ class AdminAuthApiControllerTest {
         @DisplayName("이미 로그아웃했거나 토큰이 존재하지 않아도 200 OK가 반환된다")
         void logoutSuccessEvenWhenAlreadyLoggedOut() throws Exception {
             // given
-            final AdminJoinServiceRequest joinRequest = new AdminJoinServiceRequest(
-                    VALID_USERNAME,
-                    VALID_PASSWORD,
-                    "Test Club",
-                    ClubUniv.ENGINEERING
-            );
-            adminAuthService.join(joinRequest);
-
-            final AdminLoginServiceResponse loginResponse = adminAuthService.login(
-                    new org.project.ttokttok.domain.admin.service.dto.request.AdminLoginServiceRequest(
-                            VALID_USERNAME,
-                            VALID_PASSWORD
-                    )
-            );
-            final String accessToken = loginResponse.accessToken();
-
-            // 먼저 로그아웃 수행
             adminAuthService.logout(VALID_USERNAME);
 
             // when - 이미 로그아웃된 상태에서 다시 로그아웃 시도
@@ -283,10 +265,10 @@ class AdminAuthApiControllerTest {
     @DisplayName("POST /api/admin/auth/re-issue")
     class ReissueTest {
 
-        @Test
-        @DisplayName("유효한 리프레시 토큰으로 액세스 토큰과 리프레시 토큰을 재발급받는다")
-        void reissueSuccess() throws Exception {
-            // given
+        private String refreshToken;
+
+        @BeforeEach
+        void setupAdminAndLogin() {
             final AdminJoinServiceRequest joinRequest = new AdminJoinServiceRequest(
                     VALID_USERNAME,
                     VALID_PASSWORD,
@@ -296,12 +278,18 @@ class AdminAuthApiControllerTest {
             adminAuthService.join(joinRequest);
 
             final AdminLoginServiceResponse loginResponse = adminAuthService.login(
-                    new org.project.ttokttok.domain.admin.service.dto.request.AdminLoginServiceRequest(
+                    new AdminLoginServiceRequest(
                             VALID_USERNAME,
                             VALID_PASSWORD
                     )
             );
-            final String refreshToken = loginResponse.refreshToken();
+            refreshToken = loginResponse.refreshToken();
+        }
+
+        @Test
+        @DisplayName("유효한 리프레시 토큰으로 액세스 토큰과 리프레시 토큰을 재발급받는다")
+        void reissueSuccess() throws Exception {
+            // given - BeforeEach에서 설정됨
 
             // when
             final ResultActions result = mockMvc.perform(post(REISSUE_ENDPOINT)
@@ -352,23 +340,7 @@ class AdminAuthApiControllerTest {
         @DisplayName("Redis에 저장된 리프레시 토큰과 요청된 리프레시 토큰이 다를 경우 404 Not Found가 반환된다")
         void reissueFailWithInvalidRefreshToken() throws Exception {
             // given
-            final AdminJoinServiceRequest joinRequest = new AdminJoinServiceRequest(
-                    VALID_USERNAME,
-                    VALID_PASSWORD,
-                    "Test Club",
-                    ClubUniv.ENGINEERING
-            );
-            adminAuthService.join(joinRequest);
-
-            final AdminLoginServiceResponse loginResponse = adminAuthService.login(
-                    new org.project.ttokttok.domain.admin.service.dto.request.AdminLoginServiceRequest(
-                            VALID_USERNAME,
-                            VALID_PASSWORD
-                    )
-            );
-
-            // Redis에 저장된 토큰과 다른 위조된 토큰 사용 (Redis에 존재하지 않는 토큰)
-            final String tamperedRefreshToken = loginResponse.refreshToken() + "tampered";
+            final String tamperedRefreshToken = refreshToken + "tampered";
 
             // when
             final ResultActions result = mockMvc.perform(post(REISSUE_ENDPOINT)
@@ -429,6 +401,8 @@ class AdminAuthApiControllerTest {
                     ClubUniv.ARTS
             );
             final String requestJson = objectMapper.writeValueAsString(joinRequest);
+
+            // when
             final ResultActions result = mockMvc.perform(post(JOIN_ENDPOINT)
                     .content(requestJson)
                     .contentType(MediaType.APPLICATION_JSON));
@@ -439,64 +413,15 @@ class AdminAuthApiControllerTest {
                     .andExpect(jsonPath("$.statusCode").value(409));
         }
 
-        @Test
-        @DisplayName("username이 누락되면 400 Bad Request가 반환된다")
-        void joinFailWithMissingUsername() throws Exception {
-            // given
-            final String requestJson = """
-                    {
-                        "password": "testpasswordover12",
-                        "clubName": "Test Club",
-                        "clubUniv": "ENGINEERING"
-                    }
-                    """;
-
-            // when
-            final ResultActions result = mockMvc.perform(post(JOIN_ENDPOINT)
-                    .content(requestJson)
-                    .contentType(MediaType.APPLICATION_JSON));
-
-            // then
-            result
-                    .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.statusCode").value(400));
-        }
-
-        @Test
-        @DisplayName("password가 누락되면 400 Bad Request가 반환된다")
-        void joinFailWithMissingPassword() throws Exception {
-            // given
-            final String requestJson = """
-                    {
-                        "username": "admin1234",
-                        "clubName": "Test Club",
-                        "clubUniv": "ENGINEERING"
-                    }
-                    """;
-
-            // when
-            final ResultActions result = mockMvc.perform(post(JOIN_ENDPOINT)
-                    .content(requestJson)
-                    .contentType(MediaType.APPLICATION_JSON));
-
-            // then
-            result
-                    .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.statusCode").value(400));
-        }
-
-        @Test
-        @DisplayName("clubName이 누락되면 400 Bad Request가 반환된다")
-        void joinFailWithMissingClubName() throws Exception {
-            // given
-            final String requestJson = """
-                    {
-                        "username": "admin1234",
-                        "password": "testpasswordover12",
-                        "clubUniv": "ENGINEERING"
-                    }
-                    """;
-
+        @ParameterizedTest(name = "{0}이(가) 누락되면 400 Bad Request가 반환된다")
+        @CsvSource(delimiter = '|', textBlock = """
+                username  | {"password": "testpasswordover12", "clubName": "Test Club", "clubUniv": "ENGINEERING"}
+                password  | {"username": "admin1234", "clubName": "Test Club", "clubUniv": "ENGINEERING"}
+                clubName  | {"username": "admin1234", "password": "testpasswordover12", "clubUniv": "ENGINEERING"}
+                clubUniv  | {"username": "admin1234", "password": "testpasswordover12", "clubName": "Test Club"}
+            """)
+        @DisplayName("필수 필드가 누락되면 400 Bad Request가 반환된다")
+        void joinFailWithMissingRequiredField(final String missingField, final String requestJson) throws Exception {
             // when
             final ResultActions result = mockMvc.perform(post(JOIN_ENDPOINT)
                     .content(requestJson)
@@ -514,10 +439,10 @@ class AdminAuthApiControllerTest {
     @DisplayName("GET /api/admin/auth/info")
     class GetAdminInfoTest {
 
-        @Test
-        @DisplayName("인증된 관리자가 자신의 정보를 조회하면 200 OK와 클럽 정보가 반환된다")
-        void getAdminInfoSuccess() throws Exception {
-            // given
+        private String accessToken;
+
+        @BeforeEach
+        void setupAdminAndLogin() {
             final AdminJoinServiceRequest joinRequest = new AdminJoinServiceRequest(
                     VALID_USERNAME,
                     VALID_PASSWORD,
@@ -527,12 +452,18 @@ class AdminAuthApiControllerTest {
             adminAuthService.join(joinRequest);
 
             final AdminLoginServiceResponse loginResponse = adminAuthService.login(
-                    new org.project.ttokttok.domain.admin.service.dto.request.AdminLoginServiceRequest(
+                    new AdminLoginServiceRequest(
                             VALID_USERNAME,
                             VALID_PASSWORD
                     )
             );
-            final String accessToken = loginResponse.accessToken();
+            accessToken = loginResponse.accessToken();
+        }
+
+        @Test
+        @DisplayName("인증된 관리자가 자신의 정보를 조회하면 200 OK와 클럽 정보가 반환된다")
+        void getAdminInfoSuccess() throws Exception {
+            // given - BeforeEach에서 설정됨
 
             // when
             final ResultActions result = mockMvc.perform(get(INFO_ENDPOINT)
@@ -567,10 +498,8 @@ class AdminAuthApiControllerTest {
     @DisplayName("POST /api/admin/auth/reset-password")
     class ResetPasswordTest {
 
-        @Test
-        @DisplayName("새 비밀번호와 확인 비밀번호가 일치하면 200 OK가 반환된다")
-        void resetPasswordSuccess() throws Exception {
-            // given
+        @BeforeEach
+        void setupAdmin() {
             final AdminJoinServiceRequest joinRequest = new AdminJoinServiceRequest(
                     VALID_USERNAME,
                     VALID_PASSWORD,
@@ -578,7 +507,12 @@ class AdminAuthApiControllerTest {
                     ClubUniv.ENGINEERING
             );
             adminAuthService.join(joinRequest);
+        }
 
+        @Test
+        @DisplayName("새 비밀번호와 확인 비밀번호가 일치하면 200 OK가 반환된다")
+        void resetPasswordSuccess() throws Exception {
+            // given
             final String newPassword = "newpassword1234";
             final AdminResetPasswordRequest resetRequest = new AdminResetPasswordRequest(
                     VALID_USERNAME,
@@ -598,25 +532,15 @@ class AdminAuthApiControllerTest {
                     .andExpect(jsonPath("$.message").value("비밀번호가 성공적으로 변경되었습니다."));
         }
 
-        @Test
-        @DisplayName("새 비밀번호와 확인 비밀번호가 일치하지 않으면 400 Bad Request가 반환된다")
-        void resetPasswordFailWithMismatchedPasswords() throws Exception {
-            // given
-            final AdminJoinServiceRequest joinRequest = new AdminJoinServiceRequest(
-                    VALID_USERNAME,
-                    VALID_PASSWORD,
-                    "Test Club",
-                    ClubUniv.ENGINEERING
-            );
-            adminAuthService.join(joinRequest);
-
-            final AdminResetPasswordRequest resetRequest = new AdminResetPasswordRequest(
-                    VALID_USERNAME,
-                    "newpassword1234",
-                    "differentpassword1234"
-            );
-            final String requestJson = objectMapper.writeValueAsString(resetRequest);
-
+        @ParameterizedTest(name = "{0}")
+        @CsvSource(delimiter = '|', textBlock = """
+                비밀번호 불일치     | {"username": "admin1234", "newPassword": "newpassword1234", "newPasswordConfirm": "differentpassword"}
+                username 누락     | {"newPassword": "newpassword1234", "newPasswordConfirm": "newpassword1234"}
+                newPassword 누락  | {"username": "admin1234", "newPasswordConfirm": "newpassword1234"}
+                newPasswordConfirm 누락 | {"username": "admin1234", "newPassword": "newpassword1234"}
+            """)
+        @DisplayName("유효하지 않은 요청이면 400 Bad Request가 반환된다")
+        void resetPasswordFailWithInvalidRequest(final String testCase, final String requestJson) throws Exception {
             // when
             final ResultActions result = mockMvc.perform(post(RESET_PASSWORD_ENDPOINT)
                     .content(requestJson)
@@ -649,27 +573,6 @@ class AdminAuthApiControllerTest {
             result
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.statusCode").value(404));
-        }
-
-        @Test
-        @DisplayName("필수 필드가 누락되면 400 Bad Request가 반환된다")
-        void resetPasswordFailWithMissingFields() throws Exception {
-            // given
-            final String requestJson = """
-                    {
-                        "username": "admin1234"
-                    }
-                    """;
-
-            // when
-            final ResultActions result = mockMvc.perform(post(RESET_PASSWORD_ENDPOINT)
-                    .content(requestJson)
-                    .contentType(MediaType.APPLICATION_JSON));
-
-            // then
-            result
-                    .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.statusCode").value(400));
         }
     }
 }
