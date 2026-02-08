@@ -13,6 +13,7 @@ import org.project.ttokttok.domain.admin.service.AdminAuthService;
 import org.project.ttokttok.domain.admin.service.dto.response.AdminLoginServiceResponse;
 import org.project.ttokttok.domain.admin.service.dto.response.ReissueServiceResponse;
 import org.project.ttokttok.global.annotation.auth.AuthUserInfo;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -78,7 +79,7 @@ public class AdminAuthApiController implements AdminAuthDocs {
 
         AdminJoinResponse response = AdminJoinResponse.of(adminId);
 
-        return ResponseEntity.ok()
+        return ResponseEntity.status(HttpStatus.CREATED)
                 .body(response);
     }
 
