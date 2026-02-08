@@ -7,6 +7,7 @@ import org.project.ttokttok.domain.club.domain.enums.ClubUniv;
 public record AdminJoinServiceRequest(
         String username,
         String password,
+        String email,
         String clubName,
         ClubUniv clubUniv
 ) {

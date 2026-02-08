@@ -5,6 +5,7 @@ import static org.project.ttokttok.global.entity.Role.ROLE_ADMIN;
 import lombok.RequiredArgsConstructor;
 import org.project.ttokttok.domain.admin.controller.dto.response.AdminLoginResponse;
 import org.project.ttokttok.domain.admin.domain.Admin;
+import org.project.ttokttok.domain.admin.exception.AdminEmailConflictException;
 import org.project.ttokttok.domain.admin.exception.AdminNotFoundException;
 import org.project.ttokttok.domain.admin.exception.AdminUsernameConflictException;
 import org.project.ttokttok.domain.admin.repository.AdminRepository;
@@ -17,7 +18,7 @@ import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.global.auth.jwt.dto.request.TokenRequest;
 import org.project.ttokttok.global.auth.jwt.dto.response.TokenResponse;
-import org.project.ttokttok.global.auth.jwt.exception.InvalidTokenFromCookieException;
+import org.project.ttokttok.global.auth.jwt.exception.InvalidRefreshTokenException;
 import org.project.ttokttok.global.auth.jwt.service.TokenProvider;
 import org.project.ttokttok.infrastructure.redis.service.RefreshTokenRedisService;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -56,7 +57,7 @@ public class AdminAuthService {
 
     @Transactional
     public ReissueServiceResponse reissue(String refreshToken) {
-        validateTokenFromCookie(refreshToken);
+        validateRefreshToken(refreshToken);
 
         TokenResponse tokens = tokenProvider.reissueToken(refreshToken, ROLE_ADMIN);
         Long ttl = refreshTokenRedisService.getRefreshTTL(tokens.refreshToken());
@@ -69,7 +70,8 @@ public class AdminAuthService {
 
         Admin admin = Admin.adminJoin(
                 request.username(),
-                passwordEncoder.encode(request.password())
+                passwordEncoder.encode(request.password()),
+                request.email()
         );
 
         Club club = Club.builder()
@@ -88,11 +90,15 @@ public class AdminAuthService {
         if (adminRepository.existsByUsername(request.username())) {
             throw new AdminUsernameConflictException();
         }
+
+        if (adminRepository.existsByEmail(request.email())) {
+            throw new AdminEmailConflictException();
+        }
     }
 
-    private void validateTokenFromCookie(String refreshToken) {
+    private void validateRefreshToken(String refreshToken) {
         if (refreshToken == null) {
-            throw new InvalidTokenFromCookieException();
+            throw new InvalidRefreshTokenException();
         }
     }
 
@@ -113,8 +119,8 @@ public class AdminAuthService {
         return AdminLoginResponse.of(
                 findClub.getId(),
                 findClub.getName(),
-                null, // 테스트용이므로 토큰은 null
-                null  // 테스트용이므로 토큰은 null
+                null,
+                null
         );
     }
 
@@ -130,6 +136,6 @@ public class AdminAuthService {
                 .orElseThrow(AdminNotFoundException::new);
 
         // 비밀번호 재설정
-        admin.resetPassword(passwordEncoder.encode(request.newPassword()));
+        admin.resetPassword(request.newPassword(), passwordEncoder);
     }
 }
