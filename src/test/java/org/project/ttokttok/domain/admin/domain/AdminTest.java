@@ -25,6 +25,7 @@ class AdminTest {
     private static final String VALID_USERNAME = "testuser123";
     private static final String VALID_PASSWORD = "validPassword123456";
     private static final String ENCODED_PASSWORD = "encodedPassword123";
+    private static final String VALID_EMAIL = "test@example.com";
 
     // ===== 패스워드 검증 테스트 =====
 
@@ -35,6 +36,7 @@ class AdminTest {
         Admin admin = Admin.builder()
                 .username(VALID_USERNAME)
                 .password(ENCODED_PASSWORD)
+                .email(VALID_EMAIL)
                 .build();
 
         when(passwordEncoder.matches(VALID_PASSWORD, ENCODED_PASSWORD)).thenReturn(true);
@@ -52,6 +54,7 @@ class AdminTest {
         Admin admin = Admin.builder()
                 .username(VALID_USERNAME)
                 .password(ENCODED_PASSWORD)
+                .email(VALID_EMAIL)
                 .build();
 
         when(passwordEncoder.matches(wrongPassword, ENCODED_PASSWORD)).thenReturn(false);
@@ -68,6 +71,7 @@ class AdminTest {
         Admin admin = Admin.builder()
                 .username(VALID_USERNAME)
                 .password(ENCODED_PASSWORD)
+                .email(VALID_EMAIL)
                 .build();
 
         when(passwordEncoder.matches(VALID_PASSWORD, ENCODED_PASSWORD)).thenReturn(true);
@@ -146,15 +150,86 @@ class AdminTest {
                 .hasMessage("비밀번호는 null이거나 비어 있을 수 없습니다.");
     }
 
+    // ===== Email 검증 테스트 =====
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {"   ", "\t", "\n"})
+    @DisplayName("null이거나 빈 email로 생성하면 IllegalArgumentException이 발생한다")
+    void createAdminWithInvalidEmptyEmail(String invalidEmail) {
+        // when & then
+        assertThatThrownBy(() -> Admin.builder()
+                .username(VALID_USERNAME)
+                .password(VALID_PASSWORD)
+                .email(invalidEmail)
+                .build())
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("이메일은 null이거나 비어있을 수 없습니다.");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "invalidemail",           // @ 없음
+            "invalid@",               // 도메인 없음
+            "@example.com",           // 로컬 파트 없음
+            "invalid@.com",           // 도메인 이름 없음
+            "invalid@com",            // 점 없음
+            "invalid@@example.com",   // @ 중복
+            "invalid @example.com",   // 공백 포함
+            "invalid@exam ple.com",   // 도메인에 공백
+            "invalid@example..com",   // 점 중복
+            ".invalid@example.com",   // 로컬 파트 점으로 시작
+            "invalid.@example.com"    // 로컬 파트 점으로 끝남
+    })
+    @DisplayName("유효하지 않은 이메일 형식으로 생성하면 IllegalArgumentException이 발생한다")
+    void createAdminWithInvalidEmailFormat(String invalidEmail) {
+        // when & then
+        assertThatThrownBy(() -> Admin.builder()
+                .username(VALID_USERNAME)
+                .password(VALID_PASSWORD)
+                .email(invalidEmail)
+                .build())
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("유효한 이메일 형식이 아닙니다.");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "test@example.com",
+            "user.name@example.com",
+            "user+tag@example.com",
+            "user123@example.co.kr",
+            "valid_email@subdomain.example.com"
+    })
+    @DisplayName("유효한 이메일 형식으로 Admin을 생성할 수 있다")
+    void createAdminWithValidEmail(String validEmail) {
+        // when & then
+        assertThatNoException()
+                .isThrownBy(() -> Admin.builder()
+                        .username(VALID_USERNAME)
+                        .password(VALID_PASSWORD)
+                        .email(validEmail)
+                        .build());
+    }
+
     // ===== 정상적인 생성 테스트 =====
 
     @Test
     @DisplayName("adminJoin 정적 팩토리 메서드도 동일한 검증을 수행한다")
     void adminJoinPerformsSameValidation() {
         // when & then
-        assertThatThrownBy(() -> Admin.adminJoin(null, VALID_PASSWORD))
+        assertThatThrownBy(() -> Admin.adminJoin(null, VALID_PASSWORD, VALID_EMAIL))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("관리자 명은 null이거나 비어있을 수 없습니다.");
+    }
+
+    @Test
+    @DisplayName("adminJoin 정적 팩토리 메서드에서 유효하지 않은 이메일로 생성하면 예외가 발생한다")
+    void adminJoinWithInvalidEmail() {
+        // when & then
+        assertThatThrownBy(() -> Admin.adminJoin(VALID_USERNAME, VALID_PASSWORD, "invalid-email"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("유효한 이메일 형식이 아닙니다.");
     }
 
     @ParameterizedTest
@@ -172,6 +247,7 @@ class AdminTest {
                 .isThrownBy(() -> Admin.builder()
                         .username(username)
                         .password(password)
+                        .email(VALID_EMAIL)
                         .build());
     }
 
@@ -203,5 +279,101 @@ class AdminTest {
                 .build())
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("관리자 명은 8자 이상 20자 이하여야 합니다.");
+    }
+
+    // ===== 비밀번호 업데이트(resetPassword) 테스트 =====
+
+    @Test
+    @DisplayName("resetPassword 호출 시 PasswordEncoder.encode가 호출된다")
+    void resetPasswordCallsPasswordEncoderEncode() {
+        // given
+        Admin admin = Admin.builder()
+                .username(VALID_USERNAME)
+                .password(ENCODED_PASSWORD)
+                .email(VALID_EMAIL)
+                .build();
+
+        final String newRawPassword = "newPassword456";
+        final String newEncodedPassword = "encodedNewPassword456";
+        when(passwordEncoder.encode(newRawPassword)).thenReturn(newEncodedPassword);
+
+        // when
+        admin.resetPassword(newRawPassword, passwordEncoder);
+
+        // then
+        verify(passwordEncoder).encode(newRawPassword);
+    }
+
+    @Test
+    @DisplayName("resetPassword 후 새 비밀번호로 검증하면 성공한다")
+    void resetPasswordSuccessfully() {
+        // given
+        Admin admin = Admin.builder()
+                .username(VALID_USERNAME)
+                .password(ENCODED_PASSWORD)
+                .email(VALID_EMAIL)
+                .build();
+
+        final String newRawPassword = "newPassword456";
+        final String newEncodedPassword = "encodedNewPassword456";
+        when(passwordEncoder.encode(newRawPassword)).thenReturn(newEncodedPassword);
+        when(passwordEncoder.matches(newRawPassword, newEncodedPassword)).thenReturn(true);
+
+        // when
+        admin.resetPassword(newRawPassword, passwordEncoder);
+
+        // then
+        assertThatNoException()
+                .isThrownBy(() -> admin.validatePassword(newRawPassword, passwordEncoder));
+    }
+
+    @Test
+    @DisplayName("resetPassword 후 기존 비밀번호로 검증하면 실패한다")
+    void resetPasswordInvalidatesOldPassword() {
+        // given
+        Admin admin = Admin.builder()
+                .username(VALID_USERNAME)
+                .password(ENCODED_PASSWORD)
+                .email(VALID_EMAIL)
+                .build();
+
+        final String newRawPassword = "newPassword456";
+        final String newEncodedPassword = "encodedNewPassword456";
+        when(passwordEncoder.encode(newRawPassword)).thenReturn(newEncodedPassword);
+
+        admin.resetPassword(newRawPassword, passwordEncoder);
+
+        // when & then
+        when(passwordEncoder.matches(VALID_PASSWORD, newEncodedPassword)).thenReturn(false);
+        assertThatThrownBy(() -> admin.validatePassword(VALID_PASSWORD, passwordEncoder))
+                .isInstanceOf(AdminPasswordNotMatchException.class);
+    }
+
+    @Test
+    @DisplayName("resetPassword를 여러 번 호출해도 마지막 비밀번호가 적용된다")
+    void resetPasswordMultipleTimes() {
+        // given
+        Admin admin = Admin.builder()
+                .username(VALID_USERNAME)
+                .password(ENCODED_PASSWORD)
+                .email(VALID_EMAIL)
+                .build();
+
+        final String firstNewPassword = "firstPassword123";
+        final String secondNewPassword = "secondPassword456";
+        final String firstEncoded = "encodedFirst";
+        final String secondEncoded = "encodedSecond";
+
+        when(passwordEncoder.encode(firstNewPassword)).thenReturn(firstEncoded);
+        when(passwordEncoder.encode(secondNewPassword)).thenReturn(secondEncoded);
+        when(passwordEncoder.matches(secondNewPassword, secondEncoded)).thenReturn(true);
+
+        // when
+        admin.resetPassword(firstNewPassword, passwordEncoder);
+        admin.resetPassword(secondNewPassword, passwordEncoder);
+
+        // then
+        assertThatNoException()
+                .isThrownBy(() -> admin.validatePassword(secondNewPassword, passwordEncoder));
     }
 }
