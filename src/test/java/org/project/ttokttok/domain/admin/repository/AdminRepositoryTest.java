@@ -15,6 +15,7 @@ class AdminRepositoryTest implements RepositoryTestSupport {
 
     private static final String TEST_USERNAME = "testuser123";
     private static final String NONEXISTENT_USERNAME = "nonexistent";
+    private static final String TEST_EMAIL = "test@example.com";
 
     @Autowired
     private AdminRepository adminRepository;
@@ -24,7 +25,7 @@ class AdminRepositoryTest implements RepositoryTestSupport {
     @BeforeEach
     void setUp() {
         final String testPassword = "encodedPassword456";
-        testAdmin = Admin.adminJoin(TEST_USERNAME, testPassword);
+        testAdmin = Admin.adminJoin(TEST_USERNAME, testPassword, TEST_EMAIL);
         adminRepository.save(testAdmin);
     }
 
@@ -77,7 +78,8 @@ class AdminRepositoryTest implements RepositoryTestSupport {
         // given
         final String newUsername = "newadmin123";
         final String newPassword = "newPassword789";
-        Admin newAdmin = Admin.adminJoin(newUsername, newPassword);
+        final String newEmail = "newadmin@example.com";
+        Admin newAdmin = Admin.adminJoin(newUsername, newPassword, newEmail);
 
         // when
         Admin savedAdmin = adminRepository.save(newAdmin);
@@ -96,7 +98,8 @@ class AdminRepositoryTest implements RepositoryTestSupport {
     void save_DuplicateUsername_ThrowsException() {
         // given
         final String differentPassword = "differentPassword";
-        Admin duplicateAdmin = Admin.adminJoin(TEST_USERNAME, differentPassword);
+        final String differentEmail = "different@example.com";
+        Admin duplicateAdmin = Admin.adminJoin(TEST_USERNAME, differentPassword, differentEmail);
 
         // when & then
         assertThatThrownBy(() -> adminRepository.saveAndFlush(duplicateAdmin))

@@ -60,6 +60,7 @@ class AdminAuthApiControllerTest {
     // ===== 테스트 데이터 상수 =====
     private static final String VALID_USERNAME = "admin1234";
     private static final String VALID_PASSWORD = "testpasswordover12";
+    private static final String VALID_EMAIL = "admin@example.com";
 
     @BeforeEach
     void clearRedisBeforeEach() {
@@ -80,6 +81,7 @@ class AdminAuthApiControllerTest {
             AdminJoinServiceRequest request = new AdminJoinServiceRequest(
                     VALID_USERNAME,
                     VALID_PASSWORD,
+                    VALID_EMAIL,
                     "Test Club",
                     ClubUniv.ENGINEERING
             );
@@ -212,6 +214,7 @@ class AdminAuthApiControllerTest {
             final AdminJoinServiceRequest joinRequest = new AdminJoinServiceRequest(
                     VALID_USERNAME,
                     VALID_PASSWORD,
+                    VALID_EMAIL,
                     "Test Club",
                     ClubUniv.ENGINEERING
             );
@@ -272,6 +275,7 @@ class AdminAuthApiControllerTest {
             final AdminJoinServiceRequest joinRequest = new AdminJoinServiceRequest(
                     VALID_USERNAME,
                     VALID_PASSWORD,
+                    VALID_EMAIL,
                     "Test Club",
                     ClubUniv.ENGINEERING
             );
@@ -366,6 +370,7 @@ class AdminAuthApiControllerTest {
             final AdminJoinRequest joinRequest = new AdminJoinRequest(
                     VALID_USERNAME,
                     VALID_PASSWORD,
+                    VALID_EMAIL,
                     "Test Club",
                     ClubUniv.ENGINEERING
             );
@@ -389,6 +394,7 @@ class AdminAuthApiControllerTest {
             final AdminJoinServiceRequest preJoinRequest = new AdminJoinServiceRequest(
                     VALID_USERNAME,
                     VALID_PASSWORD,
+                    VALID_EMAIL,
                     "Test Club",
                     ClubUniv.ENGINEERING
             );
@@ -397,6 +403,40 @@ class AdminAuthApiControllerTest {
             final AdminJoinRequest joinRequest = new AdminJoinRequest(
                     VALID_USERNAME,
                     VALID_PASSWORD,
+                    "another@example.com",
+                    "Another Club",
+                    ClubUniv.ARTS
+            );
+            final String requestJson = objectMapper.writeValueAsString(joinRequest);
+
+            // when
+            final ResultActions result = mockMvc.perform(post(JOIN_ENDPOINT)
+                    .content(requestJson)
+                    .contentType(MediaType.APPLICATION_JSON));
+
+            // then
+            result
+                    .andExpect(status().isConflict())
+                    .andExpect(jsonPath("$.statusCode").value(409));
+        }
+
+        @Test
+        @DisplayName("이미 존재하는 이메일로 회원가입하면 409 Conflict가 반환된다")
+        void joinFailWithDuplicateEmail() throws Exception {
+            // given
+            final AdminJoinServiceRequest preJoinRequest = new AdminJoinServiceRequest(
+                    VALID_USERNAME,
+                    VALID_PASSWORD,
+                    VALID_EMAIL,
+                    "Test Club",
+                    ClubUniv.ENGINEERING
+            );
+            adminAuthService.join(preJoinRequest);
+
+            final AdminJoinRequest joinRequest = new AdminJoinRequest(
+                    "differentadmin",
+                    VALID_PASSWORD,
+                    VALID_EMAIL,
                     "Another Club",
                     ClubUniv.ARTS
             );
@@ -415,10 +455,11 @@ class AdminAuthApiControllerTest {
 
         @ParameterizedTest(name = "{0}이(가) 누락되면 400 Bad Request가 반환된다")
         @CsvSource(delimiter = '|', textBlock = """
-                username  | {"password": "testpasswordover12", "clubName": "Test Club", "clubUniv": "ENGINEERING"}
-                password  | {"username": "admin1234", "clubName": "Test Club", "clubUniv": "ENGINEERING"}
-                clubName  | {"username": "admin1234", "password": "testpasswordover12", "clubUniv": "ENGINEERING"}
-                clubUniv  | {"username": "admin1234", "password": "testpasswordover12", "clubName": "Test Club"}
+                username  | {"password": "testpasswordover12", "email": "test@example.com", "clubName": "Test Club", "clubUniv": "ENGINEERING"}
+                password  | {"username": "admin1234", "email": "test@example.com", "clubName": "Test Club", "clubUniv": "ENGINEERING"}
+                email     | {"username": "admin1234", "password": "testpasswordover12", "clubName": "Test Club", "clubUniv": "ENGINEERING"}
+                clubName  | {"username": "admin1234", "password": "testpasswordover12", "email": "test@example.com", "clubUniv": "ENGINEERING"}
+                clubUniv  | {"username": "admin1234", "password": "testpasswordover12", "email": "test@example.com", "clubName": "Test Club"}
             """)
         @DisplayName("필수 필드가 누락되면 400 Bad Request가 반환된다")
         void joinFailWithMissingRequiredField(final String missingField, final String requestJson) throws Exception {
@@ -446,6 +487,7 @@ class AdminAuthApiControllerTest {
             final AdminJoinServiceRequest joinRequest = new AdminJoinServiceRequest(
                     VALID_USERNAME,
                     VALID_PASSWORD,
+                    VALID_EMAIL,
                     "Test Club",
                     ClubUniv.ENGINEERING
             );
@@ -503,6 +545,7 @@ class AdminAuthApiControllerTest {
             final AdminJoinServiceRequest joinRequest = new AdminJoinServiceRequest(
                     VALID_USERNAME,
                     VALID_PASSWORD,
+                    VALID_EMAIL,
                     "Test Club",
                     ClubUniv.ENGINEERING
             );
