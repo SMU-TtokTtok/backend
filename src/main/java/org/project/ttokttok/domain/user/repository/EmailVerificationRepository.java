@@ -19,12 +19,12 @@ public interface EmailVerificationRepository extends JpaRepository<EmailVerifica
     Optional<EmailVerification> findByEmailAndCodeAndIsVerifiedFalse(String email, String code);
 
     // 특정 이메일의 모든 미인증 코드들을 만료된 것으로 처리
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE EmailVerification e SET e.isVerified = true WHERE e.email = :email AND e.isVerified = false")
     void expireAllPendingVerifications(@Param("email") String email);
 
     // 만료된 인증코드들 정리 (배치 작업용)
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("DELETE FROM EmailVerification e WHERE e.expiresAt < :now")
     void deleteExpiredVerifications(@Param("now") LocalDateTime now);
 
