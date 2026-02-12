@@ -35,7 +35,12 @@ public class RefreshTokenRedisService {
                 Duration.ofMillis(REFRESH_TOKEN_EXPIRY_TIME.getExpiry())); // TTL(만료 시간 7일)
     }
 
-    // 리프레시 토큰 조회
+    /**
+     * 리프레시 토큰 조회
+     * @param refreshToken: 조회할 리프레시 토큰
+     * @return: 리프레시 토큰에 해당하는 username
+     * @throw RefreshTokenNotFoundException: 리프레시 토큰이 존재하지 않을 경우 예외 발생
+     * */
     public String getUsernameFromRefreshToken(String refreshToken) {
         if (isExistKey(refreshToken)) {
             return redisTemplate.opsForValue().get(REFRESH_REDIS_KEY + refreshToken);
@@ -101,7 +106,7 @@ public class RefreshTokenRedisService {
     }
 
     private void tokenAliveValidate(Long refreshTTL) {
-        if (refreshTTL == null) {
+        if (refreshTTL == null || refreshTTL < 0) {
             throw new RefreshTokenExpiredException();
         }
     }
