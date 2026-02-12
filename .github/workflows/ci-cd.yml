@@ -18,7 +18,7 @@ jobs:
           distribution: 'corretto'
           java-version: '17'
 
-      - name: Generate application-prod.yml and Firebase JSON from secrets
+      - name: Generate application-prod.yml, Firebase JSON, and Nginx Configs from secrets
         env:
           PROD_DB_PASSWORD: ${{ secrets.PROD_DB_PASSWORD }}
           PROD_REDIS_PASSWORD: ${{ secrets.PROD_REDIS_PASSWORD }}
@@ -29,6 +29,9 @@ jobs:
           FIREBASE_JSON: ${{ secrets.FIREBASE_JSON }}
           FIREBASE_JSON_NAME: ${{ secrets.FIREBASE_JSON_NAME }}
           PROXY_CONF: ${{ secrets.PROXY_CONF }}
+          # [NEW] Rate Limit 관련 시크릿 추가
+          NGINX_RATE_LIMIT_ZONE: ${{ secrets.NGINX_RATE_LIMIT_ZONE }}
+          NGINX_RATE_LIMIT_APP: ${{ secrets.NGINX_RATE_LIMIT_APP }}
         run: |
           mkdir -p ./src/main/resources
           
@@ -42,7 +45,6 @@ jobs:
           
           echo "Processing application-prod.yml..."
           if [ -n "${{ secrets.APPLICATION_PROD_YAML }}" ]; then
-            # 변수에 담지 않고 바로 처리 (메모리/포맷 에러 방지)
             echo "${{ secrets.APPLICATION_PROD_YAML }}" | tr -d '\n' | base64 --decode | envsubst > ./src/main/resources/application-prod.yml
           else
             echo "::error::APPLICATION_PROD_YAML secret is empty!"
@@ -57,17 +59,41 @@ jobs:
             echo "Warning: Firebase JSON secrets are missing. Skipping."
           fi
           
-          echo "Processing proxy.conf for Nginx..."
+          # ----------------------------------------------------------------
+          # Nginx Configuration Section
+          # ----------------------------------------------------------------
+          echo "Processing Nginx configurations..."
+          
+          # 기본 설정 디렉토리 생성
+          mkdir -p ./.platform/nginx/conf.d
+          
+          # 1. 기존 PROXY_CONF 처리 (전역 설정: 용량, 타임아웃 등)
           if [ -n "$PROXY_CONF" ]; then
-            mkdir -p ./.platform/nginx/conf.d
             echo "$PROXY_CONF" | tr -d '\n' | base64 --decode > ./.platform/nginx/conf.d/proxy.conf
-            echo "proxy.conf file created successfully at .platform/nginx/conf.d/proxy.conf"
-            if [ -f "./.platform/nginx/conf.d/proxy.conf" ]; then
-              echo "File size: $(wc -c < "./.platform/nginx/conf.d/proxy.conf") bytes"
-            fi
+            echo "Created: proxy.conf (Global Settings)"
           else
-            echo "Warning: PROXY_CONF secret is missing. Skipping nginx configuration."
+            echo "Warning: PROXY_CONF secret is missing. Skipping global nginx configuration."
           fi
+
+          # 2. Rate Limiting Zone 설정 (메모리 할당)
+          if [ -n "$NGINX_RATE_LIMIT_ZONE" ]; then
+            echo "$NGINX_RATE_LIMIT_ZONE" | tr -d '\n' | base64 --decode > ./.platform/nginx/conf.d/00_rate_limit_zone.conf
+            echo "Created: 00_rate_limit_zone.conf (Rate Limit Memory Zone)"
+          else
+             echo "Warning: NGINX_RATE_LIMIT_ZONE secret is missing!"
+          fi
+
+          # 3. Application Location 설정 (덮어쓰기: 보안 규칙 + 앱 연결)
+          # Amazon Linux 2023 구조에 맞게 하위 디렉토리 생성
+          mkdir -p ./.platform/nginx/conf.d/elasticbeanstalk
+          
+          if [ -n "$NGINX_RATE_LIMIT_APP" ]; then
+            echo "$NGINX_RATE_LIMIT_APP" | tr -d '\n' | base64 --decode > ./.platform/nginx/conf.d/elasticbeanstalk/00_application.conf
+            echo "Created: 00_application.conf (Location Override with Rate Limit)"
+          else
+             echo "Warning: NGINX_RATE_LIMIT_APP secret is missing!"
+          fi
+          # ----------------------------------------------------------------
 
       - name: Build with Gradle
         run: ./gradlew clean build -x test
@@ -85,16 +111,20 @@ jobs:
           cp Procfile deploy/
           cp src/main/resources/application.yml deploy/
           cp src/main/resources/application-prod.yml deploy/
+          
           # Copy Firebase JSON file if it exists
           if [ -n "${{ secrets.FIREBASE_JSON_NAME }}" ] && [ -f "src/main/resources/${{ secrets.FIREBASE_JSON_NAME }}" ]; then
             cp "src/main/resources/${{ secrets.FIREBASE_JSON_NAME }}" deploy/
           fi
-          # Copy .platform directory for nginx configuration
+          
+          # Copy .platform directory for nginx configuration (핵심: 설정 파일 포함)
           if [ -d .platform ]; then 
             cp -r .platform deploy/
             echo ".platform directory copied to deployment package"
           fi
+          
           if [ -d .ebextensions ]; then cp -r .ebextensions deploy/; fi
+          
           cd deploy
           zip -r ../deploy.zip .
           cd ..
