@@ -3,6 +3,7 @@ package org.project.ttokttok.global.auth.jwt.service;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SignatureException;
 import lombok.extern.slf4j.Slf4j;
 import org.project.ttokttok.global.auth.jwt.dto.request.TokenRequest;
 import org.project.ttokttok.global.auth.jwt.dto.response.TokenResponse;
@@ -65,6 +66,10 @@ public class TokenProvider {
             return true;
         } catch (SecurityException | MalformedJwtException e) {
             log.warn("잘못된 JWT 토큰 입니다.", e);
+        } catch (SignatureException e) {
+            log.warn("JWT 서명 검증에 실패하였습니다.", e);
+        } catch (InvalidIssuerException e) {
+            log.warn("유효하지 않은 이슈어(발급자) 입니다.", e);
         } catch (ExpiredJwtException e) {
             log.warn("JWT 토큰이 만료되었습니다.", e);
         } catch (UnsupportedJwtException e) {
