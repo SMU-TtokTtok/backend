@@ -9,6 +9,8 @@ import org.project.ttokttok.domain.clubboard.exception.ClubAdminNameNotMatchExce
 import org.project.ttokttok.domain.clubboard.exception.ClubBoardNotFoundException;
 import org.project.ttokttok.domain.clubboard.repository.ClubBoardRepository;
 import org.project.ttokttok.domain.clubboard.service.dto.request.CreateBoardServiceRequest;
+import org.project.ttokttok.global.annotation.auth.RequireClubAdmin;
+import org.project.ttokttok.global.auth.ClubHolder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -19,12 +21,10 @@ public class ClubBoardAdminService {
     private final ClubBoardRepository clubBoardRepository;
 
     // 게시글 생성
+    @RequireClubAdmin
     public String createBoard(CreateBoardServiceRequest request) {
-        Club club = clubRepository.findById(request.clubId())
-                .orElseThrow(ClubNotFoundException::new);
-
-        // 관리자가 동일한지 확인.
-        validateAdmin(club.getAdmin().getUsername(), request.adminName());
+        // AOP를 통해 이미 해당 관리자의 동아리임이 검증됨
+        Club club = ClubHolder.getClub();
 
         // 게시글 생성 로직
         ClubBoard clubBoard = ClubBoard.create(request.title(), request.content(), club);
@@ -34,24 +34,21 @@ public class ClubBoardAdminService {
     }
 
     // 게시글 삭제 로직
+    @RequireClubAdmin
     public void deleteBoard(String clubId, String boardId, String requestAdminName) {
-        Club club = clubRepository.findById(clubId)
-                .orElseThrow(ClubNotFoundException::new);
-
-        // 관리자가 동일한지 확인.
-        validateAdmin(club.getAdmin().getUsername(), requestAdminName);
+        // AOP를 통해 이미 해당 관리자의 동아리임이 검증됨
+        Club club = ClubHolder.getClub();
 
         ClubBoard clubBoard = clubBoardRepository.findById(boardId)
                 .orElseThrow(ClubBoardNotFoundException::new);
 
-        // 게시글 삭제 로직
-        clubBoardRepository.delete(clubBoard);
-    }
-
-    private void validateAdmin(String clubAdminName, String requestAdminName) {
-        if (!clubAdminName.equals(requestAdminName)) {
+        // 해당 게시글이 요청한 동아리의 게시글인지 추가 확인
+        if (!clubBoard.getClub().getId().equals(club.getId())) {
             throw new ClubAdminNameNotMatchException();
         }
+
+        // 게시글 삭제 로직
+        clubBoardRepository.delete(clubBoard);
     }
 
 
