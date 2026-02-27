@@ -1,6 +1,7 @@
 package org.project.ttokttok.domain.user.domain;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,7 +11,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class EmailVerification extends BaseTimeEntity {
     // PK
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,7 +34,7 @@ public class EmailVerification extends BaseTimeEntity {
 
     // 이메일 인증
     @Builder
-    public EmailVerification(String email, String code, LocalDateTime expiresAt) {
+    private EmailVerification(String email, String code, LocalDateTime expiresAt) {
         this.email = email;
         this.code = code;
         this.expiresAt = expiresAt;
