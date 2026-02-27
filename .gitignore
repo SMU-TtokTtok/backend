@@ -54,6 +54,7 @@ out/
 .vscode/
 
 .gemini
+GEMINI.md
 
 # Firebase 서비스 계정 키 파일
 ttokttok-push*.json
