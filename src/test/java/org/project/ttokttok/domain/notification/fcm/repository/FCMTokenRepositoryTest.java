@@ -51,30 +51,33 @@ class FCMTokenRepositoryTest {
 
     @BeforeEach
     void setUp() {
+        String uniqueSuffix = java.util.UUID.randomUUID().toString().substring(0, 8);
         // 테스트 사용자 생성
         testUser = new User();
-        testUser.setId("test-user-id");
-        testUser.setEmail("test@example.com");
+        testUser.setId("user_" + uniqueSuffix);
+        testUser.setEmail("test_" + uniqueSuffix + "@example.com");
         testUser.setPassword("password123");
         testUser.setName("테스트 사용자");
         testUser = userRepository.save(testUser);
 
         // Admin 생성 (Club에 필요)
         Admin admin = Admin.builder()
-                .username("test-admin")
+                .username("admin_" + uniqueSuffix)
                 .password("admin-password")
+                .email("admin_" + uniqueSuffix + "@example.com")
                 .build();
         Admin savedAdmin = adminRepository.save(admin);
 
         // 테스트 동아리 생성
         testClub = Club.builder()
                 .admin(savedAdmin)
+                .clubName("club_" + uniqueSuffix)
                 .build();
         testClub = clubRepository.save(testClub);
 
         // FCM 토큰 생성
-        fcmToken1 = FCMToken.create(DeviceType.ANDROID, "test@example.com", "android_token_123");
-        fcmToken2 = FCMToken.create(DeviceType.IOS, "test2@example.com", "ios_token_456");
+        fcmToken1 = FCMToken.create(DeviceType.ANDROID, testUser.getEmail(), "token1_" + uniqueSuffix);
+        fcmToken2 = FCMToken.create(DeviceType.IOS, "other_" + uniqueSuffix + "@example.com", "token2_" + uniqueSuffix);
 
         fcmTokenRepository.save(fcmToken1);
         fcmTokenRepository.save(fcmToken2);
@@ -93,7 +96,7 @@ class FCMTokenRepositoryTest {
     @DisplayName("이메일로 FCM 토큰 목록을 조회할 수 있다")
     void findByEmail() {
         // given
-        String email = "test@example.com";
+        String email = testUser.getEmail();
 
         // when
         List<FCMToken> tokens = fcmTokenRepository.findByEmail(email);
@@ -108,7 +111,7 @@ class FCMTokenRepositoryTest {
     @DisplayName("이메일과 디바이스 타입으로 FCM 토큰을 조회할 수 있다")
     void findByEmailAndDeviceType() {
         // given
-        String email = "test@example.com";
+        String email = testUser.getEmail();
         DeviceType deviceType = DeviceType.ANDROID;
 
         // when
@@ -138,8 +141,8 @@ class FCMTokenRepositoryTest {
     @DisplayName("토큰과 이메일로 FCM 토큰을 삭제할 수 있다")
     void deleteByTokenAndEmail() {
         // given
-        String token = "android_token_123";
-        String email = "test@example.com";
+        String token = fcmToken1.getToken();
+        String email = fcmToken1.getEmail();
 
         // when
         fcmTokenRepository.deleteByTokenAndEmail(token, email);
@@ -153,12 +156,17 @@ class FCMTokenRepositoryTest {
     @DisplayName("동아리를 즐겨찾기한 사용자들의 FCM 토큰을 조회할 수 있다")
     void findTokensByClubId() {
         // given
+        String uniqueSuffix2 = java.util.UUID.randomUUID().toString().substring(0, 8);
         User user2 = new User();
-        user2.setId("test-user-id-2");
-        user2.setEmail("test2@example.com");
+        user2.setId("user2_" + uniqueSuffix2);
+        user2.setEmail("test2_" + uniqueSuffix2 + "@example.com");
         user2.setPassword("password123");
         user2.setName("테스트 사용자2");
         user2 = userRepository.save(user2);
+
+        // user2에 대한 FCM 토큰 추가 (setUp에서 생성된 것은 email이 다름)
+        FCMToken fcmTokenUser2 = FCMToken.create(DeviceType.WEB, user2.getEmail(), "token_user2_" + uniqueSuffix2);
+        fcmTokenRepository.save(fcmTokenUser2);
 
         // 즐겨찾기 추가
         Favorite favorite1 = Favorite.builder()
@@ -179,7 +187,7 @@ class FCMTokenRepositoryTest {
 
         // then
         assertThat(tokens).hasSize(2);
-        assertThat(tokens).contains("android_token_123", "ios_token_456");
+        assertThat(tokens).contains(fcmToken1.getToken(), fcmTokenUser2.getToken());
     }
 
     @Test
