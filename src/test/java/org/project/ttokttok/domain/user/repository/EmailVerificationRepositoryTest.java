@@ -21,7 +21,7 @@ class EmailVerificationRepositoryTest implements RepositoryTestSupport {
     private EmailVerificationRepository emailVerificationRepository;
 
     @Nested
-    @DisplayName("findFirstByEmailAndIsVerifiedFalseAndExpiresAtAfterOrderByCreatedAtDesc 메서드")
+    @DisplayName("findFirstByEmailAndIsVerifiedFalseAndExpiresAtAfterOrderByCreatedAtDescIdDesc 메서드")
     class FindLatestPendingVerificationTest {
 
         @Test
@@ -44,7 +44,7 @@ class EmailVerificationRepositoryTest implements RepositoryTestSupport {
 
             // when
             Optional<EmailVerification> found = emailVerificationRepository
-                    .findFirstByEmailAndIsVerifiedFalseAndExpiresAtAfterOrderByCreatedAtDesc(
+                    .findFirstByEmailAndIsVerifiedFalseAndExpiresAtAfterOrderByCreatedAtDescIdDesc(
                             TEST_EMAIL, LocalDateTime.now());
 
             // then
@@ -65,7 +65,7 @@ class EmailVerificationRepositoryTest implements RepositoryTestSupport {
 
             // when
             Optional<EmailVerification> found = emailVerificationRepository
-                    .findFirstByEmailAndIsVerifiedFalseAndExpiresAtAfterOrderByCreatedAtDesc(
+                    .findFirstByEmailAndIsVerifiedFalseAndExpiresAtAfterOrderByCreatedAtDescIdDesc(
                             TEST_EMAIL, LocalDateTime.now());
 
             // then
@@ -86,7 +86,7 @@ class EmailVerificationRepositoryTest implements RepositoryTestSupport {
 
             // when
             Optional<EmailVerification> found = emailVerificationRepository
-                    .findFirstByEmailAndIsVerifiedFalseAndExpiresAtAfterOrderByCreatedAtDesc(
+                    .findFirstByEmailAndIsVerifiedFalseAndExpiresAtAfterOrderByCreatedAtDescIdDesc(
                             TEST_EMAIL, LocalDateTime.now());
 
             // then
@@ -166,7 +166,7 @@ class EmailVerificationRepositoryTest implements RepositoryTestSupport {
 
             // then
             Optional<EmailVerification> found = emailVerificationRepository
-                    .findFirstByEmailAndIsVerifiedFalseAndExpiresAtAfterOrderByCreatedAtDesc(
+                    .findFirstByEmailAndIsVerifiedFalseAndExpiresAtAfterOrderByCreatedAtDescIdDesc(
                             TEST_EMAIL, LocalDateTime.now());
             assertThat(found).isEmpty();
         }
@@ -287,5 +287,3 @@ class EmailVerificationRepositoryTest implements RepositoryTestSupport {
         }
     }
 }
-
-

@@ -8,12 +8,16 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.project.ttokttok.domain.club.exception.ClubNotFoundException;
+import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.repository.ClubRepository;
+import org.project.ttokttok.domain.clubboard.domain.ClubBoard;
 import org.project.ttokttok.domain.clubboard.repository.ClubBoardRepository;
 import org.project.ttokttok.domain.clubboard.service.dto.request.CreateBoardServiceRequest;
+import org.project.ttokttok.global.auth.ClubHolder;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ClubBoardAdminServiceTest {
@@ -27,27 +31,30 @@ class ClubBoardAdminServiceTest {
     @InjectMocks
     private ClubBoardAdminService clubBoardService;
 
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-    }
-
     @Test
-    @DisplayName("createBoard(): 요청 관리자 명과 저장된 관리자 명이 다르면 예외 발생")
-    void createBoardAdminNameNotMatch() {
-
-    }
-
-
-    @Test
-    @DisplayName("createBoard(): 동아리 ID가 존재하지 않으면 예외 발생")
-    void createBoardClubNotFound() {
+    @DisplayName("createBoard(): 게시글 생성 성공")
+    void createBoardSuccess() {
         // given
-        String clubId = "invalidClubId";
+        String clubId = "club123";
+        Club mockClub = mock(Club.class);
         CreateBoardServiceRequest request = new CreateBoardServiceRequest("admin", clubId, "title", "content");
 
-        // when & then
-        assertThatThrownBy(() -> clubBoardService.createBoard(request))
-                .isInstanceOf(ClubNotFoundException.class);
+        ClubBoard mockBoard = mock(ClubBoard.class);
+        when(mockBoard.getId()).thenReturn("board123");
+        when(clubBoardRepository.save(any(ClubBoard.class))).thenReturn(mockBoard);
+
+        // AOP 대신 수동으로 ClubHolder 설정
+        ClubHolder.setClub(mockClub);
+
+        try {
+            // when
+            String result = clubBoardService.createBoard(request);
+
+            // then
+            assertThat(result).isEqualTo("board123");
+            verify(clubBoardRepository).save(any(ClubBoard.class));
+        } finally {
+            ClubHolder.clear();
+        }
     }
 }

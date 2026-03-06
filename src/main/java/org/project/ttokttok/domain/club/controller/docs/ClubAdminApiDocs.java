@@ -111,6 +111,11 @@ public interface ClubAdminApiDocs {
                             responseCode = "404",
                             description = "존재하지 않는 동아리",
                             content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    ),
+                    @ApiResponse(
+                            responseCode = "415",
+                            description = "지원하지 않는 파일 형식",
+                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
                     )
             })
     ResponseEntity<Map<String, String>> updateClubContent(
@@ -134,7 +139,7 @@ public interface ClubAdminApiDocs {
             @Schema(
                     type = "string",
                     format = "binary",
-                    description = "동아리 프로필 이미지 파일 (JPG, PNG, WEBP 지원, 최대 5MB)"
+                    description = "동아리 프로필 이미지 파일 (JPG, PNG, WEBP 지원, 최대 20MB)"
             )
             MultipartFile profileImage
     );
@@ -147,8 +152,8 @@ public interface ClubAdminApiDocs {
                     
                     *주의사항*
                     - 이미지 파일만 업로드 가능합니다.
-                    - 최대 파일 크기: 5MB
-                    - 지원 형식: JPG, PNG, WEBP
+                    - 최대 파일 크기: 20MB
+                    - 지원 형식: JPG, PNG, WEBP, GIF, HEIC
                     - 해당 동아리의 관리자만 업로드 가능합니다.
                     """
     )
@@ -160,7 +165,7 @@ public interface ClubAdminApiDocs {
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "잘못된 파일 형식 또는 크기 초과",
+                    description = "잘못된 파일 형식",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             ),
             @ApiResponse(
@@ -179,6 +184,11 @@ public interface ClubAdminApiDocs {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             ),
             @ApiResponse(
+                    responseCode = "415",
+                    description = "지원하지 않는 파일 형식",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
                     responseCode = "500",
                     description = "서버 내부 오류 (S3 업로드 실패 등)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))
@@ -189,7 +199,7 @@ public interface ClubAdminApiDocs {
             String username,
             @Parameter(description = "동아리 ID", required = true, example = "UUID")
             String clubId,
-            @Parameter(description = "업로드할 이미지 파일 (JPG, PNG, GIF, WEBP 지원, 최대 5MB)")
+            @Parameter(description = "업로드할 이미지 파일 (JPG, PNG, GIF, WEBP, HEIC 지원, 최대 20MB)")
             MultipartFile imageFile
     );
 

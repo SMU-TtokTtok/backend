@@ -18,6 +18,8 @@ import org.project.ttokttok.domain.clubMember.repository.ClubMemberRepository;
 import org.project.ttokttok.domain.clubMember.repository.dto.ClubMemberPageQueryResponse;
 import org.project.ttokttok.domain.clubMember.service.dto.request.*;
 import org.project.ttokttok.domain.clubMember.service.dto.response.*;
+import org.project.ttokttok.global.annotation.auth.RequireClubAdmin;
+import org.project.ttokttok.global.auth.ClubHolder;
 import org.project.ttokttok.global.excel.ExcelService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,9 +42,9 @@ public class ClubMemberService {
     private static final String EMAIL_SUFFIX = "@sangmyung.kr";
 
     @Transactional(readOnly = true)
+    @RequireClubAdmin
     public ClubMemberPageServiceResponse getClubMembers(String clubId, ClubMemberPageRequest request) {
-        validateClubAndAdmin(clubId, request.username());
-
+        // AOP를 통해 이미 해당 관리자의 동아리임이 검증됨
         ClubMemberPageQueryResponse clubMemberQuery = clubMemberRepository.findClubMemberPageByClubId(
                 clubId, request.page(), request.size()
         );
@@ -51,9 +53,9 @@ public class ClubMemberService {
     }
 
     @Transactional
+    @RequireClubAdmin
     public void changeRole(ChangeRoleServiceRequest request) {
-        validateClubAndAdmin(request.clubId(), request.username());
-
+        // AOP를 통해 이미 해당 관리자의 동아리임이 검증됨
         ClubMember member = findClubMemberById(request.memberId());
 
         validateRoleChange(request.clubId(), request.newRole(), member.getId());
@@ -61,39 +63,34 @@ public class ClubMemberService {
     }
 
     @Transactional
+    @RequireClubAdmin
     public void deleteMember(DeleteMemberServiceRequest request) {
-        validateClubAndAdmin(request.clubId(), request.username());
-
+        // AOP를 통해 이미 해당 관리자의 동아리임이 검증됨
         ClubMember member = findClubMemberById(request.memberId());
 
         clubMemberRepository.delete(member);
     }
 
     @Transactional(readOnly = true)
+    @RequireClubAdmin
     public ExcelServiceResponse downloadMembersAsExcel(String clubId, String username) {
-
-        validateClubAndAdmin(clubId, username);
+        // AOP를 통해 이미 해당 관리자의 동아리임이 검증됨
+        Club club = ClubHolder.getClub();
 
         List<ClubMemberInExcelResponse> targetClubMembers =
                 clubMemberRepository.findByClubId(clubId);
 
-        Club club = validateClubExists(clubId);
-
         return new ExcelServiceResponse(
-                club.getId(),
+                club.getName(), // club.getId() 대신 club.getName() 반환 (응답 DTO 구조 확인 필요)
                 createMemberExcel(club.getName(), targetClubMembers)
         );
     }
 
     // 동아리 부원 검색 기능
     @Transactional(readOnly = true)
+    @RequireClubAdmin
     public List<ClubMemberSearchServiceResponse> clubMemberSearch(ClubMemberSearchRequest request) {
-        // 동아리 관리자 검증
-        validateClubAndAdmin(request.clubId(), request.username());
-
-        // 동아리 존재 여부 검증
-        Club club = validateClubExists(request.clubId());
-
+        // AOP를 통해 이미 해당 관리자의 동아리임이 검증됨
         // 검색어가 있을 경우 해당 키워드로 부원 조회
         return clubMemberRepository
                 .findByClubIdAndKeyword(request.clubId(), request.keyword())
@@ -110,13 +107,9 @@ public class ClubMemberService {
 
     // 동아리 부원 수 조회
     @Transactional(readOnly = true)
+    @RequireClubAdmin
     public ClubMemberCountServiceResponse getClubMembersCount(String clubId, String username) {
-        // 동아리 관리자 검증
-        validateClubAndAdmin(clubId, username);
-
-        // 동아리 존재 여부 검증
-        Club club = validateClubExists(clubId);
-
+        // AOP를 통해 이미 해당 관리자의 동아리임이 검증됨
         // 부원 수 조회
         return ClubMemberCountServiceResponse.from(
                 clubMemberRepository.countClubMembersByClubId(clubId)
@@ -124,15 +117,15 @@ public class ClubMemberService {
     }
 
     @Transactional
+    @RequireClubAdmin
     public String addMember(String username,
                             String clubId,
                             ClubMemberServiceRequest request,
                             String role) {
-        validateClubAndAdmin(clubId, username);
+        // AOP를 통해 이미 해당 관리자의 동아리임이 검증됨
+        Club club = ClubHolder.getClub();
 
         String targetEmail = getTargetEmail(request.studentNum());
-
-        Club club = validateClubExists(clubId);
 
         MemberRole memberRole = executeOrMember(role);
 

@@ -18,6 +18,8 @@ import org.project.ttokttok.domain.club.exception.ClubNotFoundException;
 import org.project.ttokttok.domain.club.exception.NotClubAdminException;
 import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.domain.temp.applyform.repository.TempApplyFormRepository;
+import org.project.ttokttok.global.annotation.auth.RequireClubAdmin;
+import org.project.ttokttok.global.auth.ClubHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,30 +42,28 @@ public class ApplyFormAdminService {
 
     // 지원 폼 생성 메서드
     @Transactional
+    @RequireClubAdmin
     public String createApplyForm(ApplyFormCreateServiceRequest request) {
-        Club club = clubRepository.findById(request.clubId())
-                .orElseThrow(ClubNotFoundException::new);
+        // 1. AOP에서 주입된 동아리 정보 가져오기
+        Club club = ClubHolder.getClub();
 
-        // 관리자 권한 검증
-        validateAdmin(club.getAdmin().getUsername(), request.username());
-
-        // 날짜 범위 검증
+        // 2. 날짜 범위 검증
         validateDateRange(request.recruitStartDate(), request.recruitEndDate());
 
-        // 활성화된 폼이 존재하는지 파악.
+        // 3. 활성화된 폼이 존재하는지 파악.
         validateActiveFormExists(request.clubId());
 
-        // 숫자 입력으로 들어온 set을 ApplicableGrade로 변환
+        // 4. 숫자 입력으로 들어온 set을 ApplicableGrade로 변환
         Set<ApplicableGrade> applicableGrades = request.applicableGrades()
                 .stream()
                 .map(ApplicableGrade::from)
                 .collect(Collectors.toSet());
 
-        // 임시저장한 지원폼이 존재하면 삭제
+        // 5. 임시저장한 지원폼이 존재하면 삭제
         tempApplyFormRepository.findByClubId(club.getId())
                 .ifPresent(tempApplyFormRepository::delete);
 
-        // 지원 폼 생성
+        // 6. 지원 폼 생성
         ApplyForm applyForm = ApplyForm.createApplyForm(
                 club,
                 request.hasInterview(),
@@ -90,35 +90,36 @@ public class ApplyFormAdminService {
 
     // 지원 폼 수정 메서드
     @Transactional
+    @RequireClubAdmin
     public void updateApplyForm(ApplyFormUpdateServiceRequest request) {
+        // 1. AOP에서 주입된 동아리 정보 가져오기
+        Club club = ClubHolder.getClub();
+
         ApplyForm applyForm = applyFormRepository.findById(request.applyFormId())
                 .orElseThrow(ApplyFormNotFoundException::new);
 
-        // 관리자 권한 검증
-        validateAdmin(applyForm.getClub().getAdmin().getUsername(), request.username());
+        // 2. 관리자 권한 검증 (AOP에서 이미 동아리 소유권 검증됨)
 
-        // JsonNullable 값 추출
+        // 3. JsonNullable 값 추출
         String title = request.title().isPresent() ? request.title().get() : null;
         String subtitle = request.subTitle().isPresent() ? request.subTitle().get() : null;
         List<Question> questions = request.questions().isPresent() ? request.questions().get() : null;
 
-        // 지원 폼 수정
+        // 4. 지원 폼 수정
         applyForm.updateFormContent(title, subtitle, questions);
     }
 
     // 동아리의 지원 폼 목록 조회 메서드
     @Transactional(readOnly = true)
+    @RequireClubAdmin
     public ApplyFormDetailServiceResponse getApplyFormDetail(String username, String clubId) {
-        Club club = clubRepository.findById(clubId)
-                .orElseThrow(ClubNotFoundException::new);
+        // 1. AOP에서 주입된 동아리 정보 가져오기
+        Club club = ClubHolder.getClub();
 
-        // 관리자 권한 검증
-        validateAdmin(club.getAdmin().getUsername(), username);
-
-        // 활성화된 지원 폼 조회 -> 없을 경우 임시 지원폼을 조회하는 방식으로 변경.
+        // 2. 활성화된 지원 폼 조회 -> 없을 경우 임시 지원폼을 조회하는 방식으로 변경.
         Optional<ApplyForm> applyForm = applyFormRepository.findByClubIdAndStatus(clubId, ACTIVE);
 
-        // 활성화된 지원 폼이 존재하지 않는다면, 
+        // 3. 활성화된 지원 폼이 존재하지 않는다면, 
         if (applyForm.isEmpty()) {
             return tempApplyFormRepository.findByClubId(clubId)
                     .map(tempForm -> ApplyFormDetailServiceResponse.of(
@@ -133,7 +134,7 @@ public class ApplyFormAdminService {
                     ));
         }
 
-        // 이전에 사용했던 질문 목록 리스트 조회
+        // 4. 이전에 사용했던 질문 목록 리스트 조회
         List<BeforeApplyFormServiceResponse> beforeForms = getBeforeForms(clubId);
 
         return ApplyFormDetailServiceResponse.of(
@@ -158,12 +159,16 @@ public class ApplyFormAdminService {
 
     // 이전에 사용한 지원폼의 질문 조회 메서드 추가
     @Transactional(readOnly = true)
+    @RequireClubAdmin
     public List<Question> getPreviousApplyFormQuestions(String username, String formId) {
         ApplyForm applyForm = applyFormRepository.findById(formId)
                 .orElseThrow(ApplyFormNotFoundException::new);
 
-        // 관리자 권한 검증
-        validateAdmin(applyForm.getClub().getAdmin().getUsername(), username);
+        // AOP를 통해 이미 해당 관리자의 동아리임이 검증됨 (validateAdmin 대신 AOP 사용)
+        // 단, formId가 해당 동아리의 것인지 추가 확인 필요
+        if (!applyForm.getClub().getId().equals(ClubHolder.getClub().getId())) {
+            throw new NotClubAdminException();
+        }
 
         // 질문 목록 반환
         return applyForm.getFormJson();
@@ -171,12 +176,15 @@ public class ApplyFormAdminService {
 
     // 이번 분기 지원을 종료
     @Transactional
+    @RequireClubAdmin
     public void finishEvaluation(String adminName, String formId) {
         ApplyForm applyForm = applyFormRepository.findById(formId)
                 .orElseThrow(ApplyFormNotFoundException::new);
 
-        // 관리자 권한 검증
-        validateAdmin(applyForm.getClub().getAdmin().getUsername(), adminName);
+        // AOP를 통해 이미 해당 관리자의 동아리임이 검증됨
+        if (!applyForm.getClub().getId().equals(ClubHolder.getClub().getId())) {
+            throw new NotClubAdminException();
+        }
 
         // 분기 모집 종료 시 ->
         // 1. 지원 폼 비활성화

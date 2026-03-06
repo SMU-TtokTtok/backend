@@ -70,7 +70,12 @@ public interface TempApplicantDocs {
             ),
             @ApiResponse(
                     responseCode = "413",
-                    description = "파일크기 초과",
+                    description = "파일 크기 초과",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "415",
+                    description = "지원하지 않는 파일 형식",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             ),
             @ApiResponse(

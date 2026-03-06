@@ -383,7 +383,7 @@ class AdminAuthApiControllerTest {
 
             // then
             result
-                    .andExpect(status().isOk())
+                    .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.adminId").isString());
         }
 
