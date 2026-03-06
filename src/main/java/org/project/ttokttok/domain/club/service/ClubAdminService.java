@@ -24,6 +24,8 @@ import org.project.ttokttok.domain.club.service.dto.request.MarkdownImageUpdateR
 import org.project.ttokttok.domain.club.service.dto.response.ClubDetailAdminServiceResponse;
 import org.project.ttokttok.domain.favorite.repository.FavoriteRepository;
 import org.project.ttokttok.domain.notification.fcm.repository.FCMTokenRepository;
+import org.project.ttokttok.global.annotation.auth.RequireClubAdmin;
+import org.project.ttokttok.global.auth.ClubHolder;
 import org.project.ttokttok.infrastructure.firebase.service.FCMService;
 import org.project.ttokttok.infrastructure.firebase.service.dto.FCMRequest;
 import org.project.ttokttok.infrastructure.s3.service.S3Service;
@@ -45,15 +47,14 @@ public class ClubAdminService {
 
     // todo: 나중에 무조건 분할 들어가야 함.
     @Transactional
+    @RequireClubAdmin
     public void updateContent(String username,
                               String clubId,
                               ClubContentUpdateServiceRequest request,
                               Optional<MultipartFile> profileImage) {
 
-        Club club = clubRepository.findById(clubId)
-                .orElseThrow(ClubNotFoundException::new);
-
-        validateAdmin(username, club.getAdmin().getUsername());
+        // AOP를 통해 이미 해당 관리자의 동아리임이 검증됨
+        Club club = ClubHolder.getClub();
 
         if (hasProfileImage(profileImage)) {
             updateProfileImage(club, profileImage.get());
@@ -66,11 +67,10 @@ public class ClubAdminService {
     }
 
     @Transactional
+    @RequireClubAdmin
     public String updateMarkdownImage(MarkdownImageUpdateRequest request) {
-        Club club = clubRepository.findById(request.clubId())
-                .orElseThrow(ClubNotFoundException::new);
-
-        validateAdmin(request.username(), club.getAdmin().getUsername());
+        // AOP를 통해 이미 해당 관리자의 동아리임이 검증됨
+        Club club = ClubHolder.getClub();
 
         MultipartFile file = request.imageFile();
 
@@ -81,11 +81,10 @@ public class ClubAdminService {
 
     // 모집 마감, 재시작 토글 로직
     @Transactional
+    @RequireClubAdmin
     public void toggleRecruitment(String username, String clubId) {
-        Club club = clubRepository.findById(clubId)
-                .orElseThrow(ClubNotFoundException::new);
-
-        validateAdmin(username, club.getAdmin().getUsername());
+        // AOP를 통해 이미 해당 관리자의 동아리임이 검증됨
+        Club club = ClubHolder.getClub();
 
         // 현재 존재하는 활성화된 지원 폼을 찾음.
         Optional<ApplyForm> form = applyFormRepository.findByClubIdAndStatus(clubId, ACTIVE);

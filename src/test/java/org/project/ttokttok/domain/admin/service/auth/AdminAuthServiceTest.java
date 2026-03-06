@@ -475,31 +475,21 @@ class AdminAuthServiceTest {
             final Club mockClub = mock(Club.class);
             when(mockClub.getId()).thenReturn(clubId);
             when(mockClub.getName()).thenReturn(clubName);
-            when(clubRepository.findByAdminUsername(adminUsername))
-                    .thenReturn(Optional.of(mockClub));
+            
+            // AOP가 작동하지 않는 단위 테스트 환경이므로 수동으로 ClubHolder에 설정
+            org.project.ttokttok.global.auth.ClubHolder.setClub(mockClub);
 
-            // when
-            var result = adminAuthService.getAdminInfo(adminUsername);
+            try {
+                // when
+                var result = adminAuthService.getAdminInfo(adminUsername);
 
-            // then
-            assertThat(result).isNotNull();
-            assertThat(result.clubId()).isEqualTo(clubId);
-            assertThat(result.clubName()).isEqualTo(clubName);
-            verify(clubRepository).findByAdminUsername(adminUsername);
-        }
-
-        @Test
-        @DisplayName("존재하지 않는 관리자명으로 조회하면 AdminNotFoundException이 발생한다")
-        void getAdminInfoWithNonExistentUsername() {
-            // given
-            final String nonExistentUsername = "nonexistent123";
-            when(clubRepository.findByAdminUsername(nonExistentUsername))
-                    .thenReturn(Optional.empty());
-
-            // when & then
-            assertThatThrownBy(() -> adminAuthService.getAdminInfo(nonExistentUsername))
-                    .isInstanceOf(AdminNotFoundException.class);
-            verify(clubRepository).findByAdminUsername(nonExistentUsername);
+                // then
+                assertThat(result).isNotNull();
+                assertThat(result.clubId()).isEqualTo(clubId);
+                assertThat(result.clubName()).isEqualTo(clubName);
+            } finally {
+                org.project.ttokttok.global.auth.ClubHolder.clear();
+            }
         }
     }
 

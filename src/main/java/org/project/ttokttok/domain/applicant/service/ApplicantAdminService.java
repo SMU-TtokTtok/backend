@@ -22,6 +22,8 @@ import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.domain.clubMember.domain.ClubMember;
 import org.project.ttokttok.domain.clubMember.repository.ClubMemberRepository;
 import org.project.ttokttok.domain.user.repository.UserRepository;
+import org.project.ttokttok.global.annotation.auth.RequireClubAdmin;
+import org.project.ttokttok.global.auth.ClubHolder;
 import org.project.ttokttok.infrastructure.email.service.EmailService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,10 +48,10 @@ public class ApplicantAdminService {
     private final ClubMemberRepository clubMemberRepository;
     private final EmailService emailService;
 
+    @RequireClubAdmin
     public ApplicantPageServiceResponse getApplicantPage(ApplicantPageServiceRequest request) {
-        // 1. username으로 관리하는 동아리 찾기
-        Club club = clubRepository.findByAdminUsername(request.username())
-                .orElseThrow(NotClubAdminException::new);
+        // 1. AOP에서 주입된 동아리 정보 가져오기
+        Club club = ClubHolder.getClub();
 
         // 2. 가장 최신의 지원 폼 찾기
         ApplyForm mostRecentApplyForm = applyFormRepository.findTopByClubIdAndStatusOrderByCreatedAtDesc(club.getId(), ACTIVE)
@@ -73,10 +75,10 @@ public class ApplicantAdminService {
     }
 
     @Transactional(readOnly = true)
+    @RequireClubAdmin
     public ApplicantDetailServiceResponse getApplicantDetail(String username, String applicantId) {
-        // 1. 관리자 권한 검증
-        Club club = clubRepository.findByAdminUsername(username)
-                .orElseThrow(NotClubAdminException::new);
+        // 1. AOP에서 주입된 동아리 정보 가져오기
+        Club club = ClubHolder.getClub();
 
         // 2. 지원자 조회 (DocumentPhase와 함께)
         Applicant applicant = applicantRepository.findByIdWithDocumentPhase(applicantId)
@@ -108,10 +110,10 @@ public class ApplicantAdminService {
         );
     }
 
+    @RequireClubAdmin
     public ApplicantPageServiceResponse searchApplicantByKeyword(ApplicantSearchServiceRequest request) {
-        // 1. 관리자 권한 검증
-        Club club = clubRepository.findByAdminUsername(request.username())
-                .orElseThrow(NotClubAdminException::new);
+        // 1. AOP에서 주입된 동아리 정보 가져오기
+        Club club = ClubHolder.getClub();
 
         // 2. 가장 최신의 지원 폼 찾기
         ApplyForm mostRecentApplyForm = applyFormRepository.findTopByClubIdAndStatusOrderByCreatedAtDesc(club.getId(), ACTIVE)
@@ -137,10 +139,10 @@ public class ApplicantAdminService {
 
     // todo: 비어있으면 null 혹은 빈 배열 반환
     @Transactional(readOnly = true)
+    @RequireClubAdmin
     public ApplicantPageServiceResponse getApplicantsByStatus(ApplicantStatusServiceRequest request) {
-        // 1. username으로 관리하는 동아리 찾기
-        Club club = clubRepository.findByAdminUsername(request.username())
-                .orElseThrow(NotClubAdminException::new);
+        // 1. AOP에서 주입된 동아리 정보 가져오기
+        Club club = ClubHolder.getClub();
 
         // 2. 가장 최신의 지원 폼 찾기
         ApplyForm mostRecentApplyForm = applyFormRepository.findTopByClubIdAndStatusOrderByCreatedAtDesc(club.getId(), ACTIVE)
@@ -164,10 +166,10 @@ public class ApplicantAdminService {
 
     // ok
     @Transactional
+    @RequireClubAdmin
     public void updateApplicantStatus(StatusUpdateServiceRequest request) {
-        // 1. 관리자 권한 검증
-        Club club = clubRepository.findByAdminUsername(request.username())
-                .orElseThrow(NotClubAdminException::new);
+        // 1. AOP에서 주입된 동아리 정보 가져오기
+        Club club = ClubHolder.getClub();
 
         // 2. 지원자 ID로 지원자 정보 조회
         Applicant applicant = applicantRepository.findById(request.applicantId())
@@ -181,9 +183,10 @@ public class ApplicantAdminService {
     }
 
     @Transactional
+    @RequireClubAdmin
     public ApplicantFinalizeServiceResponse finalizeApplicantsStatus(ApplicantFinalizationRequest request) {
-        // 1. 동아리 관리자 검증
-        Club club = validateClubAdmin(request.username());
+        // 1. AOP에서 주입된 동아리 정보 가져오기
+        Club club = ClubHolder.getClub();
 
         // 2. 현재 활성화된 지원 폼 조회
         ApplyForm currentApplyForm = findActiveApplyForm(request.clubId());
@@ -201,20 +204,18 @@ public class ApplicantAdminService {
     }
 
     @Transactional
+    @RequireClubAdmin
     public void sendResultMailToApplicants(SendResultMailServiceRequest request,
                                            String username,
                                            String clubId,
                                            String kind) {
-        // 1. 동아리 관리자 검증
-        validateClubAdmin(username);
-
-        // 2. 현재 활성화된 지원 폼 조회
+        // 1. 현재 활성화된 지원 폼 조회
         ApplyForm currentApplyForm = findActiveApplyForm(clubId);
 
         // 서류 또는 면접 단계인지 확인
         boolean isDocument = Kind.isDocument(kind);
 
-        // 3. 지원자 목록 조회
+        // 2. 지원자 목록 조회
         // 합격자 이메일 목록
         List<String> passedEmails = filterApplicantsByStatus(currentApplyForm.getId(), isDocument, PASS)
                 .stream()
@@ -227,7 +228,7 @@ public class ApplicantAdminService {
                 .map(Applicant::getEmail)
                 .toList();
 
-        // 4. 이메일 전송
+        // 3. 이메일 전송
         emailService.sendResultMail(passedEmails, request.pass());
         emailService.sendResultMail(failedEmails, request.fail());
     }
