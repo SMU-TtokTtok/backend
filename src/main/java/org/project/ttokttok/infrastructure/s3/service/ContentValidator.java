@@ -1,14 +1,19 @@
 package org.project.ttokttok.infrastructure.s3.service;
 
+import lombok.RequiredArgsConstructor;
 import org.project.ttokttok.infrastructure.s3.exception.S3FileMaxSizeOverException;
 import org.project.ttokttok.infrastructure.s3.exception.UnsupportedFileTypeException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @Service
+@RequiredArgsConstructor
 public class ContentValidator implements ContentValidatable {
+
+    private final ZipContentValidator zipContentValidator;
 
     private static final Set<String> ALLOWED_IMAGE_TYPES =
             Set.of("image/jpeg",
@@ -33,7 +38,9 @@ public class ContentValidator implements ContentValidatable {
                     "application/vnd.ms-excel", // XLS
                     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // XLSX
                     "text/csv", // CSV
-                    "text/plain" // TXT
+                    "text/plain", // TXT
+                    "application/zip", // ZIP
+                    "application/x-zip-compressed" // ZIP (Windows 등)
             );
 
     private static final long MAX_CONTENT_SIZE = 20 * 1024 * 1024L; // 20MB
@@ -44,6 +51,14 @@ public class ContentValidator implements ContentValidatable {
     public void validateContent(MultipartFile content) {
         if (content == null || content.isEmpty()) {
             throw new IllegalArgumentException("파일이 비어있거나 존재하지 않습니다.");
+        }
+
+        // ZIP 파일인 경우 내부 메타데이터 스트리밍 검증 수행
+        String contentType = content.getContentType();
+        if (contentType != null && (contentType.equals("application/zip") || contentType.equals("application/x-zip-compressed"))) {
+            Set<String> allAllowedTypes = new HashSet<>(ALLOWED_IMAGE_TYPES);
+            allAllowedTypes.addAll(ALLOWED_DOCS_TYPES);
+            zipContentValidator.validateZip(content, allAllowedTypes);
         }
     }
 

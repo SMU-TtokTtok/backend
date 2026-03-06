@@ -79,6 +79,10 @@ public enum ErrorMessage {
     S3_DELETE_NOT_FOUND("삭제하려는 파일을 찾을 수 없음", HttpStatus.NOT_FOUND),
     S3_FILE_SIZE_TOO_LARGE("파일 크기가 20MB를 초과할 수 없습니다.", HttpStatus.PAYLOAD_TOO_LARGE),
     S3_UNSUPPORTED_FILE_TYPE("지원하지 않는 파일 형식입니다. 이미지 또는 문서 파일만 허용됩니다.", HttpStatus.UNSUPPORTED_MEDIA_TYPE),
+    S3_ZIP_SLIP_ERROR("압축 파일 내 유효하지 않은 파일 경로가 포함되어 있습니다.", HttpStatus.BAD_REQUEST),
+    S3_ZIP_FILE_COUNT_LIMIT("압축 파일 내 파일 개수가 너무 많습니다. (최대 50개)", HttpStatus.BAD_REQUEST),
+    S3_ZIP_UNCOMPRESSED_SIZE_LIMIT("압축 해제 시 허용 용량을 초과합니다. (최대 100MB)", HttpStatus.PAYLOAD_TOO_LARGE),
+    S3_ZIP_INTERNAL_FILE_TYPE_ERROR("압축 파일 내 허용되지 않는 파일 형식이 포함되어 있습니다.", HttpStatus.UNSUPPORTED_MEDIA_TYPE),
 
     // FCM 에러 메시지
     FCM_FIELD_BLANK("FCM 토큰에 저장할 필드가 비어 있습니다.", HttpStatus.BAD_REQUEST),

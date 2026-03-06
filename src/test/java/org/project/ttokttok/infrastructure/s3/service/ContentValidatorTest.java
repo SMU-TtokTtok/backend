@@ -7,6 +7,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.project.ttokttok.infrastructure.s3.exception.S3FileMaxSizeOverException;
 import org.project.ttokttok.infrastructure.s3.exception.UnsupportedFileTypeException;
@@ -14,9 +15,15 @@ import org.springframework.mock.web.MockMultipartFile;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class ContentValidatorTest {
+
+    @Mock
+    private ZipContentValidator zipContentValidator;
 
     @InjectMocks
     private ContentValidator contentValidator;
@@ -31,6 +38,14 @@ class ContentValidatorTest {
             MockMultipartFile file = new MockMultipartFile("file", "test.png", "image/png", "content".getBytes());
             assertThatCode(() -> contentValidator.validateContent(file))
                     .doesNotThrowAnyException();
+        }
+
+        @Test
+        @DisplayName("ZIP 파일인 경우 ZipContentValidator를 호출한다.")
+        void callZipValidator() {
+            MockMultipartFile file = new MockMultipartFile("file", "test.zip", "application/zip", "content".getBytes());
+            contentValidator.validateContent(file);
+            verify(zipContentValidator).validateZip(eq(file), any());
         }
 
         @Test
