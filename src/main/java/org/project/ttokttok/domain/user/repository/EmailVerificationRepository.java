@@ -12,7 +12,7 @@ import java.util.Optional;
 public interface EmailVerificationRepository extends JpaRepository<EmailVerification, Long> {
 
     // 이메일로 최신 인증코드 조회 (만료되지 않은 것 중에서)
-    Optional<EmailVerification> findFirstByEmailAndIsVerifiedFalseAndExpiresAtAfterOrderByCreatedAtDesc(
+    Optional<EmailVerification> findFirstByEmailAndIsVerifiedFalseAndExpiresAtAfterOrderByCreatedAtDescIdDesc(
             String email, LocalDateTime now);
 
     // 이메일과 코드로 인증 정보 조회
