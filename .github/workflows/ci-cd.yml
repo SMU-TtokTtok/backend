@@ -58,12 +58,26 @@ jobs:
           fi
           
           echo "Processing proxy.conf for Nginx..."
+          # if [ -n "$PROXY_CONF" ]; then
+          #   mkdir -p ./.platform/nginx/conf.d
+          #   echo "$PROXY_CONF" | tr -d '\n' | base64 --decode > ./.platform/nginx/conf.d/proxy.conf
+          #   echo "proxy.conf file created successfully at .platform/nginx/conf.d/proxy.conf"
+          #   if [ -f "./.platform/nginx/conf.d/proxy.conf" ]; then
+          #     echo "File size: $(wc -c < "./.platform/nginx/conf.d/proxy.conf") bytes"
+          #   fi
+          # else
+          #   echo "Warning: PROXY_CONF secret is missing. Skipping nginx configuration."
+          # fi
           if [ -n "$PROXY_CONF" ]; then
-            mkdir -p ./.platform/nginx/conf.d
-            echo "$PROXY_CONF" | tr -d '\n' | base64 --decode > ./.platform/nginx/conf.d/proxy.conf
-            echo "proxy.conf file created successfully at .platform/nginx/conf.d/proxy.conf"
-            if [ -f "./.platform/nginx/conf.d/proxy.conf" ]; then
-              echo "File size: $(wc -c < "./.platform/nginx/conf.d/proxy.conf") bytes"
+            # 디렉토리 경로에 elasticbeanstalk 추가 (server 블록 내부 주입용)
+            mkdir -p ./.platform/nginx/conf.d/elasticbeanstalk
+            
+            # 파일명을 00_custom.conf 로 지정하여 우선순위 확보
+            echo "$PROXY_CONF" | tr -d '\n' | base64 --decode > ./.platform/nginx/conf.d/elasticbeanstalk/00_custom.conf
+            
+            echo "Nginx config created successfully at .platform/nginx/conf.d/elasticbeanstalk/00_custom.conf"
+            if [ -f "./.platform/nginx/conf.d/elasticbeanstalk/00_custom.conf" ]; then
+              echo "File size: $(wc -c < "./.platform/nginx/conf.d/elasticbeanstalk/00_custom.conf") bytes"
             fi
           else
             echo "Warning: PROXY_CONF secret is missing. Skipping nginx configuration."
