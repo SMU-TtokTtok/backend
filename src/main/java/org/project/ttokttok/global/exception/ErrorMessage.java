@@ -77,7 +77,8 @@ public enum ErrorMessage {
     // S3 에러 메시지
     S3_FILE_UPLOAD_ERROR("S3 파일 업로드 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
     S3_DELETE_NOT_FOUND("삭제하려는 파일을 찾을 수 없음", HttpStatus.NOT_FOUND),
-    S3_FILE_SIZE_TOO_LARGE("파일 크기가 5MB를 초과할 수 없습니다.", HttpStatus.PAYLOAD_TOO_LARGE),
+    S3_FILE_SIZE_TOO_LARGE("파일 크기가 20MB를 초과할 수 없습니다.", HttpStatus.PAYLOAD_TOO_LARGE),
+    S3_UNSUPPORTED_FILE_TYPE("지원하지 않는 파일 형식입니다. 이미지 또는 문서 파일만 허용됩니다.", HttpStatus.UNSUPPORTED_MEDIA_TYPE),
 
     // FCM 에러 메시지
     FCM_FIELD_BLANK("FCM 토큰에 저장할 필드가 비어 있습니다.", HttpStatus.BAD_REQUEST),

@@ -1,6 +1,7 @@
 package org.project.ttokttok.infrastructure.s3.service;
 
 import org.project.ttokttok.infrastructure.s3.exception.S3FileMaxSizeOverException;
+import org.project.ttokttok.infrastructure.s3.exception.UnsupportedFileTypeException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -12,7 +13,10 @@ public class ContentValidator implements ContentValidatable {
     private static final Set<String> ALLOWED_IMAGE_TYPES =
             Set.of("image/jpeg",
                     "image/png",
-                    "image/webp"
+                    "image/webp",
+                    "image/heic",  // 아이폰 고효율 이미지
+                    "image/heif",  // 아이폰 고효율 이미지
+                    "image/gif"   // 움직이는 이미지
             );
 
     private static final Set<String> ALLOWED_DOCS_TYPES =
@@ -23,10 +27,16 @@ public class ContentValidator implements ContentValidatable {
                     "application/x-hwp",  // 한글 (hwp)
                     "application/vnd.hancom.hwp",  // 한글 (hwp, 일부 환경)
                     "application/vnd.hancom.hwpx", // 한글 (hwpx, 신형 포맷)
-                    "application/x-hwpml" // 한글 (hwpml, 마이너)
+                    "application/x-hwpml", // 한글 (hwpml, 마이너)
+                    "application/vnd.ms-powerpoint", // PPT
+                    "application/vnd.openxmlformats-officedocument.presentationml.presentation", // PPTX
+                    "application/vnd.ms-excel", // XLS
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // XLSX
+                    "text/csv", // CSV
+                    "text/plain" // TXT
             );
 
-    private static final long MAX_CONTENT_SIZE = 5 * 1024 * 1024L; // 5MB
+    private static final long MAX_CONTENT_SIZE = 20 * 1024 * 1024L; // 20MB
     private static final String FILE_NAME_REGEX = ".*[\\\\/:*?\"<>|].*";
     private static final int MAX_FILE_NAME_LENGTH = 255; // 파일 이름 최대 길이
 
@@ -47,7 +57,7 @@ public class ContentValidator implements ContentValidatable {
     @Override
     public void validateType(String type) {
         if (!ALLOWED_IMAGE_TYPES.contains(type) && !ALLOWED_DOCS_TYPES.contains(type)) {
-            throw new IllegalArgumentException("지원하지 않는 파일 형식입니다. 이미지 또는 문서 파일만 허용됩니다.");
+            throw new UnsupportedFileTypeException();
         }
     }
 
