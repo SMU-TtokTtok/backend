@@ -14,7 +14,6 @@ import org.project.ttokttok.domain.applyform.service.dto.request.ApplyFormUpdate
 import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.domain.temp.applyform.repository.TempApplyFormRepository;
-import org.project.ttokttok.global.auth.ClubHolder;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -67,7 +66,7 @@ class ApplyFormAdminServiceTest {
         when(applyFormRepository.save(any(ApplyForm.class))).thenReturn(mockSavedForm);
 
         // AOP를 대신하여 수동으로 ClubHolder 설정
-        ClubHolder.setClub(mockClub);
+        
 
         try {
             // when
@@ -78,7 +77,7 @@ class ApplyFormAdminServiceTest {
             verify(applyFormRepository).save(any(ApplyForm.class));
             verify(tempApplyFormRepository).findByClubId(clubId);
         } finally {
-            ClubHolder.clear();
+            
         }
     }
 
@@ -100,7 +99,7 @@ class ApplyFormAdminServiceTest {
                 .build();
 
         // AOP를 대신하여 수동으로 ClubHolder 설정
-        ClubHolder.setClub(mockClub);
+        
 
         try {
             // when
@@ -109,7 +108,7 @@ class ApplyFormAdminServiceTest {
             // then
             verify(mockApplyForm).updateFormContent(eq("새 제목"), isNull(), isNull());
         } finally {
-            ClubHolder.clear();
+            
         }
     }
 }

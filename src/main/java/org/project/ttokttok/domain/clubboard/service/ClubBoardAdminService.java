@@ -3,14 +3,13 @@ package org.project.ttokttok.domain.clubboard.service;
 import lombok.RequiredArgsConstructor;
 import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.exception.ClubNotFoundException;
+import org.project.ttokttok.domain.club.exception.NotClubAdminException;
 import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.domain.clubboard.domain.ClubBoard;
 import org.project.ttokttok.domain.clubboard.exception.ClubAdminNameNotMatchException;
 import org.project.ttokttok.domain.clubboard.exception.ClubBoardNotFoundException;
 import org.project.ttokttok.domain.clubboard.repository.ClubBoardRepository;
 import org.project.ttokttok.domain.clubboard.service.dto.request.CreateBoardServiceRequest;
-import org.project.ttokttok.global.annotation.auth.RequireClubAdmin;
-import org.project.ttokttok.global.auth.ClubHolder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -21,10 +20,8 @@ public class ClubBoardAdminService {
     private final ClubBoardRepository clubBoardRepository;
 
     // 게시글 생성
-    @RequireClubAdmin
     public String createBoard(CreateBoardServiceRequest request) {
-        // AOP를 통해 이미 해당 관리자의 동아리임이 검증됨
-        Club club = ClubHolder.getClub();
+        Club club = validateClubAdmin(request.adminName());
 
         // 게시글 생성 로직
         ClubBoard clubBoard = ClubBoard.create(request.title(), request.content(), club);
@@ -34,10 +31,8 @@ public class ClubBoardAdminService {
     }
 
     // 게시글 삭제 로직
-    @RequireClubAdmin
     public void deleteBoard(String clubId, String boardId, String requestAdminName) {
-        // AOP를 통해 이미 해당 관리자의 동아리임이 검증됨
-        Club club = ClubHolder.getClub();
+        Club club = validateClubAdmin(requestAdminName);
 
         ClubBoard clubBoard = clubBoardRepository.findById(boardId)
                 .orElseThrow(ClubBoardNotFoundException::new);
@@ -51,8 +46,8 @@ public class ClubBoardAdminService {
         clubBoardRepository.delete(clubBoard);
     }
 
-
-    // 게시글 수정
-    // 게시글 삭제
-
+    private Club validateClubAdmin(String username) {
+        return clubRepository.findByAdminUsername(username)
+                .orElseThrow(NotClubAdminException::new);
+    }
 }
