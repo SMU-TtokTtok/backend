@@ -13,7 +13,6 @@ import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.domain.clubboard.domain.ClubBoard;
 import org.project.ttokttok.domain.clubboard.repository.ClubBoardRepository;
 import org.project.ttokttok.domain.clubboard.service.dto.request.CreateBoardServiceRequest;
-import org.project.ttokttok.global.auth.ClubHolder;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -44,7 +43,7 @@ class ClubBoardAdminServiceTest {
         when(clubBoardRepository.save(any(ClubBoard.class))).thenReturn(mockBoard);
 
         // AOP 대신 수동으로 ClubHolder 설정
-        ClubHolder.setClub(mockClub);
+        
 
         try {
             // when
@@ -54,7 +53,7 @@ class ClubBoardAdminServiceTest {
             assertThat(result).isEqualTo("board123");
             verify(clubBoardRepository).save(any(ClubBoard.class));
         } finally {
-            ClubHolder.clear();
+            
         }
     }
 }

@@ -15,9 +15,8 @@ import org.project.ttokttok.domain.admin.service.dto.request.AdminResetPasswordS
 import org.project.ttokttok.domain.admin.service.dto.response.AdminLoginServiceResponse;
 import org.project.ttokttok.domain.admin.service.dto.response.ReissueServiceResponse;
 import org.project.ttokttok.domain.club.domain.Club;
+import org.project.ttokttok.domain.club.exception.NotClubAdminException;
 import org.project.ttokttok.domain.club.repository.ClubRepository;
-import org.project.ttokttok.global.annotation.auth.RequireClubAdmin;
-import org.project.ttokttok.global.auth.ClubHolder;
 import org.project.ttokttok.global.auth.jwt.dto.request.TokenRequest;
 import org.project.ttokttok.global.auth.jwt.dto.response.TokenResponse;
 import org.project.ttokttok.global.auth.jwt.exception.InvalidRefreshTokenException;
@@ -53,8 +52,8 @@ public class AdminAuthService {
         );
     }
 
-    @RequireClubAdmin
     public void logout(String username) {
+        validateClubAdmin(username);
         refreshTokenRedisService.deleteRefreshToken(username);
     }
 
@@ -115,10 +114,8 @@ public class AdminAuthService {
         return tokenResponse;
     }
 
-    @RequireClubAdmin
     public AdminLoginResponse getAdminInfo(String adminName) {
-        // AOP를 통해 이미 해당 관리자의 동아리임이 검증됨
-        Club club = ClubHolder.getClub();
+        Club club = validateClubAdmin(adminName);
 
         return AdminLoginResponse.of(
                 club.getId(),
@@ -141,5 +138,10 @@ public class AdminAuthService {
 
         // 비밀번호 재설정
         admin.resetPassword(request.newPassword(), passwordEncoder);
+    }
+
+    private Club validateClubAdmin(String username) {
+        return clubRepository.findByAdminUsername(username)
+                .orElseThrow(NotClubAdminException::new);
     }
 }

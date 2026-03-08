@@ -477,7 +477,7 @@ class AdminAuthServiceTest {
             when(mockClub.getName()).thenReturn(clubName);
             
             // AOP가 작동하지 않는 단위 테스트 환경이므로 수동으로 ClubHolder에 설정
-            org.project.ttokttok.global.auth.ClubHolder.setClub(mockClub);
+            org.project.ttokttok.global.auth.
 
             try {
                 // when
@@ -488,7 +488,7 @@ class AdminAuthServiceTest {
                 assertThat(result.clubId()).isEqualTo(clubId);
                 assertThat(result.clubName()).isEqualTo(clubName);
             } finally {
-                org.project.ttokttok.global.auth.ClubHolder.clear();
+                org.project.ttokttok.global.auth.
             }
         }
     }

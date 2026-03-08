@@ -34,7 +34,7 @@ public class MemoApiController implements MemoDocs {
                 request.content()
         );
 
-        String memoId = memoService.createMemo(serviceRequest);
+        String memoId = memoService.createMemo(username, serviceRequest);
 
         MemoCreateResponse response = new MemoCreateResponse(memoId);
 
@@ -56,7 +56,7 @@ public class MemoApiController implements MemoDocs {
                 request.content()
         );
 
-        memoService.updateMemo(serviceRequest);
+        memoService.updateMemo(username, serviceRequest);
 
         return ResponseEntity.ok()
                 .body(Map.of("message", "메모 수정에 성공했습니다."));
@@ -74,7 +74,7 @@ public class MemoApiController implements MemoDocs {
                 username
         );
 
-        memoService.deleteMemo(serviceRequest);
+        memoService.deleteMemo(username, serviceRequest);
 
         return ResponseEntity.ok()
                 .body(Map.of("message", "메모 삭제에 성공했습니다."));
