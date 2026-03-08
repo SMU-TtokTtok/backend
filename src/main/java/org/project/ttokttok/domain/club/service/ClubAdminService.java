@@ -22,10 +22,7 @@ import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.domain.club.service.dto.request.ClubContentUpdateServiceRequest;
 import org.project.ttokttok.domain.club.service.dto.request.MarkdownImageUpdateRequest;
 import org.project.ttokttok.domain.club.service.dto.response.ClubDetailAdminServiceResponse;
-import org.project.ttokttok.domain.favorite.repository.FavoriteRepository;
 import org.project.ttokttok.domain.notification.fcm.repository.FCMTokenRepository;
-import org.project.ttokttok.global.annotation.auth.RequireClubAdmin;
-import org.project.ttokttok.global.auth.ClubHolder;
 import org.project.ttokttok.infrastructure.firebase.service.FCMService;
 import org.project.ttokttok.infrastructure.firebase.service.dto.FCMRequest;
 import org.project.ttokttok.infrastructure.s3.service.S3Service;
@@ -45,16 +42,13 @@ public class ClubAdminService {
     private final S3Service s3Service;
     private final FCMService fcmService;
 
-    // todo: 나중에 무조건 분할 들어가야 함.
     @Transactional
-    @RequireClubAdmin
     public void updateContent(String username,
                               String clubId,
                               ClubContentUpdateServiceRequest request,
                               Optional<MultipartFile> profileImage) {
 
-        // AOP를 통해 이미 해당 관리자의 동아리임이 검증됨
-        Club club = ClubHolder.getClub();
+        Club club = validateClubAdmin(username);
 
         if (hasProfileImage(profileImage)) {
             updateProfileImage(club, profileImage.get());
@@ -67,10 +61,8 @@ public class ClubAdminService {
     }
 
     @Transactional
-    @RequireClubAdmin
-    public String updateMarkdownImage(MarkdownImageUpdateRequest request) {
-        // AOP를 통해 이미 해당 관리자의 동아리임이 검증됨
-        Club club = ClubHolder.getClub();
+    public String updateMarkdownImage(String username, MarkdownImageUpdateRequest request) {
+        validateClubAdmin(username);
 
         MultipartFile file = request.imageFile();
 
@@ -79,36 +71,28 @@ public class ClubAdminService {
         return s3Service.uploadFile(file, INTRODUCTION_IMAGE.getDirectoryName());
     }
 
-    // 모집 마감, 재시작 토글 로직
     @Transactional
-    @RequireClubAdmin
     public void toggleRecruitment(String username, String clubId) {
-        // AOP를 통해 이미 해당 관리자의 동아리임이 검증됨
-        Club club = ClubHolder.getClub();
+        Club club = validateClubAdmin(username);
 
-        // 현재 존재하는 활성화된 지원 폼을 찾음.
         Optional<ApplyForm> form = applyFormRepository.findByClubIdAndStatus(clubId, ACTIVE);
 
         if (form.isPresent()) {
-            // 활성화된 폼이 존재한다면, 모집 상태를 토글함.
             boolean wasRecruiting = form.get().isRecruiting();
             form.get().toggleRecruiting();
 
             log.info("Current apply form status toggled for club: {}, status: {}", clubId, form.get().getStatus());
 
-            // 모집이 다시 시작된 경우 FCM 알림 전송
             if (!wasRecruiting && form.get().isRecruiting()) {
                 sendRecruitmentNotification(form.get(), club);
             }
         } else {
-            // 활성화된 폼이 없다면, 가장 최근에 생성된 지원 폼을 찾아 활성화시킴.
             ApplyForm latestForm = applyFormRepository.findTopByClubIdOrderByCreatedAtDesc(clubId)
                     .orElseThrow(ApplyFormNotFoundException::new);
 
             log.info("No active apply form found for club: {}, activating latest form: {}", clubId, latestForm.getId());
             latestForm.updateFormStatus();
 
-            // 활성화된 폼이 모집 중이라면 FCM 알림 전송
             if (latestForm.isRecruiting()) {
                 sendRecruitmentNotification(latestForm, club);
             }
@@ -131,19 +115,16 @@ public class ClubAdminService {
         }
     }
 
-    // todo: 추후 리팩토링
     private boolean isImage(String contentType) {
         return contentType.startsWith("image/jpeg") ||
                 contentType.startsWith("image/png") ||
                 contentType.startsWith("image/webp");
     }
 
-    // 요청에 프로필 이미지 업데이트 요청이 있는지 확인
     private boolean hasProfileImage(Optional<MultipartFile> profileImage) {
         return profileImage.isPresent();
     }
 
-    // 프로필 이미지 업데이트 로직
     private void updateProfileImage(Club club, MultipartFile profileImage) {
         String profileImgKey = s3Service.uploadFile(profileImage, PROFILE_IMAGE.getDirectoryName());
         validateProfileImgExist(club, profileImgKey);
@@ -151,14 +132,11 @@ public class ClubAdminService {
         club.updateProfileImgUrl(profileImgKey);
     }
 
-    // 요청에 지원 폼 업데이트 요청이 있는지 확인
     private boolean hasApplyFormUpdate(ClubContentUpdateServiceRequest request) {
         return request.applyStartDate().isPresent() || request.applyEndDate().isPresent() ||
                 request.grades().isPresent() || request.maxApplyCount().isPresent();
     }
 
-    // TODO: 추후 날짜 정합성 관련 로직 추가.
-    // 지원 폼 업데이트 로직
     private void updateApplyForm(Club club, ClubContentUpdateServiceRequest request) {
         ApplyForm applyForm = applyFormRepository.findByClubIdAndStatus(club.getId(), ACTIVE)
                 .orElseThrow(ApplyFormNotFoundException::new);
@@ -183,14 +161,12 @@ public class ClubAdminService {
         );
     }
 
-    // 기존 프로필 이미지가 있다면 삭제
     private void validateProfileImgExist(Club club, String profileImgKey) {
         if (club.getProfileImageUrl() != null && !club.getProfileImageUrl().equals(profileImgKey)) {
             s3Service.deleteFile(club.getProfileImageUrl());
         }
     }
 
-    // 요청이 null이 아니고, 지원 폼 업데이트 요청이 있는지 확인
     private boolean isRequestNotNull(ClubContentUpdateServiceRequest request) {
         return request != null;
     }
@@ -201,16 +177,12 @@ public class ClubAdminService {
         }
     }
 
-    // 동아리 관리자 검증
-    private void validateAdmin(String username, String targetAdminUsername) {
-        if (!username.equals(targetAdminUsername)) {
-            throw new NotClubAdminException();
-        }
+    private Club validateClubAdmin(String username) {
+        return clubRepository.findByAdminUsername(username)
+                .orElseThrow(NotClubAdminException::new);
     }
 
-    // 모집 재개 시 지원자들에게 FCM 알림 전송
     private void sendRecruitmentNotification(ApplyForm applyForm, Club club) {
-        // 해당 지원폼에 지원한 지원자들의 이메일 목록 조회
         List<String> fcmTokens = fcmTokenRepository.findTokensByClubId(club.getId());
 
         if (fcmTokens.isEmpty()) {
@@ -218,7 +190,6 @@ public class ClubAdminService {
             return;
         }
 
-        // FCM 알림 메시지 생성 및 전송
         String title = "📢 모집 재개 알림";
         String body = String.format("%s 동아리의 모집이 시작되었습니다! 지금 바로 확인해보세요.", club.getName());
 

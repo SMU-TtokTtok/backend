@@ -63,8 +63,6 @@ public class ApplicantAdminApiController implements ApplicantAdminDocs {
                 .body(response);
     }
 
-    // 지원자 검색
-    // TODO: 검색도 굳이 페이징이 필요한가? 고민해볼 것.
     @GetMapping("/search")
     public ResponseEntity<ApplicantPageResponse> applicantPageSearch(@AuthUserInfo String username,
                                                                      @RequestParam(name = "name") String keyword,
@@ -92,8 +90,6 @@ public class ApplicantAdminApiController implements ApplicantAdminDocs {
                 .body(response);
     }
 
-    //FIXME: 하나로 될 거 같음
-    // 합격 지원자 목록 조회
     @GetMapping("/passed")
     public ResponseEntity<ApplicantPageResponse> getPassedApplicantsPage(@AuthUserInfo String username,
                                                                          @RequestParam(required = false, defaultValue = "1") int page,
@@ -116,7 +112,6 @@ public class ApplicantAdminApiController implements ApplicantAdminDocs {
                 .body(response);
     }
 
-    // 불합격 지원자 목록 조회
     @GetMapping("/failed")
     public ResponseEntity<ApplicantPageResponse> getFailedApplicantsPage(@AuthUserInfo String username,
                                                                          @RequestParam(required = false, defaultValue = "1") int page,
@@ -125,7 +120,7 @@ public class ApplicantAdminApiController implements ApplicantAdminDocs {
 
         ApplicantStatusServiceRequest request = ApplicantStatusServiceRequest.of(
                 username,
-                false, // passed = false
+                false,
                 page,
                 size,
                 kind.name()
@@ -139,12 +134,11 @@ public class ApplicantAdminApiController implements ApplicantAdminDocs {
                 .body(response);
     }
 
-    // 지원자 상태 업데이트 - status 부분 리팩토링 필요
     @PatchMapping("/evaluations/{applicantId}")
     public ResponseEntity<Map<String, String>> updateApplicantEvaluation(@AuthUserInfo String username,
                                                                          @PathVariable String applicantId,
                                                                          @Valid @RequestBody ApplicantStatusUpdateRequest request,
-                                                                         @RequestParam(required = false) Kind kind) {
+                                                                         @RequestParam Kind kind) {
 
         StatusUpdateServiceRequest serviceRequest = StatusUpdateServiceRequest.of(
                 username,
@@ -159,7 +153,6 @@ public class ApplicantAdminApiController implements ApplicantAdminDocs {
                 .body(Map.of("message", "지원자 상태가 성공적으로 업데이트되었습니다."));
     }
 
-    // 지원자 상태 최종 확정
     @PutMapping("/{clubId}/finalize")
     public ResponseEntity<ApplicantFinalizeResponse> finalizeApplicantsStatus(@AuthUserInfo String username,
                                                                               @PathVariable String clubId,

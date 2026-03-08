@@ -43,7 +43,7 @@ public class ClubMemberApiController implements ClubMemberDocs {
         ClubMemberPageRequest pageRequest = new ClubMemberPageRequest(username, page, size);
 
         ClubMemberPageResponse response = ClubMemberPageResponse.from(
-                clubMemberService.getClubMembers(clubId, pageRequest)
+                clubMemberService.getClubMembers(username, clubId, pageRequest)
         );
 
         return ResponseEntity.ok()
@@ -75,7 +75,7 @@ public class ClubMemberApiController implements ClubMemberDocs {
                 request.role()
         );
 
-        clubMemberService.changeRole(serviceRequest);
+        clubMemberService.changeRole(username, serviceRequest);
 
         return ResponseEntity.ok()
                 .body((Map.of("message", "부원 역할 변경 완료: " + memberId)));
@@ -92,7 +92,7 @@ public class ClubMemberApiController implements ClubMemberDocs {
                 memberId
         );
 
-        clubMemberService.deleteMember(serviceRequest);
+        clubMemberService.deleteMember(username, serviceRequest);
 
         return ResponseEntity.ok()
                 .body(Map.of("message", "부원 삭제 완료: " + memberId));
@@ -125,7 +125,7 @@ public class ClubMemberApiController implements ClubMemberDocs {
         );
 
         ClubMemberSearchCoverResponse response = ClubMemberSearchCoverResponse.from(
-                clubMemberService.clubMemberSearch(request)
+                clubMemberService.clubMemberSearch(username, request)
         );
 
         return ResponseEntity.ok()

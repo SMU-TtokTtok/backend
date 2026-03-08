@@ -57,7 +57,7 @@ public class ClubAdminApiController implements ClubAdminApiDocs {
                 imageFile
         );
 
-        String imageKey = clubAdminService.updateMarkdownImage(request);
+        String imageKey = clubAdminService.updateMarkdownImage(username, request);
 
         UpdateImageResponse response = new UpdateImageResponse(imageKey);
 
@@ -70,7 +70,6 @@ public class ClubAdminApiController implements ClubAdminApiDocs {
     public ResponseEntity<Map<String, String>> toggleRecruitment(@AuthUserInfo String username,
                                                                  @PathVariable String clubId) {
         clubAdminService.toggleRecruitment(username, clubId);
-
         return ResponseEntity.ok()
                 .body(Map.of("message", "동아리 모집 상태가 변경되었습니다."));
     }
