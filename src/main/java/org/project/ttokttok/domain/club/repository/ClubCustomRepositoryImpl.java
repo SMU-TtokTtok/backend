@@ -1,6 +1,5 @@
 package org.project.ttokttok.domain.club.repository;
 
-import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
@@ -20,16 +19,10 @@ import org.project.ttokttok.domain.club.domain.enums.ClubUniv;
 import org.project.ttokttok.domain.club.repository.dto.ClubCardQueryResponse;
 import org.project.ttokttok.domain.club.repository.dto.ClubDetailAdminQueryResponse;
 import org.project.ttokttok.domain.club.repository.dto.ClubDetailQueryResponse;
-import org.project.ttokttok.domain.clubMember.domain.QClubMember;
-import org.project.ttokttok.domain.favorite.domain.QFavorite;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
-import java.util.Set;
 
 import static org.project.ttokttok.domain.applyform.domain.QApplyForm.applyForm;
 import static org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus.ACTIVE;
@@ -44,9 +37,48 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
     private final JPAQueryFactory queryFactory;
     private final EntityManager entityManager;
 
+    private static final String POPULAR_CLUB_BASE_SQL = """
+            WITH mc AS (
+                SELECT club_id, COUNT(*) as cnt FROM club_members GROUP BY club_id
+            ),
+            fc AS (
+                SELECT club_id, COUNT(*) as cnt FROM user_favorites GROUP BY club_id
+            ),
+            af_active AS (
+                SELECT club_id, 
+                       MAX(CASE WHEN is_recruiting = true THEN 1 ELSE 0 END) as is_recruiting,
+                       MAX(apply_end_date) as apply_end_date
+                FROM applyforms 
+                WHERE status = 'ACTIVE'
+                GROUP BY club_id
+            ),
+            uf_user AS (
+                SELECT f.club_id, 1 as bookmarked 
+                FROM user_favorites f
+                JOIN users u ON f.user_id = u.id
+                WHERE u.email = :userEmail
+            ),
+            scored_clubs AS (
+                SELECT c.id, c.name, c.club_type, c.club_category, c.custom_category, c.summary, c.profile_img, c.view_count, c.created_at,
+                       COALESCE(mc.cnt, 0) as member_count,
+                       (COALESCE(mc.cnt, 0) * 0.7 + COALESCE(fc.cnt, 0) * 2.5 + c.view_count * 0.7) AS score,
+                       COALESCE(af_active.is_recruiting, 0) = 1 as recruiting,
+                       COALESCE(uf_user.bookmarked, 0) = 1 as bookmarked,
+                       af_active.apply_end_date as apply_deadline
+                FROM clubs c
+                LEFT JOIN mc ON c.id = mc.club_id
+                LEFT JOIN fc ON c.id = fc.club_id
+                LEFT JOIN af_active ON c.id = af_active.club_id
+                LEFT JOIN uf_user ON c.id = uf_user.club_id
+            )
+            SELECT id, name, club_type, club_category, custom_category, summary, profile_img,
+                   member_count, recruiting, bookmarked, apply_deadline, score
+            FROM scored_clubs
+            WHERE score >= :minScore
+            """;
+
     @Override
     public ClubDetailQueryResponse getClubIntroduction(String clubId, String email) {
-        // 기본 Club 정보 조회
         var clubResult = queryFactory
                 .select(
                         club.name,
@@ -67,7 +99,6 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
             return null;
         }
 
-        // ApplyForm 정보 조회 (grades도 함께 fetch)
         ApplyForm activeForm = queryFactory
                 .selectFrom(applyForm)
                 .leftJoin(applyForm.grades).fetchJoin()
@@ -77,40 +108,21 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
                 .fetchOne();
 
         return new ClubDetailQueryResponse(
-                clubResult.get(0, String.class),           // name
-                clubResult.get(1, ClubType.class),         // clubType
-                clubResult.get(2, ClubCategory.class),     // clubCategory
-                clubResult.get(3, String.class),           // customCategory
-                Boolean.TRUE.equals(clubResult.get(4, Boolean.class)), // bookmarked
-                //activeForm != null, // ApplyForm이 존재하면 모집중
+                clubResult.get(0, String.class),
+                clubResult.get(1, ClubType.class),
+                clubResult.get(2, ClubCategory.class),
+                clubResult.get(3, String.class),
+                Boolean.TRUE.equals(clubResult.get(4, Boolean.class)),
                 activeForm != null && activeForm.isRecruiting(),
-                clubResult.get(5, String.class),           // summary
-                clubResult.get(6, String.class),           // profileImageUrl
-                clubResult.get(7, Integer.class) != null ? clubResult.get(7, Integer.class) : 0, // clubMemberCount
-                activeForm != null ? activeForm.getApplyStartDate() : null,    // ✅ ApplyForm 기준
-                activeForm != null ? activeForm.getApplyEndDate() : null,      // ✅ ApplyForm 기준
-                activeForm != null ? activeForm.getGrades() : new HashSet<>(), // ✅ ApplyForm 기준
-                activeForm != null ? activeForm.getMaxApplyCount() : 0,        // ✅ ApplyForm 기준
-                clubResult.get(8, String.class)            // content
+                clubResult.get(5, String.class),
+                clubResult.get(6, String.class),
+                clubResult.get(7, Integer.class) != null ? clubResult.get(7, Integer.class) : 0,
+                activeForm != null ? activeForm.getApplyStartDate() : null,
+                activeForm != null ? activeForm.getApplyEndDate() : null,
+                activeForm != null ? activeForm.getGrades() : new HashSet<>(),
+                activeForm != null ? activeForm.getMaxApplyCount() : 0,
+                clubResult.get(8, String.class)
         );
-    }
-
-
-    private BooleanExpression isFavorite(String clubId, String email) {
-        if (email == null) {
-            return Expressions.asBoolean(false);
-        }
-        return JPAExpressions.selectOne()
-                .from(favorite)
-                .where(favorite.user.email.eq(email)
-                        .and(favorite.club.id.eq(clubId)))
-                .exists();
-    }
-
-    private JPQLQuery<Integer> getClubMemberCount(String clubId) {
-        return JPAExpressions.select(clubMember.count().coalesce(0L).intValue())
-                .from(clubMember)
-                .where(clubMember.club.id.eq(clubId));
     }
 
     @Override
@@ -125,85 +137,199 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
             String sort,
             String userEmail) {
 
-        JPQLQuery<Boolean> bookmarkedSubQuery = (userEmail == null) ?
-                JPAExpressions.select(Expressions.constant(false)) :
-                JPAExpressions.select(favorite.count().gt(0))
-                        .from(favorite)
-                        .where(
-                                favorite.club.id.eq(club.id),
-                                favorite.user.email.eq(userEmail)
-                        );
-
-        JPAQuery<ClubCardQueryResponse> query = queryFactory
-                .select(Projections.constructor(ClubCardQueryResponse.class,
-                        club.id,
-                        club.name,
-                        club.clubType,
-                        club.clubCategory,
-                        club.customCategory,
-                        club.summary,
-                        club.profileImageUrl,
-                        JPAExpressions.select(clubMember.count().intValue())
-                                .from(clubMember)
-                                .where(clubMember.club.id.eq(club.id)),
-                        // ApplyForm 모집 상태 확인 (ACTIVE면 true, 그 외는 false)
-                        JPAExpressions.select(applyForm.count().gt(0))
-                                .from(applyForm)
-                                .where(applyForm.club.id.eq(club.id)
-                                        .and(applyForm.status.eq(ACTIVE))
-                                        .and(applyForm.isRecruiting.eq(true))),
-                        bookmarkedSubQuery,
-                        JPAExpressions.select(applyForm.applyEndDate)
-                                .from(applyForm)
-                                .where(applyForm.club.id.eq(club.id)
-                                        .and(applyForm.status.eq(ACTIVE)))
-                                .limit(1)
-                ))
-                .from(club)
+        JPAQuery<ClubCardQueryResponse> query = selectClubCard(userEmail)
                 .where(
                         categoryEq(category),
                         typeEq(type),
                         clubUnivEq(clubUniv),
                         recruitingEq(recruiting),
                         gradesEq(grades),
-                        cursorCondition(cursor, sort)
+                        cursorCondition(cursor)
                 );
 
-        if ("popular".equals(sort)) {
-            // 인기도순: 서브쿼리를 사용하여 JOIN 복잡성 제거
-            JPQLQuery<Long> memberCountSubQuery = JPAExpressions
-                    .select(clubMember.count())
-                    .from(clubMember)
-                    .where(clubMember.club.id.eq(club.id));
-            JPQLQuery<Long> favoriteCountSubQuery = JPAExpressions
-                    .select(favorite.count())
-                    .from(favorite)
-                    .where(favorite.club.id.eq(club.id));
-            NumberExpression<Double> popularityScore = Expressions.numberTemplate(Double.class,
-                    "({0}) * 0.7 + ({1}) * 2.5 + ({2}) * 0.7",
-                    memberCountSubQuery, favoriteCountSubQuery, club.viewCount);
+        applySorting(query, sort);
+        query.limit(size + 1);
 
-            // 인기도순 정렬: 인기도 점수 내림차순, ID 내림차순
-            query.orderBy(popularityScore.desc(), club.id.desc());
-        } else if ("member_count".equals(sort)) {
-            // 멤버많은순: 서브쿼리를 사용하여 JOIN 복잡성 제거
-            JPQLQuery<Long> memberCountSubQuery = JPAExpressions
-                    .select(clubMember.count())
-                    .from(clubMember)
-                    .where(clubMember.club.id.eq(club.id));
+        return query.fetch();
+    }
 
-            // 멤버많은순 정렬: 멤버 수 내림차순, ID 내림차순
-            NumberExpression<Integer> memberCountExpression = Expressions.numberTemplate(Integer.class, "({0})", memberCountSubQuery);
-            query.orderBy(memberCountExpression.desc(), club.id.desc());
-        } else {
-            // 최신순 정렬: ID 내림차순, 생성일 내림차순
-            // ID가 UUID이므로 생성 순서와 문자열 순서가 다를 수 있지만, 
-            // 커서 페이지네이션의 일관성을 위해 ID를 1차 기준으로 사용
-            query.orderBy(club.id.desc(), club.createdAt.desc());
+    @Override
+    @SuppressWarnings("unchecked")
+    public List<ClubCardQueryResponse> getAllPopularClubs(String userEmail, double minScore) {
+        String sql = POPULAR_CLUB_BASE_SQL + " ORDER BY score DESC, id DESC ";
+
+        var query = entityManager.createNativeQuery(sql);
+        query.setParameter("userEmail", userEmail);
+        query.setParameter("minScore", minScore);
+
+        return mapToClubCardQueryResponse(query.getResultList());
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public List<ClubCardQueryResponse> getPopularClubsWithFilters(
+            int size,
+            String cursor,
+            String sort,
+            String userEmail,
+            double minScore) {
+
+        StringBuilder sqlBuilder = new StringBuilder(POPULAR_CLUB_BASE_SQL);
+        if (cursor != null) {
+            sqlBuilder.append(" AND id < :cursor ");
         }
 
+        if ("popular".equals(sort)) {
+            sqlBuilder.append(" ORDER BY score DESC, id DESC ");
+        } else if ("member_count".equals(sort)) {
+            sqlBuilder.append(" ORDER BY member_count DESC, id DESC ");
+        } else {
+            sqlBuilder.append(" ORDER BY id DESC, created_at DESC ");
+        }
+
+        sqlBuilder.append(" LIMIT :limit ");
+
+        var query = entityManager.createNativeQuery(sqlBuilder.toString());
+        query.setParameter("userEmail", userEmail);
+        query.setParameter("minScore", minScore);
+        query.setParameter("limit", size + 1);
+        if (cursor != null) {
+            query.setParameter("cursor", cursor);
+        }
+
+        return mapToClubCardQueryResponse(query.getResultList());
+    }
+
+    @Override
+    public List<ClubCardQueryResponse> searchByKeyword(String keyword, int size, String cursor, String sort,
+                                                       String userEmail) {
+        JPAQuery<ClubCardQueryResponse> query = selectClubCard(userEmail)
+                .where(
+                        club.name.containsIgnoreCase(keyword),
+                        cursorCondition(cursor)
+                );
+
+        applySorting(query, sort);
         query.limit(size + 1);
+
         return query.fetch();
+    }
+
+    @Override
+    public long countByKeyword(String keyword) {
+        return queryFactory
+                .select(club.count())
+                .from(club)
+                .where(club.name.containsIgnoreCase(keyword))
+                .fetchOne();
+    }
+
+    @Override
+    public ClubDetailAdminQueryResponse getAdminClubIntro(String clubId) {
+        var clubResult = queryFactory
+                .select(
+                        club.name, club.clubType, club.clubCategory, club.customCategory,
+                        club.summary, club.profileImageUrl, getClubMemberCount(clubId),
+                        club.clubUniv, club.content
+                )
+                .from(club)
+                .where(club.id.eq(clubId))
+                .fetchOne();
+
+        if (clubResult == null) {
+            return null;
+        }
+
+        ApplyForm activeForm = queryFactory
+                .selectFrom(applyForm)
+                .leftJoin(applyForm.grades).fetchJoin()
+                .where(applyForm.club.id.eq(clubId)
+                        .and(applyForm.status.eq(ACTIVE))
+                        .and(applyForm.isRecruiting.eq(true)))
+                .fetchOne();
+
+        return new ClubDetailAdminQueryResponse(
+                clubResult.get(0, String.class), clubResult.get(1, ClubType.class),
+                clubResult.get(2, ClubCategory.class), clubResult.get(3, String.class),
+                activeForm != null && activeForm.isRecruiting(), clubResult.get(4, String.class),
+                clubResult.get(5, String.class),
+                clubResult.get(6, Integer.class) != null ? clubResult.get(6, Integer.class) : 0,
+                clubResult.get(7, ClubUniv.class), activeForm != null ? activeForm.getApplyStartDate() : null,
+                activeForm != null ? activeForm.getApplyEndDate() : null,
+                activeForm != null ? activeForm.getGrades() : new HashSet<>(),
+                activeForm != null ? activeForm.getMaxApplyCount() : 0,
+                clubResult.get(8, String.class)
+        );
+    }
+
+    // --- Private Helper Methods ---
+
+    private List<ClubCardQueryResponse> mapToClubCardQueryResponse(List<Object[]> results) {
+        return results.stream().map(row -> new ClubCardQueryResponse(
+                (String) row[0], (String) row[1], ClubType.valueOf((String) row[2]),
+                ClubCategory.valueOf((String) row[3]), (String) row[4], (String) row[5],
+                (String) row[6], ((Number) row[7]).intValue(), (Boolean) row[8],
+                (Boolean) row[9], row[10] != null ? ((java.sql.Date) row[10]).toLocalDate() : null
+        )).toList();
+    }
+
+    /**
+     * ClubCardQueryResponse를 반환하기 위한 기본 Select 및 Join 구성을 생성합니다.
+     */
+    private JPAQuery<ClubCardQueryResponse> selectClubCard(String userEmail) {
+        JPQLQuery<Long> memberCountSubQuery = JPAExpressions
+                .select(clubMember.count())
+                .from(clubMember)
+                .where(clubMember.club.id.eq(club.id));
+
+        BooleanExpression isBookmarked = (userEmail != null) ? favorite.id.isNotNull() : Expressions.asBoolean(false);
+
+        var query = queryFactory
+                .select(Projections.constructor(ClubCardQueryResponse.class,
+                        club.id, club.name, club.clubType, club.clubCategory, club.customCategory,
+                        club.summary, club.profileImageUrl,
+                        Expressions.numberTemplate(Integer.class, "({0})", memberCountSubQuery),
+                        applyForm.isRecruiting.coalesce(false),
+                        isBookmarked,
+                        applyForm.applyEndDate
+                ))
+                .from(club)
+                .leftJoin(applyForm).on(applyForm.club.id.eq(club.id).and(applyForm.status.eq(ACTIVE)));
+
+        if (userEmail != null) {
+            query.leftJoin(favorite).on(favorite.club.id.eq(club.id).and(favorite.user.email.eq(userEmail)));
+        }
+
+        return query;
+    }
+
+    /**
+     * 인기도 점수 계산식을 반환합니다.
+     */
+    private NumberExpression<Double> getPopularityScoreExpression() {
+        JPQLQuery<Long> memberCountSubQuery = JPAExpressions.select(clubMember.count()).from(clubMember)
+                .where(clubMember.club.id.eq(club.id));
+        JPQLQuery<Long> favoriteCountSubQuery = JPAExpressions.select(favorite.count()).from(favorite)
+                .where(favorite.club.id.eq(club.id));
+
+        return Expressions.numberTemplate(Double.class,
+                "({0}) * 0.7 + ({1}) * 2.5 + ({2}) * 0.7",
+                memberCountSubQuery, favoriteCountSubQuery, club.viewCount);
+    }
+
+    /**
+     * 정렬 조건에 따른 OrderBy 절을 적용합니다.
+     */
+    private void applySorting(JPAQuery<ClubCardQueryResponse> query, String sort) {
+        if ("popular".equals(sort)) {
+            query.orderBy(getPopularityScoreExpression().desc(), club.id.desc());
+        } else if ("member_count".equals(sort)) {
+            JPQLQuery<Long> memberCountSubQuery = JPAExpressions.select(clubMember.count()).from(clubMember)
+                    .where(clubMember.club.id.eq(club.id));
+            query.orderBy(Expressions.numberTemplate(Long.class, "({0})", memberCountSubQuery).desc(), club.id.desc());
+        } else {
+            query.orderBy(club.id.desc(), club.createdAt.desc());
+        }
     }
 
     private BooleanExpression categoryEq(ClubCategory category) {
@@ -220,315 +346,37 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
 
     private BooleanExpression recruitingEq(Boolean recruiting) {
         if (recruiting == null) {
-            return null; // 전체 선택 시 필터링하지 않음
+            return null;
         }
-
-        // 모집상태는 ACTIVE ApplyForm의 존재 여부로만 판단
-        BooleanExpression hasActiveApplyForm = JPAExpressions.selectOne()
-                .from(applyForm)
-                .where(applyForm.club.id.eq(club.id)
-                        .and(applyForm.status.eq(ApplyFormStatus.ACTIVE))
-                        .and(applyForm.isRecruiting.eq(true)))
-                .exists();
-
-        if (recruiting) {
-            // recruiting=true: ACTIVE ApplyForm이 있는 동아리
-            return hasActiveApplyForm;
-        } else {
-            // recruiting=false: ACTIVE ApplyForm이 없는 동아리 (모집마감)
-            return hasActiveApplyForm.not();
-        }
+        BooleanExpression hasActive = JPAExpressions.selectOne().from(applyForm)
+                .where(applyForm.club.id.eq(club.id).and(applyForm.status.eq(ACTIVE))
+                        .and(applyForm.isRecruiting.eq(true))).exists();
+        return recruiting ? hasActive : hasActive.not();
     }
 
     private BooleanExpression gradesEq(List<ApplicableGrade> grades) {
         if (grades == null || grades.isEmpty()) {
             return null;
         }
-
-        // ApplyForm이 있고 해당 grades 중 하나라도 포함하는 동아리 찾기
-        return JPAExpressions.selectOne()
-                .from(applyForm)
-                .where(applyForm.club.id.eq(club.id)
-                        .and(applyForm.status.eq(ACTIVE))
-                        .and(applyForm.grades.any().in(grades)))
-                .exists();
+        return JPAExpressions.selectOne().from(applyForm)
+                .where(applyForm.club.id.eq(club.id).and(applyForm.status.eq(ACTIVE))
+                        .and(applyForm.grades.any().in(grades))).exists();
     }
 
-    private BooleanExpression cursorCondition(String cursor, String sort) {
-        if (cursor == null) {
-            return null;
+    private BooleanExpression cursorCondition(String cursor) {
+        return cursor != null ? club.id.lt(cursor) : null;
+    }
+
+    private BooleanExpression isFavorite(String clubId, String email) {
+        if (email == null) {
+            return Expressions.asBoolean(false);
         }
-        String currentSort = (sort == null) ? "latest" : sort;
-        switch (currentSort) {
-            case "latest":
-                // 최신순은 ID 기준 정렬이므로 ID 기반 커서 사용
-                return club.id.lt(cursor);
-            case "popular":
-            case "member_count":
-                // 인기도순과 멤버많은순은 복합 정렬이므로 ID 기반 커서 사용
-                // 중복 방지를 위해 더 엄격한 조건 적용
-                return club.id.lt(cursor);
-            default:
-                return club.id.lt(cursor);
-        }
+        return JPAExpressions.selectOne().from(favorite)
+                .where(favorite.user.email.eq(email).and(favorite.club.id.eq(clubId))).exists();
     }
 
-    @Override
-    public List<ClubCardQueryResponse> getAllPopularClubs(String userEmail, double minScore) {
-        JPQLQuery<Long> memberCountSubQuery = JPAExpressions
-                .select(clubMember.count())
-                .from(clubMember)
-                .where(clubMember.club.id.eq(club.id));
-        JPQLQuery<Long> favoriteCountSubQuery = JPAExpressions
-                .select(favorite.count())
-                .from(favorite)
-                .where(favorite.club.id.eq(club.id));
-        NumberExpression<Double> popularityScore = Expressions.numberTemplate(Double.class,
-                "({0}) * 0.7 + ({1}) * 2.5 + ({2}) * 0.7",
-                memberCountSubQuery, favoriteCountSubQuery, club.viewCount);
-        JPQLQuery<Boolean> bookmarkedSubQuery = (userEmail == null) ?
-                JPAExpressions.select(Expressions.constant(false)) :
-                JPAExpressions.select(favorite.count().gt(0))
-                        .from(favorite)
-                        .where(
-                                favorite.club.id.eq(club.id),
-                                favorite.user.email.eq(userEmail)
-                        );
-        return queryFactory
-                .select(Projections.constructor(ClubCardQueryResponse.class,
-                        club.id,
-                        club.name,
-                        club.clubType,
-                        club.clubCategory,
-                        club.customCategory,
-                        club.summary,
-                        club.profileImageUrl,
-                        Expressions.numberTemplate(Integer.class, "({0})", memberCountSubQuery),
-                        // ApplyForm이 활성화되어있고, 모집 중 상태인지 확인
-                        JPAExpressions.select(applyForm.count().gt(0))
-                                .from(applyForm)
-                                .where(applyForm.club.id.eq(club.id)
-                                        .and(applyForm.status.eq(ACTIVE))
-                                        .and(applyForm.isRecruiting.eq(true))),
-                        bookmarkedSubQuery,
-                        JPAExpressions.select(applyForm.applyEndDate)
-                                .from(applyForm)
-                                .where(applyForm.club.id.eq(club.id)
-                                        .and(applyForm.status.eq(ACTIVE)))
-                                .limit(1)
-                ))
-                .from(club)
-                .where(
-                        // club.recruiting.isTrue(), - ApplyForm에서 관리하므로 제거
-                        popularityScore.goe(minScore)
-                )
-                .orderBy(popularityScore.desc(), club.id.desc())
-                .fetch();
-    }
-
-    @Override
-    public List<ClubCardQueryResponse> getPopularClubsWithFilters(
-            int size,
-            String cursor,
-            String sort,
-            String userEmail,
-            double minScore) {
-
-        JPQLQuery<Long> memberCountSubQuery = JPAExpressions
-                .select(clubMember.count())
-                .from(clubMember)
-                .where(clubMember.club.id.eq(club.id));
-        JPQLQuery<Long> favoriteCountSubQuery = JPAExpressions
-                .select(favorite.count())
-                .from(favorite)
-                .where(favorite.club.id.eq(club.id));
-        NumberExpression<Double> popularityScore = Expressions.numberTemplate(Double.class,
-                "({0}) * 0.7 + ({1}) * 2.5 + ({2}) * 0.7",
-                memberCountSubQuery, favoriteCountSubQuery, club.viewCount);
-        JPQLQuery<Boolean> bookmarkedSubQuery = (userEmail == null) ?
-                JPAExpressions.select(Expressions.constant(false)) :
-                JPAExpressions.select(favorite.count().gt(0))
-                        .from(favorite)
-                        .where(
-                                favorite.club.id.eq(club.id),
-                                favorite.user.email.eq(userEmail)
-                        );
-        JPAQuery<ClubCardQueryResponse> query = queryFactory
-                .select(Projections.constructor(ClubCardQueryResponse.class,
-                        club.id,
-                        club.name,
-                        club.clubType,
-                        club.clubCategory,
-                        club.customCategory,
-                        club.summary,
-                        club.profileImageUrl,
-                        Expressions.numberTemplate(Integer.class, "({0})", memberCountSubQuery),
-                        // ApplyForm이 ACTIVE 상태인지 확인
-                        JPAExpressions.select(applyForm.count().gt(0))
-                                .from(applyForm)
-                                .where(applyForm.club.id.eq(club.id)
-                                        .and(applyForm.status.eq(ACTIVE))
-                                        .and(applyForm.isRecruiting.eq(true))),
-                        bookmarkedSubQuery,
-                        // 마감일 정보 추가 (ACTIVE 상태인 ApplyForm의 applyEndDate)
-                        JPAExpressions.select(applyForm.applyEndDate)
-                                .from(applyForm)
-                                .where(applyForm.club.id.eq(club.id)
-                                        .and(applyForm.status.eq(ACTIVE)))
-                                .limit(1)
-                ))
-                .from(club)
-                .where(
-                        popularityScore.goe(minScore),
-                        cursorCondition(cursor, sort)
-                );
-
-        if ("popular".equals(sort)) {
-            // 인기도순 정렬: 인기도 점수 내림차순, ID 내림차순
-            query.orderBy(popularityScore.desc(), club.id.desc());
-        } else if ("member_count".equals(sort)) {
-            // 멤버많은순 정렬: 멤버 수 내림차순, ID 내림차순
-            NumberExpression<Integer> memberCountExpression = Expressions.numberTemplate(Integer.class, "({0})", memberCountSubQuery);
-            query.orderBy(memberCountExpression.desc(), club.id.desc());
-        } else { // "latest"
-            // 최신순 정렬: ID 내림차순, 생성일 내림차순
-            query.orderBy(club.id.desc(), club.createdAt.desc());
-        }
-
-        query.limit(size + 1);
-        return query.fetch();
-    }
-
-    @Override
-    public List<ClubCardQueryResponse> searchByKeyword(String keyword, int size, String cursor, String sort, String userEmail) {
-        JPQLQuery<Integer> memberCountSubQuery = JPAExpressions
-                .select(clubMember.count().intValue())
-                .from(clubMember)
-                .where(clubMember.club.id.eq(club.id));
-        JPQLQuery<Boolean> bookmarkedSubQuery = (userEmail == null) ?
-                JPAExpressions.select(Expressions.constant(false)) :
-                JPAExpressions.select(favorite.count().gt(0))
-                        .from(favorite)
-                        .where(favorite.club.id.eq(club.id).and(favorite.user.email.eq(userEmail)));
-        JPAQuery<ClubCardQueryResponse> query = queryFactory
-                .select(Projections.constructor(ClubCardQueryResponse.class,
-                        club.id,
-                        club.name,
-                        club.clubType,
-                        club.clubCategory,
-                        club.customCategory,
-                        club.summary,
-                        club.profileImageUrl,
-                        memberCountSubQuery,
-                        // ApplyForm이 ACTIVE 상태인지 확인
-                        JPAExpressions.select(applyForm.count().gt(0))
-                                .from(applyForm)
-                                .where(applyForm.club.id.eq(club.id)
-                                        .and(applyForm.status.eq(ACTIVE))
-                                        .and(applyForm.isRecruiting.eq(true))),
-                        bookmarkedSubQuery,
-                        JPAExpressions.select(applyForm.applyEndDate)
-                                .from(applyForm)
-                                .where(applyForm.club.id.eq(club.id)
-                                        .and(applyForm.status.eq(ACTIVE)))
-                                .limit(1)
-                ))
-                .from(club)
-                .where(
-                        club.name.containsIgnoreCase(keyword),
-                        cursorCondition(cursor, sort)
-                );
-
-        String currentSort = (sort == null) ? "latest" : sort;
-        switch (currentSort) {
-            case "popular":
-                JPQLQuery<Long> favoriteCountSubQuery = JPAExpressions
-                        .select(favorite.count())
-                        .from(favorite)
-                        .where(favorite.club.id.eq(club.id));
-//                JPQLQuery<Long> viewCountQuery = JPAExpressions
-//                        .select(club.viewCount)
-//                        .from(club)
-//                        .where(club.id.eq(club.id));
-                NumberExpression<Double> popularityScore = Expressions.numberTemplate(Double.class,
-                        "({0}) * 0.7 + ({1}) * 2.5 + ({2}) * 0.7",
-                        memberCountSubQuery, favoriteCountSubQuery, club.viewCount);
-                query.orderBy(popularityScore.desc(), club.id.desc());
-                break;
-            case "member_count":
-                NumberExpression<Integer> memberCountExpression = Expressions.numberTemplate(Integer.class, "({0})", memberCountSubQuery);
-                query.orderBy(memberCountExpression.desc(), club.id.desc());
-                break;
-            case "latest":
-            default:
-                // 최신순 정렬: ID 내림차순, 생성일 내림차순
-                query.orderBy(club.id.desc(), club.createdAt.desc());
-                break;
-        }
-
-        query.limit(size + 1);
-        return query.fetch();
-    }
-
-    @Override
-    public long countByKeyword(String keyword) {
-        return queryFactory
-                .select(club.count())
-                .from(club)
-                .where(
-                        club.name.containsIgnoreCase(keyword)
-                )
-                .fetchOne();
-    }
-
-    //TODO: 소개글 조회 자체를 추후 수정 필요
-    @Override
-    public ClubDetailAdminQueryResponse getAdminClubIntro(String clubId) {
-        var clubResult = queryFactory
-                .select(
-                        club.name,
-                        club.clubType,
-                        club.clubCategory,
-                        club.customCategory,
-                        club.summary,
-                        club.profileImageUrl,
-                        getClubMemberCount(clubId),
-                        club.clubUniv,  // clubUniv 필드 추가
-                        club.content
-                )
-                .from(club)
-                .where(club.id.eq(clubId))
-                .fetchOne();
-
-        if (clubResult == null) {
-            return null;
-        }
-
-        // ApplyForm 정보 조회
-        ApplyForm activeForm = queryFactory
-                .selectFrom(applyForm)
-                .leftJoin(applyForm.grades).fetchJoin()
-                .where(applyForm.club.id.eq(clubId)
-                        .and(applyForm.status.eq(ACTIVE))
-                        .and(applyForm.isRecruiting.eq(true)))
-                .fetchOne();
-
-        return new ClubDetailAdminQueryResponse(
-                clubResult.get(0, String.class),           // name
-                clubResult.get(1, ClubType.class),         // clubType
-                clubResult.get(2, ClubCategory.class),     // clubCategory
-                clubResult.get(3, String.class),           // customCategory
-                //activeForm != null, // ApplyForm이 존재하면 모집중 (recruiting)
-                activeForm != null && activeForm.isRecruiting(),
-                clubResult.get(4, String.class),           // summary
-                clubResult.get(5, String.class),           // profileImageUrl
-                clubResult.get(6, Integer.class) != null ? clubResult.get(6, Integer.class) : 0, // clubMemberCount
-                clubResult.get(7, ClubUniv.class),         // clubUniv
-                activeForm != null ? activeForm.getApplyStartDate() : null,    // applyStartDate
-                activeForm != null ? activeForm.getApplyEndDate() : null,      // applyDeadLine
-                activeForm != null ? activeForm.getGrades() : new HashSet<>(), // grades
-                activeForm != null ? activeForm.getMaxApplyCount() : 0,        // maxApplyCount
-                clubResult.get(8, String.class)            // content
-        );
+    private JPQLQuery<Integer> getClubMemberCount(String clubId) {
+        return JPAExpressions.select(clubMember.count().coalesce(0L).intValue()).from(clubMember)
+                .where(clubMember.club.id.eq(clubId));
     }
 }
