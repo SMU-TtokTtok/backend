@@ -220,6 +220,8 @@ class AdminAuthServiceTest {
         void logoutDeletesRefreshToken() {
             // given
             final String username = "testadmin123";
+            final Club mockClub = mock(Club.class);
+            when(clubRepository.findByAdminUsername(username)).thenReturn(Optional.of(mockClub));
 
             // when
             adminAuthService.logout(username);
@@ -233,6 +235,8 @@ class AdminAuthServiceTest {
         void logoutCallsDeleteWithCorrectUsername() {
             // given
             final String username = "anotheradmin";
+            final Club mockClub = mock(Club.class);
+            when(clubRepository.findByAdminUsername(username)).thenReturn(Optional.of(mockClub));
 
             // when
             adminAuthService.logout(username);
@@ -475,18 +479,15 @@ class AdminAuthServiceTest {
             final Club mockClub = mock(Club.class);
             when(mockClub.getId()).thenReturn(clubId);
             when(mockClub.getName()).thenReturn(clubName);
+            when(clubRepository.findByAdminUsername(adminUsername)).thenReturn(Optional.of(mockClub));
 
-            try {
-                // when
-                var result = adminAuthService.getAdminInfo(adminUsername);
+            // when
+            var result = adminAuthService.getAdminInfo(adminUsername);
 
-                // then
-                assertThat(result).isNotNull();
-                assertThat(result.clubId()).isEqualTo(clubId);
-                assertThat(result.clubName()).isEqualTo(clubName);
-            } finally {
-
-            }
+            // then
+            assertThat(result).isNotNull();
+            assertThat(result.clubId()).isEqualTo(clubId);
+            assertThat(result.clubName()).isEqualTo(clubName);
         }
     }
 
