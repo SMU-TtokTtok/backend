@@ -220,6 +220,8 @@ class AdminAuthServiceTest {
         void logoutDeletesRefreshToken() {
             // given
             final String username = "testadmin123";
+            final Club mockClub = mock(Club.class);
+            when(clubRepository.findByAdminUsername(username)).thenReturn(Optional.of(mockClub));
 
             // when
             adminAuthService.logout(username);
@@ -233,6 +235,8 @@ class AdminAuthServiceTest {
         void logoutCallsDeleteWithCorrectUsername() {
             // given
             final String username = "anotheradmin";
+            final Club mockClub = mock(Club.class);
+            when(clubRepository.findByAdminUsername(username)).thenReturn(Optional.of(mockClub));
 
             // when
             adminAuthService.logout(username);
@@ -475,21 +479,15 @@ class AdminAuthServiceTest {
             final Club mockClub = mock(Club.class);
             when(mockClub.getId()).thenReturn(clubId);
             when(mockClub.getName()).thenReturn(clubName);
-            
-            // AOP가 작동하지 않는 단위 테스트 환경이므로 수동으로 ClubHolder에 설정
-            org.project.ttokttok.global.auth.
+            when(clubRepository.findByAdminUsername(adminUsername)).thenReturn(Optional.of(mockClub));
 
-            try {
-                // when
-                var result = adminAuthService.getAdminInfo(adminUsername);
+            // when
+            var result = adminAuthService.getAdminInfo(adminUsername);
 
-                // then
-                assertThat(result).isNotNull();
-                assertThat(result.clubId()).isEqualTo(clubId);
-                assertThat(result.clubName()).isEqualTo(clubName);
-            } finally {
-                org.project.ttokttok.global.auth.
-            }
+            // then
+            assertThat(result).isNotNull();
+            assertThat(result.clubId()).isEqualTo(clubId);
+            assertThat(result.clubName()).isEqualTo(clubName);
         }
     }
 

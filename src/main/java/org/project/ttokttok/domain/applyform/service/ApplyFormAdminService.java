@@ -38,7 +38,10 @@ public class ApplyFormAdminService {
 
     @Transactional
     public String createApplyForm(ApplyFormCreateServiceRequest request) {
-        Club club = validateClubAdmin(request.username());
+        Club club = clubRepository.findById(request.clubId())
+                .orElseThrow(ClubNotFoundException::new);
+
+        validateAdmin(club.getAdmin().getUsername(), request.username());
 
         validateDateRange(request.recruitStartDate(), request.recruitEndDate());
 

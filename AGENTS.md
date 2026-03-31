@@ -200,6 +200,9 @@ public class ClubService {
 }
 ```
 
+### 6. 작업 기록 관리
+- 특정한 날짜마다 작업한 기록들을 `implementation.md`로 작성하고 작업마다 갱신해야 함
+
 ---
 
 ## ⚠️ 금지 사항

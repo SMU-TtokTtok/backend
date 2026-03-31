@@ -14,6 +14,8 @@ import org.project.ttokttok.domain.clubboard.domain.ClubBoard;
 import org.project.ttokttok.domain.clubboard.repository.ClubBoardRepository;
 import org.project.ttokttok.domain.clubboard.service.dto.request.CreateBoardServiceRequest;
 
+import java.util.Optional;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -36,6 +38,7 @@ class ClubBoardAdminServiceTest {
         // given
         String clubId = "club123";
         Club mockClub = mock(Club.class);
+        when(clubRepository.findByAdminUsername("admin")).thenReturn(Optional.of(mockClub));
         CreateBoardServiceRequest request = new CreateBoardServiceRequest("admin", clubId, "title", "content");
 
         ClubBoard mockBoard = mock(ClubBoard.class);
