@@ -52,20 +52,21 @@ class FCMTokenRepositoryTest {
     @BeforeEach
     void setUp() {
         String uniqueSuffix = java.util.UUID.randomUUID().toString().substring(0, 8);
-        // 테스트 사용자 생성
-        testUser = new User();
-        testUser.setId("user_" + uniqueSuffix);
-        testUser.setEmail("test_" + uniqueSuffix + "@example.com");
-        testUser.setPassword("password123");
-        testUser.setName("테스트 사용자");
+        // 테스트 사용자 생성 (리팩토링된 signUp 사용, @sangmyung.kr 규칙 준수)
+        testUser = User.signUp(
+                "test_" + uniqueSuffix + "@sangmyung.kr",
+                "password123",
+                "테스트 사용자",
+                true
+        );
         testUser = userRepository.save(testUser);
 
-        // Admin 생성 (Club에 필요)
-        Admin admin = Admin.builder()
-                .username("admin_" + uniqueSuffix)
-                .password("admin-password")
-                .email("admin_" + uniqueSuffix + "@example.com")
-                .build();
+        // Admin 생성 (adminJoin 사용, @sangmyung.kr 규칙 준수)
+        Admin admin = Admin.adminJoin(
+                "admin_" + uniqueSuffix,
+                "admin-password",
+                "admin_" + uniqueSuffix + "@sangmyung.kr"
+        );
         Admin savedAdmin = adminRepository.save(admin);
 
         // 테스트 동아리 생성
@@ -75,9 +76,9 @@ class FCMTokenRepositoryTest {
                 .build();
         testClub = clubRepository.save(testClub);
 
-        // FCM 토큰 생성
+        // FCM 토큰 생성 (@sangmyung.kr 규칙 준수)
         fcmToken1 = FCMToken.create(DeviceType.ANDROID, testUser.getEmail(), "token1_" + uniqueSuffix);
-        fcmToken2 = FCMToken.create(DeviceType.IOS, "other_" + uniqueSuffix + "@example.com", "token2_" + uniqueSuffix);
+        fcmToken2 = FCMToken.create(DeviceType.IOS, "other_" + uniqueSuffix + "@sangmyung.kr", "token2_" + uniqueSuffix);
 
         fcmTokenRepository.save(fcmToken1);
         fcmTokenRepository.save(fcmToken2);
@@ -127,7 +128,7 @@ class FCMTokenRepositoryTest {
     @DisplayName("존재하지 않는 이메일과 디바이스 타입으로 조회 시 빈 결과가 반환된다")
     void findByEmailAndDeviceType_NotFound() {
         // given
-        String email = "notexist@example.com";
+        String email = "notexist@sangmyung.kr";
         DeviceType deviceType = DeviceType.WEB;
 
         // when
@@ -157,27 +158,21 @@ class FCMTokenRepositoryTest {
     void findTokensByClubId() {
         // given
         String uniqueSuffix2 = java.util.UUID.randomUUID().toString().substring(0, 8);
-        User user2 = new User();
-        user2.setId("user2_" + uniqueSuffix2);
-        user2.setEmail("test2_" + uniqueSuffix2 + "@example.com");
-        user2.setPassword("password123");
-        user2.setName("테스트 사용자2");
+        User user2 = User.signUp(
+                "test2_" + uniqueSuffix2 + "@sangmyung.kr",
+                "password123",
+                "테스트 사용자2",
+                true
+        );
         user2 = userRepository.save(user2);
 
-        // user2에 대한 FCM 토큰 추가 (setUp에서 생성된 것은 email이 다름)
+        // user2에 대한 FCM 토큰 추가
         FCMToken fcmTokenUser2 = FCMToken.create(DeviceType.WEB, user2.getEmail(), "token_user2_" + uniqueSuffix2);
         fcmTokenRepository.save(fcmTokenUser2);
 
         // 즐겨찾기 추가
-        Favorite favorite1 = Favorite.builder()
-                .user(testUser)
-                .club(testClub)
-                .build();
-
-        Favorite favorite2 = Favorite.builder()
-                .user(user2)
-                .club(testClub)
-                .build();
+        Favorite favorite1 = Favorite.create(testUser, testClub);
+        Favorite favorite2 = Favorite.create(user2, testClub);
 
         favoriteRepository.save(favorite1);
         favoriteRepository.save(favorite2);
@@ -207,7 +202,7 @@ class FCMTokenRepositoryTest {
         LocalDateTime cutoffDate = LocalDateTime.now().minusDays(1);
 
         // FCM 토큰의 생성 시간을 과거로 설정하기 위해 새로운 토큰 생성
-        FCMToken oldToken = FCMToken.create(DeviceType.WEB, "old@example.com", "old_token_789");
+        FCMToken oldToken = FCMToken.create(DeviceType.WEB, "old@sangmyung.kr", "old_token_789");
         fcmTokenRepository.save(oldToken);
         fcmTokenRepository.flush();
 
@@ -215,13 +210,11 @@ class FCMTokenRepositoryTest {
         int deletedCount = fcmTokenRepository.deleteTokensOlderThan(cutoffDate);
 
         // then
-        // 실제로는 JPA 엔티티의 BaseTimeEntity가 현재 시간으로 설정되므로
-        // 이 테스트에서는 삭제되는 토큰이 없음
         assertThat(deletedCount).isGreaterThanOrEqualTo(0);
 
         // 전체 토큰 수 확인
         List<FCMToken> allTokens = fcmTokenRepository.findAll();
-        assertThat(allTokens).hasSizeGreaterThanOrEqualTo(2); // 최소 2개는 남아있어야 함
+        assertThat(allTokens).hasSizeGreaterThanOrEqualTo(2);
     }
 
     @Test

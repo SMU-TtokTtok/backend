@@ -23,13 +23,13 @@ public class FavoriteCustomRepositoryImpl implements FavoriteCustomRepository {
 
     @Override
     public List<Favorite> findFavoritesByRequest(FavoriteListServiceRequest request) {
-               // 다음 페이지 확인을 위해 요청된 size보다 1개 더 조회
+        // 다음 페이지 확인을 위해 요청된 size보다 1개 더 조회
         int fetchSize = request.size() + 1;
         JPAQuery<Favorite> query = queryFactory
                 .selectFrom(favorite)
                 .join(favorite.club, club).fetchJoin()
-                .leftJoin(club.admin).fetchJoin()
                 .where(favorite.user.email.eq(request.userEmail()));
+
         // 커서 기반 조건 추가
         BooleanExpression cursorCondition = getCursorCondition(request.cursor(), request.sort());
         if (cursorCondition != null) {
