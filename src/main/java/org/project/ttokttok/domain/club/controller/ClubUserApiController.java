@@ -1,15 +1,9 @@
 package org.project.ttokttok.domain.club.controller;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.enums.Explode;
-import io.swagger.v3.oas.annotations.enums.ParameterStyle;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
+import org.project.ttokttok.domain.club.controller.docs.ClubUserApiDocs;
 import org.project.ttokttok.domain.club.controller.dto.response.ClubDetailResponse;
 import org.project.ttokttok.domain.club.controller.dto.response.ClubListResponse;
 import org.project.ttokttok.domain.club.domain.enums.ClubCategory;
@@ -18,11 +12,9 @@ import org.project.ttokttok.domain.club.domain.enums.ClubUniv;
 import org.project.ttokttok.domain.club.service.ClubUserService;
 import org.project.ttokttok.domain.club.service.dto.response.ClubListServiceResponse;
 import org.project.ttokttok.global.annotation.auth.AuthUserInfo;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 import java.util.Arrays;
@@ -33,11 +25,10 @@ import java.util.HashMap;
  * 사용자가 동아리 정보를 조회할 수 있는 API들을 제공합니다.
  */
 @Slf4j
-@Tag(name="[사용자] 동아리 조회", description = "사용자가 동아리 정보를 조회하는 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/clubs")
-public class ClubUserApiController {
+public class ClubUserApiController implements ClubUserApiDocs {
 
     private final ClubUserService clubUserService;
 
@@ -49,16 +40,9 @@ public class ClubUserApiController {
      * @param clubId 조회할 동아리 ID
      * @return 동아리 상세 정보 (소개, 지원 정보, 멤버 수 등, 마감 임박 여부 포함)
      */
-    @Operation(
-            summary = "동아리 소개글 조회",
-            description = "동아리 타고 들어갔을때의 소개글과 모집인원, 지원가능 학년 등을 조회합니다. 마감 임박 여부(일주일 이내)도 포함됩니다."
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "조회 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 파라미터")
-    })
+    @Override
     @GetMapping("/{clubId}/content")
-    public ResponseEntity<ClubDetailResponse> getClubIntroduction(@Parameter(hidden = true) @AuthUserInfo String username,
+    public ResponseEntity<ClubDetailResponse> getClubIntroduction(@AuthUserInfo String username,
                                                                   @PathVariable String clubId) {
         ClubDetailResponse response = ClubDetailResponse.from(
                 clubUserService.getClubIntroduction(username, clubId)
@@ -81,44 +65,18 @@ public class ClubUserApiController {
      * @return 필터링된 동아리 목록과 페이징 정보
      */
     //FIXME - 마감 임박 추가 (지원 마감기간이 일주일 이내로 남은 동아리 boolean 필드 추가)
-    @Operation(
-            summary = "동아리 목록 조회",
-            description = "메인 화면 동아리 목록을 무한스크롤로 조회합니다. 카테고리, 분류, 모집여부 필터링 가능."
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "조회 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 파라미터")
-    })
+    @Override
     @GetMapping
     public ResponseEntity<ClubListResponse> getClubList(
-            @Parameter(description = "카테고리 (스포츠, 예술, 문화 등)")
             @RequestParam(required = false) String category,
-
-            @Parameter(description = "분류 (전체: null, 중앙: CENTRAL, 연합: UNION, 과동아리: DEPARTMENT)")
             @RequestParam(required = false) String type,
-
-            @Parameter(description = "대학 구분 (글로벌지역학부, 디자인대학, 공대, 융합기술대, 예술대)")
             @RequestParam(required = false) ClubUniv clubUniv,
-
-            @Parameter(
-                    description = "학년 (1학년, 2학년, 3학년, 4학년)",
-                    style = ParameterStyle.FORM,
-                    explode = Explode.TRUE
-            )
             @RequestParam(required = false) List<ApplicableGrade> grades,
-
-            @Parameter(description = "모집여부 (전체: null, 모집중: true, 모집마감: false)")
             @RequestParam(required = false) String recruiting,
-
-            @Parameter(description = "조회 개수 (기본 20개)")
             @RequestParam(defaultValue = "20") int size,
-
-            @Parameter(description = "무한스크롤 커서 (첫 요청시 생략)")
-            @RequestParam(required = false) String cursor,    // cursor 추가
-
-            @Parameter(description = "정렬 (latest: 최신등록순, popular: 인기도순, member_count: 멤버많은순)\n")
+            @RequestParam(required = false) String cursor,
             @RequestParam(defaultValue = "latest") String sort,
-            @Parameter(hidden = true) @AuthUserInfo String userEmail) {
+            @AuthUserInfo String userEmail) {
 
         // type 파라미터 처리
         ClubType clubType = null;
@@ -168,17 +126,9 @@ public class ClubUserApiController {
      *
      * @return (멤버수 x 0.7) + (즐겨찾기 수 x 0.3) 기준으로 정렬된 인기 동아리 목록
      * */
-    //FIXME - 마감 임박 추가 (지원 마감기간이 일주일 이내로 남은 동아리 boolean 필드 추가)
-    @Operation(
-            summary = "메인 배너 인기 동아리 조회",
-            description = "메인 화면 상단 배너에 표시될 모든 인기 동아리를 한번에 조회합니다."
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "조회 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 파라미터")
-    })
+    @Override
     @GetMapping("/banner/popular")
-    public ResponseEntity<ClubListResponse> getBannerPopularClubs(@Parameter(hidden = true) @AuthUserInfo String userEmail) {
+    public ResponseEntity<ClubListResponse> getBannerPopularClubs(@AuthUserInfo String userEmail) {
         // 프론트엔드 요청으로 기존의 page, size 페이지네이션 방식의 파라미터 제거
         ClubListServiceResponse response = clubUserService.getAllPopularClubs(userEmail);
         return ResponseEntity.ok(ClubListResponse.from(response));
@@ -195,25 +145,13 @@ public class ClubUserApiController {
      * @return 멤버수 기준으로 정렬된 인기 동아리 목록
      * */
     //FIXME - 마감 임박 추가 (지원 마감기간이 일주일 이내로 남은 동아리 boolean 필드 추가)
-    @Operation(
-            summary = "전체 인기 동아리 목록 조회",
-            description = "전체 인기 동아리를 조회합니다. '인기도순', '멤버많은순', '최신등록순' 정렬 및 무한스크롤을 지원합니다."
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "조회 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 파라미터")
-    })
+    @Override
     @GetMapping("/popular")
     public ResponseEntity<ClubListResponse> getPopularClubs(
-            @Parameter(description = "조회 개수 (기본 20개)")
             @RequestParam(defaultValue = "20") int size,
-
-            @Parameter(description = "무한스크롤 커서 (첫 요청시 생략)")
             @RequestParam(required = false) String cursor,
-
-            @Parameter(description = "정렬 (popular: 인기도순, member_count: 멤버많은순, latest: 최신등록순)")
             @RequestParam(defaultValue = "popular") String sort,
-            @Parameter(hidden = true) @AuthUserInfo String userEmail) {
+            @AuthUserInfo String userEmail) {
 
         ClubListServiceResponse response = clubUserService.getPopularClubsWithFilters(size, cursor, sort, userEmail);
 
@@ -226,14 +164,7 @@ public class ClubUserApiController {
      * 
      * @return 사용 가능한 필터링 옵션들
      */
-    @Operation(
-            summary = "동아리 필터링 옵션 조회",
-            description = "동아리 목록 필터링에 사용할 수 있는 모든 옵션을 조회합니다."
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "조회 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 파라미터")
-    })
+    @Override
     @GetMapping("/filter-options")
     public ResponseEntity<Map<String, Object>> getFilterOptions() {
         Map<String, Object> options = new HashMap<>();
@@ -281,22 +212,14 @@ public class ClubUserApiController {
      * @param size 페이지당 로드할 개수 (기본값 20)
      */
     //FIXME - 마감 임박 추가 (지원 마감기간이 일주일 이내로 남은 동아리 boolean 필드 추가)
-    @Operation(
-            summary = "동아리 검색",
-            description = "동아리 이름을 기준으로 검색합니다."
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "검색 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 파라미터")
-    })
+    @Override
     @GetMapping("/search")
     public ResponseEntity<ClubListResponse> searchClubs(
             @RequestParam String keyword,
-            @Parameter(description = "정렬 (latest: 최신등록순, popular: 인기도순, member_count: 멤버많은순)")
             @RequestParam(defaultValue = "latest") String sort,
             @RequestParam(required = false) String cursor,
             @RequestParam(defaultValue = "20") int size,
-            @Parameter(hidden = true) @AuthUserInfo String userEmail
+            @AuthUserInfo String userEmail
     ) {
         ClubListResponse response = ClubListResponse.from(
                 clubUserService.searchClubs(keyword, sort, cursor, size, userEmail)
