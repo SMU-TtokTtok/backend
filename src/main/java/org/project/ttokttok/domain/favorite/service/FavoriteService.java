@@ -30,8 +30,7 @@ import static java.time.temporal.ChronoUnit.DAYS;
 import static org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus.ACTIVE;
 
 /**
- * 즐겨찾기 서비스 클래스
- * 즐겨찾기 추가/제거 및 조회 관련 비즈니스 로직을 처리합니다.
+ * 즐겨찾기 서비스 클래스 즐겨찾기 추가/제거 및 조회 관련 비즈니스 로직을 처리합니다.
  */
 @Slf4j
 @Service
@@ -44,8 +43,7 @@ public class FavoriteService {
     private final ApplyFormRepository applyFormRepository;
 
     /**
-     * 즐겨찾기 토글 (추가/제거)
-     * 이미 즐겨찾기가 되어 있으면 제거하고, 없으면 추가합니다.
+     * 즐겨찾기 토글 (추가/제거) 이미 즐겨찾기가 되어 있으면 제거하고, 없으면 추가합니다.
      *
      * @param request 즐겨찾기 토글 요청 정보
      * @return 즐겨찾기 토글 결과
@@ -53,19 +51,19 @@ public class FavoriteService {
     @Transactional
     public FavoriteToggleServiceResponse toggleFavorite(FavoriteToggleServiceRequest request) {
         log.info("[즐겨찾기 서비스] 토글 요청 시작 - userEmail: {}, clubId: {}", request.userEmail(), request.clubId());
-        
+
         try {
             // 입력값 검증
             if (request.userEmail() == null || request.userEmail().trim().isEmpty()) {
                 log.error("[즐겨찾기 서비스] userEmail이 null 또는 빈 값");
                 throw new IllegalArgumentException("사용자 이메일이 필요합니다.");
             }
-            
+
             if (request.clubId() == null || request.clubId().trim().isEmpty()) {
                 log.error("[즐겨찾기 서비스] clubId가 null 또는 빈 값");
                 throw new IllegalArgumentException("동아리 ID가 필요합니다.");
             }
-            
+
             log.debug("[즐겨찾기 서비스] 동아리 조회 시작 - clubId: {}", request.clubId());
             // 동아리 존재 확인
             Club club = clubRepository.findById(request.clubId())
@@ -104,11 +102,11 @@ public class FavoriteService {
                         .club(club)
                         .build();
                 Favorite savedFavorite = favoriteRepository.save(favorite);
-                log.info("[즐겨찾기 서비스] 즐겨찾기 추가 완료 - 사용자: {}, 동아리: {}, favoriteId: {}", 
+                log.info("[즐겨찾기 서비스] 즐겨찾기 추가 완료 - 사용자: {}, 동아리: {}, favoriteId: {}",
                         request.userEmail(), request.clubId(), savedFavorite.getId());
                 return FavoriteToggleServiceResponse.of(request.clubId(), true);
             }
-            
+
         } catch (ClubNotFoundException e) {
             log.error("[즐겨찾기 서비스] ClubNotFoundException 발생 - clubId: {}", request.clubId(), e);
             throw e;
@@ -116,7 +114,7 @@ public class FavoriteService {
             log.error("[즐겨찾기 서비스] UserNotFoundException 발생 - userEmail: {}", request.userEmail(), e);
             throw e;
         } catch (Exception e) {
-            log.error("[즐겨찾기 서비스] 예상치 못한 예외 발생 - userEmail: {}, clubId: {}, error: {}", 
+            log.error("[즐겨찾기 서비스] 예상치 못한 예외 발생 - userEmail: {}, clubId: {}, error: {}",
                     request.userEmail(), request.clubId(), e.getMessage(), e);
             throw new RuntimeException("즐겨찾기 처리 중 오류가 발생했습니다.", e);
         }
@@ -152,8 +150,7 @@ public class FavoriteService {
     }
 
     /**
-     * 인기순 즐겨찾기 목록 조회 (메모리 기반 처리)
-     * 'popular' 정렬은 커서 기반을 지원하지 않으므로, 첫 페이지 요청 시에만 동작합니다.
+     * 인기순 즐겨찾기 목록 조회 (메모리 기반 처리) 'popular' 정렬은 커서 기반을 지원하지 않으므로, 첫 페이지 요청 시에만 동작합니다.
      */
     private FavoriteListServiceResponse getPopularFavoriteList(FavoriteListServiceRequest request) {
         if (request.cursor() != null) {
@@ -165,18 +162,10 @@ public class FavoriteService {
         // 1. 사용자의 모든 즐겨찾기 동아리 정보를 가져옵니다.
         List<Favorite> allFavorites = favoriteRepository.findAllByUserEmailWithClub(request.userEmail());
 
-        // 2. ClubCardServiceResponse로 변환합니다.
-        List<ClubCardServiceResponse> allFavoriteClubs = allFavorites.stream()
+        // 2. 스트림 연산 간략화
+        List<ClubCardServiceResponse> resultClubs = allFavorites.stream()
                 .map(favorite -> toClubCardServiceResponse(favorite.getClub(), true))
-                .toList();
-
-        // 3. 인기도 점수를 기준으로 메모리에서 내림차순 정렬합니다.
-        List<ClubCardServiceResponse> sortedClubs = allFavoriteClubs.stream()
                 .sorted(Comparator.comparingDouble(this::calculatePopularityScore).reversed())
-                .toList();
-
-        // 4. 요청된 사이즈만큼 잘라서 최종 결과를 생성합니다.
-        List<ClubCardServiceResponse> resultClubs = sortedClubs.stream()
                 .limit(request.size())
                 .toList();
 
@@ -185,8 +174,7 @@ public class FavoriteService {
     }
 
     /**
-     * 인기도 점수 계산 (기존 로직 반영)
-     * 점수 = (멤버 수 * 0.7) + (총 즐겨찾기 수 * 0.3)
+     * 인기도 점수 계산 (기존 로직 반영) 점수 = (멤버 수 * 0.7) + (총 즐겨찾기 수 * 0.3)
      *
      * @param club 카드 응답 DTO
      * @return 계산된 인기도 점수
@@ -206,7 +194,7 @@ public class FavoriteService {
      * 특정 동아리의 즐겨찾기 상태 확인
      *
      * @param userEmail 사용자 이메일
-     * @param clubId 동아리 ID
+     * @param clubId    동아리 ID
      * @return 즐겨찾기 여부
      */
     @Transactional(readOnly = true)
