@@ -122,27 +122,68 @@ class FavoriteRepositoryTest implements RepositoryTestSupport {
     }
 
     @Nested
-    @DisplayName("countByClubId 메서드")
-    class CountByClubIdTest {
+    @DisplayName("countClubFavoritesForEach 메서드")
+    class CountClubFavoritesForEachTest {
 
         @Test
-        @DisplayName("동아리의 총 즐겨찾기 수를 반환한다")
-        void countByClubId_ReturnsCorrectCount() {
+        @DisplayName("주어진 동아리 ID 리스트에 대해 각 동아리별 즐겨찾기 수를 반환한다")
+        void countClubFavoritesForEach_ReturnsCountForEachClub() {
             // given
-            User anotherUser = User.signUp("another@sangmyung.kr", "password123!", "다른유저", true);
-            anotherUser = userRepository.save(anotherUser);
+            User user1 = testUser;
+            User user2 = User.signUp("user2@sangmyung.kr", "password123!", "유저2", true);
+            user2 = userRepository.save(user2);
+            User user3 = User.signUp("user3@sangmyung.kr", "password123!", "유저3", true);
+            user3 = userRepository.save(user3);
 
-            favoriteRepository.save(Favorite.builder().user(testUser).club(testClub1).build());
-            favoriteRepository.save(Favorite.builder().user(anotherUser).club(testClub1).build());
-            
+            // testClub1: 즐겨찾기 2개 (user1, user2)
+            favoriteRepository.save(Favorite.builder().user(user1).club(testClub1).build());
+            favoriteRepository.save(Favorite.builder().user(user2).club(testClub1).build());
+
+            // testClub2: 즐겨찾기 1개 (user3)
+            favoriteRepository.save(Favorite.builder().user(user3).club(testClub2).build());
+
             em.flush();
             em.clear();
 
+            List<String> clubIds = List.of(testClub1.getId(), testClub2.getId());
+
             // when
-            long count = favoriteRepository.countByClubId(testClub1.getId());
+            var results = favoriteRepository.countClubFavoritesForEach(clubIds);
 
             // then
-            assertThat(count).isEqualTo(2);
+            assertThat(results).hasSize(2);
+            
+            var club1Result = results.stream()
+                    .filter(dto -> dto.clubId().equals(testClub1.getId()))
+                    .findFirst()
+                    .orElseThrow();
+            assertThat(club1Result.count()).isEqualTo(2);
+
+            var club2Result = results.stream()
+                    .filter(dto -> dto.clubId().equals(testClub2.getId()))
+                    .findFirst()
+                    .orElseThrow();
+            assertThat(club2Result.count()).isEqualTo(1);
+        }
+
+        @Test
+        @DisplayName("즐겨찾기가 없는 동아리 ID는 결과 리스트에 포함되지 않는다")
+        void countClubFavoritesForEach_ExcludesClubsWithNoFavorites() {
+            // given
+            favoriteRepository.save(Favorite.builder().user(testUser).club(testClub1).build());
+
+            em.flush();
+            em.clear();
+
+            List<String> clubIds = List.of(testClub1.getId(), testClub2.getId());
+
+            // when
+            var results = favoriteRepository.countClubFavoritesForEach(clubIds);
+
+            // then
+            assertThat(results).hasSize(1);
+            assertThat(results.get(0).clubId()).isEqualTo(testClub1.getId());
+            assertThat(results.get(0).count()).isEqualTo(1);
         }
     }
 
@@ -263,19 +304,19 @@ class FavoriteRepositoryTest implements RepositoryTestSupport {
             assertThat(results2).hasSize(1);
             assertThat(results2.get(0).getClub().getId()).isEqualTo(testClub1.getId());
         }
+    }
 
-        private void addClubMember(Club club, String name, String email) {
-            ClubMember member = ClubMember.builder()
-                    .club(club)
-                    .memberName(name)
-                    .email(email)
-                    .phoneNumber("010-0000-0000")
-                    .role(MemberRole.MEMBER)
-                    .grade(Grade.FIRST_GRADE)
-                    .gender(Gender.MALE)
-                    .major("공학")
-                    .build();
-            clubMemberRepository.save(member);
-        }
+    private void addClubMember(Club club, String name, String email) {
+        ClubMember member = ClubMember.builder()
+                .club(club)
+                .memberName(name)
+                .email(email)
+                .phoneNumber("010-0000-0000")
+                .role(MemberRole.MEMBER)
+                .grade(Grade.FIRST_GRADE)
+                .gender(Gender.MALE)
+                .major("공학")
+                .build();
+        clubMemberRepository.save(member);
     }
 }

@@ -1,7 +1,6 @@
 package org.project.ttokttok.domain.favorite.controller;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.project.ttokttok.domain.favorite.controller.docs.FavoriteDocs;
 import org.project.ttokttok.domain.favorite.controller.dto.response.FavoriteListResponse;
 import org.project.ttokttok.domain.favorite.controller.dto.response.FavoriteToggleResponse;
@@ -10,7 +9,6 @@ import org.project.ttokttok.domain.favorite.service.dto.request.FavoriteListServ
 import org.project.ttokttok.domain.favorite.service.dto.request.FavoriteToggleServiceRequest;
 import org.project.ttokttok.domain.favorite.service.dto.response.FavoriteToggleServiceResponse;
 import org.project.ttokttok.global.annotation.auth.AuthUserInfo;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,7 +21,6 @@ import org.springframework.web.bind.annotation.RestController;
  * 즐겨찾기 관련 API 컨트롤러
  * 사용자의 즐겨찾기 추가/제거 및 조회 기능을 제공합니다.
  */
-@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/favorites")
@@ -44,32 +41,11 @@ public class FavoriteController implements FavoriteDocs {
             @AuthUserInfo String userEmail,
             @PathVariable String clubId) {
 
-        log.info("[즐겨찾기 토글] 요청 시작 - clubId: {}, userEmail: {}", clubId, userEmail);
-        
-        try {
-            if (userEmail == null) {
-                log.warn("[즐겨찾기 토글] 인증 실패 - userEmail이 null");
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            }
+        FavoriteToggleServiceRequest request = FavoriteToggleServiceRequest.of(userEmail, clubId);
+        FavoriteToggleServiceResponse serviceResponse = favoriteService.toggleFavorite(request);
+        FavoriteToggleResponse response = FavoriteToggleResponse.from(serviceResponse);
 
-            log.debug("[즐겨찾기 토글] 서비스 요청 생성 - userEmail: {}, clubId: {}", userEmail, clubId);
-            FavoriteToggleServiceRequest request = FavoriteToggleServiceRequest.of(userEmail, clubId);
-            
-            log.debug("[즐겨찾기 토글] 서비스 메서드 호출 시작");
-            FavoriteToggleServiceResponse serviceResponse = favoriteService.toggleFavorite(request);
-            
-            log.debug("[즐겨찾기 토글] 서비스 응답 생성 - favorited: {}", serviceResponse.favorited());
-            FavoriteToggleResponse response = FavoriteToggleResponse.from(serviceResponse);
-
-            log.info("[즐겨찾기 토글] 요청 완료 - clubId: {}, userEmail: {}, result: {}", 
-                    clubId, userEmail, serviceResponse.favorited() ? "추가" : "제거");
-            return ResponseEntity.ok(response);
-            
-        } catch (Exception e) {
-            log.error("[즐겨찾기 토글] 예외 발생 - clubId: {}, userEmail: {}, error: {}", 
-                    clubId, userEmail, e.getMessage(), e);
-            throw e; // 예외를 다시 던져서 GlobalExceptionHandler가 처리하도록
-        }
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -114,10 +90,6 @@ public class FavoriteController implements FavoriteDocs {
     public ResponseEntity<Boolean> getFavoriteStatus(
             @AuthUserInfo String userEmail,
             @PathVariable String clubId) {
-
-        if (userEmail == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
 
         boolean isFavorited = favoriteService.isFavorited(userEmail, clubId);
 

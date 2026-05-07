@@ -1,5 +1,15 @@
 package org.project.ttokttok.domain.favorite.service;
 
+import static java.time.temporal.ChronoUnit.DAYS;
+import static org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus.ACTIVE;
+
+import java.time.LocalDate;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.project.ttokttok.domain.applyform.domain.ApplyForm;
@@ -10,6 +20,7 @@ import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.domain.club.service.dto.response.ClubCardServiceResponse;
 import org.project.ttokttok.domain.favorite.domain.Favorite;
 import org.project.ttokttok.domain.favorite.repository.FavoriteRepository;
+import org.project.ttokttok.domain.favorite.repository.dto.ClubFavoriteCountQueryDto;
 import org.project.ttokttok.domain.favorite.service.dto.request.FavoriteListServiceRequest;
 import org.project.ttokttok.domain.favorite.service.dto.request.FavoriteToggleServiceRequest;
 import org.project.ttokttok.domain.favorite.service.dto.response.FavoriteListServiceResponse;
@@ -19,15 +30,6 @@ import org.project.ttokttok.domain.user.exception.UserNotFoundException;
 import org.project.ttokttok.domain.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDate;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
-
-import static java.time.temporal.ChronoUnit.DAYS;
-import static org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus.ACTIVE;
 
 /**
  * 즐겨찾기 서비스 클래스 즐겨찾기 추가/제거 및 조회 관련 비즈니스 로직을 처리합니다.
@@ -41,96 +43,36 @@ public class FavoriteService {
     private final ClubRepository clubRepository;
     private final UserRepository userRepository;
     private final ApplyFormRepository applyFormRepository;
+    private final PopularityCalculator popularityCalculator;
 
     /**
      * 즐겨찾기 토글 (추가/제거) 이미 즐겨찾기가 되어 있으면 제거하고, 없으면 추가합니다.
-     *
-     * @param request 즐겨찾기 토글 요청 정보
-     * @return 즐겨찾기 토글 결과
      */
     @Transactional
     public FavoriteToggleServiceResponse toggleFavorite(FavoriteToggleServiceRequest request) {
-        log.info("[즐겨찾기 서비스] 토글 요청 시작 - userEmail: {}, clubId: {}", request.userEmail(), request.clubId());
+        Club club = clubRepository.findById(request.clubId())
+                .orElseThrow(ClubNotFoundException::new);
 
-        try {
-            // 입력값 검증
-            if (request.userEmail() == null || request.userEmail().trim().isEmpty()) {
-                log.error("[즐겨찾기 서비스] userEmail이 null 또는 빈 값");
-                throw new IllegalArgumentException("사용자 이메일이 필요합니다.");
-            }
+        User user = userRepository.findByEmail(request.userEmail())
+                .orElseThrow(UserNotFoundException::new);
 
-            if (request.clubId() == null || request.clubId().trim().isEmpty()) {
-                log.error("[즐겨찾기 서비스] clubId가 null 또는 빈 값");
-                throw new IllegalArgumentException("동아리 ID가 필요합니다.");
-            }
+        Optional<Favorite> existingFavorite = favoriteRepository.findByUserEmailAndClubId(
+                request.userEmail(), request.clubId());
 
-            log.debug("[즐겨찾기 서비스] 동아리 조회 시작 - clubId: {}", request.clubId());
-            // 동아리 존재 확인
-            Club club = clubRepository.findById(request.clubId())
-                    .orElseThrow(() -> {
-                        log.error("[즐겨찾기 서비스] 동아리를 찾을 수 없음 - clubId: {}", request.clubId());
-                        return new ClubNotFoundException();
-                    });
-            log.debug("[즐겨찾기 서비스] 동아리 조회 완료 - clubId: {}, clubName: {}", club.getId(), club.getName());
-
-            log.debug("[즐겨찾기 서비스] 사용자 조회 시작 - userEmail: {}", request.userEmail());
-            // 사용자 존재 확인
-            User user = userRepository.findByEmail(request.userEmail())
-                    .orElseThrow(() -> {
-                        log.error("[즐겨찾기 서비스] 사용자를 찾을 수 없음 - userEmail: {}", request.userEmail());
-                        return new UserNotFoundException();
-                    });
-            log.debug("[즐겨찾기 서비스] 사용자 조회 완료 - userEmail: {}, userId: {}", user.getEmail(), user.getId());
-
-            log.debug("[즐겨찾기 서비스] 기존 즐겨찾기 조회 시작");
-            // 기존 즐겨찾기 확인
-            Optional<Favorite> existingFavorite = favoriteRepository.findByUserEmailAndClubId(
-                    request.userEmail(), request.clubId());
-            log.debug("[즐겨찾기 서비스] 기존 즐겨찾기 조회 완료 - 존재여부: {}", existingFavorite.isPresent());
-
-            if (existingFavorite.isPresent()) {
-                // 즐겨찾기 제거
-                log.debug("[즐겨찾기 서비스] 즐겨찾기 제거 시작 - favoriteId: {}", existingFavorite.get().getId());
-                favoriteRepository.delete(existingFavorite.get());
-                log.info("[즐겨찾기 서비스] 즐겨찾기 제거 완료 - 사용자: {}, 동아리: {}", request.userEmail(), request.clubId());
-                return FavoriteToggleServiceResponse.of(request.clubId(), false);
-            } else {
-                // 즐겨찾기 추가
-                log.debug("[즐겨찾기 서비스] 즐겨찾기 추가 시작");
-                Favorite favorite = Favorite.builder()
-                        .user(user)
-                        .club(club)
-                        .build();
-                Favorite savedFavorite = favoriteRepository.save(favorite);
-                log.info("[즐겨찾기 서비스] 즐겨찾기 추가 완료 - 사용자: {}, 동아리: {}, favoriteId: {}",
-                        request.userEmail(), request.clubId(), savedFavorite.getId());
-                return FavoriteToggleServiceResponse.of(request.clubId(), true);
-            }
-
-        } catch (ClubNotFoundException e) {
-            log.error("[즐겨찾기 서비스] ClubNotFoundException 발생 - clubId: {}", request.clubId(), e);
-            throw e;
-        } catch (UserNotFoundException e) {
-            log.error("[즐겨찾기 서비스] UserNotFoundException 발생 - userEmail: {}", request.userEmail(), e);
-            throw e;
-        } catch (Exception e) {
-            log.error("[즐겨찾기 서비스] 예상치 못한 예외 발생 - userEmail: {}, clubId: {}, error: {}",
-                    request.userEmail(), request.clubId(), e.getMessage(), e);
-            throw new RuntimeException("즐겨찾기 처리 중 오류가 발생했습니다.", e);
+        if (existingFavorite.isPresent()) {
+            favoriteRepository.delete(existingFavorite.get());
+            return FavoriteToggleServiceResponse.of(request.clubId(), false);
         }
+
+        Favorite favorite = Favorite.create(user, club);
+
+        favoriteRepository.save(favorite);
+
+        return FavoriteToggleServiceResponse.of(request.clubId(), true);
     }
 
-    /**
-     * 사용자의 즐겨찾기 목록 조회 (커서 기반)
-     *
-     * @param request 커서, 사이즈, 정렬 기준 포함 요청
-     * @return 커서 기반 페이징 처리된 즐겨찾기 동아리 목록
-     */
     @Transactional(readOnly = true)
     public FavoriteListServiceResponse getFavoriteList(FavoriteListServiceRequest request) {
-        log.info("즐겨찾기 목록 조회 시작: {}", request);
-
-        // "popular" 정렬은 별도 처리
         if ("popular".equals(request.sort())) {
             return getPopularFavoriteList(request);
         }
@@ -142,75 +84,58 @@ public class FavoriteService {
         String nextCursor = hasNext ? actualFavorites.get(actualFavorites.size() - 1).getId() : null;
 
         List<ClubCardServiceResponse> favoriteClubs = actualFavorites.stream()
-                .map(favorite -> toClubCardServiceResponse(favorite.getClub(), true))
+                .map(favorite -> toClubCardServiceResponse(favorite.getClub()))
                 .toList();
 
-        log.info("즐겨찾기 목록 조회 완료: 사용자={}, 개수={}, 다음 페이지 존재={}", request.userEmail(), favoriteClubs.size(), hasNext);
         return new FavoriteListServiceResponse(favoriteClubs, nextCursor, hasNext);
     }
 
     /**
-     * 인기순 즐겨찾기 목록 조회 (메모리 기반 처리) 'popular' 정렬은 커서 기반을 지원하지 않으므로, 첫 페이지 요청 시에만 동작합니다.
+     * [개선 후] Batch Query를 활용한 인기순 조회 로직
      */
     private FavoriteListServiceResponse getPopularFavoriteList(FavoriteListServiceRequest request) {
         if (request.cursor() != null) {
-            // 커서가 있다는 것은 다음 페이지 요청이지만, 'popular'는 전체 목록을 정렬하므로
-            // 다음 페이지라는 개념이 없습니다. 따라서 빈 목록을 반환합니다.
             return new FavoriteListServiceResponse(Collections.emptyList(), null, false);
         }
 
-        // 1. 사용자의 모든 즐겨찾기 동아리 정보를 가져옵니다.
         List<Favorite> allFavorites = favoriteRepository.findAllByUserEmailWithClub(request.userEmail());
 
-        // 2. 스트림 연산 간략화
+        List<String> clubIds = allFavorites.stream()
+                .map(f -> f.getClub().getId())
+                .toList();
+        
+        Map<String, Long> favoriteCountMap = favoriteRepository.countClubFavoritesForEach(clubIds).stream()
+                .collect(Collectors.toMap(ClubFavoriteCountQueryDto::clubId, ClubFavoriteCountQueryDto::count));
+
         List<ClubCardServiceResponse> resultClubs = allFavorites.stream()
-                .map(favorite -> toClubCardServiceResponse(favorite.getClub(), true))
-                .sorted(Comparator.comparingDouble(this::calculatePopularityScore).reversed())
+                .map(Favorite::getClub)
+                .sorted((club1, club2) -> {
+                    double score1 = popularityCalculator.calculate(
+                            club1.getClubMembers().size(), 
+                            favoriteCountMap.getOrDefault(club1.getId(), 0L),
+                            club1.getViewCount());
+                    double score2 = popularityCalculator.calculate(
+                            club2.getClubMembers().size(), 
+                            favoriteCountMap.getOrDefault(club2.getId(), 0L),
+                            club2.getViewCount());
+                    return Double.compare(score2, score1);
+                })
                 .limit(request.size())
+                .map(this::toClubCardServiceResponse)
                 .toList();
 
-        // 'popular' 정렬은 커서 기반 다음 페이지를 지원하지 않으므로 hasNext는 항상 false, nextCursor는 null 입니다.
         return new FavoriteListServiceResponse(resultClubs, null, false);
     }
 
-    /**
-     * 인기도 점수 계산 (기존 로직 반영) 점수 = (멤버 수 * 0.7) + (총 즐겨찾기 수 * 0.3)
-     *
-     * @param club 카드 응답 DTO
-     * @return 계산된 인기도 점수
-     */
-    private double calculatePopularityScore(ClubCardServiceResponse club) {
-        // ClubCardServiceResponse에서 멤버 수를 가져옵니다.
-        long memberCount = club.clubMemberCount();
-
-        // **성능 주의**: 이 부분은 각 동아리마다 즐겨찾기 수를 조회하는 추가 쿼리(N+1)를 발생시킬 수 있습니다.
-        // 즐겨찾기 수가 매우 많은 사용자의 경우 성능에 영향을 줄 수 있습니다.
-        long favoriteCount = favoriteRepository.countByClubId(club.id());
-
-        return (memberCount * 0.7) + (favoriteCount * 0.3);
-    }
-
-    /**
-     * 특정 동아리의 즐겨찾기 상태 확인
-     *
-     * @param userEmail 사용자 이메일
-     * @param clubId    동아리 ID
-     * @return 즐겨찾기 여부
-     */
     @Transactional(readOnly = true)
     public boolean isFavorited(String userEmail, String clubId) {
         return favoriteRepository.existsByUserEmailAndClubId(userEmail, clubId);
     }
 
-    /**
-     * Club 엔티티를 ClubCardServiceResponse로 변환
-     */
-    private ClubCardServiceResponse toClubCardServiceResponse(Club club, boolean bookmarked) {
-        // ApplyForm이 ACTIVE 상태인지 확인해서 recruiting 상태 결정
+    private ClubCardServiceResponse toClubCardServiceResponse(Club club) {
         Optional<ApplyForm> activeApplyForm = applyFormRepository.findByClubIdAndStatus(club.getId(), ACTIVE);
         boolean recruiting = activeApplyForm.isPresent();
 
-        // 마감 임박 여부 계산 (지원 마감일이 일주일 이내인지 확인)
         boolean isDeadlineImminent = false;
         if (activeApplyForm.isPresent() && activeApplyForm.get().getApplyEndDate() != null) {
             LocalDate today = LocalDate.now();
@@ -227,9 +152,9 @@ public class FavoriteService {
                 club.getCustomCategory(),
                 club.getSummary(),
                 club.getProfileImageUrl(),
-                club.getClubMembers().size(), // 멤버 수
-                recruiting, // ✅ ApplyForm 기준으로 수정
-                bookmarked,
+                club.getClubMembers().size(),
+                recruiting,
+                true,
                 isDeadlineImminent
         );
     }

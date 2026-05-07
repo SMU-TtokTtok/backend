@@ -14,6 +14,7 @@ public class ClubPopularityConfig {
     @Data
     public static class Weight {
         private double members = 0.7;
-        private double favorites = 0.3;
+        private double favorites = 2.5;
+        private double views = 0.7;
     }
 }
