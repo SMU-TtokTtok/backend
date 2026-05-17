@@ -122,6 +122,80 @@ class FavoriteRepositoryTest implements RepositoryTestSupport {
     }
 
     @Nested
+    @DisplayName("findAllByUserEmailWithClub 메서드")
+    class FindAllByUserEmailWithClubTest {
+
+        @Test
+        @DisplayName("사용자의 모든 즐겨찾기를 동아리 정보와 함께 조회한다")
+        void findAllByUserEmailWithClub_Success() {
+            // given
+            favoriteRepository.save(Favorite.builder().user(testUser).club(testClub1).build());
+            favoriteRepository.save(Favorite.builder().user(testUser).club(testClub2).build());
+            em.flush();
+            em.clear();
+
+            // when
+            List<Favorite> results = favoriteRepository.findAllByUserEmailWithClub(testUser.getEmail());
+
+            // then
+            assertThat(results).hasSize(2);
+            assertThat(results.get(0).getClub().getName()).isNotNull(); // Fetch join check
+        }
+    }
+
+    @Nested
+    @DisplayName("existsByUserEmailAndClubId 메서드")
+    class ExistsByUserEmailAndClubIdTest {
+
+        @Test
+        @DisplayName("즐겨찾기가 존재하면 true를 반환한다")
+        void existsByUserEmailAndClubId_True() {
+            // given
+            favoriteRepository.save(Favorite.builder().user(testUser).club(testClub1).build());
+            em.flush();
+            em.clear();
+
+            // when
+            boolean exists = favoriteRepository.existsByUserEmailAndClubId(testUser.getEmail(), testClub1.getId());
+
+            // then
+            assertThat(exists).isTrue();
+        }
+
+        @Test
+        @DisplayName("즐겨찾기가 존재하지 않으면 false를 반환한다")
+        void existsByUserEmailAndClubId_False() {
+            // when
+            boolean exists = favoriteRepository.existsByUserEmailAndClubId(testUser.getEmail(), testClub1.getId());
+
+            // then
+            assertThat(exists).isFalse();
+        }
+    }
+
+    @Nested
+    @DisplayName("countByClubId 메서드")
+    class CountByClubIdTest {
+
+        @Test
+        @DisplayName("특정 동아리의 즐겨찾기 총 개수를 반환한다")
+        void countByClubId_Success() {
+            // given
+            User user2 = userRepository.save(User.signUp("user2@sangmyung.kr", "pass", "유저2", true));
+            favoriteRepository.save(Favorite.builder().user(testUser).club(testClub1).build());
+            favoriteRepository.save(Favorite.builder().user(user2).club(testClub1).build());
+            em.flush();
+            em.clear();
+
+            // when
+            long count = favoriteRepository.countByClubId(testClub1.getId());
+
+            // then
+            assertThat(count).isEqualTo(2);
+        }
+    }
+
+    @Nested
     @DisplayName("countClubFavoritesForEach 메서드")
     class CountClubFavoritesForEachTest {
 
