@@ -1,0 +1,90 @@
+version: '3.8'
+
+services:
+  # Nginx 리버스 프록시 (포트 포워딩 및 로드밸런서 역할 모방)
+  nginx:
+    image: nginx:1.25-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - app
+
+  # Spring Boot 애플리케이션 (AWS t3.small 모방: vCPU 2, RAM 2GB)
+  app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080" # 디버깅 및 Nginx 통신용
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev # 또는 테스트용 프로파일
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/ttokttok
+      - SPRING_DATASOURCE_USERNAME=ttokttok_user
+      - SPRING_DATASOURCE_PASSWORD=ttokttok_password
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_FLYWAY_ENABLED=false
+      # JVM 메모리 설정 (컨테이너 제한의 약 70~80% 할당 권장)
+      - JAVA_OPTS=-Xms1g -Xmx1g -XX:+UseG1GC
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # PostgreSQL DB (AWS db.t4g.micro 모방: vCPU 2, RAM 1GB)
+  db:
+    image: postgres:17.4-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=ttokttok
+      - POSTGRES_USER=ttokttok_user
+      - POSTGRES_PASSWORD=ttokttok_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ttokttok_user -d ttokttok"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Redis 캐시 (AWS t2.micro 모방: vCPU 1, RAM 1GB)
+  redis:
+    image: redis:7.2-alpine
+    ports:
+      - "6380:6379" # 로컬 Redis 충돌 방지를 위해 6380으로 변경
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+  redis_data:
