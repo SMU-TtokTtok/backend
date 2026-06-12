@@ -16,7 +16,7 @@ services:
   app:
     build:
       context: ..
-      dockerfile: Dockerfile
+      dockerfile: load-test/Dockerfile
     ports:
       - "8080:8080" # 디버깅 및 Nginx 통신용
     environment:
