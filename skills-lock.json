@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "springboot-tdd": {
+      "source": "affaan-m/everything-claude-code",
+      "sourceType": "github",
+      "skillPath": "skills/springboot-tdd/SKILL.md",
+      "computedHash": "ff44f4d2e2044957ec39f7f28b87fe4eda18531cbed47c9e9360f82fba676258"
+    }
+  }
+}

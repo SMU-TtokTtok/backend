@@ -122,13 +122,12 @@ public class UserAuthService {
         }
 
         // 3-4. 사용자 정보 저장
-        User user = new User();
-        user.setId(UUID.randomUUID().toString());
-        user.setEmail(request.email());
-        user.setPassword(passwordEncoder.encode(request.password()));
-        user.setName(request.name());
-        user.setEmailVerified(true);
-        user.setTermsAgreed(request.termsAgreed());
+        User user = User.signUp(
+                request.email(),
+                passwordEncoder.encode(request.password()),
+                request.name(),
+                request.termsAgreed()
+        );
 
         User savedUser = userRepository.save(user);
         log.info("회원가입 완료: {}", savedUser.getEmail());
@@ -194,7 +193,7 @@ public class UserAuthService {
         User user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
 
-        user.setPassword(passwordEncoder.encode(request.newPassword()));
+        user.updatePassword(passwordEncoder.encode(request.newPassword()));
         userRepository.save(user);
 
         log.info("비밀번호 재설정 완료 : {}", user.getEmail());
