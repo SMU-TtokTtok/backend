@@ -15,8 +15,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class UserRepositoryTest implements RepositoryTestSupport {
 
-    private static final String TEST_EMAIL = "test@example.com";
-    private static final String NONEXISTENT_EMAIL = "nonexistent@example.com";
+    private static final String TEST_EMAIL = "test@sangmyung.kr";
+    private static final String NONEXISTENT_EMAIL = "nonexistent@sangmyung.kr";
 
     @Autowired
     private UserRepository userRepository;
@@ -25,11 +25,7 @@ class UserRepositoryTest implements RepositoryTestSupport {
 
     @BeforeEach
     void setUp() {
-        testUser = new User();
-        testUser.setId(UUID.randomUUID().toString());
-        testUser.setEmail(TEST_EMAIL);
-        testUser.setPassword("encodedPassword123");
-        testUser.setName("테스트유저");
+        testUser = User.signUp(TEST_EMAIL, "encodedPassword123", "테스트유저", true);
         userRepository.save(testUser);
     }
 

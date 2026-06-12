@@ -17,14 +17,8 @@ import java.util.UUID;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Favorite extends BaseTimeEntity {
 
-    @PrePersist
-    private void generateId() {
-        if (this.id == null) {
-            this.id = UUID.randomUUID().toString();
-        }
-    }
-
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(length = 36, updatable = false, unique = true)
     private String id;
 
@@ -40,5 +34,12 @@ public class Favorite extends BaseTimeEntity {
     private Favorite(User user, Club club) {
         this.user = user;
         this.club = club;
+    }
+
+    public static Favorite create(User user, Club club) {
+        return Favorite.builder()
+                .user(user)
+                .club(club)
+                .build();
     }
 }

@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Import(RepositoryTestSupport.TestConfig.class)
 @Transactional
 // JSONB 타입 사용을 위한 인메모리 DB 교체 방지
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+//@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 public interface RepositoryTestSupport {
 
     @TestConfiguration

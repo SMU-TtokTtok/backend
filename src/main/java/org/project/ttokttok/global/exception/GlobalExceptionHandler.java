@@ -1,5 +1,6 @@
 package org.project.ttokttok.global.exception;
 
+import lombok.extern.slf4j.Slf4j;
 import org.project.ttokttok.global.exception.dto.ErrorResponse;
 import org.project.ttokttok.global.exception.dto.ValidErrorDetails;
 import org.project.ttokttok.global.exception.exception.CustomException;
@@ -14,6 +15,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import java.util.List;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     // 들어오는 예외들을 캐치하여 처리하는 클래스
@@ -44,6 +46,8 @@ public class GlobalExceptionHandler {
                 .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                 .details("서버 내부 오류가 발생했습니다.")
                 .build();
+
+        log.error("Uncaught Error occurred: ", e);
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(response);
