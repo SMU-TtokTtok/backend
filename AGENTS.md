@@ -210,21 +210,9 @@ public class ClubService {
 
 ## 🔀 Git Conventions
 
-This is the **single source of truth** for commit/branch rules. They are enforced automatically by the git hooks in `maintenance/hooks/` (install once via `bash maintenance/hooks/install.sh`).
+Detailed, situational rules live under [`rules/`](rules/) and are enforced by the git hooks in `maintenance/hooks/` (install once via `bash maintenance/hooks/install.sh`).
 
-### Commit messages
-- **Format:** `[#issue-number] - message` (header)
-- **Language:** Korean
-- **Body:** one `- item` line per piece of work
-- **Example:**
-  ```text
-  [#123] - 새로운 알림 기능 추가
-
-  - FCM 연동 로직 구현
-  - 알림 설정 API 엔드포인트 추가
-  - 관련 단위 테스트 작성
-  ```
-- Auto-generated messages (`Merge`, `Revert`, `fixup!`, `squash!`) are exempt from the format check.
+- **Commit messages** → [`rules/commit-message.md`](rules/commit-message.md)
 
 ### Branches
 - **Naming:** `<type>/#<issue-number>` (e.g. `feat/#312`, `fix/#205`)
