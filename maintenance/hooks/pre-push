@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+#
+# pre-push: ④ block force-push (non-fast-forward) on ALL branches
+#           ⑤ block direct push to protected branches (main/develop)
+#           ⑥ enforce branch-name convention
+#
+# stdin lines: <local_ref> <local_sha> <remote_ref> <remote_sha>
+set -euo pipefail
+
+HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
+. "$HOOK_DIR/lib.sh"
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  [ -z "${remote_ref:-}" ] && continue
+
+  remote_branch="${remote_ref#refs/heads/}"
+  local_branch="${local_ref#refs/heads/}"
+
+  # ⑤ Direct push to protected branch
+  if is_protected "$remote_branch"; then
+    block "보호 브랜치 '$remote_branch'로 직접 push할 수 없습니다." \
+          "→ PR을 통해 머지하세요."
+  fi
+
+  # ④ Force-push / non-fast-forward (skip new-branch creation where remote_sha is null)
+  if ! is_zero_sha "$remote_sha" && ! is_zero_sha "$local_sha"; then
+    if ! git merge-base --is-ancestor "$remote_sha" "$local_sha" 2>/dev/null; then
+      block "force-push(non-fast-forward)는 모든 브랜치에서 금지됩니다: '$remote_branch'" \
+            "→ rebase 후 강제 push 대신, 이력 보존 방식(merge/새 커밋)을 사용하세요."
+    fi
+  fi
+
+  # ⑥ Branch-name convention (skip deletions; protected already blocked above)
+  if ! is_zero_sha "$local_sha" && [ -n "$local_branch" ]; then
+    if ! printf '%s' "$local_branch" | grep -Eq "$BRANCH_CONVENTION"; then
+      block "브랜치명이 컨벤션에 맞지 않습니다: '$local_branch'" \
+            "형식: <type>/#<이슈번호>  (type: feat|feature|fix|hotfix|refactor|chore|test|arch|release)" \
+            "예: feat/#312, fix/#205"
+    fi
+  fi
+done
+
+exit 0
