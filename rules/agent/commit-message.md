@@ -1,6 +1,6 @@
 # Rule: Commit Message Convention
 
-> Indexed from [`AGENTS.md`](../AGENTS.md) → Git Conventions. Enforced by [`maintenance/hooks/commit-msg`](../maintenance/hooks/commit-msg).
+> Indexed from [`AGENTS.md`](../../AGENTS.md) → Git Conventions. Enforced by [`maintenance/hooks/commit-msg`](../../maintenance/hooks/commit-msg).
 
 - **Format:** `[#issue-number] - message` (header)
 - **Language:** Korean

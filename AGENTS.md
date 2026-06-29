@@ -210,9 +210,9 @@ public class ClubService {
 
 ## 🔀 Git Conventions
 
-Detailed, situational rules live under [`rules/`](rules/) and are enforced by the git hooks in `maintenance/hooks/` (install once via `bash maintenance/hooks/install.sh`).
+Detailed, situational rules live under [`rules/`](rules/) — common agent rules in [`rules/agent/`](rules/agent/), runtime-specific rules in `rules/<runtime>/` (e.g. `rules/claude/`, pointed to from that runtime's entry doc). Git rules are enforced by the hooks in `maintenance/hooks/` (install once via `bash maintenance/hooks/install.sh`).
 
-- **Commit messages** → [`rules/commit-message.md`](rules/commit-message.md)
+- **Commit messages** → [`rules/agent/commit-message.md`](rules/agent/commit-message.md)
 
 ### Branches
 - **Naming:** `<type>/#<issue-number>` (e.g. `feat/#312`, `fix/#205`)
