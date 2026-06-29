@@ -213,12 +213,7 @@ public class ClubService {
 Detailed, situational rules live under [`rules/`](rules/) — common agent rules in [`rules/agent/`](rules/agent/), runtime-specific rules in `rules/<runtime>/` (e.g. `rules/claude/`, pointed to from that runtime's entry doc). Git rules are enforced by the hooks in `maintenance/hooks/` (install once via `bash maintenance/hooks/install.sh`).
 
 - **Commit messages** → [`rules/agent/commit-message.md`](rules/agent/commit-message.md)
-
-### Branches
-- **Naming:** `<type>/#<issue-number>` (e.g. `feat/#312`, `fix/#205`)
-- **Types:** `feat | feature | fix | hotfix | refactor | chore | test | arch | release`
-- **Protected branches:** `main`, `develop` — no direct commit or push; merge via PR only.
-- **No force-push** on any branch (non-fast-forward pushes are rejected).
+- **Branches** → [`rules/agent/branch-naming.md`](rules/agent/branch-naming.md)
 
 ---
 
