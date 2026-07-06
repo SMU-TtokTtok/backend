@@ -55,6 +55,14 @@ out/
 ### VS Code ###
 .vscode/
 
+### Claude Code / OMC ###
+# 워크트리 체크아웃 자체는 로컬 전용 (다른 클론에서는 존재하지 않음)
+.claude/worktrees/
+# OMC 런타임 상태(세션 로그, HUD, 체크포인트 등) — 프로젝트 스킬(.omc/skills/)만 예외로 커밋
+.omc/*
+!.omc/skills/
+!.omc/skills/**
+
 .gemini
 GEMINI.md
 IMPLEMENTATION.md
