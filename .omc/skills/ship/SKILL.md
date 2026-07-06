@@ -65,13 +65,24 @@ Every issue body must also cover the fields from [`maintenance/task.md`](../../.
    Immediately run `git branch --unset-upstream` inside the new worktree — `git worktree add -b <branch> origin/develop` auto-sets upstream tracking to `origin/develop`, and a bare `git push` would then target the protected `develop` branch instead of creating a new remote branch.
    Then call `EnterWorktree({ path: ".claude/worktrees/<prefix>-<issue-number>" })` to switch the session's cwd. If the tool reports the path is already the current working directory (this can happen if a prior Bash `cd` already moved the shell there), that's fine — no further action needed, just confirm with `pwd` / `git status --short --branch`.
 
+   **Immediately after creating the worktree, restore local-only resources.** `git worktree add` only populates git-tracked files — anything gitignored (`application*.yml`, the Firebase service-account `*.json` key, `db/seed/`, mock `*.csv` fixtures) exists solely on disk in whichever checkout created it, never in git history, so a brand-new worktree starts without them. Skipping this produces confusing, unrelated failures in step 5 (e.g. Flyway running with its default `enabled` instead of the `application-test.yml` override, cascading into dozens of Spring-context test failures that have nothing to do with the actual feature). Copy them in from the original checkout — find it via `git worktree list` (the entry that isn't the new one, usually the repo root) — before running `verify.sh`:
+   ```bash
+   SRC_ROOT="<original checkout root from `git worktree list`>"
+   NEW_ROOT=".claude/worktrees/<prefix>-<issue-number>"
+   git -C "$SRC_ROOT" status --porcelain --ignored=matching -- src | grep '^!!' | sed 's/^!! //' | while IFS= read -r f; do
+     mkdir -p "$NEW_ROOT/$(dirname "$f")"
+     cp -r "$SRC_ROOT/$f" "$NEW_ROOT/$f"
+   done
+   ```
+   Never edit `.gitignore` to make these trackable — they stay untracked by design (secrets/local fixtures). This step only mirrors the working-tree copy across so the new worktree can actually build and test; it changes nothing about what git tracks.
+
 4. **Implement (Change)** — follow `AGENTS.md` conventions. Use the per-type mini checklist in `maintenance/task.md` as the working checklist.
 
 5. **Verify**:
    ```bash
    bash maintenance/verify.sh
    ```
-   On failure, go back to step 4 and retry. **Cap at 3 verify attempts.** If still failing after 3, stop — do not commit/push/open a PR. Report the failure with the test report path (`build/reports/tests/test/index.html`) and leave the worktree in place for manual inspection.
+   On failure, go back to step 4 and retry. **Cap at 3 verify attempts.** If still failing after 3, stop — do not commit/push/open a PR. Report the failure with the test report path (`build/reports/tests/test/index.html`) and leave the worktree in place for manual inspection. If a failure looks unrelated to the actual change (widespread Spring-context/Flyway errors across unrelated domains), first double-check the local-resource copy above before spending a retry attempt.
 
 6. **Record** — append a dated section to `IMPLEMENTATION.md`, following its existing format (see prior entries: dated header, 주요 작업 내용, 기술적 세부 사항, 업데이트된 파일, 최종 확인 사항).
 
