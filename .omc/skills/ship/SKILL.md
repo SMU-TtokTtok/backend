@@ -4,6 +4,17 @@ description: End-to-end automation for ttokttok tasks — GitHub issue, branch, 
 aliases: [ship-task]
 argument-hint: "<task description> [--type feature|fix|refactor|chore|test|arch|hotfix]"
 level: 2
+triggers:
+  - "새 작업"
+  - "새 이슈"
+  - "이슈 생성"
+  - "이슈 만들고"
+  - "이슈부터 pr"
+  - "브랜치 만들고"
+  - "worktree 만들고"
+  - "pr 생성"
+  - "pr까지"
+  - "ship"
 ---
 
 # Ship Skill
