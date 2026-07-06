@@ -18,6 +18,7 @@ public record ClubBoardListResponse(
     public record ClubBoardSummary(
             String boardId,
             String title,
+            String content,
             String clubName,
             boolean hasImages,      // content에 이미지가 포함되어 있는지
             LocalDateTime createdAt // 프론트에서 "19시간 전" 형식으로 변환

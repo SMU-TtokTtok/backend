@@ -44,6 +44,17 @@ public class ClubBoard extends BaseTimeEntity {
         this.club = club;
     }
 
+    public void update(String title, String content) {
+        if (title != null) {
+            validateTitle(title);
+            this.title = title;
+        }
+        if (content != null) {
+            validateContent(content);
+            this.content = content;
+        }
+    }
+
     // ------- 정적 메서드 -------
     public static ClubBoard create(String title, String content, Club club) {
         validateTitle(title);

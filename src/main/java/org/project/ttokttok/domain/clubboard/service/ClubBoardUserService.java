@@ -61,6 +61,7 @@ public class ClubBoardUserService {
         return new ClubBoardSummary(
                 board.getId(),
                 board.getTitle(),
+                board.getContent(),
                 board.getClub().getName(),
                 hasImages(board.getContent()),
                 board.getCreatedAt()
