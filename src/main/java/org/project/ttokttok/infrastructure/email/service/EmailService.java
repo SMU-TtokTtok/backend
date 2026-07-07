@@ -9,7 +9,6 @@ import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Service;
 
 import jakarta.mail.MessagingException;
@@ -20,7 +19,6 @@ import java.util.List;
 
 @Slf4j
 @Service
-@EnableAsync
 @RequiredArgsConstructor
 public class EmailService {
 
@@ -106,8 +104,19 @@ public class EmailService {
         return code;
     }
 
-    // TODO: 성능이 너무 안 나올 경우, 배치 처리로 변경 필요
-    // 동아리 지원 결과 안내 이메일 발송
+    /**
+     * 동아리 지원 결과 안내 이메일 벌크 발송.
+     *
+     * <p>메서드 전체를 {@code mailExecutor} 풀에서 비동기 실행한다. 호출부
+     * ({@code ApplicantAdminService})는 다른 빈이므로 Spring AOP 프록시가 적용되어
+     * {@code @Async}가 정상 동작한다(과거 self-invocation + protected 조합은 프록시를
+     * 우회해 동기 실행됐음). 덕분에 느린 SMTP I/O가 호출자의 트랜잭션 스레드를 막지 않아
+     * DB 커넥션이 조기에 반납된다.
+     *
+     * <p>인자는 이미 구체화된 {@code List<String>}이라 비동기 스레드로 넘겨도
+     * 지연 로딩(영속성 컨텍스트) 이슈가 없다.
+     */
+    @Async("mailExecutor")
     public void sendResultMail(List<String> emails, MailFormatRequest request) {
         int successCount = 0;
         int failureCount = 0;
@@ -121,7 +130,7 @@ public class EmailService {
 
             try {
                 EmailRequest emailRequest = EmailRequest.createResultEmail(email, request.title(), request.body());
-                sendEmailAsync(emailRequest);
+                sendEmail(emailRequest);
                 successCount++;
                 log.info("지원 결과 안내 이메일 발송 완료: {}", email);
             } catch (Exception e) {
@@ -131,31 +140,6 @@ public class EmailService {
         }
 
         log.info("지원 결과 안내 이메일 발송 완료 - 성공: {}건, 실패: {}건", successCount, failureCount);
-    }
-
-    // 비동기 이메일 발송 - TODO: 추후 리팩토링
-    @Async
-    protected void sendEmailAsync(EmailRequest emailRequest) {
-        try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
-            helper.setFrom(fromAddress, fromName); // 발신자 주소와 이름 설정
-            helper.setReplyTo(replyTo);
-            helper.setTo(emailRequest.getTo());
-            helper.setSubject(emailRequest.getSubject());
-            helper.setText(emailRequest.getContent(), emailRequest.isHtml());
-
-            mailSender.send(message);
-            log.info("이메일 발송 성공: {}", emailRequest.getTo());
-
-        } catch (MessagingException e) {
-            log.error("이메일 메시지 생성 실패: {} - {}", emailRequest.getTo(), e.getMessage());
-        } catch (UnsupportedEncodingException e) {
-            log.error("이메일 인코딩 실패: {} - {}", emailRequest.getTo(), e.getMessage());
-        } catch (MailException e) {
-            log.error("이메일 발송 실패: {} - {}", emailRequest.getTo(), e.getMessage());
-        }
     }
 
     // 순수 이메일 주소 검증 메서드
