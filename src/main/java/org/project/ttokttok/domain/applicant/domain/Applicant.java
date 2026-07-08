@@ -13,6 +13,7 @@ import org.project.ttokttok.global.entity.BaseTimeEntity;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Entity
 @Getter
@@ -149,6 +150,43 @@ public class Applicant extends BaseTimeEntity {
 
     public void failInterview() {
         this.interviewPhase.updateStatus(PhaseStatus.FAIL);
+    }
+
+    // 현재 단계(phase) 기준으로 전형 상태를 변경한다.
+    // 서류/면접 분기는 이 메서드가 캡슐화하며, 각 단계별 가드는 위임 대상 메서드가 그대로 유지한다.
+    public void changeEvaluationStatus(ApplicantPhase phase, PhaseStatus status) {
+        switch (phase) {
+            case DOCUMENT -> changeDocumentStatus(status);
+            case INTERVIEW -> changeInterviewStatus(status);
+        }
+    }
+
+    private void changeDocumentStatus(PhaseStatus status) {
+        switch (status) {
+            case PASS -> passDocumentEvaluation();
+            case FAIL -> failDocumentEvaluation();
+            case EVALUATING -> setDocumentEvaluating();
+        }
+    }
+
+    private void changeInterviewStatus(PhaseStatus status) {
+        switch (status) {
+            case PASS -> passInterview();
+            case FAIL -> failInterview();
+            case EVALUATING -> setInterviewEvaluating();
+        }
+    }
+
+    // 해당 단계에 실제로 존재할 때만 그 단계의 상태를 반환한다. (없으면 empty)
+    public Optional<PhaseStatus> statusOf(ApplicantPhase phase) {
+        return switch (phase) {
+            case DOCUMENT -> (isInDocumentPhase() && documentPhase != null)
+                    ? Optional.of(documentPhase.getStatus())
+                    : Optional.empty();
+            case INTERVIEW -> (isInInterviewPhase() && hasInterviewPhase() && interviewPhase != null)
+                    ? Optional.of(interviewPhase.getStatus())
+                    : Optional.empty();
+        };
     }
 
     // 편의 메서드들
