@@ -2,6 +2,7 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.5.0'
 	id 'io.spring.dependency-management' version '1.1.7'
+	id 'jacoco'
 }
 
 group = 'org.project.ttokttok'
@@ -85,4 +86,61 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+	finalizedBy jacocoTestReport
 }
+
+jacoco {
+	toolVersion = "0.8.12"
+}
+
+// 커버리지 측정에서 제외할 항목 (생성 코드/보일러플레이트/설정)
+def jacocoExcludes = [
+		'**/Q*.class',                 // QueryDSL 생성 클래스
+		'**/*Application*',            // 스프링 부트 진입점
+		'**/dto/**',                   // 요청/응답 DTO
+		'**/*Request*',
+		'**/*Response*',
+		'**/*QueryResponse*',
+		'**/docs/**',                  // Swagger 문서 인터페이스
+		'**/*Docs*',
+		'**/config/**',                // 설정 클래스
+		'**/*Config*',
+		'**/enums/**',                 // enum
+		'**/exception/**',             // 커스텀 예외(로직 없음)
+]
+
+jacocoTestReport {
+	dependsOn test
+	reports {
+		html.required = true
+		xml.required = true
+		csv.required = false
+	}
+	afterEvaluate {
+		classDirectories.setFrom(files(classDirectories.files.collect {
+			fileTree(dir: it, exclude: jacocoExcludes)
+		}))
+	}
+}
+
+jacocoTestCoverageVerification {
+	dependsOn test
+	afterEvaluate {
+		classDirectories.setFrom(files(classDirectories.files.collect {
+			fileTree(dir: it, exclude: jacocoExcludes)
+		}))
+	}
+	violationRules {
+		rule {
+			element = 'BUNDLE'
+			limit {
+				counter = 'LINE'
+				value = 'COVEREDRATIO'
+				minimum = 0.80
+			}
+		}
+	}
+}
+
+// 80% 라인 커버리지 하드 게이트: check(= build) 시 검증을 강제한다.
+check.dependsOn jacocoTestCoverageVerification
