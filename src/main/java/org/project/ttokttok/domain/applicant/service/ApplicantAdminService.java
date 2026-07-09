@@ -164,7 +164,9 @@ public class ApplicantAdminService {
         return ApplicantFinalizeServiceResponse.of(passedApplicantCount, finalizedApplicantCount);
     }
 
-    @Transactional
+    // 조회 전용(쓰기 없음). 발송은 EmailService의 @Async로 트랜잭션 밖에서 처리되어
+    // SMTP I/O가 커넥션 점유 시간을 늘리지 않는다. readOnly로 lazy loading 세션만 유지한다.
+    @Transactional(readOnly = true)
     public void sendResultMailToApplicants(SendResultMailServiceRequest request,
                                            String username,
                                            String clubId,
