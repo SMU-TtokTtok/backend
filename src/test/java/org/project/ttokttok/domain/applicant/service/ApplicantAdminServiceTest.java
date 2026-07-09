@@ -10,7 +10,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.project.ttokttok.domain.applicant.controller.dto.request.MailFormatRequest;
 import org.project.ttokttok.domain.applicant.domain.Applicant;
 import org.project.ttokttok.domain.applicant.domain.DocumentPhase;
-import org.project.ttokttok.domain.applicant.domain.InterviewPhase;
+import org.project.ttokttok.domain.applicant.domain.enums.ApplicantPhase;
 import org.project.ttokttok.domain.applicant.domain.enums.Gender;
 import org.project.ttokttok.domain.applicant.domain.enums.Grade;
 import org.project.ttokttok.domain.applicant.domain.enums.PhaseStatus;
@@ -444,7 +444,7 @@ class ApplicantAdminServiceTest {
             applicantAdminService.updateApplicantStatus(request);
 
             // then
-            verify(applicant).passDocumentEvaluation();
+            verify(applicant).changeEvaluationStatus(ApplicantPhase.DOCUMENT, PhaseStatus.PASS);
         }
 
         @Test
@@ -463,7 +463,7 @@ class ApplicantAdminServiceTest {
             applicantAdminService.updateApplicantStatus(request);
 
             // then
-            verify(applicant).failDocumentEvaluation();
+            verify(applicant).changeEvaluationStatus(ApplicantPhase.DOCUMENT, PhaseStatus.FAIL);
         }
 
         @Test
@@ -482,7 +482,7 @@ class ApplicantAdminServiceTest {
             applicantAdminService.updateApplicantStatus(request);
 
             // then
-            verify(applicant).setDocumentEvaluating();
+            verify(applicant).changeEvaluationStatus(ApplicantPhase.DOCUMENT, PhaseStatus.EVALUATING);
         }
 
         @Test
@@ -501,7 +501,7 @@ class ApplicantAdminServiceTest {
             applicantAdminService.updateApplicantStatus(request);
 
             // then
-            verify(applicant).passInterview();
+            verify(applicant).changeEvaluationStatus(ApplicantPhase.INTERVIEW, PhaseStatus.PASS);
         }
 
         @Test
@@ -520,7 +520,7 @@ class ApplicantAdminServiceTest {
             applicantAdminService.updateApplicantStatus(request);
 
             // then
-            verify(applicant).failInterview();
+            verify(applicant).changeEvaluationStatus(ApplicantPhase.INTERVIEW, PhaseStatus.FAIL);
         }
 
         @Test
@@ -539,7 +539,7 @@ class ApplicantAdminServiceTest {
             applicantAdminService.updateApplicantStatus(request);
 
             // then
-            verify(applicant).setInterviewEvaluating();
+            verify(applicant).changeEvaluationStatus(ApplicantPhase.INTERVIEW, PhaseStatus.EVALUATING);
         }
 
         @Test
@@ -606,17 +606,11 @@ class ApplicantAdminServiceTest {
             given(applyFormRepository.findByClubIdAndStatus(CLUB_ID, ACTIVE)).willReturn(Optional.of(applyForm));
 
             Applicant passedApplicant = mock(Applicant.class);
-            given(passedApplicant.isInDocumentPhase()).willReturn(true);
-            DocumentPhase passedDocumentPhase = mock(DocumentPhase.class);
-            given(passedDocumentPhase.getStatus()).willReturn(PhaseStatus.PASS);
-            given(passedApplicant.getDocumentPhase()).willReturn(passedDocumentPhase);
+            given(passedApplicant.statusOf(ApplicantPhase.DOCUMENT)).willReturn(Optional.of(PhaseStatus.PASS));
             given(passedApplicant.isInInterviewPhase()).willReturn(false);
 
             Applicant failedApplicant = mock(Applicant.class);
-            given(failedApplicant.isInDocumentPhase()).willReturn(true);
-            DocumentPhase failedDocumentPhase = mock(DocumentPhase.class);
-            given(failedDocumentPhase.getStatus()).willReturn(PhaseStatus.FAIL);
-            given(failedApplicant.getDocumentPhase()).willReturn(failedDocumentPhase);
+            given(failedApplicant.statusOf(ApplicantPhase.DOCUMENT)).willReturn(Optional.of(PhaseStatus.FAIL));
 
             given(applicantRepository.findByApplyFormId(APPLY_FORM_ID))
                     .willReturn(List.of(passedApplicant, failedApplicant));
@@ -646,11 +640,7 @@ class ApplicantAdminServiceTest {
             given(applyFormRepository.findByClubIdAndStatus(CLUB_ID, ACTIVE)).willReturn(Optional.of(applyForm));
 
             Applicant passedApplicant = mock(Applicant.class);
-            given(passedApplicant.isInInterviewPhase()).willReturn(true);
-            given(passedApplicant.hasInterviewPhase()).willReturn(true);
-            InterviewPhase interviewPhase = mock(InterviewPhase.class);
-            given(interviewPhase.getStatus()).willReturn(PhaseStatus.PASS);
-            given(passedApplicant.getInterviewPhase()).willReturn(interviewPhase);
+            given(passedApplicant.statusOf(ApplicantPhase.INTERVIEW)).willReturn(Optional.of(PhaseStatus.PASS));
             given(passedApplicant.getName()).willReturn("홍길동");
             given(passedApplicant.getGrade()).willReturn(Grade.FIRST_GRADE);
             given(passedApplicant.getMajor()).willReturn("컴퓨터공학과");
@@ -684,11 +674,7 @@ class ApplicantAdminServiceTest {
             given(applyFormRepository.findByClubIdAndStatus(CLUB_ID, ACTIVE)).willReturn(Optional.of(applyForm));
 
             Applicant passedApplicant = mock(Applicant.class);
-            given(passedApplicant.isInInterviewPhase()).willReturn(true);
-            given(passedApplicant.hasInterviewPhase()).willReturn(true);
-            InterviewPhase interviewPhase = mock(InterviewPhase.class);
-            given(interviewPhase.getStatus()).willReturn(PhaseStatus.PASS);
-            given(passedApplicant.getInterviewPhase()).willReturn(interviewPhase);
+            given(passedApplicant.statusOf(ApplicantPhase.INTERVIEW)).willReturn(Optional.of(PhaseStatus.PASS));
             given(passedApplicant.getEmail()).willReturn("hong@test.com");
 
             given(applicantRepository.findByApplyFormId(APPLY_FORM_ID)).willReturn(List.of(passedApplicant));
@@ -752,17 +738,11 @@ class ApplicantAdminServiceTest {
             given(applyFormRepository.findByClubIdAndStatus(CLUB_ID, ACTIVE)).willReturn(Optional.of(applyForm));
 
             Applicant passedApplicant = mock(Applicant.class);
-            given(passedApplicant.isInDocumentPhase()).willReturn(true);
-            DocumentPhase passedPhase = mock(DocumentPhase.class);
-            given(passedPhase.getStatus()).willReturn(PhaseStatus.PASS);
-            given(passedApplicant.getDocumentPhase()).willReturn(passedPhase);
+            given(passedApplicant.statusOf(ApplicantPhase.DOCUMENT)).willReturn(Optional.of(PhaseStatus.PASS));
             given(passedApplicant.getEmail()).willReturn("passed@test.com");
 
             Applicant failedApplicant = mock(Applicant.class);
-            given(failedApplicant.isInDocumentPhase()).willReturn(true);
-            DocumentPhase failedPhase = mock(DocumentPhase.class);
-            given(failedPhase.getStatus()).willReturn(PhaseStatus.FAIL);
-            given(failedApplicant.getDocumentPhase()).willReturn(failedPhase);
+            given(failedApplicant.statusOf(ApplicantPhase.DOCUMENT)).willReturn(Optional.of(PhaseStatus.FAIL));
             given(failedApplicant.getEmail()).willReturn("failed@test.com");
 
             given(applicantRepository.findByApplyFormId(APPLY_FORM_ID))
