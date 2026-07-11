@@ -1,8 +1,6 @@
 package org.project.ttokttok.infrastructure.s3.support;
 
 import java.util.Set;
-import java.util.stream.Stream;
-import java.util.stream.Collectors;
 
 /**
  * 업로드 허용 파일 형식의 단일 소스(single source of truth).
@@ -61,10 +59,4 @@ public final class AllowedFileTypes {
             "pdf", "doc", "docx", "hwp", "hwpx", "hwpml",
             "ppt", "pptx", "xls", "xlsx", "csv", "txt", "zip"
     );
-
-    /** 이미지·문서를 모두 포함한 허용 MIME 타입 전체. */
-    public static Set<String> allMimeTypes() {
-        return Stream.concat(IMAGES.stream(), DOCUMENTS.stream())
-                .collect(Collectors.toUnmodifiableSet());
-    }
 }
