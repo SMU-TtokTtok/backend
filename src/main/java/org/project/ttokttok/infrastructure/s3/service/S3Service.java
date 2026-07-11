@@ -51,9 +51,11 @@ public class S3Service {
     }
 
     private void validateFile(MultipartFile file) {
-        validator.validateContent(file);
+        // 값싼 검증부터 수행하여 fail-fast. 무거운 ZIP 스트리밍 검증(validateArchive)은 마지막.
+        validator.validateNotEmpty(file);
         validator.validateSize(file.getSize());
         validator.validateType(file.getContentType());
         validator.validateFileName(file.getOriginalFilename());
+        validator.validateArchive(file);
     }
 }

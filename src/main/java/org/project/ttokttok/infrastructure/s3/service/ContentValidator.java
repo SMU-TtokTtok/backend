@@ -1,13 +1,12 @@
 package org.project.ttokttok.infrastructure.s3.service;
 
 import lombok.RequiredArgsConstructor;
+import org.project.ttokttok.global.config.MultipartConfig;
 import org.project.ttokttok.infrastructure.s3.exception.S3FileMaxSizeOverException;
 import org.project.ttokttok.infrastructure.s3.exception.UnsupportedFileTypeException;
+import org.project.ttokttok.infrastructure.s3.support.AllowedFileTypes;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.util.HashSet;
-import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -15,50 +14,18 @@ public class ContentValidator implements ContentValidatable {
 
     private final ZipContentValidator zipContentValidator;
 
-    private static final Set<String> ALLOWED_IMAGE_TYPES =
-            Set.of("image/jpeg",
-                    "image/png",
-                    "image/webp",
-                    "image/heic",  // 아이폰 고효율 이미지
-                    "image/heif",  // 아이폰 고효율 이미지
-                    "image/gif"   // 움직이는 이미지
-            );
-
-    private static final Set<String> ALLOWED_DOCS_TYPES =
-            Set.of(
-                    "application/pdf",  // PDF
-                    "application/msword",  // Word (doc)
-                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",  // Word (docx)
-                    "application/x-hwp",  // 한글 (hwp)
-                    "application/vnd.hancom.hwp",  // 한글 (hwp, 일부 환경)
-                    "application/vnd.hancom.hwpx", // 한글 (hwpx, 신형 포맷)
-                    "application/x-hwpml", // 한글 (hwpml, 마이너)
-                    "application/vnd.ms-powerpoint", // PPT
-                    "application/vnd.openxmlformats-officedocument.presentationml.presentation", // PPTX
-                    "application/vnd.ms-excel", // XLS
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // XLSX
-                    "text/csv", // CSV
-                    "text/plain", // TXT
-                    "application/zip", // ZIP
-                    "application/x-zip-compressed" // ZIP (Windows 등)
-            );
-
-    private static final long MAX_CONTENT_SIZE = 20 * 1024 * 1024L; // 20MB
+    // 서블릿 컨테이너 한계(MultipartConfig)와 동일한 값을 단일 소스로 참조하여 드리프트를 방지한다.
+    private static final long MAX_CONTENT_SIZE = MultipartConfig.MAX_FILE_SIZE.toBytes();
     private static final String FILE_NAME_REGEX = ".*[\\\\/:*?\"<>|].*";
     private static final int MAX_FILE_NAME_LENGTH = 255; // 파일 이름 최대 길이
 
+    private static final String ZIP_MIME = "application/zip";
+    private static final String ZIP_MIME_WINDOWS = "application/x-zip-compressed";
+
     @Override
-    public void validateContent(MultipartFile content) {
+    public void validateNotEmpty(MultipartFile content) {
         if (content == null || content.isEmpty()) {
             throw new IllegalArgumentException("파일이 비어있거나 존재하지 않습니다.");
-        }
-
-        // ZIP 파일인 경우 내부 메타데이터 스트리밍 검증 수행
-        String contentType = content.getContentType();
-        if (contentType != null && (contentType.equals("application/zip") || contentType.equals("application/x-zip-compressed"))) {
-            Set<String> allAllowedTypes = new HashSet<>(ALLOWED_IMAGE_TYPES);
-            allAllowedTypes.addAll(ALLOWED_DOCS_TYPES);
-            zipContentValidator.validateZip(content, allAllowedTypes);
         }
     }
 
@@ -71,7 +38,7 @@ public class ContentValidator implements ContentValidatable {
 
     @Override
     public void validateType(String type) {
-        if (!ALLOWED_IMAGE_TYPES.contains(type) && !ALLOWED_DOCS_TYPES.contains(type)) {
+        if (!AllowedFileTypes.IMAGES.contains(type) && !AllowedFileTypes.DOCUMENTS.contains(type)) {
             throw new UnsupportedFileTypeException();
         }
     }
@@ -83,6 +50,19 @@ public class ContentValidator implements ContentValidatable {
         validateFileNameTooLong(fileName);
 
         validateChars(fileName);
+    }
+
+    @Override
+    public void validateArchive(MultipartFile content) {
+        // ZIP 파일인 경우에만 내부를 스트리밍 검증한다. (값싼 검증을 모두 통과한 뒤 수행)
+        String contentType = content.getContentType();
+        if (isZip(contentType)) {
+            zipContentValidator.validateZip(content, AllowedFileTypes.EXTENSIONS);
+        }
+    }
+
+    private boolean isZip(String contentType) {
+        return ZIP_MIME.equals(contentType) || ZIP_MIME_WINDOWS.equals(contentType);
     }
 
     // 파일 이름이 비어있지 않은지 확인

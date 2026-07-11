@@ -16,12 +16,32 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class ZipContentValidatorTest {
 
     private final ZipContentValidator zipContentValidator = new ZipContentValidator();
-    private final Set<String> allowedExtensions = Set.of("image/png", "application/pdf");
+    private final Set<String> allowedExtensions = Set.of("png", "pdf", "docx");
 
     @Test
     @DisplayName("정상적인 ZIP 파일은 검증을 통과한다.")
     void success() throws IOException {
         byte[] zipBytes = createMockZip("test.png", "content".getBytes());
+        MockMultipartFile file = new MockMultipartFile("file", "test.zip", "application/zip", zipBytes);
+
+        assertThatCode(() -> zipContentValidator.validateZip(file, allowedExtensions))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    @DisplayName("하위 폴더에 든 파일(folder/file)은 Zip Slip으로 오탐하지 않고 통과한다.")
+    void successWhenNestedDirectory() throws IOException {
+        byte[] zipBytes = createMockZip("docs/report.pdf", "content".getBytes());
+        MockMultipartFile file = new MockMultipartFile("file", "test.zip", "application/zip", zipBytes);
+
+        assertThatCode(() -> zipContentValidator.validateZip(file, allowedExtensions))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    @DisplayName("MIME 타입이 아닌 실제 확장자(docx)로 정확히 매칭하여 통과한다.")
+    void successWhenExtensionExactMatch() throws IOException {
+        byte[] zipBytes = createMockZip("resume.docx", "content".getBytes());
         MockMultipartFile file = new MockMultipartFile("file", "test.zip", "application/zip", zipBytes);
 
         assertThatCode(() -> zipContentValidator.validateZip(file, allowedExtensions))
@@ -63,6 +83,18 @@ class ZipContentValidatorTest {
 
         assertThatThrownBy(() -> zipContentValidator.validateZip(file, allowedExtensions))
                 .hasMessageContaining("파일 개수가 너무 많습니다");
+    }
+
+    @Test
+    @DisplayName("압축 해제 실제 용량이 한계를 초과하면 예외가 발생한다. (헤더값이 아닌 실측 기준)")
+    void failWhenUncompressedSizeExceeded() throws IOException {
+        // 압축 해제 한계를 10바이트로 낮춘 검증기 (실측 누적 로직 검증)
+        ZipContentValidator smallLimitValidator = new ZipContentValidator(50, 10L);
+        byte[] zipBytes = createMockZip("big.png", new byte[1024]); // 실제 1KB 내용
+        MockMultipartFile file = new MockMultipartFile("file", "test.zip", "application/zip", zipBytes);
+
+        assertThatThrownBy(() -> smallLimitValidator.validateZip(file, allowedExtensions))
+                .hasMessageContaining("압축 해제 시 허용 용량을 초과");
     }
 
     private byte[] createMockZip(String entryName, byte[] content) throws IOException {

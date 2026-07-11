@@ -68,10 +68,11 @@ class S3ServiceTest {
         assertEquals(expectedUrl, result);
 
         // 컴포넌트 간 협력 검증
-        verify(validator).validateContent(file);
+        verify(validator).validateNotEmpty(file);
         verify(validator).validateSize(file.getSize());
         verify(validator).validateType(contentType);
         verify(validator).validateFileName(fileName);
+        verify(validator).validateArchive(file);
         verify(keyUrlGenerator).generateKey(dirName, fileName);
         verify(s3Client).putObject(any(PutObjectRequest.class), any(RequestBody.class));
         verify(keyUrlGenerator).createUrl(expectedKey);
@@ -92,11 +93,12 @@ class S3ServiceTest {
                 .isInstanceOf(RuntimeException.class)
                 .hasMessage("파일 크기가 5MB를 초과합니다");
 
-        verify(validator).validateContent(file);
+        verify(validator).validateNotEmpty(file);
         verify(validator).validateSize(file.getSize());
         // 검증 실패 후에는 다른 작업들이 호출되지 않아야 함
         verify(validator, never()).validateType(anyString());
         verify(validator, never()).validateFileName(anyString());
+        verify(validator, never()).validateArchive(any());
         verify(keyUrlGenerator, never()).generateKey(anyString(), anyString());
         verify(s3Client, never()).putObject(any(PutObjectRequest.class), any(RequestBody.class));
     }
@@ -122,10 +124,11 @@ class S3ServiceTest {
         assertThatThrownBy(() -> s3Service.uploadFile(mockFile, dirName))
                 .isInstanceOf(S3FileUploadException.class);
 
-        verify(validator).validateContent(mockFile);
+        verify(validator).validateNotEmpty(mockFile);
         verify(validator).validateSize(1024L);
         verify(validator).validateType(contentType);
         verify(validator).validateFileName(fileName);
+        verify(validator).validateArchive(mockFile);
         verify(keyUrlGenerator).generateKey(dirName, fileName);
         // I/O 에러로 인해 S3 업로드는 시도되지 않음
         verify(s3Client, never()).putObject(any(PutObjectRequest.class), any(RequestBody.class));
