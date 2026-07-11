@@ -101,11 +101,11 @@ Every issue body must also cover the fields from [`maintenance/task.md`](../../.
    ```
    The `pre-push` hook enforces branch naming, blocks force-push, and blocks direct pushes to `main`/`develop` — do not bypass it.
 
-9. **Create the PR** against `develop`, using only the upper half of `.github/PULL_REQUEST_TEMPLATE.md` (everything above the "아래 부터 `develop -> main` PR 템플릿입니다" divider — the release-PR section below it does not apply here):
+9. **Create the PR** against `develop`, using only the upper half of `.github/PULL_REQUEST_TEMPLATE.md` (everything above the "아래 부터 `develop -> main` PR 템플릿입니다" divider — the release-PR section below it does not apply here). The title must follow [`rules/agent/pr-title.md`](../../../rules/agent/pr-title.md): `<작업 내용> (<branch> -> develop)` — Korean 작업 내용, no issue number in the title (the branch already carries `#<issue>`):
    ```bash
-   gh pr create --base develop --head "<branch>" --title "<title>" --body-file <generated PR body> --label "<mapped label>"
+   gh pr create --base develop --head "<branch>" --title "<작업 내용> (<branch> -> develop)" --body-file <generated PR body> --label "<mapped label>"
    ```
-   Auto-check the checklist items you can actually verify (로컬 테스트 완료 — since verify.sh passed; 라벨을 붙혔나요 — yes; 팀 코드 컨벤션 준수 — yes), fill in 관련 이슈 with `#<issue-number>`, and summarize the change in 기타 참고 사항.
+   e.g. `--title "파일 업로드 로직 개선 (refactor/#326 -> develop)"`. Auto-check the checklist items you can actually verify (로컬 테스트 완료 — since verify.sh passed; 라벨을 붙혔나요 — yes; 팀 코드 컨벤션 준수 — yes), fill in 관련 이슈 with `#<issue-number>`, and summarize the change in 기타 참고 사항.
 
 10. **Cleanup** — leave the worktree and branch on disk (for review follow-up commits); do not remove them automatically. If you used `EnterWorktree`, you may call `ExitWorktree({action: "keep"})` to return the parent session to its original directory without deleting anything.
 
