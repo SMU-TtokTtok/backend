@@ -214,6 +214,7 @@ Detailed, situational rules live under [`rules/`](rules/) — common agent rules
 
 - **Commit messages** → [`rules/agent/commit-message.md`](rules/agent/commit-message.md)
 - **Branches** → [`rules/agent/branch-naming.md`](rules/agent/branch-naming.md)
+- **PR titles** → [`rules/agent/pr-title.md`](rules/agent/pr-title.md)
 
 ---
 
