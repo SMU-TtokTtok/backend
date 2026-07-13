@@ -26,6 +26,7 @@ import org.project.ttokttok.domain.notification.fcm.repository.FCMTokenRepositor
 import org.project.ttokttok.infrastructure.firebase.service.FCMService;
 import org.project.ttokttok.infrastructure.firebase.service.dto.FCMRequest;
 import org.project.ttokttok.infrastructure.s3.service.S3Service;
+import org.project.ttokttok.infrastructure.s3.support.AllowedFileTypes;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -110,15 +111,10 @@ public class ClubAdminService {
     }
 
     private void validateImage(String contentType) {
-        if (contentType == null || !isImage(contentType)) {
+        // 허용 이미지 형식은 AllowedFileTypes 단일 소스를 참조한다. (중복 화이트리스트 제거)
+        if (contentType == null || !AllowedFileTypes.IMAGES.contains(contentType)) {
             throw new FileIsNotImageException();
         }
-    }
-
-    private boolean isImage(String contentType) {
-        return contentType.startsWith("image/jpeg") ||
-                contentType.startsWith("image/png") ||
-                contentType.startsWith("image/webp");
     }
 
     private boolean hasProfileImage(Optional<MultipartFile> profileImage) {
