@@ -1,26 +1,33 @@
 package org.project.ttokttok.infrastructure.s3.service;
 
-import lombok.RequiredArgsConstructor;
-import org.project.ttokttok.global.config.MultipartConfig;
 import org.project.ttokttok.infrastructure.s3.exception.S3FileMaxSizeOverException;
 import org.project.ttokttok.infrastructure.s3.exception.UnsupportedFileTypeException;
 import org.project.ttokttok.infrastructure.s3.support.AllowedFileTypes;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.unit.DataSize;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
-@RequiredArgsConstructor
 public class ContentValidator implements ContentValidatable {
 
     private final ZipContentValidator zipContentValidator;
 
-    // 서블릿 컨테이너 한계(MultipartConfig)와 동일한 값을 단일 소스로 참조하여 드리프트를 방지한다.
-    private static final long MAX_CONTENT_SIZE = MultipartConfig.MAX_FILE_SIZE.toBytes();
+    // 애플리케이션 레벨 사이즈 상한은 서블릿 컨테이너 한계(spring.servlet.multipart.max-file-size)와
+    // 동일한 yml 값을 단일 소스로 주입받아, 프로파일별로 두 한계가 어긋나지 않도록 한다.
+    private final long maxContentSize;
+
     private static final String FILE_NAME_REGEX = ".*[\\\\/:*?\"<>|].*";
     private static final int MAX_FILE_NAME_LENGTH = 255; // 파일 이름 최대 길이
 
     private static final String ZIP_MIME = "application/zip";
     private static final String ZIP_MIME_WINDOWS = "application/x-zip-compressed";
+
+    public ContentValidator(ZipContentValidator zipContentValidator,
+                            @Value("${spring.servlet.multipart.max-file-size:20MB}") DataSize maxFileSize) {
+        this.zipContentValidator = zipContentValidator;
+        this.maxContentSize = maxFileSize.toBytes();
+    }
 
     @Override
     public void validateNotEmpty(MultipartFile content) {
@@ -31,7 +38,7 @@ public class ContentValidator implements ContentValidatable {
 
     @Override
     public void validateSize(long size) {
-        if (size > MAX_CONTENT_SIZE) {
+        if (size > maxContentSize) {
             throw new S3FileMaxSizeOverException();
         }
     }
