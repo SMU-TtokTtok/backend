@@ -1,17 +1,18 @@
 package org.project.ttokttok.infrastructure.s3.service;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.project.ttokttok.infrastructure.s3.exception.S3FileMaxSizeOverException;
 import org.project.ttokttok.infrastructure.s3.exception.UnsupportedFileTypeException;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.util.unit.DataSize;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -26,8 +27,13 @@ class ContentValidatorTest {
     @Mock
     private ZipContentValidator zipContentValidator;
 
-    @InjectMocks
     private ContentValidator contentValidator;
+
+    @BeforeEach
+    void setUp() {
+        // 실제 주입은 yml의 spring.servlet.multipart.max-file-size(=20MB)에서 온다.
+        contentValidator = new ContentValidator(zipContentValidator, DataSize.ofMegabytes(20));
+    }
 
     @Nested
     @DisplayName("파일 존재 여부 검증")
