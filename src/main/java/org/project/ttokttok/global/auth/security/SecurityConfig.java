@@ -10,6 +10,7 @@ import org.project.ttokttok.global.auth.jwt.service.TokenProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
@@ -69,6 +70,8 @@ public class SecurityConfig {
                                 .requestMatchers(ALLOW_URLS.getEndPoints()).permitAll() // JWT를 가질 수 없는 요청은 허용
                                 .requestMatchers(SWAGGER_URLS.getEndPoints()).permitAll()
                                 .requestMatchers("/api/clubs/**").permitAll() // 동아리 조회는 비로그인 사용자도 가능
+                                .requestMatchers(HttpMethod.GET, "/api/notices", "/api/notices/**").permitAll() // 공지 조회는 비로그인 사용자도 가능
+                                .requestMatchers("/api/super-admin/**").hasRole("SUPER_ADMIN") // 운영자 전용 (공지 작성 등)
                                 .requestMatchers("/api/admin/**").hasRole("ADMIN") // ADMIN 권한이 필요한 요청은 검증
                                 .anyRequest().authenticated() // 나머지 요청은 인증 필요
                 )
