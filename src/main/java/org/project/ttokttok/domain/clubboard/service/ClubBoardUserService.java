@@ -63,7 +63,8 @@ public class ClubBoardUserService {
                 board.getTitle(),
                 board.getContent(),
                 board.getClub().getName(),
-                hasImages(board.getContent()),
+                board.getThumbnailUrl(),
+                board.getThumbnailUrl() != null || hasImages(board.getContent()),
                 board.getCreatedAt()
         );
     }

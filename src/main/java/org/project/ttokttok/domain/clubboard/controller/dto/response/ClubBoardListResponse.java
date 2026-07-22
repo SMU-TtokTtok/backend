@@ -20,7 +20,8 @@ public record ClubBoardListResponse(
             String title,
             String content,
             String clubName,
-            boolean hasImages,      // content에 이미지가 포함되어 있는지
+            String thumbnailUrl,    // 대표(썸네일) 이미지 URL. 레거시 게시글은 null
+            boolean hasImages,      // 썸네일이 있거나 content에 이미지가 포함되어 있는지
             LocalDateTime createdAt // 프론트에서 "19시간 전" 형식으로 변환
     ) {}
     

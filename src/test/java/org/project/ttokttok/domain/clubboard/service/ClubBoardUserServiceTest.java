@@ -123,5 +123,39 @@ class ClubBoardUserServiceTest {
 
             assertThat(response.boards().get(0).hasImages()).isFalse();
         }
+
+        @Test
+        @DisplayName("썸네일이 있는 게시글은 thumbnailUrl이 내려가고 내용이 텍스트뿐이어도 hasImages가 true이다.")
+        void getBoardListWithThumbnail() {
+            when(clubRepository.existsById("club123")).thenReturn(true);
+
+            String thumbnailUrl = "https://cdn.example.com/board-images/uuid_thumb.webp";
+            ClubBoard board = mockBoard("board1", "제목", "그냥 텍스트 내용입니다.");
+            lenient().when(board.getThumbnailUrl()).thenReturn(thumbnailUrl);
+            when(clubBoardRepository.findBoardsByClubIdWithCursor("club123", 20, null))
+                    .thenReturn(List.of(board));
+
+            ClubBoardListResponse response = clubBoardUserService.getBoardList("club123", 20, null);
+
+            ClubBoardSummary summary = response.boards().get(0);
+            assertThat(summary.thumbnailUrl()).isEqualTo(thumbnailUrl);
+            assertThat(summary.hasImages()).isTrue();
+        }
+
+        @Test
+        @DisplayName("썸네일이 없는 레거시 게시글은 thumbnailUrl이 null이고 기존 휴리스틱 동작을 유지한다.")
+        void getBoardListLegacyBoardWithoutThumbnail() {
+            when(clubRepository.existsById("club123")).thenReturn(true);
+
+            ClubBoard board = mockBoard("board1", "제목", "그냥 텍스트 내용입니다.");
+            when(clubBoardRepository.findBoardsByClubIdWithCursor("club123", 20, null))
+                    .thenReturn(List.of(board));
+
+            ClubBoardListResponse response = clubBoardUserService.getBoardList("club123", 20, null);
+
+            ClubBoardSummary summary = response.boards().get(0);
+            assertThat(summary.thumbnailUrl()).isNull();
+            assertThat(summary.hasImages()).isFalse();
+        }
     }
 }

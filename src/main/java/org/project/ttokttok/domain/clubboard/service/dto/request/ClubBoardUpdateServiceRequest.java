@@ -1,6 +1,7 @@
 package org.project.ttokttok.domain.clubboard.service.dto.request;
 
 import lombok.Builder;
+import org.springframework.web.multipart.MultipartFile;
 
 @Builder
 public record ClubBoardUpdateServiceRequest(
@@ -8,6 +9,7 @@ public record ClubBoardUpdateServiceRequest(
         String clubId,
         String boardId,
         String title,
-        String content
+        String content,
+        MultipartFile thumbnail
 ) {
 }

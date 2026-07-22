@@ -45,8 +45,9 @@ class ClubBoardUserControllerTest {
     @WithMockUser
     @DisplayName("게시판 목록 조회 API를 기본 파라미터로 호출한다")
     void getBoardListWithDefaultParams() throws Exception {
+        String thumbnailUrl = "https://cdn.example.com/board-images/uuid_thumb.png";
         ClubBoardSummary summary = new ClubBoardSummary(
-                "board-1", "제목", "내용", "동아리", false, LocalDateTime.of(2026, 1, 1, 0, 0)
+                "board-1", "제목", "내용", "동아리", thumbnailUrl, true, LocalDateTime.of(2026, 1, 1, 0, 0)
         );
         given(clubBoardUserService.getBoardList(CLUB_ID, 20, null))
                 .willReturn(ClubBoardListResponse.of(List.of(summary), false, null));
@@ -55,6 +56,7 @@ class ClubBoardUserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.boards[0].boardId").value("board-1"))
+                .andExpect(jsonPath("$.boards[0].thumbnailUrl").value(thumbnailUrl))
                 .andExpect(jsonPath("$.hasNext").value(false));
 
         verify(clubBoardUserService).getBoardList(CLUB_ID, 20, null);
