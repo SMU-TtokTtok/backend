@@ -87,7 +87,14 @@ public enum ErrorMessage {
     // FCM 에러 메시지
     FCM_FIELD_BLANK("FCM 토큰에 저장할 필드가 비어 있습니다.", HttpStatus.BAD_REQUEST),
     FCM_EMAIL_BLANK("FCM 토큰 내 저장 시도된 이메일이 비어 있습니다.", HttpStatus.BAD_REQUEST),
-    FCM_TOKEN_BLANK("FCM 토큰 내 저장 시도된 토큰 값이 비어 있습니다.", HttpStatus.BAD_REQUEST);
+    FCM_TOKEN_BLANK("FCM 토큰 내 저장 시도된 토큰 값이 비어 있습니다.", HttpStatus.BAD_REQUEST),
+
+    // 운영자(슈퍼 관리자) 에러 메시지
+    SUPER_ADMIN_NOT_FOUND("운영자를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+    SUPER_ADMIN_PASSWORD_NOT_MATCH("비밀번호가 틀렸습니다.", HttpStatus.UNAUTHORIZED),
+
+    // 공지사항 에러 메시지
+    NOTICE_NOT_FOUND("공지사항을 찾을 수 없습니다.", HttpStatus.NOT_FOUND);
 
     private final String message;
     private final HttpStatus status;
