@@ -36,8 +36,8 @@ class NoticeUserServiceTest {
         @DisplayName("목록 조회 시 페이지 정보와 공지 요약 목록을 반환한다.")
         void getNoticesSuccess() {
             // given
-            Notice notice1 = Notice.create("제목1", "내용1");
-            Notice notice2 = Notice.create("제목2", "내용2");
+            Notice notice1 = Notice.create("제목1", "내용1", "ttok_operator");
+            Notice notice2 = Notice.create("제목2", "내용2", "ttok_operator");
             NoticePageQueryResponse queryResponse = NoticePageQueryResponse.builder()
                     .content(List.of(notice1, notice2))
                     .totalCount(2L)
@@ -104,6 +104,7 @@ class NoticeUserServiceTest {
             when(notice.getId()).thenReturn("notice-1");
             when(notice.getTitle()).thenReturn("제목");
             when(notice.getContent()).thenReturn("내용");
+            when(notice.getCreatedBy()).thenReturn("ttok_operator");
             when(notice.getViewCount()).thenReturn(2); // 증가 후 재조회된 값
             when(noticeRepository.increaseViewCount("notice-1")).thenReturn(1);
             when(noticeRepository.findById("notice-1")).thenReturn(Optional.of(notice));
@@ -115,6 +116,7 @@ class NoticeUserServiceTest {
             verify(noticeRepository).increaseViewCount("notice-1");
             assertThat(response.noticeId()).isEqualTo("notice-1");
             assertThat(response.content()).isEqualTo("내용");
+            assertThat(response.createdBy()).isEqualTo("ttok_operator");
             assertThat(response.viewCount()).isEqualTo(2);
         }
 

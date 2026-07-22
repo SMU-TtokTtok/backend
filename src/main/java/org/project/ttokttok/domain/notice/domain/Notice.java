@@ -36,24 +36,30 @@ public class Notice extends BaseTimeEntity {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 
+    // 작성한 운영자 username (감사/책임 추적용)
+    @Column(name = "created_by", nullable = false, updatable = false)
+    private String createdBy;
+
     @Column(nullable = false)
     private int viewCount;
 
     @Builder
-    private Notice(String title, String content) {
+    private Notice(String title, String content, String createdBy) {
         this.title = title;
         this.content = content;
+        this.createdBy = createdBy;
         this.viewCount = 0;
     }
 
     // ------- 정적 메서드 -------
-    public static Notice create(String title, String content) {
+    public static Notice create(String title, String content, String createdBy) {
         validateTitle(title);
         validateContent(content);
 
         return Notice.builder()
                 .title(title)
                 .content(content)
+                .createdBy(createdBy)
                 .build();
     }
 

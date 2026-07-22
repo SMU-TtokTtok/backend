@@ -43,7 +43,7 @@ class NoticeUserControllerTest {
     void getNoticeDetail() {
         // given
         NoticeDetailResponse detailResponse =
-                new NoticeDetailResponse("notice-1", "제목", "내용", LocalDateTime.now(), 1);
+                new NoticeDetailResponse("notice-1", "제목", "내용", "ttok_operator", LocalDateTime.now(), 1);
         when(noticeUserService.getNoticeDetail("notice-1")).thenReturn(detailResponse);
 
         // when

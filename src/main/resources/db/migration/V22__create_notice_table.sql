@@ -4,6 +4,7 @@ CREATE TABLE notices
     id         VARCHAR(36)  NOT NULL PRIMARY KEY,
     title      VARCHAR(255) NOT NULL,
     content    TEXT         NOT NULL,
+    created_by VARCHAR(255) NOT NULL,
     view_count INTEGER      NOT NULL DEFAULT 0,
     created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP

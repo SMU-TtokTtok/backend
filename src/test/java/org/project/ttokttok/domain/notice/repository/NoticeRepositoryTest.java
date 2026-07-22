@@ -17,9 +17,9 @@ class NoticeRepositoryTest implements RepositoryTestSupport {
 
     @BeforeEach
     void setUp() {
-        noticeRepository.save(Notice.create("공지 A 안내", "내용 A"));
-        noticeRepository.save(Notice.create("공지 B 안내", "내용 B"));
-        noticeRepository.save(Notice.create("이벤트 C", "내용 C"));
+        noticeRepository.save(Notice.create("공지 A 안내", "내용 A", "ttok_operator"));
+        noticeRepository.save(Notice.create("공지 B 안내", "내용 B", "ttok_operator"));
+        noticeRepository.save(Notice.create("이벤트 C", "내용 C", "ttok_operator"));
     }
 
     @Test
@@ -59,7 +59,7 @@ class NoticeRepositoryTest implements RepositoryTestSupport {
     @DisplayName("increaseViewCount는 조회수를 DB에서 원자적으로 1 증가시킨다.")
     void increaseViewCount() {
         // given
-        Notice saved = noticeRepository.save(Notice.create("조회수 테스트", "내용"));
+        Notice saved = noticeRepository.save(Notice.create("조회수 테스트", "내용", "ttok_operator"));
 
         // when
         int updated = noticeRepository.increaseViewCount(saved.getId());
