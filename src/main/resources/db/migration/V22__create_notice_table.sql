@@ -8,3 +8,6 @@ CREATE TABLE notices
     created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+-- 목록 조회 정렬(createdAt DESC, id DESC) 및 페이지네이션 성능을 위한 인덱스
+CREATE INDEX idx_notices_created_at_id ON notices (created_at DESC, id DESC);
