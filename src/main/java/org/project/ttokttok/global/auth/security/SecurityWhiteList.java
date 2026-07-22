@@ -23,7 +23,9 @@ public enum SecurityWhiteList {
             "/api/admin/auth/re-issue",
             "/health",
             "/api/admin/auth/join",
-            "/api/super-admin/login"
+            "/api/super-admin/login",
+            "/api/user/auth/oauth/google",
+            "/api/user/auth/oauth/google/complete"
     }),
 
     SWAGGER_URLS(new String[]{

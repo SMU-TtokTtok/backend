@@ -63,6 +63,12 @@ public class TokenProvider {
             // 유효한 이슈어인지 검증
             isValidIssuer(jws.getBody().getIssuer());
 
+            // 용도가 지정된 토큰(예: 온보딩 토큰)은 액세스 토큰으로 사용 불가
+            if (jws.getBody().get("token_type") != null) {
+                log.warn("액세스 토큰이 아닌 용도의 토큰입니다.");
+                return false;
+            }
+
             return true;
         } catch (SecurityException | MalformedJwtException e) {
             log.warn("잘못된 JWT 토큰 입니다.", e);
