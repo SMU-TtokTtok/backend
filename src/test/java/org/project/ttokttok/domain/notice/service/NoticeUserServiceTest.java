@@ -72,6 +72,24 @@ class NoticeUserServiceTest {
             assertThat(response.totalPage()).isEqualTo(3); // ceil(21 / 10)
             assertThat(response.totalCount()).isEqualTo(21);
         }
+
+        @Test
+        @DisplayName("page가 1 미만이면 1로, size가 상한(100)을 초과하면 100으로 보정하여 조회한다.")
+        void getNoticesClampsPageAndSize() {
+            // given
+            NoticePageQueryResponse queryResponse = NoticePageQueryResponse.builder()
+                    .content(List.of())
+                    .totalCount(0L)
+                    .build();
+            when(noticeRepository.searchNotices(1, 100, null)).thenReturn(queryResponse);
+
+            // when
+            NoticeListResponse response = noticeUserService.getNotices(0, 1000, null);
+
+            // then
+            assertThat(response.currentPage()).isEqualTo(1);
+            verify(noticeRepository).searchNotices(1, 100, null);
+        }
     }
 
     @Nested
