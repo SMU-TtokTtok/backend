@@ -215,6 +215,7 @@ Detailed, situational rules live under [`rules/`](rules/) — common agent rules
 - **Commit messages** → [`rules/agent/commit-message.md`](rules/agent/commit-message.md)
 - **Branches** → [`rules/agent/branch-naming.md`](rules/agent/branch-naming.md)
 - **PR titles** → [`rules/agent/pr-title.md`](rules/agent/pr-title.md)
+- **Protected local-only files** → [`rules/agent/protected-local-files.md`](rules/agent/protected-local-files.md)
 
 ---
 
@@ -225,6 +226,7 @@ Detailed, situational rules live under [`rules/`](rules/) — common agent rules
 3. **No Primitive Obsession** - avoid overusing primitive types; use Value Objects.
 4. **No tight coupling** - keep loose coupling through interfaces.
 5. **No business logic in Controllers.**
+6. **Never delete gitignored local-only config** - do not delete/move/overwrite/`git clean` `application*.yml`, Firebase `*.json`, or `db/seed/**` (unrecoverable from git). See [`rules/agent/protected-local-files.md`](rules/agent/protected-local-files.md).
 
 ---
 
