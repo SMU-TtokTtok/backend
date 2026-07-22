@@ -39,23 +39,4 @@ class NoticeTest {
                     .isInstanceOf(IllegalArgumentException.class);
         }
     }
-
-    @Nested
-    @DisplayName("increaseViewCount()")
-    class IncreaseViewCount {
-
-        @Test
-        @DisplayName("호출할 때마다 조회수가 1씩 증가한다.")
-        void increase() {
-            // given
-            Notice notice = Notice.create("제목", "내용");
-
-            // when
-            notice.increaseViewCount();
-            notice.increaseViewCount();
-
-            // then
-            assertThat(notice.getViewCount()).isEqualTo(2);
-        }
-    }
 }

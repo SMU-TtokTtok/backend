@@ -33,13 +33,16 @@ public class NoticeUserService {
         return NoticeListResponse.of(page, totalPage, (int) queryResponse.totalCount(), summaries);
     }
 
-    // 공지사항 상세 조회 (조회 시 조회수 증가, 비로그인 공개)
+    // 공지사항 상세 조회 (조회 시 조회수 원자적 증가, 비로그인 공개)
     @Transactional
     public NoticeDetailResponse getNoticeDetail(String noticeId) {
+        int updated = noticeRepository.increaseViewCount(noticeId);
+        if (updated == 0) {
+            throw new NoticeNotFoundException();
+        }
+
         Notice notice = noticeRepository.findById(noticeId)
                 .orElseThrow(NoticeNotFoundException::new);
-
-        notice.increaseViewCount();
 
         return NoticeDetailResponse.from(notice);
     }

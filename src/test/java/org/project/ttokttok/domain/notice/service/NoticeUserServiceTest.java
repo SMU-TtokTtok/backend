@@ -18,6 +18,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -78,35 +79,37 @@ class NoticeUserServiceTest {
     class GetNoticeDetail {
 
         @Test
-        @DisplayName("상세 조회 시 조회수를 증가시키고 상세 응답을 반환한다.")
+        @DisplayName("상세 조회 시 조회수를 원자적으로 증가시키고 증가된 상세 응답을 반환한다.")
         void getNoticeDetailSuccess() {
             // given
             Notice notice = mock(Notice.class);
             when(notice.getId()).thenReturn("notice-1");
             when(notice.getTitle()).thenReturn("제목");
             when(notice.getContent()).thenReturn("내용");
-            when(notice.getViewCount()).thenReturn(1);
+            when(notice.getViewCount()).thenReturn(2); // 증가 후 재조회된 값
+            when(noticeRepository.increaseViewCount("notice-1")).thenReturn(1);
             when(noticeRepository.findById("notice-1")).thenReturn(Optional.of(notice));
 
             // when
             NoticeDetailResponse response = noticeUserService.getNoticeDetail("notice-1");
 
             // then
-            verify(notice).increaseViewCount();
+            verify(noticeRepository).increaseViewCount("notice-1");
             assertThat(response.noticeId()).isEqualTo("notice-1");
             assertThat(response.content()).isEqualTo("내용");
-            assertThat(response.viewCount()).isEqualTo(1);
+            assertThat(response.viewCount()).isEqualTo(2);
         }
 
         @Test
-        @DisplayName("존재하지 않는 공지를 조회하면 예외가 발생한다.")
+        @DisplayName("존재하지 않는 공지를 조회하면 예외가 발생하고 재조회하지 않는다.")
         void getNoticeDetailNotFound() {
             // given
-            when(noticeRepository.findById("missing")).thenReturn(Optional.empty());
+            when(noticeRepository.increaseViewCount("missing")).thenReturn(0);
 
             // when & then
             assertThatThrownBy(() -> noticeUserService.getNoticeDetail("missing"))
                     .isInstanceOf(NoticeNotFoundException.class);
+            verify(noticeRepository, never()).findById("missing");
         }
     }
 }

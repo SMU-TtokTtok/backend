@@ -54,4 +54,19 @@ class NoticeRepositoryTest implements RepositoryTestSupport {
         assertThat(response.totalCount()).isEqualTo(3);
         assertThat(response.content()).hasSize(1);
     }
+
+    @Test
+    @DisplayName("increaseViewCount는 조회수를 DB에서 원자적으로 1 증가시킨다.")
+    void increaseViewCount() {
+        // given
+        Notice saved = noticeRepository.save(Notice.create("조회수 테스트", "내용"));
+
+        // when
+        int updated = noticeRepository.increaseViewCount(saved.getId());
+        Notice reloaded = noticeRepository.findById(saved.getId()).orElseThrow();
+
+        // then
+        assertThat(updated).isEqualTo(1);
+        assertThat(reloaded.getViewCount()).isEqualTo(1);
+    }
 }

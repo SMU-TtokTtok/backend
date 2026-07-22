@@ -57,11 +57,6 @@ public class Notice extends BaseTimeEntity {
                 .build();
     }
 
-    // ------- 비즈니스 로직 메서드 -------
-    public void increaseViewCount() {
-        this.viewCount++;
-    }
-
     // ------- 유효성 검사 메서드 -------
     private static void validateTitle(String title) {
         if (title == null || title.isBlank()) {
