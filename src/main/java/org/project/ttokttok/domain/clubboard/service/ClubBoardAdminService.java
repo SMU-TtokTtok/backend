@@ -1,7 +1,6 @@
 package org.project.ttokttok.domain.clubboard.service;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.exception.FileIsNotImageException;
 import org.project.ttokttok.domain.club.exception.NotClubAdminException;
@@ -21,7 +20,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import static org.project.ttokttok.infrastructure.s3.enums.S3FileDirectory.BOARD_IMAGE;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ClubBoardAdminService {
@@ -37,18 +35,14 @@ public class ClubBoardAdminService {
 
         validateImage(request.thumbnail());
 
-        // S3 업로드를 먼저 수행하고, 이후 DB 저장이 실패하면 업로드본을 보상 삭제한다.
+        // S3 업로드 후 트랜잭션이 롤백되면(커밋 시점 실패 포함) 업로드본을 보상 삭제한다.
         String thumbnailUrl = s3Service.uploadFile(request.thumbnail(), BOARD_IMAGE.getDirectoryName());
+        s3Service.deleteFileOnRollback(thumbnailUrl);
 
-        try {
-            ClubBoard clubBoard = ClubBoard.create(request.title(), request.content(), thumbnailUrl, club);
+        ClubBoard clubBoard = ClubBoard.create(request.title(), request.content(), thumbnailUrl, club);
 
-            return clubBoardRepository.save(clubBoard)
-                    .getId();
-        } catch (RuntimeException e) {
-            deleteFileQuietly(thumbnailUrl);
-            throw e;
-        }
+        return clubBoardRepository.save(clubBoard)
+                .getId();
     }
 
     // 게시글 수정 로직 (썸네일 교체 지원)
@@ -77,9 +71,9 @@ public class ClubBoardAdminService {
         // 게시글 삭제 로직
         clubBoardRepository.delete(clubBoard);
 
-        // S3 삭제 실패가 게시글 삭제를 막지 않도록 best-effort로 처리한다.
+        // 커밋이 확정된 뒤에만 S3 파일을 삭제한다 — 롤백 시 DB가 참조하는 파일이 유실되지 않는다.
         if (thumbnailUrl != null) {
-            deleteFileQuietly(thumbnailUrl);
+            s3Service.deleteFileAfterCommit(thumbnailUrl);
         }
     }
 
@@ -88,20 +82,14 @@ public class ClubBoardAdminService {
 
         String oldThumbnailUrl = clubBoard.getThumbnailUrl();
         String newThumbnailUrl = s3Service.uploadFile(thumbnail, BOARD_IMAGE.getDirectoryName());
+        // 트랜잭션이 롤백되면 방금 업로드한 새 파일을 보상 삭제한다.
+        s3Service.deleteFileOnRollback(newThumbnailUrl);
 
         clubBoard.updateThumbnailUrl(newThumbnailUrl);
 
-        // 교체 성공 시 기존 파일은 best-effort 삭제 (실패해도 요청은 성공 처리)
+        // 기존 파일은 커밋이 확정된 뒤에만 삭제한다 (롤백 시 구 파일 보존).
         if (oldThumbnailUrl != null) {
-            deleteFileQuietly(oldThumbnailUrl);
-        }
-    }
-
-    private void deleteFileQuietly(String fileUrl) {
-        try {
-            s3Service.deleteFile(fileUrl);
-        } catch (RuntimeException e) {
-            log.warn("S3 썸네일 파일 삭제 실패 (best-effort): {}", fileUrl, e);
+            s3Service.deleteFileAfterCommit(oldThumbnailUrl);
         }
     }
 

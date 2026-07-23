@@ -45,7 +45,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 class ClubBoardAdminControllerTest {
 
-    private static final String THUMBNAIL_URL = "https://cdn.example.com/board-images/uuid_thumb.png";
+    // 저장된 게시글이 이미 갖고 있는 기존 썸네일 URL과 신규 업로드 결과 URL을 구분해
+    // "기존 파일이 삭제 예약되었는지"를 정확히 검증한다.
+    private static final String EXISTING_THUMBNAIL_URL = "https://cdn.example.com/board-images/uuid_existing.png";
+    private static final String UPLOADED_THUMBNAIL_URL = "https://cdn.example.com/board-images/uuid_uploaded.png";
 
     @Autowired
     private ClubRepository clubRepository;
@@ -92,7 +95,7 @@ class ClubBoardAdminControllerTest {
         myAccessToken = jwtFactory.generateValidToken(myAdmin.getUsername(), Role.ROLE_ADMIN);
         otherAccessToken = jwtFactory.generateValidToken(otherAdmin.getUsername(), Role.ROLE_ADMIN);
 
-        given(s3Service.uploadFile(any(MultipartFile.class), anyString())).willReturn(THUMBNAIL_URL);
+        given(s3Service.uploadFile(any(MultipartFile.class), anyString())).willReturn(UPLOADED_THUMBNAIL_URL);
     }
 
     private MockMultipartFile jsonPart(Object request) throws Exception {
@@ -105,7 +108,7 @@ class ClubBoardAdminControllerTest {
     }
 
     private ClubBoard saveBoard(String title, String content) {
-        return clubBoardRepository.save(ClubBoard.create(title, content, THUMBNAIL_URL, myClub));
+        return clubBoardRepository.save(ClubBoard.create(title, content, EXISTING_THUMBNAIL_URL, myClub));
     }
 
     @Test
@@ -160,7 +163,7 @@ class ClubBoardAdminControllerTest {
     }
 
     @Test
-    @DisplayName("updateBoard(): 썸네일만 보내도 교체에 성공하고 기존 파일이 삭제된다.")
+    @DisplayName("updateBoard(): 썸네일만 보내도 교체에 성공하고 기존 파일이 커밋 후 삭제로 예약된다.")
     void updateBoard_replaceThumbnailOnly() throws Exception {
         ClubBoard board = saveBoard("원래 제목", "원래 내용");
 
@@ -170,11 +173,13 @@ class ClubBoardAdminControllerTest {
                 .andExpect(status().isOk());
 
         verify(s3Service).uploadFile(any(MultipartFile.class), anyString());
-        verify(s3Service).deleteFile(THUMBNAIL_URL);
+        // 신규 업로드본은 롤백 보상 훅, 기존 파일은 커밋 후 삭제로 각각 예약된다.
+        verify(s3Service).deleteFileOnRollback(UPLOADED_THUMBNAIL_URL);
+        verify(s3Service).deleteFileAfterCommit(EXISTING_THUMBNAIL_URL);
     }
 
     @Test
-    @DisplayName("deleteBoard(): 게시글 삭제 시 S3 썸네일도 삭제한다.")
+    @DisplayName("deleteBoard(): 게시글 삭제 시 S3 썸네일이 커밋 후 삭제로 예약된다.")
     void deleteBoard_success() throws Exception {
         ClubBoard board = saveBoard("삭제될 제목", "삭제될 내용");
 
@@ -182,7 +187,7 @@ class ClubBoardAdminControllerTest {
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + myAccessToken))
                 .andExpect(status().isOk());
 
-        verify(s3Service).deleteFile(THUMBNAIL_URL);
+        verify(s3Service).deleteFileAfterCommit(EXISTING_THUMBNAIL_URL);
     }
 
     @Test

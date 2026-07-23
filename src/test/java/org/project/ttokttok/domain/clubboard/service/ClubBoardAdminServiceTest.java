@@ -79,7 +79,8 @@ class ClubBoardAdminServiceTest {
             assertThat(result).isEqualTo("board123");
             verify(s3Service).uploadFile(any(MultipartFile.class), eq(BOARD_IMAGE.getDirectoryName()));
             verify(clubBoardRepository).save(any(ClubBoard.class));
-            verify(s3Service, never()).deleteFile(anyString());
+            // 롤백 시 업로드본이 보상 삭제되도록 훅이 등록되어야 한다.
+            verify(s3Service).deleteFileOnRollback(THUMBNAIL_URL);
         }
 
         @Test
@@ -99,8 +100,8 @@ class ClubBoardAdminServiceTest {
         }
 
         @Test
-        @DisplayName("DB 저장이 실패하면 업로드된 썸네일을 보상 삭제하고 예외를 다시 던진다.")
-        void createBoardCompensatesUploadOnSaveFailure() {
+        @DisplayName("DB 저장이 실패해도 업로드 직후 롤백 보상 훅이 이미 등록되어 있다.")
+        void createBoardRegistersRollbackHookBeforeSave() {
             Club club = mockClub("club123");
             when(clubRepository.findByAdminUsername("admin")).thenReturn(Optional.of(club));
             when(s3Service.uploadFile(any(MultipartFile.class), eq(BOARD_IMAGE.getDirectoryName())))
@@ -115,7 +116,8 @@ class ClubBoardAdminServiceTest {
                     .isInstanceOf(RuntimeException.class)
                     .hasMessage("db down");
 
-            verify(s3Service).deleteFile(THUMBNAIL_URL);
+            // 예외로 트랜잭션이 롤백되면 등록된 훅이 업로드본을 삭제한다 (실제 삭제는 S3ServiceTest가 검증).
+            verify(s3Service).deleteFileOnRollback(THUMBNAIL_URL);
         }
 
         @Test
@@ -199,34 +201,9 @@ class ClubBoardAdminServiceTest {
             clubBoardService.updateBoard(request);
 
             verify(board).updateThumbnailUrl(THUMBNAIL_URL);
-            verify(s3Service).deleteFile(oldUrl);
-        }
-
-        @Test
-        @DisplayName("기존 썸네일 삭제가 실패해도 교체 요청은 성공한다.")
-        void updateBoardOldThumbnailDeleteFailureIsIgnored() {
-            Club club = mockClub("club123");
-            when(clubRepository.findByAdminUsername("admin")).thenReturn(Optional.of(club));
-
-            String oldUrl = "https://cdn.example.com/board-images/uuid_old.png";
-            ClubBoard board = mock(ClubBoard.class);
-            when(board.getClub()).thenReturn(club);
-            when(board.getThumbnailUrl()).thenReturn(oldUrl);
-            when(clubBoardRepository.findById("board123")).thenReturn(Optional.of(board));
-            when(s3Service.uploadFile(any(MultipartFile.class), eq(BOARD_IMAGE.getDirectoryName())))
-                    .thenReturn(THUMBNAIL_URL);
-            doThrow(new RuntimeException("s3 down")).when(s3Service).deleteFile(oldUrl);
-
-            ClubBoardUpdateServiceRequest request = ClubBoardUpdateServiceRequest.builder()
-                    .username("admin")
-                    .clubId("club123")
-                    .boardId("board123")
-                    .thumbnail(imageFile())
-                    .build();
-
-            clubBoardService.updateBoard(request);
-
-            verify(board).updateThumbnailUrl(THUMBNAIL_URL);
+            // 새 업로드본은 롤백 보상 훅 등록, 기존 파일은 커밋 이후 삭제로 예약되어야 한다.
+            verify(s3Service).deleteFileOnRollback(THUMBNAIL_URL);
+            verify(s3Service).deleteFileAfterCommit(oldUrl);
         }
 
         @Test
@@ -303,7 +280,7 @@ class ClubBoardAdminServiceTest {
     class DeleteBoard {
 
         @Test
-        @DisplayName("게시글 삭제 시 S3 썸네일 파일도 삭제한다.")
+        @DisplayName("게시글 삭제 시 S3 썸네일 파일은 커밋 이후 삭제로 예약된다.")
         void deleteBoardSuccess() {
             Club club = mockClub("club123");
             when(clubRepository.findByAdminUsername("admin")).thenReturn(Optional.of(club));
@@ -318,7 +295,7 @@ class ClubBoardAdminServiceTest {
             clubBoardService.deleteBoard(request);
 
             verify(clubBoardRepository).delete(board);
-            verify(s3Service).deleteFile(THUMBNAIL_URL);
+            verify(s3Service).deleteFileAfterCommit(THUMBNAIL_URL);
         }
 
         @Test
@@ -338,25 +315,6 @@ class ClubBoardAdminServiceTest {
 
             verify(clubBoardRepository).delete(board);
             verifyNoInteractions(s3Service);
-        }
-
-        @Test
-        @DisplayName("S3 삭제가 실패해도 게시글 삭제는 성공한다.")
-        void deleteBoardS3FailureIsIgnored() {
-            Club club = mockClub("club123");
-            when(clubRepository.findByAdminUsername("admin")).thenReturn(Optional.of(club));
-
-            ClubBoard board = mock(ClubBoard.class);
-            when(board.getClub()).thenReturn(club);
-            when(board.getThumbnailUrl()).thenReturn(THUMBNAIL_URL);
-            when(clubBoardRepository.findById("board123")).thenReturn(Optional.of(board));
-            doThrow(new RuntimeException("s3 down")).when(s3Service).deleteFile(THUMBNAIL_URL);
-
-            DeleteBoardServiceRequest request = new DeleteBoardServiceRequest("admin", "club123", "board123");
-
-            clubBoardService.deleteBoard(request);
-
-            verify(clubBoardRepository).delete(board);
         }
 
         @Test
