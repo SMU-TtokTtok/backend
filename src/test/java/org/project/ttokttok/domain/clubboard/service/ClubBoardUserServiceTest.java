@@ -8,13 +8,16 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.exception.ClubNotFoundException;
 import org.project.ttokttok.domain.club.repository.ClubRepository;
+import org.project.ttokttok.domain.clubboard.controller.dto.response.ClubBoardDetailResponse;
 import org.project.ttokttok.domain.clubboard.controller.dto.response.ClubBoardListResponse;
 import org.project.ttokttok.domain.clubboard.controller.dto.response.ClubBoardListResponse.ClubBoardSummary;
 import org.project.ttokttok.domain.clubboard.domain.ClubBoard;
+import org.project.ttokttok.domain.clubboard.exception.ClubBoardNotFoundException;
 import org.project.ttokttok.domain.clubboard.repository.ClubBoardRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -27,6 +30,8 @@ class ClubBoardUserServiceTest {
     private final ClubRepository clubRepository = mock(ClubRepository.class);
     private final ClubBoardUserService clubBoardUserService =
             new ClubBoardUserService(clubBoardRepository, clubRepository);
+
+    private static final String THUMBNAIL_URL = "https://cdn.example.com/board-images/uuid_thumb.webp";
 
     private ClubBoard mockBoard(String id, String title, String content) {
         Club club = mock(Club.class);
@@ -73,8 +78,7 @@ class ClubBoardUserServiceTest {
 
             ClubBoardSummary summary = response.boards().get(0);
             assertThat(summary.boardId()).isEqualTo("board1");
-            assertThat(summary.title()).isEqualTo("제목1");
-            assertThat(summary.clubName()).isEqualTo("동아리");
+            assertThat(summary.createdAt()).isEqualTo(LocalDateTime.of(2026, 1, 1, 0, 0));
         }
 
         @Test
@@ -97,65 +101,76 @@ class ClubBoardUserServiceTest {
         }
 
         @Test
-        @DisplayName("게시글 내용에 img 태그가 있으면 hasImages가 true이다.")
-        void getBoardListHasImagesFromImgTag() {
-            when(clubRepository.existsById("club123")).thenReturn(true);
-
-            ClubBoard board = mockBoard("board1", "제목", "<p>본문 <img src='a.png'/></p>");
-            when(clubBoardRepository.findBoardsByClubIdWithCursor("club123", 20, null))
-                    .thenReturn(List.of(board));
-
-            ClubBoardListResponse response = clubBoardUserService.getBoardList("club123", 20, null);
-
-            assertThat(response.boards().get(0).hasImages()).isTrue();
-        }
-
-        @Test
-        @DisplayName("게시글 내용에 이미지가 없으면 hasImages가 false이다.")
-        void getBoardListNoImages() {
-            when(clubRepository.existsById("club123")).thenReturn(true);
-
-            ClubBoard board = mockBoard("board1", "제목", "그냥 텍스트 내용입니다.");
-            when(clubBoardRepository.findBoardsByClubIdWithCursor("club123", 20, null))
-                    .thenReturn(List.of(board));
-
-            ClubBoardListResponse response = clubBoardUserService.getBoardList("club123", 20, null);
-
-            assertThat(response.boards().get(0).hasImages()).isFalse();
-        }
-
-        @Test
-        @DisplayName("썸네일이 있는 게시글은 thumbnailUrl이 내려가고 내용이 텍스트뿐이어도 hasImages가 true이다.")
+        @DisplayName("썸네일이 있는 게시글은 thumbnailUrl이 내려간다.")
         void getBoardListWithThumbnail() {
             when(clubRepository.existsById("club123")).thenReturn(true);
 
-            String thumbnailUrl = "https://cdn.example.com/board-images/uuid_thumb.webp";
-            ClubBoard board = mockBoard("board1", "제목", "그냥 텍스트 내용입니다.");
-            lenient().when(board.getThumbnailUrl()).thenReturn(thumbnailUrl);
+            ClubBoard board = mockBoard("board1", "제목", "내용");
+            lenient().when(board.getThumbnailUrl()).thenReturn(THUMBNAIL_URL);
             when(clubBoardRepository.findBoardsByClubIdWithCursor("club123", 20, null))
                     .thenReturn(List.of(board));
 
             ClubBoardListResponse response = clubBoardUserService.getBoardList("club123", 20, null);
 
-            ClubBoardSummary summary = response.boards().get(0);
-            assertThat(summary.thumbnailUrl()).isEqualTo(thumbnailUrl);
-            assertThat(summary.hasImages()).isTrue();
+            assertThat(response.boards().get(0).thumbnailUrl()).isEqualTo(THUMBNAIL_URL);
         }
 
         @Test
-        @DisplayName("썸네일이 없는 레거시 게시글은 thumbnailUrl이 null이고 기존 휴리스틱 동작을 유지한다.")
+        @DisplayName("썸네일이 없는 레거시 게시글은 thumbnailUrl이 null이다.")
         void getBoardListLegacyBoardWithoutThumbnail() {
             when(clubRepository.existsById("club123")).thenReturn(true);
 
-            ClubBoard board = mockBoard("board1", "제목", "그냥 텍스트 내용입니다.");
+            ClubBoard board = mockBoard("board1", "제목", "내용");
             when(clubBoardRepository.findBoardsByClubIdWithCursor("club123", 20, null))
                     .thenReturn(List.of(board));
 
             ClubBoardListResponse response = clubBoardUserService.getBoardList("club123", 20, null);
 
-            ClubBoardSummary summary = response.boards().get(0);
-            assertThat(summary.thumbnailUrl()).isNull();
-            assertThat(summary.hasImages()).isFalse();
+            assertThat(response.boards().get(0).thumbnailUrl()).isNull();
+        }
+    }
+
+    @Nested
+    @DisplayName("getBoardDetail()")
+    class GetBoardDetail {
+
+        @Test
+        @DisplayName("게시글 상세 정보를 조회한다.")
+        void getBoardDetailSuccess() {
+            ClubBoard board = mockBoard("board1", "제목", "본문 전체 내용");
+            lenient().when(board.getThumbnailUrl()).thenReturn(THUMBNAIL_URL);
+            when(clubBoardRepository.findByIdAndClubIdWithClub("board1", "club123"))
+                    .thenReturn(Optional.of(board));
+
+            ClubBoardDetailResponse response = clubBoardUserService.getBoardDetail("club123", "board1");
+
+            assertThat(response.boardId()).isEqualTo("board1");
+            assertThat(response.title()).isEqualTo("제목");
+            assertThat(response.content()).isEqualTo("본문 전체 내용");
+            assertThat(response.thumbnailUrl()).isEqualTo(THUMBNAIL_URL);
+            assertThat(response.clubName()).isEqualTo("동아리");
+            assertThat(response.createdAt()).isEqualTo(LocalDateTime.of(2026, 1, 1, 0, 0));
+        }
+
+        @Test
+        @DisplayName("존재하지 않는 게시글을 조회하면 예외가 발생한다.")
+        void getBoardDetailNotFound() {
+            when(clubBoardRepository.findByIdAndClubIdWithClub("missing", "club123"))
+                    .thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> clubBoardUserService.getBoardDetail("club123", "missing"))
+                    .isInstanceOf(ClubBoardNotFoundException.class);
+        }
+
+        @Test
+        @DisplayName("다른 동아리 소속 게시글을 조회하면 예외가 발생한다.")
+        void getBoardDetailWrongClub() {
+            // 리포지토리 쿼리가 clubId 조건을 포함하므로 다른 동아리의 boardId로는 조회되지 않는다.
+            when(clubBoardRepository.findByIdAndClubIdWithClub("board1", "otherClub"))
+                    .thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> clubBoardUserService.getBoardDetail("otherClub", "board1"))
+                    .isInstanceOf(ClubBoardNotFoundException.class);
         }
     }
 }

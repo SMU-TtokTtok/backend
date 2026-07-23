@@ -2,6 +2,7 @@ package org.project.ttokttok.domain.clubboard.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.project.ttokttok.domain.clubboard.controller.docs.ClubBoardUserDocs;
+import org.project.ttokttok.domain.clubboard.controller.dto.response.ClubBoardDetailResponse;
 import org.project.ttokttok.domain.clubboard.controller.dto.response.ClubBoardListResponse;
 import org.project.ttokttok.domain.clubboard.service.ClubBoardUserService;
 import org.springframework.http.ResponseEntity;
@@ -36,6 +37,25 @@ public class ClubBoardUserController implements ClubBoardUserDocs {
             @RequestParam(required = false) String cursor
     ) {
         ClubBoardListResponse response = clubBoardUserService.getBoardList(clubId, size, cursor);
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 동아리 게시판 상세 조회 API
+     * 게시글 단건의 상세 정보(본문 전문 포함)를 조회합니다.
+     *
+     * @param clubId 동아리 ID
+     * @param boardId 게시글 ID
+     * @return 게시글 상세 정보
+     */
+    @Override
+    @GetMapping("/{boardId}")
+    public ResponseEntity<ClubBoardDetailResponse> getBoardDetail(
+            @PathVariable String clubId,
+            @PathVariable String boardId
+    ) {
+        ClubBoardDetailResponse response = clubBoardUserService.getBoardDetail(clubId, boardId);
 
         return ResponseEntity.ok(response);
     }
