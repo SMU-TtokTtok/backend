@@ -44,6 +44,9 @@ class GoogleOAuthServiceTest {
     private UserRepository userRepository;
 
     @Mock
+    private GoogleAccountWriter googleAccountWriter;
+
+    @Mock
     private GoogleIdTokenVerifier googleIdTokenVerifier;
 
     @Mock
@@ -85,6 +88,12 @@ class GoogleOAuthServiceTest {
         return User.signUp(SMU_EMAIL, "encoded-password", "김철수", true);
     }
 
+    private User linkedLocalUser() {
+        User user = localUser();
+        user.linkGoogle(SUB);
+        return user;
+    }
+
     @Nested
     @DisplayName("login 메서드")
     class LoginTest {
@@ -105,6 +114,7 @@ class GoogleOAuthServiceTest {
             assertThat(response.needsOnboarding()).isFalse();
             assertThat(response.accessToken()).isEqualTo("access-token");
             verify(refreshTokenRedisService).save(GMAIL, "refresh-token");
+            verify(googleAccountWriter, never()).autoLink(any(), any());
         }
 
         @Test
@@ -136,12 +146,11 @@ class GoogleOAuthServiceTest {
             GoogleUserInfo smuInfo = GoogleUserInfo.builder()
                     .sub(SUB).email(SMU_EMAIL).emailVerified(true).name("김철수")
                     .build();
-            User local = localUser();
             given(googleIdTokenVerifier.verify(ID_TOKEN)).willReturn(smuInfo);
             given(userRepository.findByProviderAndProviderId(AuthProvider.GOOGLE, SUB))
                     .willReturn(Optional.empty());
-            given(userRepository.findByEmail(SMU_EMAIL)).willReturn(Optional.of(local));
-            given(userRepository.save(local)).willReturn(local);
+            given(userRepository.findByEmail(SMU_EMAIL)).willReturn(Optional.of(localUser()));
+            given(googleAccountWriter.autoLink(SMU_EMAIL, SUB)).willReturn(linkedLocalUser());
             given(tokenProvider.generateToken(any(TokenRequest.class))).willReturn(tokens);
 
             // when
@@ -149,24 +158,24 @@ class GoogleOAuthServiceTest {
 
             // then
             assertThat(response.needsOnboarding()).isFalse();
-            assertThat(local.getProviderId()).isEqualTo(SUB);
-            assertThat(local.getProvider()).isEqualTo(AuthProvider.GOOGLE);
-            assertThat(local.getPassword()).isNotNull(); // 비밀번호 로그인도 계속 가능
+            assertThat(response.user().email()).isEqualTo(SMU_EMAIL);
+            verify(googleAccountWriter).autoLink(SMU_EMAIL, SUB);
             verify(refreshTokenRedisService).save(SMU_EMAIL, "refresh-token");
         }
 
         @Test
         @DisplayName("이미 다른 구글 계정과 연동된 이메일이면 GoogleAccountConflictException을 던진다")
         void login_emailLinkedToDifferentSub_throwsConflict() {
-            // given
-            User linkedToOther = googleUser(); // providerId = SUB
+            // given - writer.autoLink 내부 linkGoogle 이 충돌 예외를 던진다
             GoogleUserInfo otherSubInfo = GoogleUserInfo.builder()
                     .sub("different-sub").email(GMAIL).emailVerified(true).name("홍길동")
                     .build();
             given(googleIdTokenVerifier.verify(ID_TOKEN)).willReturn(otherSubInfo);
             given(userRepository.findByProviderAndProviderId(AuthProvider.GOOGLE, "different-sub"))
                     .willReturn(Optional.empty());
-            given(userRepository.findByEmail(GMAIL)).willReturn(Optional.of(linkedToOther));
+            given(userRepository.findByEmail(GMAIL)).willReturn(Optional.of(googleUser()));
+            given(googleAccountWriter.autoLink(GMAIL, "different-sub"))
+                    .willThrow(new GoogleAccountConflictException());
 
             // when & then
             assertThatThrownBy(() -> googleOAuthService.login(ID_TOKEN))
@@ -176,18 +185,17 @@ class GoogleOAuthServiceTest {
         @Test
         @DisplayName("자동 연동 중 유니크 제약 충돌이 나면 sub로 재조회하여 멱등 로그인한다")
         void login_autoLinkRace_recoversIdempotently() {
-            // given - 병렬 연동 경쟁에서 패배한 상황
+            // given - 병렬 연동 경쟁에서 패배한 상황 (writer 가 DataIntegrityViolationException)
             GoogleUserInfo smuInfo = GoogleUserInfo.builder()
                     .sub(SUB).email(SMU_EMAIL).emailVerified(true).name("김철수")
                     .build();
-            User local = localUser();
-            User alreadyLinked = googleUser();
             given(googleIdTokenVerifier.verify(ID_TOKEN)).willReturn(smuInfo);
             given(userRepository.findByProviderAndProviderId(AuthProvider.GOOGLE, SUB))
-                    .willReturn(Optional.empty())            // 최초 조회 - 없음
-                    .willReturn(Optional.of(alreadyLinked)); // 충돌 후 재조회 - 있음
-            given(userRepository.findByEmail(SMU_EMAIL)).willReturn(Optional.of(local));
-            given(userRepository.save(local)).willThrow(new DataIntegrityViolationException("duplicate"));
+                    .willReturn(Optional.empty())              // 최초 조회 - 없음
+                    .willReturn(Optional.of(linkedLocalUser())); // 충돌 후 재조회 - 있음
+            given(userRepository.findByEmail(SMU_EMAIL)).willReturn(Optional.of(localUser()));
+            given(googleAccountWriter.autoLink(SMU_EMAIL, SUB))
+                    .willThrow(new DataIntegrityViolationException("duplicate"));
             given(tokenProvider.generateToken(any(TokenRequest.class))).willReturn(tokens);
 
             // when
@@ -195,6 +203,7 @@ class GoogleOAuthServiceTest {
 
             // then
             assertThat(response.needsOnboarding()).isFalse();
+            assertThat(response.accessToken()).isEqualTo("access-token");
         }
 
         @Test
@@ -215,7 +224,8 @@ class GoogleOAuthServiceTest {
             assertThat(response.onboardingToken()).isEqualTo("onboarding-token");
             assertThat(response.email()).isEqualTo(GMAIL);
             assertThat(response.suggestedName()).isEqualTo("홍길동");
-            verify(userRepository, never()).save(any()); // 계정 미생성 검증
+            verify(googleAccountWriter, never()).createGoogleUser(any(), any()); // 계정 미생성 검증
+            verify(googleAccountWriter, never()).autoLink(any(), any());
             verify(refreshTokenRedisService, never()).save(any(), any());
         }
 
@@ -266,10 +276,7 @@ class GoogleOAuthServiceTest {
             // given
             given(onboardingTokenProvider.parse(ONBOARDING_TOKEN)).willReturn(claims);
             given(onboardingTokenRedisService.markUsed(JTI)).willReturn(true);
-            given(userRepository.findByProviderAndProviderId(AuthProvider.GOOGLE, SUB))
-                    .willReturn(Optional.empty());
-            given(userRepository.findByEmail(GMAIL)).willReturn(Optional.empty());
-            given(userRepository.save(any(User.class))).willAnswer(inv -> inv.getArgument(0));
+            given(googleAccountWriter.createGoogleUser(claims, "홍길동")).willReturn(googleUser());
             given(tokenProvider.generateToken(any(TokenRequest.class))).willReturn(tokens);
 
             // when
@@ -309,7 +316,7 @@ class GoogleOAuthServiceTest {
 
             // then
             assertThat(response.accessToken()).isEqualTo("access-token");
-            verify(userRepository, never()).save(any());
+            verify(googleAccountWriter, never()).createGoogleUser(any(), any());
         }
 
         @Test
@@ -327,40 +334,34 @@ class GoogleOAuthServiceTest {
         }
 
         @Test
-        @DisplayName("온보딩 사이에 같은 이메일의 로컬 계정이 생겼으면 자동 연동한다")
-        void complete_localAccountCreatedMeanwhile_autoLinks() {
-            // given - 온보딩 토큰 발급과 완료 사이에 이메일 가입이 끝난 상황
+        @DisplayName("writer가 반환한 계정(온보딩 사이 자동 연동 등)으로 토큰을 발급한다")
+        void complete_writerReturnsLinkedAccount_issuesTokens() {
+            // given - 온보딩 토큰 발급과 완료 사이에 이메일 가입이 끝나 writer 가 연동 처리한 계정 반환
             OnboardingClaims smuClaims = new OnboardingClaims(SUB, SMU_EMAIL, "김철수", JTI);
-            User local = localUser();
+            GoogleOnboardingCompleteServiceRequest smuRequest =
+                    GoogleOnboardingCompleteServiceRequest.of(ONBOARDING_TOKEN, true, "김철수");
             given(onboardingTokenProvider.parse(ONBOARDING_TOKEN)).willReturn(smuClaims);
             given(onboardingTokenRedisService.markUsed(JTI)).willReturn(true);
-            given(userRepository.findByProviderAndProviderId(AuthProvider.GOOGLE, SUB))
-                    .willReturn(Optional.empty());
-            given(userRepository.findByEmail(SMU_EMAIL)).willReturn(Optional.of(local));
-            given(userRepository.save(local)).willReturn(local);
+            given(googleAccountWriter.createGoogleUser(smuClaims, "김철수")).willReturn(linkedLocalUser());
             given(tokenProvider.generateToken(any(TokenRequest.class))).willReturn(tokens);
 
             // when
-            LoginServiceResponse response = googleOAuthService.completeOnboarding(request);
+            LoginServiceResponse response = googleOAuthService.completeOnboarding(smuRequest);
 
             // then
-            assertThat(local.getProviderId()).isEqualTo(SUB);
             assertThat(response.user().email()).isEqualTo(SMU_EMAIL);
         }
 
         @Test
         @DisplayName("가입 저장 시 유니크 제약 충돌이 나면 sub로 재조회하여 멱등 처리한다")
         void complete_signUpRace_recoversIdempotently() {
-            // given - 동시 가입 경쟁에서 저장에 실패한 상황
-            User winner = googleUser();
+            // given - 동시 가입 경쟁에서 writer 저장이 실패한 상황
             given(onboardingTokenProvider.parse(ONBOARDING_TOKEN)).willReturn(claims);
             given(onboardingTokenRedisService.markUsed(JTI)).willReturn(true);
-            given(userRepository.findByProviderAndProviderId(AuthProvider.GOOGLE, SUB))
-                    .willReturn(Optional.empty())        // 저장 전 조회 - 없음
-                    .willReturn(Optional.of(winner));    // 충돌 후 재조회 - 있음
-            given(userRepository.findByEmail(GMAIL)).willReturn(Optional.empty());
-            given(userRepository.save(any(User.class)))
+            given(googleAccountWriter.createGoogleUser(claims, "홍길동"))
                     .willThrow(new DataIntegrityViolationException("duplicate"));
+            given(userRepository.findByProviderAndProviderId(AuthProvider.GOOGLE, SUB))
+                    .willReturn(Optional.of(googleUser())); // 충돌 후 재조회 - 승자 존재
             given(tokenProvider.generateToken(any(TokenRequest.class))).willReturn(tokens);
 
             // when
@@ -373,14 +374,13 @@ class GoogleOAuthServiceTest {
         @Test
         @DisplayName("유니크 제약 충돌 후 재조회에도 없으면 GoogleAccountConflictException을 던진다")
         void complete_signUpRaceWithEmailConflict_throwsConflict() {
-            // given - 같은 이메일의 다른 계정이 선점한 상황 (unique(email) 충돌)
+            // given - 같은 이메일을 다른 계정이 선점한 상황 (unique(email) 충돌, sub 로는 조회 안 됨)
             given(onboardingTokenProvider.parse(ONBOARDING_TOKEN)).willReturn(claims);
             given(onboardingTokenRedisService.markUsed(JTI)).willReturn(true);
+            given(googleAccountWriter.createGoogleUser(claims, "홍길동"))
+                    .willThrow(new DataIntegrityViolationException("duplicate"));
             given(userRepository.findByProviderAndProviderId(AuthProvider.GOOGLE, SUB))
                     .willReturn(Optional.empty());
-            given(userRepository.findByEmail(GMAIL)).willReturn(Optional.empty());
-            given(userRepository.save(any(User.class)))
-                    .willThrow(new DataIntegrityViolationException("duplicate"));
 
             // when & then
             assertThatThrownBy(() -> googleOAuthService.completeOnboarding(request))

@@ -49,6 +49,25 @@ class GoogleIdTokenVerifierTest {
     }
 
     @Test
+    @DisplayName("이메일은 대소문자를 정규화하여 소문자로 반환한다")
+    void verify_normalizesEmailToLowerCase() {
+        // given - 자동 연동 조회 미스로 인한 계정 중복 방지
+        Jwt jwt = Jwt.withTokenValue("id-token")
+                .header("alg", "RS256")
+                .subject("google-sub-123")
+                .claim("email", "User@Gmail.COM")
+                .claim("email_verified", true)
+                .build();
+        given(googleJwtDecoder.decode("id-token")).willReturn(jwt);
+
+        // when
+        GoogleUserInfo userInfo = googleIdTokenVerifier.verify("id-token");
+
+        // then
+        assertThat(userInfo.email()).isEqualTo("user@gmail.com");
+    }
+
+    @Test
     @DisplayName("email_verified 클레임이 없으면 미검증으로 취급한다")
     void verify_withoutEmailVerifiedClaim_treatsAsUnverified() {
         // given

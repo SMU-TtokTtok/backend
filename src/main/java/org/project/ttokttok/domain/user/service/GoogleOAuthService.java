@@ -23,27 +23,29 @@ import org.project.ttokttok.infrastructure.redis.service.OnboardingTokenRedisSer
 import org.project.ttokttok.infrastructure.redis.service.RefreshTokenRedisService;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
 import static org.project.ttokttok.global.entity.Role.ROLE_USER;
 
 /**
- * 구글 OAuth 로그인 서비스
+ * 구글 OAuth 로그인 오케스트레이터
  *
- * 1) 구글 ID 토큰 검증 후 sub(불변 식별자) 우선, email 차선으로 사용자를 조회하여 로그인/자동연동 처리
- * 2) 신규 사용자는 계정을 만들지 않고 10분 TTL 온보딩 토큰 발급 (약관 동의 화면으로 유도)
- * 3) 온보딩 완료 시 SETNX(jti) + DB 유니크 제약 + 멱등 재조회의 3중 방어로
- *    재생(replay)/동시 요청(두 탭) 경쟁을 "로그인 성공"으로 수렴시킨다
+ * 이 클래스는 <b>트랜잭션을 열지 않는다</b>. 외부 호출(ID 토큰 검증)과 조회를 트랜잭션 밖에서 수행하여
+ * DB 커넥션이 네트워크 대기에 묶이지 않게 하고(P1-2), DB 쓰기는 별도 트랜잭션 빈
+ * {@link GoogleAccountWriter}에 위임한다. 유니크 제약 위반은 writer 트랜잭션이 롤백된 뒤
+ * 이 클래스의 catch(트랜잭션 밖)로 전파되므로, 새 트랜잭션으로 승자(winner)를 재조회해 멱등 처리한다(P1-1).
+ *
+ * 동시성 방어: SETNX(jti) + DB 유니크 제약 + DataIntegrityViolationException 멱등 재조회의 3중 방어로
+ * 재생(replay)/동시 요청(두 탭) 경쟁을 "로그인 성공"으로 수렴시킨다.
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class GoogleOAuthService {
 
     private final UserRepository userRepository;
+    private final GoogleAccountWriter googleAccountWriter;
     private final GoogleIdTokenVerifier googleIdTokenVerifier;
     private final TokenProvider tokenProvider;
     private final OnboardingTokenProvider onboardingTokenProvider;
@@ -58,7 +60,7 @@ public class GoogleOAuthService {
      * @throws GoogleEmailNotVerifiedException 구글 측 이메일 미검증 시 (자동 연동 = 계정 탈취 벡터 차단)
      */
     public GoogleLoginServiceResponse login(String idToken) {
-        // 1-1. 구글 ID 토큰 검증 (서명/iss/aud/exp)
+        // 1-1. 구글 ID 토큰 검증 (서명/iss/aud/exp) - 트랜잭션 밖 외부 호출
         GoogleUserInfo userInfo = googleIdTokenVerifier.verify(idToken);
 
         // 1-2. 미검증 이메일 거부 - 검증되지 않은 이메일로 자동 연동하면 계정 탈취 가능
@@ -67,13 +69,12 @@ public class GoogleOAuthService {
         // 1-3. sub 우선 조회 (구글 이메일이 변경되어도 로그인 유지)
         Optional<User> bySub = userRepository.findByProviderAndProviderId(AuthProvider.GOOGLE, userInfo.sub());
         if (bySub.isPresent()) {
-            return loginExistingUser(bySub.get());
+            return GoogleLoginServiceResponse.ofLogin(issueTokenResponse(bySub.get()), userServiceResponse(bySub.get()));
         }
 
         // 1-4. email 차선 조회 - 기존 계정이면 자동 연동
-        Optional<User> byEmail = userRepository.findByEmail(userInfo.email());
-        if (byEmail.isPresent()) {
-            return autoLink(byEmail.get(), userInfo.sub());
+        if (userRepository.findByEmail(userInfo.email()).isPresent()) {
+            return autoLink(userInfo.email(), userInfo.sub());
         }
 
         // 1-5. 신규 사용자 - 계정을 만들지 않고 온보딩 토큰 발급
@@ -102,35 +103,31 @@ public class GoogleOAuthService {
             return loginIfAlreadyCompleted(claims.sub());
         }
 
-        // 2-4. 토큰 발급 사이 상태 변화 재확인 후 가입 (동시성 방어)
-        User user = findOrSignUp(claims, request.name());
+        // 2-4. 계정 생성 위임 (트랜잭션 경계는 writer). 동시 가입 경쟁은 catch 에서 멱등 복구
+        // 충돌 후 sub 로 승자가 조회되면 멱등 로그인, 조회되지 않으면 이메일을 다른 계정이 선점한 것 → 충돌
+        User user;
+        try {
+            user = googleAccountWriter.createGoogleUser(claims, request.name());
+        } catch (DataIntegrityViolationException e) {
+            user = recoverBySub(claims.sub(), GoogleAccountConflictException::new);
+        }
 
         log.info("구글 온보딩 가입 완료: {}", user.getEmail());
         return issueTokens(user);
     }
 
-    // 기존 사용자 로그인 처리
-    private GoogleLoginServiceResponse loginExistingUser(User user) {
-        LoginServiceResponse login = issueTokens(user);
-        log.info("구글 로그인 성공: {}", user.getEmail());
-        return GoogleLoginServiceResponse.ofLogin(
-                TokenResponse.of(login.accessToken(), login.refreshToken()), login.user());
-    }
-
-    // 기존 이메일 계정에 구글 계정 자동 연동
-    private GoogleLoginServiceResponse autoLink(User user, String sub) {
+    // 기존 이메일 계정에 구글 계정 자동 연동 (writer 트랜잭션 밖에서 충돌 복구)
+    private GoogleLoginServiceResponse autoLink(String email, String sub) {
+        User user;
         try {
-            user.linkGoogle(sub); // 다른 sub 와 이미 연동 시 GoogleAccountConflictException
-            userRepository.save(user);
+            user = googleAccountWriter.autoLink(email, sub);
         } catch (DataIntegrityViolationException e) {
             // 병렬 연동 경쟁 - 유니크 제약 충돌 시 sub 로 재조회하여 멱등 처리
-            return userRepository.findByProviderAndProviderId(AuthProvider.GOOGLE, sub)
-                    .map(this::loginExistingUser)
-                    .orElseThrow(GoogleAccountConflictException::new);
+            user = recoverBySub(sub, GoogleAccountConflictException::new);
         }
 
         log.info("구글 계정 자동 연동 완료: {}", user.getEmail());
-        return loginExistingUser(user);
+        return GoogleLoginServiceResponse.ofLogin(issueTokenResponse(user), userServiceResponse(user));
     }
 
     // 신규 사용자 온보딩 시작 (계정 미생성)
@@ -142,46 +139,28 @@ public class GoogleOAuthService {
 
     // 이미 사용된 온보딩 토큰 - 가입이 완료됐다면 멱등 로그인, 아니면 이상 상태
     private LoginServiceResponse loginIfAlreadyCompleted(String sub) {
+        return issueTokens(recoverBySub(sub, OnboardingAlreadyCompletedException::new));
+    }
+
+    // 유니크 제약 충돌 후 승자(winner)를 sub 로 재조회 (새 트랜잭션 = auto-commit 조회)
+    private User recoverBySub(String sub, java.util.function.Supplier<? extends RuntimeException> onMissing) {
         return userRepository.findByProviderAndProviderId(AuthProvider.GOOGLE, sub)
-                .map(this::issueTokens)
-                .orElseThrow(OnboardingAlreadyCompletedException::new);
-    }
-
-    // 온보딩 완료 시점의 상태를 재확인하고 필요 시 가입한다
-    private User findOrSignUp(OnboardingClaims claims, String name) {
-        // 이미 다른 요청이 가입을 끝냈다면 그 계정으로 (멱등)
-        Optional<User> bySub = userRepository.findByProviderAndProviderId(AuthProvider.GOOGLE, claims.sub());
-        if (bySub.isPresent()) {
-            return bySub.get();
-        }
-
-        // 온보딩 토큰 발급 사이에 같은 이메일의 로컬 계정이 생겼다면 자동 연동
-        Optional<User> byEmail = userRepository.findByEmail(claims.email());
-        if (byEmail.isPresent()) {
-            User existing = byEmail.get();
-            existing.linkGoogle(claims.sub());
-            return userRepository.save(existing);
-        }
-
-        return signUpNewUser(claims, name);
-    }
-
-    // 신규 가입 - DB 유니크 제약 경쟁 시 멱등 재조회
-    private User signUpNewUser(OnboardingClaims claims, String name) {
-        try {
-            return userRepository.save(User.signUpWithGoogle(claims.email(), name, claims.sub()));
-        } catch (DataIntegrityViolationException e) {
-            // 동시 가입 경쟁 패배 - 같은 sub 로 가입됐다면 멱등 로그인, 아니면 이메일 충돌
-            return userRepository.findByProviderAndProviderId(AuthProvider.GOOGLE, claims.sub())
-                    .orElseThrow(GoogleAccountConflictException::new);
-        }
+                .orElseThrow(onMissing);
     }
 
     // 자체 JWT 발급 + 리프레시 토큰 Redis 저장 (기존 login 과 동일)
     private LoginServiceResponse issueTokens(User user) {
+        return LoginServiceResponse.from(issueTokenResponse(user), userServiceResponse(user));
+    }
+
+    private TokenResponse issueTokenResponse(User user) {
         TokenResponse tokens = tokenProvider.generateToken(TokenRequest.of(user.getEmail(), ROLE_USER));
         refreshTokenRedisService.save(user.getEmail(), tokens.refreshToken());
-        return LoginServiceResponse.from(tokens, UserServiceResponse.from(user));
+        return tokens;
+    }
+
+    private UserServiceResponse userServiceResponse(User user) {
+        return UserServiceResponse.from(user);
     }
 
     private void validateEmailVerified(GoogleUserInfo userInfo) {

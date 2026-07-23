@@ -21,9 +21,14 @@ public record GoogleUserInfo(
     public static GoogleUserInfo from(final Jwt jwt) {
         return GoogleUserInfo.builder()
                 .sub(jwt.getSubject())
-                .email(jwt.getClaimAsString("email"))
+                .email(normalizeEmail(jwt.getClaimAsString("email")))
                 .emailVerified(Boolean.TRUE.equals(jwt.getClaimAsBoolean("email_verified")))
                 .name(jwt.getClaimAsString("name"))
                 .build();
+    }
+
+    // 이메일 대소문자 정규화 - 자동 연동 조회 미스로 인한 계정 중복 방지
+    private static String normalizeEmail(String email) {
+        return email == null ? null : email.toLowerCase();
     }
 }

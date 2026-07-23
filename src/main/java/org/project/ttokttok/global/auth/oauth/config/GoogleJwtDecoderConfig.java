@@ -11,6 +11,8 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtTimestampValidator;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.Duration;
 import java.util.List;
@@ -32,12 +34,18 @@ public class GoogleJwtDecoderConfig {
     // 시계 오차 허용 범위
     private static final Duration CLOCK_SKEW = Duration.ofSeconds(60);
 
+    // 구글 JWKS 조회 타임아웃 - 무제한 대기로 인한 커넥션/스레드 고갈 방지
+    private static final int JWKS_CONNECT_TIMEOUT_MS = 2_000;
+    private static final int JWKS_READ_TIMEOUT_MS = 3_000;
+
     @Bean
     public JwtDecoder googleJwtDecoder(
             @Value("${google.oauth.jwk-set-uri}") String jwkSetUri,
             @Value("${google.oauth.client-id}") String clientId) {
 
-        NimbusJwtDecoder decoder = NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
+        NimbusJwtDecoder decoder = NimbusJwtDecoder.withJwkSetUri(jwkSetUri)
+                .restOperations(jwkSetRestTemplate())
+                .build();
 
         decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(
                 new JwtTimestampValidator(CLOCK_SKEW),
@@ -46,6 +54,14 @@ public class GoogleJwtDecoderConfig {
         ));
 
         return decoder;
+    }
+
+    // 타임아웃이 설정된 RestTemplate - JWKS 엔드포인트 지연 시 무제한 블로킹 방지
+    private RestTemplate jwkSetRestTemplate() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(JWKS_CONNECT_TIMEOUT_MS);
+        factory.setReadTimeout(JWKS_READ_TIMEOUT_MS);
+        return new RestTemplate(factory);
     }
 
     private OAuth2TokenValidator<Jwt> googleIssuerValidator() {
