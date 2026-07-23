@@ -128,6 +128,49 @@ class ClubBoardUserServiceTest {
 
             assertThat(response.boards().get(0).thumbnailUrl()).isNull();
         }
+
+        @Test
+        @DisplayName("size가 최대치(50)를 초과하면 50으로 보정하여 조회한다.")
+        void getBoardListClampsOversizedRequest() {
+            when(clubRepository.existsById("club123")).thenReturn(true);
+            when(clubBoardRepository.findBoardsByClubIdWithCursor("club123", 50, null))
+                    .thenReturn(List.of());
+
+            clubBoardUserService.getBoardList("club123", 1_000_000, null);
+
+            verify(clubBoardRepository).findBoardsByClubIdWithCursor("club123", 50, null);
+        }
+
+        @Test
+        @DisplayName("size가 1 미만이면 1로 보정하여 조회한다.")
+        void getBoardListClampsUndersizedRequest() {
+            when(clubRepository.existsById("club123")).thenReturn(true);
+            when(clubBoardRepository.findBoardsByClubIdWithCursor("club123", 1, null))
+                    .thenReturn(List.of());
+
+            clubBoardUserService.getBoardList("club123", -5, null);
+            clubBoardUserService.getBoardList("club123", 0, null);
+
+            verify(clubBoardRepository, times(2)).findBoardsByClubIdWithCursor("club123", 1, null);
+        }
+
+        @Test
+        @DisplayName("보정된 size 기준으로 hasNext를 판단한다.")
+        void getBoardListHasNextUsesClampedSize() {
+            when(clubRepository.existsById("club123")).thenReturn(true);
+
+            ClubBoard board1 = mockBoard("board1", "제목1", "내용1");
+            ClubBoard board2 = mockBoard("board2", "제목2", "내용2");
+            // size=0 → 1로 보정, 2건(size+1) 반환 시 hasNext=true + 1건만 반환
+            when(clubBoardRepository.findBoardsByClubIdWithCursor("club123", 1, null))
+                    .thenReturn(List.of(board1, board2));
+
+            ClubBoardListResponse response = clubBoardUserService.getBoardList("club123", 0, null);
+
+            assertThat(response.hasNext()).isTrue();
+            assertThat(response.boards()).hasSize(1);
+            assertThat(response.nextCursor()).isEqualTo("board1");
+        }
     }
 
     @Nested

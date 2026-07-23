@@ -17,14 +17,19 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ClubBoardUserService {
 
+    // 한 페이지 최대 조회 개수 — 과도한 size 요청으로 인한 대량 조회(DoS) 방지
+    private static final int MAX_PAGE_SIZE = 50;
+    private static final int MIN_PAGE_SIZE = 1;
+
     private final ClubBoardRepository clubBoardRepository;
     private final ClubRepository clubRepository;
 
     /**
      * 동아리 게시판 목록을 커서 기반으로 조회합니다. (인스타그램식 썸네일 피드)
+     * size는 1~50 범위로 보정됩니다.
      *
      * @param clubId 동아리 ID
-     * @param size 조회할 개수
+     * @param size 조회할 개수 (1~50 범위로 클램프)
      * @param cursor 커서 (null이면 첫 페이지)
      * @return 게시판 목록 응답
      */
@@ -34,13 +39,15 @@ public class ClubBoardUserService {
             throw new ClubNotFoundException();
         }
 
+        int clampedSize = clampSize(size);
+
         // 게시글 조회 (size + 1개를 조회하여 다음 페이지 존재 여부 확인)
-        List<ClubBoard> boards = clubBoardRepository.findBoardsByClubIdWithCursor(clubId, size, cursor);
+        List<ClubBoard> boards = clubBoardRepository.findBoardsByClubIdWithCursor(clubId, clampedSize, cursor);
 
         // 다음 페이지 존재 여부 확인
-        boolean hasNext = boards.size() > size;
+        boolean hasNext = boards.size() > clampedSize;
         if (hasNext) {
-            boards = boards.subList(0, size); // 실제 반환할 개수만큼 자르기
+            boards = boards.subList(0, clampedSize); // 실제 반환할 개수만큼 자르기
         }
 
         // 다음 커서 설정
@@ -69,6 +76,13 @@ public class ClubBoardUserService {
                 .orElseThrow(ClubBoardNotFoundException::new);
 
         return ClubBoardDetailResponse.from(board);
+    }
+
+    /**
+     * 요청 size를 허용 범위(1~50)로 보정합니다.
+     */
+    private int clampSize(int size) {
+        return Math.min(Math.max(size, MIN_PAGE_SIZE), MAX_PAGE_SIZE);
     }
 
     /**

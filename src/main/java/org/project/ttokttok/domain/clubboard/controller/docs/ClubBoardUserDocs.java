@@ -45,7 +45,7 @@ public interface ClubBoardUserDocs {
     ResponseEntity<ClubBoardListResponse> getBoardList(
             @Parameter(description = "동아리 ID", required = true, example = "UUID")
             String clubId,
-            @Parameter(description = "조회할 개수 (기본 20개)", example = "20")
+            @Parameter(description = "조회할 개수 (기본 20개, 1~50 범위로 보정)", example = "20")
             int size,
             @Parameter(description = "무한스크롤 커서 (첫 요청시 생략)")
             String cursor
