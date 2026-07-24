@@ -15,17 +15,27 @@ import org.project.ttokttok.domain.clubboard.domain.ClubBoard;
 import org.project.ttokttok.domain.clubboard.repository.ClubBoardRepository;
 import org.project.ttokttok.global.entity.Role;
 import org.project.ttokttok.infrastructure.jwt.JwtFactory;
+import org.project.ttokttok.infrastructure.s3.service.S3Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import static org.hamcrest.Matchers.notNullValue;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -34,6 +44,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 class ClubBoardAdminControllerTest {
+
+    // 저장된 게시글이 이미 갖고 있는 기존 썸네일 URL과 신규 업로드 결과 URL을 구분해
+    // "기존 파일이 삭제 예약되었는지"를 정확히 검증한다.
+    private static final String EXISTING_THUMBNAIL_URL = "https://cdn.example.com/board-images/uuid_existing.png";
+    private static final String UPLOADED_THUMBNAIL_URL = "https://cdn.example.com/board-images/uuid_uploaded.png";
 
     @Autowired
     private ClubRepository clubRepository;
@@ -52,6 +67,9 @@ class ClubBoardAdminControllerTest {
 
     @Autowired
     private JwtFactory jwtFactory;
+
+    @MockitoBean
+    private S3Service s3Service;
 
     private Club myClub;
     private String myAccessToken;
@@ -76,19 +94,47 @@ class ClubBoardAdminControllerTest {
 
         myAccessToken = jwtFactory.generateValidToken(myAdmin.getUsername(), Role.ROLE_ADMIN);
         otherAccessToken = jwtFactory.generateValidToken(otherAdmin.getUsername(), Role.ROLE_ADMIN);
+
+        given(s3Service.uploadFile(any(MultipartFile.class), anyString())).willReturn(UPLOADED_THUMBNAIL_URL);
+    }
+
+    private MockMultipartFile jsonPart(Object request) throws Exception {
+        return new MockMultipartFile("request", "", MediaType.APPLICATION_JSON_VALUE,
+                objectMapper.writeValueAsBytes(request));
+    }
+
+    private MockMultipartFile thumbnailPart() {
+        return new MockMultipartFile("thumbnail", "thumb.png", "image/png", "img".getBytes());
+    }
+
+    private ClubBoard saveBoard(String title, String content) {
+        return clubBoardRepository.save(ClubBoard.create(title, content, EXISTING_THUMBNAIL_URL, myClub));
     }
 
     @Test
-    @DisplayName("createBoard(): 게시글 생성에 성공한다.")
+    @DisplayName("createBoard(): 썸네일과 함께 게시글 생성에 성공한다.")
     void createBoard_success() throws Exception {
         CreateBoardRequest request = new CreateBoardRequest("제목입니다", "본문입니다");
 
-        mockMvc.perform(post("/api/admin/clubs/{clubId}/boards", myClub.getId())
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + myAccessToken)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(multipart("/api/admin/clubs/{clubId}/boards", myClub.getId())
+                        .file(jsonPart(request))
+                        .file(thumbnailPart())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + myAccessToken))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.boardId", notNullValue()));
+
+        verify(s3Service).uploadFile(any(MultipartFile.class), anyString());
+    }
+
+    @Test
+    @DisplayName("createBoard(): 썸네일 파트가 없으면 400이 발생한다.")
+    void createBoard_missingThumbnail() throws Exception {
+        CreateBoardRequest request = new CreateBoardRequest("제목입니다", "본문입니다");
+
+        mockMvc.perform(multipart("/api/admin/clubs/{clubId}/boards", myClub.getId())
+                        .file(jsonPart(request))
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + myAccessToken))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -96,41 +142,58 @@ class ClubBoardAdminControllerTest {
     void createBoard_forbidden() throws Exception {
         CreateBoardRequest request = new CreateBoardRequest("제목입니다", "본문입니다");
 
-        mockMvc.perform(post("/api/admin/clubs/{clubId}/boards", myClub.getId())
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + otherAccessToken)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(multipart("/api/admin/clubs/{clubId}/boards", myClub.getId())
+                        .file(jsonPart(request))
+                        .file(thumbnailPart())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + otherAccessToken))
                 .andExpect(status().isForbidden());
     }
 
     @Test
     @DisplayName("updateBoard(): 게시글 수정에 성공한다.")
     void updateBoard_success() throws Exception {
-        ClubBoard board = clubBoardRepository.save(ClubBoard.create("원래 제목", "원래 내용", myClub));
+        ClubBoard board = saveBoard("원래 제목", "원래 내용");
 
         ClubBoardUpdateRequest request = new ClubBoardUpdateRequest("수정된 제목", null);
 
-        mockMvc.perform(patch("/api/admin/clubs/{clubId}/boards/{boardId}", myClub.getId(), board.getId())
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + myAccessToken)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk());
-    }
-
-    @Test
-    @DisplayName("deleteBoard(): 게시글 삭제에 성공한다.")
-    void deleteBoard_success() throws Exception {
-        ClubBoard board = clubBoardRepository.save(ClubBoard.create("삭제될 제목", "삭제될 내용", myClub));
-
-        mockMvc.perform(delete("/api/admin/clubs/{clubId}/boards/{boardId}", myClub.getId(), board.getId())
+        mockMvc.perform(multipart(HttpMethod.PATCH, "/api/admin/clubs/{clubId}/boards/{boardId}", myClub.getId(), board.getId())
+                        .file(jsonPart(request))
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + myAccessToken))
                 .andExpect(status().isOk());
     }
 
     @Test
+    @DisplayName("updateBoard(): 썸네일만 보내도 교체에 성공하고 기존 파일이 커밋 후 삭제로 예약된다.")
+    void updateBoard_replaceThumbnailOnly() throws Exception {
+        ClubBoard board = saveBoard("원래 제목", "원래 내용");
+
+        mockMvc.perform(multipart(HttpMethod.PATCH, "/api/admin/clubs/{clubId}/boards/{boardId}", myClub.getId(), board.getId())
+                        .file(thumbnailPart())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + myAccessToken))
+                .andExpect(status().isOk());
+
+        verify(s3Service).uploadFile(any(MultipartFile.class), anyString());
+        // 신규 업로드본은 롤백 보상 훅, 기존 파일은 커밋 후 삭제로 각각 예약된다.
+        verify(s3Service).deleteFileOnRollback(UPLOADED_THUMBNAIL_URL);
+        verify(s3Service).deleteFileAfterCommit(EXISTING_THUMBNAIL_URL);
+    }
+
+    @Test
+    @DisplayName("deleteBoard(): 게시글 삭제 시 S3 썸네일이 커밋 후 삭제로 예약된다.")
+    void deleteBoard_success() throws Exception {
+        ClubBoard board = saveBoard("삭제될 제목", "삭제될 내용");
+
+        mockMvc.perform(delete("/api/admin/clubs/{clubId}/boards/{boardId}", myClub.getId(), board.getId())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + myAccessToken))
+                .andExpect(status().isOk());
+
+        verify(s3Service).deleteFileAfterCommit(EXISTING_THUMBNAIL_URL);
+    }
+
+    @Test
     @DisplayName("deleteBoard(): 다른 동아리 관리자가 요청하면 403이 발생한다.")
     void deleteBoard_forbidden() throws Exception {
-        ClubBoard board = clubBoardRepository.save(ClubBoard.create("삭제될 제목", "삭제될 내용", myClub));
+        ClubBoard board = saveBoard("삭제될 제목", "삭제될 내용");
 
         mockMvc.perform(delete("/api/admin/clubs/{clubId}/boards/{boardId}", myClub.getId(), board.getId())
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + otherAccessToken))

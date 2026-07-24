@@ -1,7 +1,9 @@
 package org.project.ttokttok.infrastructure.s3.service;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -10,6 +12,8 @@ import org.project.ttokttok.infrastructure.s3.enums.S3FileDirectory;
 import org.project.ttokttok.infrastructure.s3.exception.S3FileUploadException;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -19,6 +23,7 @@ import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @ExtendWith(MockitoExtension.class)
@@ -41,6 +46,14 @@ class S3ServiceTest {
     void setUp() {
         s3Service = new S3Service(s3Client, validator, keyUrlGenerator);
         ReflectionTestUtils.setField(s3Service, "bucketName", TEST_BUCKET);
+    }
+
+    @AfterEach
+    void tearDown() {
+        // 테스트에서 수동으로 연 트랜잭션 동기화 컨텍스트를 반드시 정리한다 (스레드 로컬 누수 방지).
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.clearSynchronization();
+        }
     }
 
     @Test
@@ -198,5 +211,146 @@ class S3ServiceTest {
         verify(validator).validateType(contentType);
         verify(keyUrlGenerator).generateKey(dirName, fileName);
         verify(s3Client).putObject(any(PutObjectRequest.class), any(RequestBody.class));
+    }
+
+    // ------- 트랜잭션 연동 삭제 (tx-aware) -------
+
+    private static final String FILE_URL = "https://cdn.test.com/board-images/uuid_thumb.png";
+
+    private void stubExtractKey() {
+        lenient().when(keyUrlGenerator.extractKeyFromUrl(FILE_URL))
+                .thenReturn("board-images/uuid_thumb.png");
+    }
+
+    private void triggerAfterCommit() {
+        TransactionSynchronizationManager.getSynchronizations()
+                .forEach(TransactionSynchronization::afterCommit);
+    }
+
+    private void triggerAfterCompletion(int status) {
+        TransactionSynchronizationManager.getSynchronizations()
+                .forEach(sync -> sync.afterCompletion(status));
+    }
+
+    @Nested
+    @DisplayName("deleteFileAfterCommit()")
+    class DeleteFileAfterCommit {
+
+        @Test
+        @DisplayName("활성 트랜잭션이 있으면 커밋 전에는 삭제하지 않고, 커밋 이후에 삭제한다.")
+        void deletesOnlyAfterCommit() {
+            stubExtractKey();
+            TransactionSynchronizationManager.initSynchronization();
+
+            s3Service.deleteFileAfterCommit(FILE_URL);
+
+            verify(s3Client, never()).deleteObject(any(DeleteObjectRequest.class));
+
+            triggerAfterCommit();
+
+            verify(s3Client).deleteObject(any(DeleteObjectRequest.class));
+        }
+
+        @Test
+        @DisplayName("트랜잭션이 롤백되면(afterCommit 미호출) 파일을 삭제하지 않는다.")
+        void doesNotDeleteOnRollback() {
+            TransactionSynchronizationManager.initSynchronization();
+
+            s3Service.deleteFileAfterCommit(FILE_URL);
+
+            triggerAfterCompletion(TransactionSynchronization.STATUS_ROLLED_BACK);
+
+            verify(s3Client, never()).deleteObject(any(DeleteObjectRequest.class));
+        }
+
+        @Test
+        @DisplayName("활성 트랜잭션이 없으면 즉시 삭제한다.")
+        void deletesImmediatelyWithoutTransaction() {
+            stubExtractKey();
+
+            s3Service.deleteFileAfterCommit(FILE_URL);
+
+            verify(s3Client).deleteObject(any(DeleteObjectRequest.class));
+        }
+
+        @Test
+        @DisplayName("커밋 이후 삭제가 실패해도 예외를 전파하지 않는다.")
+        void swallowsDeleteFailureAfterCommit() {
+            stubExtractKey();
+            TransactionSynchronizationManager.initSynchronization();
+            when(s3Client.deleteObject(any(DeleteObjectRequest.class)))
+                    .thenThrow(new RuntimeException("s3 down"));
+
+            s3Service.deleteFileAfterCommit(FILE_URL);
+
+            assertThatCode(S3ServiceTest.this::triggerAfterCommit)
+                    .doesNotThrowAnyException();
+        }
+    }
+
+    @Nested
+    @DisplayName("deleteFileOnRollback()")
+    class DeleteFileOnRollback {
+
+        @Test
+        @DisplayName("트랜잭션이 롤백되면 파일을 삭제한다.")
+        void deletesOnRollback() {
+            stubExtractKey();
+            TransactionSynchronizationManager.initSynchronization();
+
+            s3Service.deleteFileOnRollback(FILE_URL);
+
+            verify(s3Client, never()).deleteObject(any(DeleteObjectRequest.class));
+
+            triggerAfterCompletion(TransactionSynchronization.STATUS_ROLLED_BACK);
+
+            verify(s3Client).deleteObject(any(DeleteObjectRequest.class));
+        }
+
+        @Test
+        @DisplayName("트랜잭션이 커밋되면 파일을 삭제하지 않는다.")
+        void doesNotDeleteOnCommit() {
+            TransactionSynchronizationManager.initSynchronization();
+
+            s3Service.deleteFileOnRollback(FILE_URL);
+
+            triggerAfterCompletion(TransactionSynchronization.STATUS_COMMITTED);
+
+            verify(s3Client, never()).deleteObject(any(DeleteObjectRequest.class));
+        }
+
+        @Test
+        @DisplayName("커밋 여부가 불명확하면(STATUS_UNKNOWN) 파일을 삭제하지 않는다.")
+        void doesNotDeleteOnUnknownStatus() {
+            TransactionSynchronizationManager.initSynchronization();
+
+            s3Service.deleteFileOnRollback(FILE_URL);
+
+            triggerAfterCompletion(TransactionSynchronization.STATUS_UNKNOWN);
+
+            verify(s3Client, never()).deleteObject(any(DeleteObjectRequest.class));
+        }
+
+        @Test
+        @DisplayName("활성 트랜잭션이 없으면 아무 동작도 하지 않는다.")
+        void noOpWithoutTransaction() {
+            s3Service.deleteFileOnRollback(FILE_URL);
+
+            verifyNoInteractions(s3Client);
+        }
+
+        @Test
+        @DisplayName("롤백 시 삭제가 실패해도 예외를 전파하지 않는다.")
+        void swallowsDeleteFailureOnRollback() {
+            stubExtractKey();
+            TransactionSynchronizationManager.initSynchronization();
+            when(s3Client.deleteObject(any(DeleteObjectRequest.class)))
+                    .thenThrow(new RuntimeException("s3 down"));
+
+            s3Service.deleteFileOnRollback(FILE_URL);
+
+            assertThatCode(() -> triggerAfterCompletion(TransactionSynchronization.STATUS_ROLLED_BACK))
+                    .doesNotThrowAnyException();
+        }
     }
 }

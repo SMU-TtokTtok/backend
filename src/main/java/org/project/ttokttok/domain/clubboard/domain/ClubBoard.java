@@ -33,14 +33,19 @@ public class ClubBoard extends BaseTimeEntity {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 
+    // 대표(썸네일) 이미지 URL. 레거시 게시글은 null 허용, 신규 생성 시에는 필수.
+    @Column(name = "thumbnail_url", length = 512)
+    private String thumbnailUrl;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "club_id", nullable = false, updatable = false)
     private Club club;
 
     @Builder
-    private ClubBoard(String title, String content, Club club) {
+    private ClubBoard(String title, String content, String thumbnailUrl, Club club) {
         this.title = title;
         this.content = content;
+        this.thumbnailUrl = thumbnailUrl;
         this.club = club;
     }
 
@@ -55,15 +60,22 @@ public class ClubBoard extends BaseTimeEntity {
         }
     }
 
+    public void updateThumbnailUrl(String thumbnailUrl) {
+        validateThumbnailUrl(thumbnailUrl);
+        this.thumbnailUrl = thumbnailUrl;
+    }
+
     // ------- 정적 메서드 -------
-    public static ClubBoard create(String title, String content, Club club) {
+    public static ClubBoard create(String title, String content, String thumbnailUrl, Club club) {
         validateTitle(title);
         validateContent(content);
+        validateThumbnailUrl(thumbnailUrl);
         validateClub(club);
 
         return ClubBoard.builder()
                 .title(title)
                 .content(content)
+                .thumbnailUrl(thumbnailUrl)
                 .club(club)
                 .build();
     }
@@ -84,6 +96,12 @@ public class ClubBoard extends BaseTimeEntity {
     private static void validateTitle(String title) {
         if (title == null || title.isBlank()) {
             throw new IllegalArgumentException("Title cannot be null or blank.");
+        }
+    }
+
+    private static void validateThumbnailUrl(String thumbnailUrl) {
+        if (thumbnailUrl == null || thumbnailUrl.isBlank()) {
+            throw new IllegalArgumentException("Thumbnail URL cannot be null or blank.");
         }
     }
 }

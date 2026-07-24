@@ -14,6 +14,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 import java.util.List;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
 @Slf4j
 @RestControllerAdvice
@@ -76,6 +77,17 @@ public class GlobalExceptionHandler {
         ErrorResponse response = ErrorResponse.builder()
                 .statusCode(HttpStatus.BAD_REQUEST.value())
                 .details(message)
+                .build();
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(response);
+    }
+
+    @ExceptionHandler(MissingServletRequestPartException.class)
+    public ResponseEntity<ErrorResponse> handleMissingServletRequestPart(MissingServletRequestPartException e) {
+        ErrorResponse response = ErrorResponse.builder()
+                .statusCode(HttpStatus.BAD_REQUEST.value())
+                .details(String.format("필수 요청 파트 '%s'가 누락되었습니다.", e.getRequestPartName()))
                 .build();
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
