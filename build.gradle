@@ -53,6 +53,9 @@ dependencies {
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
 	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
+	// Google ID 토큰 검증 (JWKS 기반, resource-server 스타터는 필터체인 오염 방지를 위해 미사용)
+	implementation 'org.springframework.security:spring-security-oauth2-jose'
+
 	//Querydsl
 	implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
 	annotationProcessor "com.querydsl:querydsl-apt:${dependencyManagement.importedProperties['querydsl.version']}:jakarta"

@@ -94,7 +94,16 @@ public enum ErrorMessage {
     SUPER_ADMIN_PASSWORD_NOT_MATCH("비밀번호가 틀렸습니다.", HttpStatus.UNAUTHORIZED),
 
     // 공지사항 에러 메시지
-    NOTICE_NOT_FOUND("공지사항을 찾을 수 없습니다.", HttpStatus.NOT_FOUND);
+    NOTICE_NOT_FOUND("공지사항을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+
+    // 구글 OAuth 에러 메시지
+    INVALID_GOOGLE_TOKEN("유효하지 않은 구글 토큰입니다.", HttpStatus.UNAUTHORIZED),
+    GOOGLE_EMAIL_NOT_VERIFIED("구글 계정의 이메일 인증이 필요합니다.", HttpStatus.BAD_REQUEST),
+    GOOGLE_ACCOUNT_CONFLICT("이미 다른 구글 계정과 연동된 이메일입니다.", HttpStatus.CONFLICT),
+    OAUTH_ONLY_ACCOUNT("구글 로그인으로 가입된 계정입니다. 구글 로그인을 이용해주세요.", HttpStatus.CONFLICT),
+    INVALID_ONBOARDING_TOKEN("유효하지 않은 가입 세션입니다. 다시 로그인해주세요.", HttpStatus.UNAUTHORIZED),
+    ONBOARDING_TOKEN_EXPIRED("가입 세션이 만료되었습니다. 다시 로그인해주세요.", HttpStatus.UNAUTHORIZED),
+    ONBOARDING_ALREADY_COMPLETED("이미 처리된 가입 요청입니다.", HttpStatus.CONFLICT);
 
     private final String message;
     private final HttpStatus status;

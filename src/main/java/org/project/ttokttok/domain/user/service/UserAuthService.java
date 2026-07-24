@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.project.ttokttok.domain.user.domain.EmailVerification;
 import org.project.ttokttok.domain.user.domain.User;
+import org.project.ttokttok.domain.user.exception.OAuthOnlyAccountException;
 import org.project.ttokttok.domain.user.repository.EmailVerificationRepository;
 import org.project.ttokttok.domain.user.repository.UserRepository;
 import org.project.ttokttok.domain.user.service.dto.request.LoginServiceRequest;
@@ -150,7 +151,12 @@ public class UserAuthService {
         User user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
 
-        // 4-2. 비밀번호 검증
+        // 4-2. OAuth 전용 계정(비밀번호 없음)은 비밀번호 로그인 불가
+        if (user.isOAuthOnly()) {
+            throw new OAuthOnlyAccountException();
+        }
+
+        // 4-3. 비밀번호 검증
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
             throw new IllegalArgumentException("비밀번호가 올바르지 않습니다.");
         }
@@ -193,6 +199,11 @@ public class UserAuthService {
         User user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
 
+        // OAuth 전용 계정은 비밀번호 재설정 불가 (구글 로그인 이용 안내)
+        if (user.isOAuthOnly()) {
+            throw new OAuthOnlyAccountException();
+        }
+
         user.updatePassword(passwordEncoder.encode(request.newPassword()));
         userRepository.save(user);
 
@@ -209,8 +220,12 @@ public class UserAuthService {
      * */
     public void sendPasswordResetCode(String email) {
         // 사용자 존재 확인
-        if (!userRepository.existsByEmail(email)) {
-            throw new IllegalArgumentException("존재하지 않는 사용자입니다.");
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+
+        // OAuth 전용 계정은 비밀번호 재설정 코드 발송 불가 (구글 로그인 이용 안내)
+        if (user.isOAuthOnly()) {
+            throw new OAuthOnlyAccountException();
         }
 
         // 기존 미인증 코드들 만료 처리
