@@ -3,6 +3,8 @@ package org.project.ttokttok.global.auth.jwt.filter;
 import lombok.RequiredArgsConstructor;
 import org.project.ttokttok.domain.admin.exception.AdminNotFoundException;
 import org.project.ttokttok.domain.admin.repository.AdminRepository;
+import org.project.ttokttok.domain.superadmin.exception.SuperAdminNotFoundException;
+import org.project.ttokttok.domain.superadmin.repository.SuperAdminRepository;
 import org.project.ttokttok.domain.user.repository.UserRepository;
 import org.project.ttokttok.global.auth.jwt.exception.InvalidRoleException;
 import org.project.ttokttok.global.entity.Role;
@@ -22,16 +24,20 @@ public class JwtAuthenticationManager {
 
     private final UserRepository userRepository;
     private final AdminRepository adminRepository;
+    private final SuperAdminRepository superAdminRepository;
 
     private final String ROLE_USER = "ROLE_USER";
     private final String ROLE_ADMIN = "ROLE_ADMIN";
-    
+    private final String ROLE_SUPER_ADMIN = "ROLE_SUPER_ADMIN";
+
     public Authentication getAuthentication(String email, String role) {
         Object principal = switch (role) {
             case ROLE_USER -> userRepository.findByEmail(email)
                     .orElseThrow(() -> new RuntimeException("User not found"));
             case ROLE_ADMIN -> adminRepository.findByUsername(email)
                     .orElseThrow(AdminNotFoundException::new);
+            case ROLE_SUPER_ADMIN -> superAdminRepository.findByUsername(email)
+                    .orElseThrow(SuperAdminNotFoundException::new);
             default -> throw new InvalidRoleException();
         };
 

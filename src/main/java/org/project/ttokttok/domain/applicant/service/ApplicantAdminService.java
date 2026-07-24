@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.project.ttokttok.domain.applicant.controller.enums.Kind;
 import org.project.ttokttok.domain.applicant.domain.Applicant;
+import org.project.ttokttok.domain.applicant.domain.enums.ApplicantPhase;
 import org.project.ttokttok.domain.applicant.domain.enums.PhaseStatus;
 import org.project.ttokttok.domain.applicant.exception.*;
 import org.project.ttokttok.domain.applicant.repository.ApplicantRepository;
@@ -149,7 +150,8 @@ public class ApplicantAdminService {
 
         validateApplicantAccess(applicant.getApplyForm().getClub().getId(), club.getId());
 
-        updateApplicantPhaseStatus(applicant, request.status(), request.kind());
+        ApplicantPhase phase = Kind.toApplicantPhase(request.kind());
+        applicant.changeEvaluationStatus(phase, request.status());
     }
 
     @Transactional
@@ -157,14 +159,16 @@ public class ApplicantAdminService {
         Club club = validateClubAdmin(request.username());
 
         ApplyForm currentApplyForm = findActiveApplyForm(request.clubId());
-        boolean isDocument = Kind.isDocument(request.kind());
-        int passedApplicantCount = processApplicants(currentApplyForm, club, isDocument);
-        int finalizedApplicantCount = calculateFinalizedApplicantCount(currentApplyForm.getId(), isDocument) + passedApplicantCount;
+        ApplicantPhase phase = Kind.toApplicantPhase(request.kind());
+        int passedApplicantCount = processApplicants(currentApplyForm, club, phase);
+        int finalizedApplicantCount = calculateFinalizedApplicantCount(currentApplyForm.getId(), phase) + passedApplicantCount;
 
         return ApplicantFinalizeServiceResponse.of(passedApplicantCount, finalizedApplicantCount);
     }
 
-    @Transactional
+    // 조회 전용(쓰기 없음). 발송은 EmailService의 @Async로 트랜잭션 밖에서 처리되어
+    // SMTP I/O가 커넥션 점유 시간을 늘리지 않는다. readOnly로 lazy loading 세션만 유지한다.
+    @Transactional(readOnly = true)
     public void sendResultMailToApplicants(SendResultMailServiceRequest request,
                                            String username,
                                            String clubId,
@@ -172,14 +176,14 @@ public class ApplicantAdminService {
         validateClubAdmin(username);
         
         ApplyForm currentApplyForm = findActiveApplyForm(clubId);
-        boolean isDocument = Kind.isDocument(kind);
+        ApplicantPhase phase = Kind.toApplicantPhase(kind);
 
-        List<String> passedEmails = filterApplicantsByStatus(currentApplyForm.getId(), isDocument, PASS)
+        List<String> passedEmails = filterApplicantsByStatus(currentApplyForm.getId(), phase, PASS)
                 .stream()
                 .map(Applicant::getEmail)
                 .toList();
 
-        List<String> failedEmails = filterApplicantsByStatus(currentApplyForm.getId(), isDocument, FAIL)
+        List<String> failedEmails = filterApplicantsByStatus(currentApplyForm.getId(), phase, FAIL)
                 .stream()
                 .map(Applicant::getEmail)
                 .toList();
@@ -198,10 +202,10 @@ public class ApplicantAdminService {
                 .orElseThrow(ActiveApplyFormNotFoundException::new);
     }
 
-    private int processApplicants(ApplyForm applyForm, Club club, boolean isDocument) {
-        List<Applicant> passedApplicants = filterApplicantsByStatus(applyForm.getId(), isDocument, PASS);
+    private int processApplicants(ApplyForm applyForm, Club club, ApplicantPhase phase) {
+        List<Applicant> passedApplicants = filterApplicantsByStatus(applyForm.getId(), phase, PASS);
 
-        if (!passedApplicants.isEmpty() && !isDocument) {
+        if (!passedApplicants.isEmpty() && phase == ApplicantPhase.INTERVIEW) {
             savePassedApplicantsAsClubMembers(passedApplicants, club);
         } else if (!passedApplicants.isEmpty() && applyForm.isHasInterview()) {
             passedApplicants.stream()
@@ -215,42 +219,21 @@ public class ApplicantAdminService {
         return passedApplicants.size();
     }
 
-    private int calculateFinalizedApplicantCount(String applyFormId, boolean isDocument) {
-        return applicantRepository.findByApplyFormId(applyFormId)
+    private int calculateFinalizedApplicantCount(String applyFormId, ApplicantPhase phase) {
+        return (int) applicantRepository.findByApplyFormId(applyFormId)
                 .stream()
-                .mapToInt(applicant -> {
-                    Integer status = failApplicantCount(isDocument, applicant);
-                    if (status != null)
-                        return status;
-                    return 0;
-                })
-                .sum();
+                .filter(applicant -> applicant.statusOf(phase)
+                        .filter(status -> status == FAIL)
+                        .isPresent())
+                .count();
     }
 
-    private Integer failApplicantCount(boolean isDocument, Applicant applicant) {
-        if (isDocument && applicant.isInDocumentPhase()) {
-            PhaseStatus status = applicant.getDocumentPhase() != null ?
-                    applicant.getDocumentPhase().getStatus() : null;
-            return (status == FAIL) ? 1 : 0;
-        } else if (!isDocument && applicant.isInInterviewPhase()) {
-            PhaseStatus status = applicant.hasInterviewPhase() ?
-                    applicant.getInterviewPhase().getStatus() : null;
-            return (status == FAIL) ? 1 : 0;
-        }
-        return null;
-    }
-
-    private List<Applicant> filterApplicantsByStatus(String applyFormId, boolean isDocument, PhaseStatus status) {
+    private List<Applicant> filterApplicantsByStatus(String applyFormId, ApplicantPhase phase, PhaseStatus status) {
         return applicantRepository.findByApplyFormId(applyFormId)
                 .stream()
-                .filter(applicant -> {
-                    if (isDocument) {
-                        return applicant.isInDocumentPhase() && applicant.getDocumentPhase().getStatus() == status;
-                    } else if (applicant.isInInterviewPhase()) {
-                        return applicant.hasInterviewPhase() && applicant.getInterviewPhase().getStatus() == status;
-                    }
-                    return false;
-                })
+                .filter(applicant -> applicant.statusOf(phase)
+                        .filter(phaseStatus -> phaseStatus == status)
+                        .isPresent())
                 .toList();
     }
 
@@ -293,43 +276,6 @@ public class ApplicantAdminService {
     private void validateApplicantAccess(String applicantClubId, String targetClubId) {
         if (!applicantClubId.equals(targetClubId)) {
             throw new UnAuthorizedApplicantAccessException();
-        }
-    }
-
-    private void updateApplicantPhaseStatus(Applicant applicant, PhaseStatus status, String kind) {
-
-        boolean isDocument = Kind.isDocument(kind);
-
-        if (status == PASS) {
-            handlePassStatus(applicant, isDocument);
-        } else if (status == PhaseStatus.FAIL) {
-            handleFailStatus(applicant, isDocument);
-        } else if (status == PhaseStatus.EVALUATING) {
-            handleEvaluatingStatus(applicant, isDocument);
-        }
-    }
-
-    private void handlePassStatus(Applicant applicant, boolean isDocument) {
-        if (isDocument) {
-            applicant.passDocumentEvaluation();
-        } else {
-            applicant.passInterview();
-        }
-    }
-
-    private void handleFailStatus(Applicant applicant, boolean isDocument) {
-        if (isDocument) {
-            applicant.failDocumentEvaluation();
-        } else {
-            applicant.failInterview();
-        }
-    }
-
-    private void handleEvaluatingStatus(Applicant applicant, boolean isDocument) {
-        if (isDocument) {
-            applicant.setDocumentEvaluating();
-        } else {
-            applicant.setInterviewEvaluating();
         }
     }
 }

@@ -2,6 +2,7 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.5.0'
 	id 'io.spring.dependency-management' version '1.1.7'
+	id 'jacoco'
 }
 
 group = 'org.project.ttokttok'
@@ -52,6 +53,9 @@ dependencies {
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
 	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
+	// Google ID 토큰 검증 (JWKS 기반, resource-server 스타터는 필터체인 오염 방지를 위해 미사용)
+	implementation 'org.springframework.security:spring-security-oauth2-jose'
+
 	//Querydsl
 	implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
 	annotationProcessor "com.querydsl:querydsl-apt:${dependencyManagement.importedProperties['querydsl.version']}:jakarta"
@@ -85,4 +89,61 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+	finalizedBy jacocoTestReport
 }
+
+jacoco {
+	toolVersion = "0.8.12"
+}
+
+// 커버리지 측정에서 제외할 항목 (생성 코드/보일러플레이트/설정)
+def jacocoExcludes = [
+		'**/Q*.class',                 // QueryDSL 생성 클래스
+		'**/*Application*',            // 스프링 부트 진입점
+		'**/dto/**',                   // 요청/응답 DTO
+		'**/*Request*',
+		'**/*Response*',
+		'**/*QueryResponse*',
+		'**/docs/**',                  // Swagger 문서 인터페이스
+		'**/*Docs*',
+		'**/config/**',                // 설정 클래스
+		'**/*Config*',
+		'**/enums/**',                 // enum
+		'**/exception/**',             // 커스텀 예외(로직 없음)
+]
+
+jacocoTestReport {
+	dependsOn test
+	reports {
+		html.required = true
+		xml.required = true
+		csv.required = false
+	}
+	afterEvaluate {
+		classDirectories.setFrom(files(classDirectories.files.collect {
+			fileTree(dir: it, exclude: jacocoExcludes)
+		}))
+	}
+}
+
+jacocoTestCoverageVerification {
+	dependsOn test
+	afterEvaluate {
+		classDirectories.setFrom(files(classDirectories.files.collect {
+			fileTree(dir: it, exclude: jacocoExcludes)
+		}))
+	}
+	violationRules {
+		rule {
+			element = 'BUNDLE'
+			limit {
+				counter = 'LINE'
+				value = 'COVEREDRATIO'
+				minimum = 0.80
+			}
+		}
+	}
+}
+
+// 80% 라인 커버리지 하드 게이트: check(= build) 시 검증을 강제한다.
+check.dependsOn jacocoTestCoverageVerification

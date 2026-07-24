@@ -1,22 +1,24 @@
 package org.project.ttokttok.infrastructure.s3.service;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.project.ttokttok.infrastructure.s3.exception.S3FileMaxSizeOverException;
 import org.project.ttokttok.infrastructure.s3.exception.UnsupportedFileTypeException;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.util.unit.DataSize;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -25,33 +27,30 @@ class ContentValidatorTest {
     @Mock
     private ZipContentValidator zipContentValidator;
 
-    @InjectMocks
     private ContentValidator contentValidator;
+
+    @BeforeEach
+    void setUp() {
+        // 실제 주입은 yml의 spring.servlet.multipart.max-file-size(=20MB)에서 온다.
+        contentValidator = new ContentValidator(zipContentValidator, DataSize.ofMegabytes(20));
+    }
 
     @Nested
     @DisplayName("파일 존재 여부 검증")
-    class ValidateContent {
+    class ValidateNotEmpty {
 
         @Test
         @DisplayName("파일이 존재하면 예외가 발생하지 않는다.")
         void success() {
             MockMultipartFile file = new MockMultipartFile("file", "test.png", "image/png", "content".getBytes());
-            assertThatCode(() -> contentValidator.validateContent(file))
+            assertThatCode(() -> contentValidator.validateNotEmpty(file))
                     .doesNotThrowAnyException();
-        }
-
-        @Test
-        @DisplayName("ZIP 파일인 경우 ZipContentValidator를 호출한다.")
-        void callZipValidator() {
-            MockMultipartFile file = new MockMultipartFile("file", "test.zip", "application/zip", "content".getBytes());
-            contentValidator.validateContent(file);
-            verify(zipContentValidator).validateZip(eq(file), any());
         }
 
         @Test
         @DisplayName("파일이 null이면 예외가 발생한다.")
         void failWhenNull() {
-            assertThatThrownBy(() -> contentValidator.validateContent(null))
+            assertThatThrownBy(() -> contentValidator.validateNotEmpty(null))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessage("파일이 비어있거나 존재하지 않습니다.");
         }
@@ -60,9 +59,30 @@ class ContentValidatorTest {
         @DisplayName("파일이 비어있으면 예외가 발생한다.")
         void failWhenEmpty() {
             MockMultipartFile file = new MockMultipartFile("file", "test.png", "image/png", new byte[0]);
-            assertThatThrownBy(() -> contentValidator.validateContent(file))
+            assertThatThrownBy(() -> contentValidator.validateNotEmpty(file))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessage("파일이 비어있거나 존재하지 않습니다.");
+        }
+    }
+
+    @Nested
+    @DisplayName("아카이브(ZIP) 내부 검증")
+    class ValidateArchive {
+
+        @Test
+        @DisplayName("ZIP 파일인 경우 ZipContentValidator를 호출한다.")
+        void callZipValidator() {
+            MockMultipartFile file = new MockMultipartFile("file", "test.zip", "application/zip", "content".getBytes());
+            contentValidator.validateArchive(file);
+            verify(zipContentValidator).validateZip(eq(file), any());
+        }
+
+        @Test
+        @DisplayName("ZIP이 아닌 파일은 ZipContentValidator를 호출하지 않는다.")
+        void skipWhenNotZip() {
+            MockMultipartFile file = new MockMultipartFile("file", "test.png", "image/png", "content".getBytes());
+            contentValidator.validateArchive(file);
+            verify(zipContentValidator, never()).validateZip(any(), any());
         }
     }
 

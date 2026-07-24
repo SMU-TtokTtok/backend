@@ -127,6 +127,28 @@ class TokenProviderTest {
         }
 
         @Test
+        @DisplayName("token_type 클레임이 있는 토큰(온보딩 토큰 등)이면 false를 반환한다")
+        void validateToken_withTokenTypeClaim_returnsFalse() {
+            // given - 온보딩 토큰은 같은 키/이슈어로 서명되지만 액세스 토큰으로 사용될 수 없다
+            Date now = new Date();
+            String onboardingToken = Jwts.builder()
+                    .setIssuer(TEST_ISSUER)
+                    .setSubject("google-sub-123")
+                    .setIssuedAt(now)
+                    .setExpiration(new Date(now.getTime() + 600000L))
+                    .claim("token_type", "onboarding")
+                    .signWith(key, SignatureAlgorithm.HS256)
+                    .compact();
+            when(refreshTokenRedisService.isAccessTokenBlacklisted(onboardingToken)).thenReturn(false);
+
+            // when
+            boolean result = tokenProvider.validateToken(onboardingToken);
+
+            // then
+            assertThat(result).isFalse();
+        }
+
+        @Test
         @DisplayName("잘못된 issuer의 토큰이면 false를 반환한다")
         void validateToken_withInvalidIssuer_returnsFalse() {
             // given
