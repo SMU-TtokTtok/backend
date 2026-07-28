@@ -1,12 +1,14 @@
 package org.project.ttokttok.domain.applicant.service;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.project.ttokttok.domain.applicant.service.answer.AnswerAssembler;
+import org.project.ttokttok.domain.applicant.service.answer.FileAnswerUploader;
 import org.project.ttokttok.domain.applicant.controller.dto.request.AnswerRequest;
 import org.project.ttokttok.domain.applicant.controller.dto.request.ApplyFormRequest;
 import org.project.ttokttok.domain.applicant.domain.Applicant;
@@ -56,7 +58,6 @@ import static org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus
 @ExtendWith(MockitoExtension.class)
 class ApplicantUserServiceTest {
 
-    @InjectMocks
     private ApplicantUserService applicantUserService;
 
     @Mock
@@ -73,6 +74,23 @@ class ApplicantUserServiceTest {
 
     @Mock
     private S3Service s3Service;
+
+    /**
+     * 답변 조립기는 실제 구현을 사용한다.
+     * 파일 답변 처리 동작을 계속 검증하기 위해 S3Service만 목으로 두고 그 위 계층은 실물로 조립한다.
+     */
+    @BeforeEach
+    void setUp() {
+        AnswerAssembler answerAssembler = new AnswerAssembler(new FileAnswerUploader(s3Service));
+
+        applicantUserService = new ApplicantUserService(
+                userRepository,
+                applicantRepository,
+                applyFormRepository,
+                tempApplicantRepository,
+                answerAssembler
+        );
+    }
 
     private static final String EMAIL = "user@sangmyung.kr";
     private static final String CLUB_ID = "club-1";
