@@ -105,6 +105,17 @@ class ApplicantCustomRepositoryImplTest implements RepositoryTestSupport {
         em.clear();
     }
 
+    /** 연속 생성된 엔티티의 createdAt이 확실히 달라지도록 최소 간격을 둔다. */
+    private void sleepBriefly() {
+        em.flush();
+        try {
+            Thread.sleep(20);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException(e);
+        }
+    }
+
     private List<String> namesOf(ApplicantPageQueryResponse response) {
         return response.applicants().stream()
                 .map(ApplicantSimpleInfoDto::name)
@@ -174,7 +185,11 @@ class ApplicantCustomRepositoryImplTest implements RepositoryTestSupport {
         @Test
         @DisplayName("SUBMIT 정렬은 지원 순서(생성일 오름차순)로 반환한다")
         void submitSort_ordersByCreatedAt() {
+            // createdAt은 밀리초 단위라 연속 저장 시 값이 같아질 수 있다.
+            // 그 경우 보조 정렬(UUID 오름차순)이 순서를 정해 테스트가 불안정해지므로,
+            // 생성 시각이 확실히 달라지도록 최소 간격을 둔다.
             givenDocumentApplicant("첫번째", Grade.FOURTH_GRADE);
+            sleepBriefly();
             givenDocumentApplicant("두번째", Grade.FIRST_GRADE);
             flushAndClear();
 
