@@ -7,6 +7,7 @@ import org.project.ttokttok.domain.admin.controller.dto.response.AdminLoginRespo
 import org.project.ttokttok.domain.admin.domain.Admin;
 import org.project.ttokttok.domain.admin.exception.AdminEmailConflictException;
 import org.project.ttokttok.domain.admin.exception.AdminNotFoundException;
+import org.project.ttokttok.domain.admin.exception.AdminPasswordConfirmNotMatchException;
 import org.project.ttokttok.domain.admin.exception.AdminUsernameConflictException;
 import org.project.ttokttok.domain.admin.repository.AdminRepository;
 import org.project.ttokttok.domain.admin.service.dto.request.AdminJoinServiceRequest;
@@ -129,7 +130,7 @@ public class AdminAuthService {
     public void resetPassword(AdminResetPasswordServiceRequest request) {
         // 새 비밀번호와 확인 비밀번호 일치 검증
         if (!request.newPassword().equals(request.newPasswordConfirm())) {
-            throw new IllegalArgumentException("새 비밀번호와 새 비밀번호 확인이 일치하지 않습니다.");
+            throw new AdminPasswordConfirmNotMatchException();
         }
 
         // 관리자 조회

@@ -62,7 +62,6 @@ public class ClubUserApiController implements ClubUserApiDocs {
      * @param sort 정렬 방식 (latest: 최신순, popular: 인기순) - 기본값: latest
      * @return 필터링된 동아리 목록과 페이징 정보
      */
-    //FIXME - 마감 임박 추가 (지원 마감기간이 일주일 이내로 남은 동아리 boolean 필드 추가)
     @Override
     @GetMapping
     public ResponseEntity<ClubListResponse> getClubList(
@@ -142,7 +141,6 @@ public class ClubUserApiController implements ClubUserApiDocs {
      * @param sort 정렬 방식 (popular : 인기도순, member_count : 멤버많은 순, latest : 최신등록 순) - 기본값 : popular
      * @return 멤버수 기준으로 정렬된 인기 동아리 목록
      * */
-    //FIXME - 마감 임박 추가 (지원 마감기간이 일주일 이내로 남은 동아리 boolean 필드 추가)
     @Override
     @GetMapping("/popular")
     public ResponseEntity<ClubListResponse> getPopularClubs(
@@ -179,7 +177,6 @@ public class ClubUserApiController implements ClubUserApiDocs {
      * @param cursor 커서 기반 페이지네이션을 위한 기준 ID
      * @param size 페이지당 로드할 개수 (기본값 20)
      */
-    //FIXME - 마감 임박 추가 (지원 마감기간이 일주일 이내로 남은 동아리 boolean 필드 추가)
     @Override
     @GetMapping("/search")
     public ResponseEntity<ClubListResponse> searchClubs(
