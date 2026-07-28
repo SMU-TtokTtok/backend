@@ -541,6 +541,10 @@ class AdminAuthServiceTest {
             // when & then
             assertThatThrownBy(() -> adminAuthService.resetPassword(request))
                     .isInstanceOf(AdminPasswordConfirmNotMatchException.class)
+                    // 기존 IllegalArgumentException과 응답 메시지가 동일해야 한다.
+                    // GlobalExceptionHandler가 두 예외 모두 getMessage()를 details로 내려주므로,
+                    // 메시지가 같으면 클라이언트가 받는 응답 본문도 동일하다.
+                    .hasMessage("새 비밀번호와 새 비밀번호 확인이 일치하지 않습니다.")
                     // 기존 IllegalArgumentException과 동일하게 400을 유지해야 한다
                     .extracting(thrown -> ((CustomException) thrown).getStatus())
                     .isEqualTo(HttpStatus.BAD_REQUEST);
