@@ -293,15 +293,23 @@ class FavoriteServiceTest {
     @DisplayName("toClubCardServiceResponse 로직 테스트")
     class ToClubCardServiceResponseTest {
 
-        @Test
-        @DisplayName("모집 마감일이 7일 이내이면 isDeadlineImminent가 true이다")
-        void toClubCardServiceResponse_DeadlineImminent_True() {
-            // given
-            FavoriteListServiceRequest request = FavoriteListServiceRequest.builder()
+        private FavoriteListServiceRequest givenRequest() {
+            return FavoriteListServiceRequest.builder()
                     .userEmail("test@test.com")
                     .size(10)
                     .sort("latest")
                     .build();
+        }
+
+        /**
+         * 마감일이 {@code applyEndDate} 인 활성 지원폼이 걸린 즐겨찾기 목록을 조회한다.
+         *
+         * <p>{@link ApplyForm} 을 목이 아닌 <b>실제 엔티티</b>로 만든다.
+         * 마감 임박 판정이 {@code ApplyForm#isDeadlineImminent()} 에 위임되므로,
+         * 목을 쓰면 스텁한 boolean을 되돌려받을 뿐 실제 날짜 규칙을 검증하지 못한다.
+         */
+        private FavoriteListServiceResponse getFavoriteListWithDeadline(LocalDate applyEndDate) {
+            FavoriteListServiceRequest request = givenRequest();
 
             Club club = mock(Club.class);
             Favorite favorite = mock(Favorite.class);
@@ -309,28 +317,62 @@ class FavoriteServiceTest {
             given(club.getId()).willReturn("club-1");
             given(club.getClubMembers()).willReturn(Collections.emptyList());
 
-            ApplyForm activeForm = mock(ApplyForm.class);
-            given(activeForm.getApplyEndDate()).willReturn(LocalDate.now().plusDays(5));
+            ApplyForm activeForm = ApplyForm.builder()
+                    .applyEndDate(applyEndDate)
+                    .build();
             given(applyFormRepository.findByClubIdAndStatus(any(), any())).willReturn(Optional.of(activeForm));
-
             given(favoriteRepository.findFavoritesByRequest(request)).willReturn(List.of(favorite));
 
-            // when
-            FavoriteListServiceResponse response = favoriteService.getFavoriteList(request);
+            return favoriteService.getFavoriteList(request);
+        }
 
-            // then
+        @Test
+        @DisplayName("모집 마감일이 7일 이내이면 isDeadlineImminent가 true이다")
+        void toClubCardServiceResponse_DeadlineImminent_True() {
+            FavoriteListServiceResponse response = getFavoriteListWithDeadline(LocalDate.now().plusDays(5));
+
             assertThat(response.favoriteClubs().get(0).isDeadlineImminent()).isTrue();
         }
 
         @Test
         @DisplayName("모집 마감일이 7일보다 많이 남았으면 isDeadlineImminent가 false이다")
         void toClubCardServiceResponse_DeadlineImminent_False() {
-            // given
-            FavoriteListServiceRequest request = FavoriteListServiceRequest.builder()
-                    .userEmail("test@test.com")
-                    .size(10)
-                    .sort("latest")
-                    .build();
+            FavoriteListServiceResponse response = getFavoriteListWithDeadline(LocalDate.now().plusDays(10));
+
+            assertThat(response.favoriteClubs().get(0).isDeadlineImminent()).isFalse();
+        }
+
+        @Test
+        @DisplayName("마감일 당일(0일 남음)과 정확히 7일 남은 경우 모두 마감 임박이다 - 경계값")
+        void toClubCardServiceResponse_DeadlineImminent_Boundaries() {
+            assertThat(getFavoriteListWithDeadline(LocalDate.now())
+                    .favoriteClubs().get(0).isDeadlineImminent()).isTrue();
+            assertThat(getFavoriteListWithDeadline(LocalDate.now().plusDays(7))
+                    .favoriteClubs().get(0).isDeadlineImminent()).isTrue();
+            assertThat(getFavoriteListWithDeadline(LocalDate.now().plusDays(8))
+                    .favoriteClubs().get(0).isDeadlineImminent()).isFalse();
+        }
+
+        @Test
+        @DisplayName("마감일이 이미 지났으면 마감 임박이 아니다")
+        void toClubCardServiceResponse_DeadlineAlreadyPassed() {
+            FavoriteListServiceResponse response = getFavoriteListWithDeadline(LocalDate.now().minusDays(1));
+
+            assertThat(response.favoriteClubs().get(0).isDeadlineImminent()).isFalse();
+        }
+
+        @Test
+        @DisplayName("마감일 정보가 없으면 마감 임박이 아니다")
+        void toClubCardServiceResponse_NoDeadline() {
+            FavoriteListServiceResponse response = getFavoriteListWithDeadline(null);
+
+            assertThat(response.favoriteClubs().get(0).isDeadlineImminent()).isFalse();
+        }
+
+        @Test
+        @DisplayName("활성 지원폼이 없으면 모집중이 아니고 마감 임박도 아니다")
+        void toClubCardServiceResponse_NoActiveApplyForm() {
+            FavoriteListServiceRequest request = givenRequest();
 
             Club club = mock(Club.class);
             Favorite favorite = mock(Favorite.class);
@@ -338,16 +380,12 @@ class FavoriteServiceTest {
             given(club.getId()).willReturn("club-1");
             given(club.getClubMembers()).willReturn(Collections.emptyList());
 
-            ApplyForm activeForm = mock(ApplyForm.class);
-            given(activeForm.getApplyEndDate()).willReturn(LocalDate.now().plusDays(10));
-            given(applyFormRepository.findByClubIdAndStatus(any(), any())).willReturn(Optional.of(activeForm));
-
+            given(applyFormRepository.findByClubIdAndStatus(any(), any())).willReturn(Optional.empty());
             given(favoriteRepository.findFavoritesByRequest(request)).willReturn(List.of(favorite));
 
-            // when
             FavoriteListServiceResponse response = favoriteService.getFavoriteList(request);
 
-            // then
+            assertThat(response.favoriteClubs().get(0).recruiting()).isFalse();
             assertThat(response.favoriteClubs().get(0).isDeadlineImminent()).isFalse();
         }
     }

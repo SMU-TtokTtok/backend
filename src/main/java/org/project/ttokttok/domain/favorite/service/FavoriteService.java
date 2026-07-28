@@ -1,9 +1,7 @@
 package org.project.ttokttok.domain.favorite.service;
 
-import static java.time.temporal.ChronoUnit.DAYS;
 import static org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus.ACTIVE;
 
-import java.time.LocalDate;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -136,13 +134,9 @@ public class FavoriteService {
         Optional<ApplyForm> activeApplyForm = applyFormRepository.findByClubIdAndStatus(club.getId(), ACTIVE);
         boolean recruiting = activeApplyForm.isPresent();
 
-        boolean isDeadlineImminent = false;
-        if (activeApplyForm.isPresent() && activeApplyForm.get().getApplyEndDate() != null) {
-            LocalDate today = LocalDate.now();
-            LocalDate deadline = activeApplyForm.get().getApplyEndDate();
-            long daysUntilDeadline = today.until(deadline, DAYS);
-            isDeadlineImminent = daysUntilDeadline >= 0 && daysUntilDeadline <= 7;
-        }
+        boolean isDeadlineImminent = activeApplyForm
+                .map(ApplyForm::isDeadlineImminent)
+                .orElse(false);
 
         return new ClubCardServiceResponse(
                 club.getId(),
