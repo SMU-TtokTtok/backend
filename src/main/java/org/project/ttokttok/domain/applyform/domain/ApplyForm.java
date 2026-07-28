@@ -166,4 +166,13 @@ public class ApplyForm extends BaseTimeEntity {
     public void endRecruiting() {
         this.isRecruiting = false;
     }
+
+    /**
+     * 지원 마감이 임박했는지 여부
+     *
+     * <p>판정 규칙은 {@link ApplyDeadlinePolicy} 에 정의되어 있다.
+     */
+    public boolean isDeadlineImminent() {
+        return ApplyDeadlinePolicy.isImminent(this.applyEndDate);
+    }
 }
