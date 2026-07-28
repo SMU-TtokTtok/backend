@@ -93,11 +93,10 @@ public class ClubUserService {
             results = results.subList(0, size);  // 실제 size만큼만 반환
         }
 
-        // 다음 커서 생성 (정렬 방식에 따라 다르게 생성)
+        // 다음 커서 생성
         String nextCursor = null;
         if (hasNext && !results.isEmpty()) {
-            ClubCardQueryResponse lastItem = results.get(results.size() - 1);
-            nextCursor = generateNextCursor(lastItem.id(), sort);
+            nextCursor = results.get(results.size() - 1).id();
         }
 
         List<ClubCardServiceResponse> clubs = results.stream()
@@ -197,9 +196,7 @@ public class ClubUserService {
         // 다음 커서 생성
         String nextCursor = null;
         if (hasNext && !results.isEmpty()) {
-            ClubCardQueryResponse lastItem = results.get(results.size() - 1);
-            // 'getClubList'에서 사용하던 커서 생성 로직 재활용
-            nextCursor = generateNextCursor(lastItem.id(), sort);
+            nextCursor = results.get(results.size() - 1).id();
         }
 
         List<ClubCardServiceResponse> clubs = results.stream()
@@ -207,29 +204,6 @@ public class ClubUserService {
                 .toList();
 
         return new ClubListServiceResponse(clubs, clubs.size(), 0L, hasNext, nextCursor);
-    }
-
-    /**
-     * 정렬 방식에 따라 다음 커서 생성
-     *
-     * @param lastItemId 마지막으로 조회된 아이템의 ID
-     * @param sort 정렬 방식
-     * @return 다음 커서 문자열
-     */
-    private String generateNextCursor(String lastItemId, String sort) {
-        // 정렬 방식에 따라 다른 커서 생성
-        switch (sort) {
-            case "latest":
-                // 최신순은 ID 기준으로 정렬되므로 ID 사용
-                return lastItemId;
-            case "popular":
-            case "member_count":
-                // 인기도순과 멤버많은순은 복합 정렬이므로 ID만 사용
-                // TODO: 향후 정렬 기준값과 ID를 조합한 복합 커서로 개선 가능
-                return lastItemId;
-            default:
-                return lastItemId;
-        }
     }
 
     /**
@@ -262,7 +236,7 @@ public class ClubUserService {
         // 5. 다음 커서 생성
         String nextCursor = null;
         if (hasNext && !results.isEmpty()) {
-            nextCursor = generateNextCursor(results.get(results.size() - 1).id(), sort);
+            nextCursor = results.get(results.size() - 1).id();
         }
 
         // 6. 최종 응답 생성

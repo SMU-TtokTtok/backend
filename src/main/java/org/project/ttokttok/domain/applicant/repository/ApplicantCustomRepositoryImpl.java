@@ -344,40 +344,31 @@ public class ApplicantCustomRepositoryImpl implements ApplicantCustomRepository 
 
     /**
      * 사용자 지원내역 정렬 조건 생성
+     *
+     * <p>현재 {@code sort} 값은 정렬 결과에 영향을 주지 않는다.
+     * {@code popular} / {@code member_count} 정렬이 아직 구현되지 않아 {@code latest} 와
+     * 동일하게 최신순으로 동작한다. {@code sort} 는 공개 API 시그니처이므로 유지하되,
+     * 실제 분기는 해당 정렬이 구현될 때 추가한다.
      */
     private OrderSpecifier<?>[] getApplicationSortCriteria(String sort) {
-        return switch (sort.toLowerCase()) {
-            case "latest" -> new OrderSpecifier[]{
-                    applicant.createdAt.desc(),
-                    applicant.id.desc() // 일관성을 위한 보조 정렬
-            };
-            case "popular", "member_count" -> new OrderSpecifier[]{
-                    // 멤버수 기준 정렬 (서브쿼리 사용)
-                    applicant.createdAt.desc(), // 임시로 날짜순 정렬 (성능상 이유)
-                    applicant.id.desc()
-            };
-            default -> new OrderSpecifier[]{
-                    applicant.createdAt.desc(),
-                    applicant.id.desc()
-            };
+        return new OrderSpecifier[]{
+                applicant.createdAt.desc(),
+                applicant.id.desc() // 일관성을 위한 보조 정렬
         };
     }
 
     /**
      * 커서 기반 페이징을 위한 조건 생성
+     *
+     * <p>정렬 기준과 무관하게 ID 기반 단일 커서를 사용한다.
+     * 복합 커서는 위 정렬이 실제로 구현될 때 함께 도입한다.
      */
     private BooleanExpression cursorCondition(String cursor, String sort) {
         if (cursor == null || cursor.isEmpty()) {
             return null;
         }
 
-        // 간단한 구현: ID 기반 커서
-        // 실제로는 정렬 기준에 따라 복합 커서를 구현해야 함
-        return switch (sort.toLowerCase()) {
-            case "latest" -> applicant.id.lt(cursor);
-            case "popular", "member_count" -> applicant.id.lt(cursor);
-            default -> applicant.id.lt(cursor);
-        };
+        return applicant.id.lt(cursor);
     }
 
     /**

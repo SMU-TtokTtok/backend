@@ -246,8 +246,7 @@ public class ApplicantUserService {
         // 4. 다음 커서 생성
         String nextCursor = null;
         if (hasNext && !results.isEmpty()) {
-            UserApplicationHistoryQueryResponse lastItem = results.get(results.size() - 1);
-            nextCursor = generateNextCursor(lastItem.applicantId(), sort);
+            nextCursor = results.get(results.size() - 1).applicantId();
         }
 
         // 5. ClubCardServiceResponse로 변환
@@ -292,19 +291,4 @@ public class ApplicantUserService {
         );
     }
 
-    /**
-     * 정렬 방식에 따라 다음 커서 생성
-     *
-     * @param lastItemId 마지막으로 조회된 아이템의 ID
-     * @param sort 정렬 방식
-     * @return 다음 커서 문자열
-     */
-    private String generateNextCursor(String lastItemId, String sort) {
-        // 정렬 방식에 따라 다른 커서 생성
-        // 현재는 간단하게 ID만 사용하지만, 향후 복합 커서로 개선 가능
-        return switch (sort.toLowerCase()) {
-            case "latest", "popular", "member_count" -> lastItemId;
-            default -> lastItemId;
-        };
-    }
 }
