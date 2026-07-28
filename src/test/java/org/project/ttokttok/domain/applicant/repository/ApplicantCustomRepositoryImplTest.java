@@ -345,5 +345,194 @@ class ApplicantCustomRepositoryImplTest implements RepositoryTestSupport {
 
             assertThat(history).hasSize(1);
         }
+
+        @Test
+        @DisplayName("sort 값은 결과에 영향을 주지 않는다 - popular/member_count도 latest와 동일하다")
+        void sortValueDoesNotChangeOrder() {
+            // popular/member_count 정렬은 아직 구현되지 않아 모두 최신순으로 동작한다.
+            // 죽은 switch를 제거하면서 이 동작이 바뀌지 않았음을 고정한다.
+            givenDocumentApplicant("지원자", Grade.FIRST_GRADE);
+            flushAndClear();
+
+            String email = "지원자@sangmyung.kr";
+            var latest = applicantRepository.getUserApplicationHistory(email, 10, null, "latest");
+            var popular = applicantRepository.getUserApplicationHistory(email, 10, null, "popular");
+            var memberCount = applicantRepository.getUserApplicationHistory(email, 10, null, "member_count");
+            var unknown = applicantRepository.getUserApplicationHistory(email, 10, null, "무슨값이든");
+
+            assertThat(popular).isEqualTo(latest);
+            assertThat(memberCount).isEqualTo(latest);
+            assertThat(unknown).isEqualTo(latest);
+        }
+
+        @Test
+        @DisplayName("커서보다 ID가 작은 지원내역만 반환한다")
+        void cursorExcludesIdsGreaterOrEqual() {
+            Applicant applicant = givenDocumentApplicant("커서지원자", Grade.FIRST_GRADE);
+            flushAndClear();
+
+            String email = "커서지원자@sangmyung.kr";
+            // 자기 자신의 ID를 커서로 주면 (id < cursor 조건이므로) 결과에서 빠진다.
+            var afterSelf = applicantRepository.getUserApplicationHistory(
+                    email, 10, applicant.getId(), "latest");
+            // 빈 문자열 커서는 커서 없음과 같게 취급된다.
+            var emptyCursor = applicantRepository.getUserApplicationHistory(email, 10, "", "latest");
+
+            assertThat(afterSelf).isEmpty();
+            assertThat(emptyCursor).hasSize(1);
+        }
+    }
+
+    @Nested
+    @DisplayName("목록 쿼리와 개수 쿼리는 항상 같은 필터를 본다")
+    class ListAndCountShareFilters {
+
+        /**
+         * 목록 조회와 개수 조회는 서로 다른 쿼리이지만 동일한 필터 배열을 공유한다.
+         * 한쪽에만 필터가 빠지면 "3건 중 1건 표시" 같은 페이징 오류가 생기므로,
+         * 필터 조합마다 totalCount와 실제 목록 크기가 일치하는지 검증한다.
+         */
+        @Test
+        @DisplayName("이름 검색 시 totalCount가 검색 결과 수와 일치한다")
+        void keywordSearchCountMatchesList() {
+            givenDocumentApplicant("김철수", Grade.FIRST_GRADE);
+            givenDocumentApplicant("김영희", Grade.SECOND_GRADE);
+            givenDocumentApplicant("박민수", Grade.THIRD_GRADE);
+            flushAndClear();
+
+            ApplicantPageQueryResponse response = applicantRepository.searchApplicantsByKeyword(
+                    "김", null, false, 1, 10, form.getId(), DOCUMENT_KIND);
+
+            assertThat(response.applicants()).hasSize(2);
+            assertThat(response.totalCount()).isEqualTo(2);
+        }
+
+        @Test
+        @DisplayName("evaluating 필터 시 totalCount가 필터링된 수와 일치한다")
+        void evaluatingFilterCountMatchesList() {
+            givenDocumentApplicant("평가중1", Grade.FIRST_GRADE);
+            givenDocumentApplicant("평가중2", Grade.SECOND_GRADE);
+
+            Applicant passed = givenDocumentApplicant("합격", Grade.THIRD_GRADE);
+            passed.passDocumentEvaluation();
+            applicantRepository.save(passed);
+            flushAndClear();
+
+            ApplicantPageQueryResponse response = applicantRepository.findApplicantsPageWithSortCriteria(
+                    null, true, 1, 10, form.getId(), DOCUMENT_KIND);
+
+            assertThat(response.applicants()).hasSize(2);
+            assertThat(response.totalCount()).isEqualTo(2);
+        }
+
+        @Test
+        @DisplayName("합격 상태 필터 시 totalCount가 필터링된 수와 일치한다")
+        void statusFilterCountMatchesList() {
+            Applicant passed = givenDocumentApplicant("합격", Grade.FIRST_GRADE);
+            passed.passDocumentEvaluation();
+            applicantRepository.save(passed);
+
+            givenDocumentApplicant("평가중", Grade.SECOND_GRADE);
+            givenDocumentApplicant("평가중2", Grade.THIRD_GRADE);
+            flushAndClear();
+
+            ApplicantPageQueryResponse response = applicantRepository.findApplicantsByStatus(
+                    true, 1, 10, form.getId(), DOCUMENT_KIND);
+
+            assertThat(response.applicants()).hasSize(1);
+            assertThat(response.totalCount()).isEqualTo(1);
+        }
+
+        @Test
+        @DisplayName("면접 단계에서도 totalCount가 면접 지원자 수와 일치한다")
+        void interviewPhaseCountMatchesList() {
+            givenDocumentApplicant("서류만1", Grade.FIRST_GRADE);
+            givenDocumentApplicant("서류만2", Grade.SECOND_GRADE);
+            givenInterviewApplicant("면접까지", Grade.THIRD_GRADE);
+            flushAndClear();
+
+            ApplicantPageQueryResponse response = applicantRepository.findApplicantsPageWithSortCriteria(
+                    null, false, 1, 10, form.getId(), INTERVIEW_KIND);
+
+            assertThat(response.applicants()).hasSize(1);
+            assertThat(response.totalCount()).isEqualTo(1);
+        }
+
+        @Test
+        @DisplayName("검색 + evaluating 필터를 함께 걸어도 totalCount가 일치한다")
+        void combinedFiltersCountMatchesList() {
+            givenDocumentApplicant("김평가중", Grade.FIRST_GRADE);
+
+            Applicant passed = givenDocumentApplicant("김합격", Grade.SECOND_GRADE);
+            passed.passDocumentEvaluation();
+            applicantRepository.save(passed);
+
+            givenDocumentApplicant("박평가중", Grade.THIRD_GRADE);
+            flushAndClear();
+
+            ApplicantPageQueryResponse response = applicantRepository.searchApplicantsByKeyword(
+                    "김", null, true, 1, 10, form.getId(), DOCUMENT_KIND);
+
+            assertThat(namesOf(response)).containsExactly("김평가중");
+            assertThat(response.totalCount()).isEqualTo(1);
+        }
+
+        @Test
+        @DisplayName("다른 지원폼의 지원자는 개수에도 목록에도 포함되지 않는다")
+        void otherApplyFormIsExcludedFromBothQueries() {
+            givenDocumentApplicant("우리폼지원자", Grade.FIRST_GRADE);
+            flushAndClear();
+
+            ApplicantPageQueryResponse response = applicantRepository.findApplicantsPageWithSortCriteria(
+                    null, false, 1, 10, "존재하지-않는-폼-id", DOCUMENT_KIND);
+
+            assertThat(response.applicants()).isEmpty();
+            assertThat(response.totalCount()).isZero();
+        }
+    }
+
+    @Nested
+    @DisplayName("kind 문자열 해석")
+    class KindInterpretation {
+
+        @Test
+        @DisplayName("kind 대소문자를 구분하지 않는다")
+        void kindIsCaseInsensitive() {
+            givenInterviewApplicant("면접지원자", Grade.FIRST_GRADE);
+            flushAndClear();
+
+            ApplicantPageQueryResponse upper = applicantRepository.findApplicantsPageWithSortCriteria(
+                    null, false, 1, 10, form.getId(), "INTERVIEW");
+            ApplicantPageQueryResponse lower = applicantRepository.findApplicantsPageWithSortCriteria(
+                    null, false, 1, 10, form.getId(), "interview");
+
+            assertThat(namesOf(upper)).containsExactly("면접지원자");
+            assertThat(namesOf(lower)).containsExactly("면접지원자");
+        }
+
+        @Test
+        @DisplayName("INTERVIEW가 아닌 kind는 모두 서류 단계로 조회한다")
+        void unknownKindFallsBackToDocument() {
+            givenDocumentApplicant("서류지원자", Grade.FIRST_GRADE);
+            flushAndClear();
+
+            ApplicantPageQueryResponse response = applicantRepository.findApplicantsPageWithSortCriteria(
+                    null, false, 1, 10, form.getId(), "알 수 없는 kind");
+
+            assertThat(namesOf(response)).containsExactly("서류지원자");
+            assertThat(response.applicants().get(0).interviewDate()).isNull();
+        }
+
+        @Test
+        @DisplayName("kind가 null이어도 예외 없이 서류 단계로 조회한다")
+        void nullKindFallsBackToDocument() {
+            givenDocumentApplicant("서류지원자", Grade.FIRST_GRADE);
+            flushAndClear();
+
+            ApplicantPageQueryResponse response = applicantRepository.findApplicantsPageWithSortCriteria(
+                    null, false, 1, 10, form.getId(), null);
+
+            assertThat(namesOf(response)).containsExactly("서류지원자");
+        }
     }
 }
