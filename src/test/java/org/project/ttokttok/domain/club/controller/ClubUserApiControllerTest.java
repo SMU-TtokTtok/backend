@@ -22,6 +22,7 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -124,6 +125,39 @@ class ClubUserApiControllerTest {
                 .andExpect(jsonPath("$.types").isArray())
                 .andExpect(jsonPath("$.recruitingOptions").isArray())
                 .andExpect(jsonPath("$.universities").isArray());
+    }
+
+    @Test
+    @WithMockUser
+    @DisplayName("필터 옵션 응답의 JSON 구조가 리팩토링 전과 동일하다")
+    void getFilterOptions_preservesExactJsonStructure() throws Exception {
+        String expected = """
+                {
+                  "types": [
+                    {"value": "null", "label": "전체"},
+                    {"value": "CENTRAL", "label": "중앙동아리"},
+                    {"value": "UNION", "label": "연합동아리"},
+                    {"value": "DEPARTMENT", "label": "과동아리"}
+                  ],
+                  "recruitingOptions": [
+                    {"value": "null", "label": "전체"},
+                    {"value": "true", "label": "모집중"},
+                    {"value": "false", "label": "모집마감"}
+                  ],
+                  "universities": [
+                    {"value": "GLOBAL_AREA", "label": "글로벌지역학부"},
+                    {"value": "DESIGN", "label": "디자인대학"},
+                    {"value": "ENGINEERING", "label": "공대"},
+                    {"value": "CONVERGENCE_TECHNOLOGY", "label": "융합기술대"},
+                    {"value": "ARTS", "label": "예술대"}
+                  ]
+                }
+                """;
+
+        mockMvc.perform(get("/api/clubs/filter-options")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().json(expected, true));
     }
 
     @Test

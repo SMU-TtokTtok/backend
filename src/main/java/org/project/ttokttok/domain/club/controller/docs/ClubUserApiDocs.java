@@ -12,12 +12,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
 import org.project.ttokttok.domain.club.controller.dto.response.ClubDetailResponse;
 import org.project.ttokttok.domain.club.controller.dto.response.ClubListResponse;
+import org.project.ttokttok.domain.club.controller.dto.response.FilterOptionsResponse;
 import org.project.ttokttok.domain.club.domain.enums.ClubUniv;
 import org.project.ttokttok.global.exception.dto.ErrorResponse;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * 동아리 사용자 조회 API 문서화 인터페이스
@@ -256,7 +256,7 @@ public interface ClubUserApiDocs {
                     )
             }
     )
-    ResponseEntity<Map<String, Object>> getFilterOptions();
+    ResponseEntity<FilterOptionsResponse> getFilterOptions();
 
     /**
      * 동아리 검색 API
