@@ -90,6 +90,8 @@ iterations 로 계산하면 유실을 과대평가한다.
 - **읽은 값으로 분기해야 하는 쓰기 → 비관락이 정당하다**
   지원 정원 체크(`maxApplyCount`)처럼 "현재 인원을 읽고 미달이면 insert" 는 읽기-판단-쓰기가 원자적이어야 하고
   한 문장으로 접을 수 없다. 조회수의 결론을 그대로 가져가면 안 되는 사례다.
+  여기서는 SERIALIZABLE 도 논리적으로 답이 되지만, 트랜잭션 전체에 걸리고 오탐 재시도를 전역으로 감당해야 한다.
+  문제의 행 하나만 겨냥하고 대기했다가 성공하는 비관락이 더 외과적이다.
 - **충돌률이 낮고 트랜잭션이 긴 경우 → 낙관락**
   조회수는 정반대 조건이었고, V2 수치가 그 대가를 보여준다.
 
@@ -97,6 +99,24 @@ iterations 로 계산하면 유실을 과대평가한다.
 
 - **인덱스**: 이 이슈의 해법이 아니다. 쓰기 경로의 `WHERE id = ?` 는 PK 조회라 이미 인덱스가 있고,
   추가할 여지가 없다. 인덱스는 탐색 비용을 줄이지 경합을 줄이지 않는다.
+- **트랜잭션 격리 수준**: 구현은 `@Transactional(isolation = ...)` 한 줄이지만 **올리면 채택안이 깨진다.**
+  PostgreSQL 의 REPEATABLE READ 는 UPDATE 가 찾은 행이 이미 다른 트랜잭션에 의해 갱신·커밋됐으면
+  `ERROR: could not serialize access due to concurrent update` (SQLSTATE 40001) 로 실패시킨다.
+  이건 `SET view_count = ?` 든 `SET view_count = view_count + 1` 이든 가리지 않으므로,
+  지금 100% 성공하는 V1b 의 요청들이 40001 로 떨어지기 시작한다 (충돌률 100% 워크로드이므로 V2 보다 나쁠 수 있다).
+
+  반대로 기본값인 READ COMMITTED 에서 원자적 UPDATE 가 안전한 건 격리가 느슨해서가 아니라,
+  락 대기에서 깨어난 뒤 **갱신된 행 버전 위에서 WHERE 절과 SET 식을 다시 평가**하기 때문이다 (EvalPlanQual).
+  격리 수준을 올려서 얻으려는 정확성이 이미 확보돼 있다.
+
+  결국 REPEATABLE READ / SERIALIZABLE 은 충돌을 막는 게 아니라 **감지해서 에러로 만드는** 방식이라 구조가 V2 와 같고,
+  트랜잭션 전체에 걸리는 무딘 도구라 카운터 한 줄만 겨냥할 수도 없다.
+  낮추는 방향은 애초에 없다 — PostgreSQL 은 `READ UNCOMMITTED` 를 READ COMMITTED 로 처리한다.
+  (MySQL 은 기본이 REPEATABLE READ 라 낮추는 게 튜닝 카드가 되지만 여기엔 해당 없다.)
+
+  > 근거: [PostgreSQL 13.2.2 Repeatable Read](https://www.postgresql.org/docs/current/transaction-iso.html#XACT-REPEATABLE-READ).
+  > 이 항목만 **실측이 아니라 문서화된 동작에 근거**한다. 위 표의 수치와 근거 유형이 다르다.
+
 - **Redis 카운터 / 샤딩 카운터**: 단일 핫 로우 쓰기는 어떤 방식이든 결국 직렬화되므로 V1b 에도 상한이 있다.
   그 상한을 넘겨야 한다면 다음 수는 비관락이 아니라 카운터를 DB 밖으로 빼거나 행을 N개로 쪼개 합산하는 방향이다.
   최종적 일관성과 장애 시 유실을 감수하는 트레이드오프이므로 별도 판단이 필요하다.
