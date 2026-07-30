@@ -1,0 +1,88 @@
+﻿
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+
+     execution: local
+        script: /k6/scenarios/issue-a-view-count.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 100 max VUs, 10m30s max duration (incl. graceful stop):
+              * view_count_race: 5000 iterations shared among 100 VUs (maxDuration: 10m0s, gracefulStop: 30s)
+
+
+running (00m01.0s), 100/100 VUs, 201 complete and 0 interrupted iterations
+view_count_race   [   4% ] 100 VUs  00m01.0s/10m0s  0201/5000 shared iters
+
+running (00m02.0s), 100/100 VUs, 426 complete and 0 interrupted iterations
+view_count_race   [   9% ] 100 VUs  00m02.0s/10m0s  0426/5000 shared iters
+
+running (00m03.0s), 100/100 VUs, 658 complete and 0 interrupted iterations
+view_count_race   [  13% ] 100 VUs  00m03.0s/10m0s  0658/5000 shared iters
+
+running (00m04.0s), 100/100 VUs, 880 complete and 0 interrupted iterations
+view_count_race   [  18% ] 100 VUs  00m04.0s/10m0s  0880/5000 shared iters
+
+running (00m05.0s), 100/100 VUs, 1099 complete and 0 interrupted iterations
+view_count_race   [  22% ] 100 VUs  00m05.0s/10m0s  1099/5000 shared iters
+
+running (00m06.0s), 100/100 VUs, 1310 complete and 0 interrupted iterations
+view_count_race   [  26% ] 100 VUs  00m06.0s/10m0s  1310/5000 shared iters
+
+running (00m07.0s), 100/100 VUs, 1532 complete and 0 interrupted iterations
+view_count_race   [  31% ] 100 VUs  00m07.0s/10m0s  1532/5000 shared iters
+
+running (00m08.0s), 100/100 VUs, 1775 complete and 0 interrupted iterations
+view_count_race   [  36% ] 100 VUs  00m08.0s/10m0s  1775/5000 shared iters
+
+running (00m09.0s), 100/100 VUs, 2007 complete and 0 interrupted iterations
+view_count_race   [  40% ] 100 VUs  00m09.0s/10m0s  2007/5000 shared iters
+
+running (00m10.0s), 100/100 VUs, 2260 complete and 0 interrupted iterations
+view_count_race   [  45% ] 100 VUs  00m10.0s/10m0s  2260/5000 shared iters
+
+running (00m11.0s), 100/100 VUs, 2526 complete and 0 interrupted iterations
+view_count_race   [  51% ] 100 VUs  00m11.0s/10m0s  2526/5000 shared iters
+
+running (00m12.0s), 100/100 VUs, 2767 complete and 0 interrupted iterations
+view_count_race   [  55% ] 100 VUs  00m12.0s/10m0s  2767/5000 shared iters
+
+running (00m13.0s), 100/100 VUs, 3007 complete and 0 interrupted iterations
+view_count_race   [  60% ] 100 VUs  00m13.0s/10m0s  3007/5000 shared iters
+
+running (00m14.0s), 100/100 VUs, 3263 complete and 0 interrupted iterations
+view_count_race   [  65% ] 100 VUs  00m14.0s/10m0s  3263/5000 shared iters
+
+running (00m15.0s), 100/100 VUs, 3536 complete and 0 interrupted iterations
+view_count_race   [  71% ] 100 VUs  00m15.0s/10m0s  3537/5000 shared iters
+
+running (00m16.0s), 100/100 VUs, 3812 complete and 0 interrupted iterations
+view_count_race   [  76% ] 100 VUs  00m16.0s/10m0s  3812/5000 shared iters
+
+running (00m17.0s), 100/100 VUs, 4082 complete and 0 interrupted iterations
+view_count_race   [  82% ] 100 VUs  00m17.0s/10m0s  4082/5000 shared iters
+
+running (00m18.0s), 100/100 VUs, 4346 complete and 0 interrupted iterations
+view_count_race   [  87% ] 100 VUs  00m18.0s/10m0s  4346/5000 shared iters
+
+running (00m19.0s), 100/100 VUs, 4632 complete and 0 interrupted iterations
+view_count_race   [  93% ] 100 VUs  00m19.0s/10m0s  4632/5000 shared iters
+
+running (00m20.0s), 098/100 VUs, 4902 complete and 0 interrupted iterations
+view_count_race   [  98% ] 100 VUs  00m20.0s/10m0s  4902/5000 shared iters
+docker : time="2026-07-30T13:17:37Z" level=info msg="=== view-count summary ===" source=console
+At C:\Users\tnals\바탕 화면\프로젝트폴더\ttokttok\.claude\worktrees\fix-346\load-test\scripts\measure-viewcount.ps1:91 char:5
++     docker run --rm `
++     ~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (time="2026-07-3... source=console:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+time="2026-07-30T13:17:37Z" level=info msg="{\n  \"vus\": 100,\n  \"iterations_configured\": 5000,\n  \"successful_views\": 5000,\n  \"http_reqs\": 5000,\n  \
+"http_req_failed_rate\": 0,\n  \"rps\": 245.85894847302848,\n  \"latency_ms\": {\n    \"med\": 401.1239055,\n    \"p90\": 466.4750373,\n    \"p95\": 480.72680
+365,\n    \"p99\": 503.59707054000006,\n    \"max\": 517.427172\n  }\n}" source=console
+
+running (00m20.3s), 000/100 VUs, 5000 complete and 0 interrupted iterations
+view_count_race ✓ [ 100% ] 100 VUs  00m20.3s/10m0s  5000/5000 shared iters

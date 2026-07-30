@@ -1,0 +1,15 @@
+{
+  "vus": 100,
+  "iterations_configured": 5000,
+  "successful_views": 5000,
+  "http_reqs": 5000,
+  "http_req_failed_rate": 0,
+  "rps": 245.85894847302848,
+  "latency_ms": {
+    "med": 401.1239055,
+    "p90": 466.4750373,
+    "p95": 480.72680365,
+    "p99": 503.59707054000006,
+    "max": 517.427172
+  }
+}

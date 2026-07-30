@@ -1,4 +1,3 @@
-version: "3.8"
 
 # Monitoring stack: Prometheus, Grafana, Pushgateway
 # Usage: docker compose -f docker-compose.yml -f docker-compose.monitoring.yml up -d
