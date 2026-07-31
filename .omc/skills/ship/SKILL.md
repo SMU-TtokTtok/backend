@@ -79,6 +79,8 @@ Every issue body must also cover the fields from [`maintenance/task.md`](../../.
    ```
    Never edit `.gitignore` to make these trackable — they stay untracked by design (secrets/local fixtures). This step only mirrors the working-tree copy across so the new worktree can actually build and test; it changes nothing about what git tracks.
 
+   Note the `-- src` scope: this deliberately does **not** copy the root-level gitignored docs `GEMINI.md` and `IMPLEMENTATION.md`. Those stay single-copy in the original checkout so the work log never forks. Read and append to them there (path from `git worktree list`), not inside the worktree.
+
 4. **Implement (Change)** — follow `AGENTS.md` conventions. Use the per-type mini checklist in `maintenance/task.md` as the working checklist.
 
 5. **Verify**:
@@ -116,6 +118,10 @@ Every issue body must also cover the fields from [`maintenance/task.md`](../../.
    Then confirm the rebase changed nothing: `git diff <pre-rebase HEAD> HEAD --stat` must be empty. If it is not, re-run `bash maintenance/verify.sh`. The full test suite runs **once** on the final tree, not per commit.
 
 9. **Record** — append a dated section to `IMPLEMENTATION.md`, following its existing format (see prior entries: dated header, 주요 작업 내용, 기술적 세부 사항, 업데이트된 파일, 최종 확인 사항). Written after the code commits so it can describe the actual commit breakdown. Do not sign the entry with a model name.
+
+   **`IMPLEMENTATION.md` is gitignored** (`.gitignore:68`, alongside `GEMINI.md`) — it is a local-only work log and is **never committed**. Do not stage it, do not expect a commit from this step, and do not "fix" it by editing `.gitignore`. Two consequences:
+   - A fresh worktree does not contain it (step 3's restore only sweeps gitignored files under `src`). Append to the log in the **original checkout** found via `git worktree list`, not to a new copy inside the worktree.
+   - Treat it like the other protected local-only files: append only, never overwrite or recreate (`rules/agent/protected-local-files.md`).
 
 10. **Push**:
    ```bash
