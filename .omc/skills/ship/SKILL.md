@@ -111,7 +111,7 @@ Every issue body must also cover the fields from [`maintenance/task.md`](../../.
    ```bash
    git rebase origin/develop --exec './gradlew.bat compileJava compileTestJava'
    ```
-   (Verified working in Git Bash on Windows; `gradlew.bat` needs no `cmd //c` wrapper.) On failure the rebase halts at the offending commit — fix it, `git commit --amend`, then `git rebase --continue`.
+   (Verified working in Git Bash on Windows; `gradlew.bat` needs no `cmd //c` wrapper. Each run prints `'DOSKEY' is not recognized…` — a harmless Git-Bash artifact of `gradlew.bat`, not a failure. Judge by `BUILD SUCCESSFUL` and the exit code.) On failure the rebase halts at the offending commit — fix it, `git commit --amend`, then `git rebase --continue`.
 
    **Never use `git stash` for this.** Rebase leaves untracked and gitignored files alone, so the local-only config restored in step 3 survives; `git stash -a` / `--all` would sweep those up (see `rules/agent/protected-local-files.md`).
 
