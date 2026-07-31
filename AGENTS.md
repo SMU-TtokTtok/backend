@@ -217,6 +217,7 @@ public class ClubService {
 Detailed, situational rules live under [`rules/`](rules/) — common agent rules in [`rules/agent/`](rules/agent/), runtime-specific rules in `rules/<runtime>/` (e.g. `rules/claude/`, pointed to from that runtime's entry doc). Git rules are enforced by the hooks in `maintenance/hooks/` (install once via `bash maintenance/hooks/install.sh`).
 
 - **Commit messages** → [`rules/agent/commit-message.md`](rules/agent/commit-message.md)
+- **Commit granularity** → [`rules/agent/commit-granularity.md`](rules/agent/commit-granularity.md)
 - **Branches** → [`rules/agent/branch-naming.md`](rules/agent/branch-naming.md)
 - **PR titles** → [`rules/agent/pr-title.md`](rules/agent/pr-title.md)
 - **Protected local-only files** → [`rules/agent/protected-local-files.md`](rules/agent/protected-local-files.md)

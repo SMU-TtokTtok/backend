@@ -82,6 +82,7 @@ bash maintenance/verify.sh
 
 - Append the work to [`../IMPLEMENTATION.md`](../IMPLEMENTATION.md) as a **dated section** (keep the existing format: key work / changed files / verification notes).
 - Commit message: `[#issue] - message` (Korean header), with each item as a `- item` line in the body. (See the commit convention in [`GEMINI.md`](../GEMINI.md).)
+- **Split the work into one commit per concern** rather than a single large commit — see [`rules/agent/commit-granularity.md`](../rules/agent/commit-granularity.md).
 - PR: fill in the [`.github/PULL_REQUEST_TEMPLATE.md`](../.github/PULL_REQUEST_TEMPLATE.md) checklist.
 
 > ⚠️ Before committing, re-run `git status` to confirm no secrets are staged.
