@@ -89,6 +89,10 @@ if (user.isActive()) { }
 - Prefer unchecked over checked exceptions.
 - Define specific exception types.
 - Handle exceptions at the top level.
+- **New code must throw `CustomException` subclasses, not `IllegalArgumentException`.** Add an `ErrorMessage`
+  entry (message + HTTP status) and a matching exception class, so the status is declared at the throw site
+  instead of relying on the catch-all `IllegalArgumentException` handler in `GlobalExceptionHandler`.
+  That handler still exists only for pre-existing call sites; do not add new dependencies on it.
 
 ---
 

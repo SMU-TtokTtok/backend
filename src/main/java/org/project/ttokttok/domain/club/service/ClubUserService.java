@@ -1,7 +1,7 @@
 package org.project.ttokttok.domain.club.service;
 
-import java.time.temporal.ChronoUnit;
 import lombok.RequiredArgsConstructor;
+import org.project.ttokttok.domain.applyform.domain.ApplyDeadlinePolicy;
 import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
 import org.project.ttokttok.domain.club.domain.enums.ClubCategory;
 import org.project.ttokttok.domain.club.domain.enums.ClubType;
@@ -20,10 +20,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.util.List;
-
-import static java.time.temporal.ChronoUnit.*;
 
 /**
  * 동아리 서비스 클래스
@@ -99,11 +96,10 @@ public class ClubUserService {
             results = results.subList(0, size);  // 실제 size만큼만 반환
         }
 
-        // 다음 커서 생성 (정렬 방식에 따라 다르게 생성)
+        // 다음 커서 생성
         String nextCursor = null;
         if (hasNext && !results.isEmpty()) {
-            ClubCardQueryResponse lastItem = results.get(results.size() - 1);
-            nextCursor = generateNextCursor(lastItem.id(), sort);
+            nextCursor = results.get(results.size() - 1).id();
         }
 
         List<ClubCardServiceResponse> clubs = results.stream()
@@ -120,24 +116,7 @@ public class ClubUserService {
      * @return Service 레이어 응답 DTO
      * */
     private ClubCardServiceResponse toServiceResponse(ClubCardQueryResponse queryResponse) {
-        // 마감 임박 여부 계산 (지원 마감일이 일주일 이내인지 확인)
-        boolean isDeadlineImminent = false;
-        LocalDate deadline = queryResponse.applyDeadLine(); // 1. 마감일 가져오기
-
-        if (deadline != null) {
-            LocalDate today = LocalDate.now();
-
-            // 오늘부터 마감일까지 남은 일수 계산
-            // 음수: 이미 지남, 0: 당일, 양수: 미래
-            long daysUntilDeadline = today.until(deadline, DAYS);
-
-            // 로직 적용
-            // 1. daysUntilDeadline >= 0 : 마감일이 현재(오늘 포함)보다 이후여야 함
-            // 2. daysUntilDeadline <= 7 : 일주일 이내여야 함
-            if (daysUntilDeadline >= 0 && daysUntilDeadline <= 7) {
-                isDeadlineImminent = true;
-            }
-        }
+        boolean isDeadlineImminent = ApplyDeadlinePolicy.isImminent(queryResponse.applyDeadLine());
 
         return new ClubCardServiceResponse(
                 queryResponse.id(),
@@ -203,9 +182,7 @@ public class ClubUserService {
         // 다음 커서 생성
         String nextCursor = null;
         if (hasNext && !results.isEmpty()) {
-            ClubCardQueryResponse lastItem = results.get(results.size() - 1);
-            // 'getClubList'에서 사용하던 커서 생성 로직 재활용
-            nextCursor = generateNextCursor(lastItem.id(), sort);
+            nextCursor = results.get(results.size() - 1).id();
         }
 
         List<ClubCardServiceResponse> clubs = results.stream()
@@ -213,29 +190,6 @@ public class ClubUserService {
                 .toList();
 
         return new ClubListServiceResponse(clubs, clubs.size(), 0L, hasNext, nextCursor);
-    }
-
-    /**
-     * 정렬 방식에 따라 다음 커서 생성
-     *
-     * @param lastItemId 마지막으로 조회된 아이템의 ID
-     * @param sort 정렬 방식
-     * @return 다음 커서 문자열
-     */
-    private String generateNextCursor(String lastItemId, String sort) {
-        // 정렬 방식에 따라 다른 커서 생성
-        switch (sort) {
-            case "latest":
-                // 최신순은 ID 기준으로 정렬되므로 ID 사용
-                return lastItemId;
-            case "popular":
-            case "member_count":
-                // 인기도순과 멤버많은순은 복합 정렬이므로 ID만 사용
-                // TODO: 향후 정렬 기준값과 ID를 조합한 복합 커서로 개선 가능
-                return lastItemId;
-            default:
-                return lastItemId;
-        }
     }
 
     /**
@@ -268,7 +222,7 @@ public class ClubUserService {
         // 5. 다음 커서 생성
         String nextCursor = null;
         if (hasNext && !results.isEmpty()) {
-            nextCursor = generateNextCursor(results.get(results.size() - 1).id(), sort);
+            nextCursor = results.get(results.size() - 1).id();
         }
 
         // 6. 최종 응답 생성
