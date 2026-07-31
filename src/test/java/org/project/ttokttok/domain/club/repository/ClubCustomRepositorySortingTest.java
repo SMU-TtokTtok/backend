@@ -83,10 +83,11 @@ class ClubCustomRepositorySortingTest implements RepositoryTestSupport {
                 .clubUniv(ClubUniv.ENGINEERING)
                 .build());
 
+        // 조회수 증가는 엔티티 메서드가 아니라 원자적 UPDATE 로만 가능하다 (#346).
+        // 영속성 컨텍스트를 우회하므로 뒤이어 club 을 save 할 필요가 없다.
         for (int i = 0; i < viewCount; i++) {
-            club.updateViewCount();
+            clubRepository.increaseViewCount(club.getId());
         }
-        clubRepository.save(club);
 
         for (int i = 0; i < memberCount; i++) {
             clubMemberRepository.save(ClubMember.create(

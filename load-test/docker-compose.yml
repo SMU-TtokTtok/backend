@@ -1,4 +1,3 @@
-version: "3.8"
 
 # Base infrastructure: App, DB, Redis, Nginx
 # Add monitoring with: docker compose -f docker-compose.yml -f docker-compose.monitoring.yml up -d
@@ -25,15 +24,31 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - SPRING_PROFILES_ACTIVE=loadtest
+      # dev 를 먼저 깔고 loadtest 로 덮는다. application-loadtest.yml 에는 jwt/aws/mail/firebase 같은
+      # 기동 필수 설정이 없어서 단독으로는 'Could not resolve placeholder jwt.secret' 로 죽는다.
+      # 그 값들은 gitignored 인 application-dev.yml 에만 있고 커밋될 수 없으므로(실제 시크릿),
+      # 프로파일을 겹쳐서 재사용한다. 뒤에 오는 loadtest 가 겹치는 키(hikari/logging/actuator)를 이긴다.
+      - SPRING_PROFILES_ACTIVE=dev,loadtest
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/ttokttok
       - SPRING_DATASOURCE_USERNAME=ttokttok_user
       - SPRING_DATASOURCE_PASSWORD=ttokttok_password
       - SPRING_DATA_REDIS_HOST=redis
       - SPRING_DATA_REDIS_PORT=6379
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=validate
-      - SPRING_FLYWAY_ENABLED=true
-      - SPRING_FLYWAY_LOCATIONS=classpath:db/migration
+      # 컨테이너 redis 는 인증을 걸지 않는다 (dev 프로파일의 비밀번호를 비운다)
+      - SPRING_DATA_REDIS_PASSWORD=
+      # dev 프로파일에는 H2ConsoleSecurityDisableConfig(@Profile("dev")) 가 딸려온다.
+      # 이 빈은 WebSecurity#ignoring 에 toH2Console() 매처를 걸고, 그 매처는 요청마다
+      # H2ConsoleProperties 빈을 찾는다. PostgreSQL 로 뜨면 H2 콘솔 자동설정이 비활성이라
+      # 빈이 없어서 "모든 요청이 500" 이 된다. 콘솔 자동설정만 켜서 빈을 존재하게 만든다.
+      # (H2 데이터소스를 쓰는 게 아니라 매처가 참조하는 프로퍼티 빈만 필요하다)
+      - SPRING_H2_CONSOLE_ENABLED=true
+      # 스키마는 엔티티 기준으로 생성하고 Flyway는 끈다.
+      # db/migration에는 clubs/users CREATE TABLE이 없다 — V0부터 이미 ALTER TABLE로 시작하므로
+      # 빈 볼륨에서 Flyway를 켜면 첫 마이그레이션에서 "relation does not exist"로 기동이 실패한다.
+      # (운영 DB는 마이그레이션 도입 전부터 존재했던 스키마를 이어받고 있어 baseline이 없는 상태)
+      # 부하테스트는 재현 가능한 빈 DB에서 출발해야 하므로 ddl-auto=update로 스키마를 만든다.
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_FLYWAY_ENABLED=false
       - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,prometheus
       - JAVA_OPTS=-Xms1g -Xmx1g -XX:+UseG1GC
     deploy:
@@ -50,7 +65,10 @@ services:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health || exit 1"]
+      # /actuator/health 는 쓸 수 없다 — SecurityWhiteList 에 등록돼 있지 않아 401 을 돌려주고,
+      # 그러면 컨테이너가 영구히 unhealthy 로 남아 depends_on 이 걸린 nginx 가 기동하지 못한다.
+      # 공개 엔드포인트(/api/clubs/** 는 permitAll)로 확인한다.
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/api/clubs/filter-options || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 30
@@ -61,7 +79,9 @@ services:
   db:
     image: postgres:17.4-alpine
     ports:
-      - "5432:5432"
+      # 로컬에 PostgreSQL이 5432를 점유한 환경에서도 기동되도록 호스트 포트를 옮겼다.
+      # 앱은 컴포즈 네트워크 내부에서 db:5432로 붙으므로 영향 없다 (이 공개 포트는 psql 접속 편의용).
+      - "55432:5432"
     environment:
       - POSTGRES_DB=ttokttok
       - POSTGRES_USER=ttokttok_user

@@ -1,16 +1,15 @@
 package org.project.ttokttok.domain.club.service;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.project.ttokttok.domain.applyform.domain.ApplyDeadlinePolicy;
 import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
-import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.domain.enums.ClubCategory;
 import org.project.ttokttok.domain.club.domain.enums.ClubType;
 import org.project.ttokttok.domain.club.domain.enums.ClubUniv;
 import org.project.ttokttok.domain.club.exception.ClubNotFoundException;
 import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.domain.club.repository.dto.ClubCardQueryResponse;
+import org.project.ttokttok.domain.club.repository.dto.ClubDetailQueryResponse;
 import org.project.ttokttok.domain.club.service.dto.response.ClubCardServiceResponse;
 import org.project.ttokttok.domain.club.service.dto.response.ClubDetailServiceResponse;
 import org.project.ttokttok.domain.club.service.dto.response.ClubListServiceResponse;
@@ -19,6 +18,7 @@ import org.project.ttokttok.infrastructure.s3.service.S3Service;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -48,12 +48,18 @@ public class ClubUserService {
      */
     @Transactional
     public ClubDetailServiceResponse getClubIntroduction(String username, String clubId) {
-        Club targetClub = clubRepository.findById(clubId)
-                .orElseThrow(ClubNotFoundException::new);
+        // 상세 조회를 먼저 하고 조회수 증가를 마지막에 둔다.
+        // PostgreSQL 은 UPDATE 가 잡은 행 배타 락을 문장 종료가 아니라 커밋까지 유지한다.
+        // 증가를 앞에 두면 뒤따르는 상세 조회 쿼리가 모두 락 구간에 들어가 처리량이 절반이 된다
+        // (실측: RPS 601 -> 327). 부수적으로, 존재하지 않는 동아리 판정을 조회 결과로 직접 할 수 있다.
+        ClubDetailQueryResponse detail = clubRepository.getClubIntroduction(clubId, username);
+        if (detail == null) {
+            throw new ClubNotFoundException();
+        }
 
-        targetClub.updateViewCount();
+        clubRepository.increaseViewCount(clubId);
 
-        return ClubDetailServiceResponse.from(clubRepository.getClubIntroduction(clubId, username));
+        return ClubDetailServiceResponse.from(detail);
     }
 
     /**

@@ -1,0 +1,37 @@
+﻿
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+
+     execution: local
+        script: /k6/scenarios/issue-a-view-count.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 100 max VUs, 10m30s max duration (incl. graceful stop):
+              * view_count_race: 2000 iterations shared among 100 VUs (maxDuration: 10m0s, gracefulStop: 30s)
+
+
+running (00m01.0s), 100/100 VUs, 437 complete and 0 interrupted iterations
+view_count_race   [  22% ] 100 VUs  00m01.0s/10m0s  0437/2000 shared iters
+
+running (00m02.0s), 100/100 VUs, 933 complete and 0 interrupted iterations
+view_count_race   [  47% ] 100 VUs  00m02.0s/10m0s  0933/2000 shared iters
+
+running (00m03.0s), 100/100 VUs, 1467 complete and 0 interrupted iterations
+view_count_race   [  73% ] 100 VUs  00m03.0s/10m0s  1467/2000 shared iters
+docker : time="2026-07-30T12:56:46Z" level=info msg="=== view-count summary ===" source=console
+At C:\Users\tnals\바탕 화면\프로젝트폴더\ttokttok\.claude\worktrees\fix-346\load-test\scripts\measure-viewcount.ps1:91 char:5
++     docker run --rm `
++     ~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (time="2026-07-3... source=console:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+time="2026-07-30T12:56:46Z" level=info msg="{\n  \"vus\": 100,\n  \"iterations_configured\": 2000,\n  \"successful_views\": 2000,\n  \"http_reqs\": 2000,\n  \
+"http_req_failed_rate\": 0,\n  \"rps\": 507.68289560680114,\n  \"latency_ms\": {\n    \"med\": 188.30798449999998,\n    \"p90\": 243.9152481,\n    \"p95\": 32
+6.9852603,\n    \"p99\": 401.88915794999997,\n    \"max\": 516.598883\n  }\n}" source=console
+
+running (00m03.9s), 000/100 VUs, 2000 complete and 0 interrupted iterations
+view_count_race ✓ [ 100% ] 100 VUs  00m03.9s/10m0s  2000/2000 shared iters

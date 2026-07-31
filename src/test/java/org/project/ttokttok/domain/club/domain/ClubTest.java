@@ -46,24 +46,6 @@ class ClubTest {
     }
 
     @Nested
-    @DisplayName("updateViewCount()")
-    class UpdateViewCount {
-
-        @Test
-        @DisplayName("호출할 때마다 조회수가 1씩 증가한다.")
-        void increasesByOneEachCall() {
-            Club club = createClub();
-
-            club.updateViewCount();
-            assertThat(club.getViewCount()).isEqualTo(1L);
-
-            club.updateViewCount();
-            club.updateViewCount();
-            assertThat(club.getViewCount()).isEqualTo(3L);
-        }
-    }
-
-    @Nested
     @DisplayName("updateProfileImgUrl()")
     class UpdateProfileImgUrl {
 

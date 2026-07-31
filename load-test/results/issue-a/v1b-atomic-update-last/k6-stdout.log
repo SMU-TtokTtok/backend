@@ -1,0 +1,52 @@
+﻿
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+
+     execution: local
+        script: /k6/scenarios/issue-a-view-count.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 100 max VUs, 10m30s max duration (incl. graceful stop):
+              * view_count_race: 5000 iterations shared among 100 VUs (maxDuration: 10m0s, gracefulStop: 30s)
+
+
+running (00m01.0s), 100/100 VUs, 509 complete and 0 interrupted iterations
+view_count_race   [  10% ] 100 VUs  00m01.0s/10m0s  0509/5000 shared iters
+
+running (00m02.0s), 100/100 VUs, 1123 complete and 0 interrupted iterations
+view_count_race   [  22% ] 100 VUs  00m02.0s/10m0s  1123/5000 shared iters
+
+running (00m03.0s), 100/100 VUs, 1671 complete and 0 interrupted iterations
+view_count_race   [  33% ] 100 VUs  00m03.0s/10m0s  1671/5000 shared iters
+
+running (00m04.0s), 100/100 VUs, 2302 complete and 0 interrupted iterations
+view_count_race   [  46% ] 100 VUs  00m04.0s/10m0s  2302/5000 shared iters
+
+running (00m05.0s), 100/100 VUs, 2921 complete and 0 interrupted iterations
+view_count_race   [  58% ] 100 VUs  00m05.0s/10m0s  2921/5000 shared iters
+
+running (00m06.0s), 100/100 VUs, 3557 complete and 0 interrupted iterations
+view_count_race   [  71% ] 100 VUs  00m06.0s/10m0s  3557/5000 shared iters
+
+running (00m07.0s), 100/100 VUs, 4169 complete and 0 interrupted iterations
+view_count_race   [  83% ] 100 VUs  00m07.0s/10m0s  4169/5000 shared iters
+
+running (00m08.0s), 100/100 VUs, 4796 complete and 0 interrupted iterations
+view_count_race   [  96% ] 100 VUs  00m08.0s/10m0s  4796/5000 shared iters
+docker : time="2026-07-30T12:56:56Z" level=info msg="=== view-count summary ===" source=console
+At C:\Users\tnals\바탕 화면\프로젝트폴더\ttokttok\.claude\worktrees\fix-346\load-test\scripts\measure-viewcount.ps1:91 char:5
++     docker run --rm `
++     ~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (time="2026-07-3... source=console:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+time="2026-07-30T12:56:56Z" level=info msg="{\n  \"vus\": 100,\n  \"iterations_configured\": 5000,\n  \"successful_views\": 5000,\n  \"http_reqs\": 5000,\n  \
+"http_req_failed_rate\": 0,\n  \"rps\": 601.3975542182643,\n  \"latency_ms\": {\n    \"med\": 157.4799295,\n    \"p90\": 201.78705090000005,\n    \"p95\": 244
+.7913736000001,\n    \"p99\": 325.0378372500001,\n    \"max\": 479.094446\n  }\n}" source=console
+
+running (00m08.3s), 000/100 VUs, 5000 complete and 0 interrupted iterations
+view_count_race ✓ [ 100% ] 100 VUs  00m08.3s/10m0s  5000/5000 shared iters
