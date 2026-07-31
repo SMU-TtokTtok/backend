@@ -24,8 +24,11 @@ Callable directly as a typed slash command via [`/ship`](../../../.claude/comman
 Automates the full `ttokttok` task pipeline described in [`maintenance/HARNESS.md`](../../../maintenance/HARNESS.md):
 
 ```
-issue → branch/worktree → implement (Change) → verify → record → commit → push → PR
+issue → branch/worktree → implement (Change) → verify
+      → split-plan → commit ×N → per-commit gate → record → push → PR
 ```
+
+Commits are sliced per concern, not dumped as one big commit — see [`rules/agent/commit-granularity.md`](../../../rules/agent/commit-granularity.md).
 
 Runs fully autonomously once invoked — no confirmation checkpoints between steps. It stops and reports (never fakes success) if the verification gate keeps failing.
 
@@ -84,35 +87,55 @@ Every issue body must also cover the fields from [`maintenance/task.md`](../../.
    ```
    On failure, go back to step 4 and retry. **Cap at 3 verify attempts.** If still failing after 3, stop — do not commit/push/open a PR. Report the failure with the test report path (`build/reports/tests/test/index.html`) and leave the worktree in place for manual inspection. If a failure looks unrelated to the actual change (widespread Spring-context/Flyway errors across unrelated domains), first double-check the local-resource copy above before spending a retry attempt.
 
-6. **Record** — append a dated section to `IMPLEMENTATION.md`, following its existing format (see prior entries: dated header, 주요 작업 내용, 기술적 세부 사항, 업데이트된 파일, 최종 확인 사항).
+6. **Plan the commit split** — before committing anything, enumerate every changed file with `git status --porcelain` and `git diff --stat`, then assign each one to a slice according to [`rules/agent/commit-granularity.md`](../../../rules/agent/commit-granularity.md) (one concern per commit; never mix the four axes; soft caps ~6 code files / ~300 hand-written lines). Output the plan as a table before proceeding:
 
-7. **Commit** — re-run `git status` to confirm no secret files (`application*.yml`, Firebase `*.json`) are staged, then commit with:
+   | # | Commit title | Files | Axis | Rationale |
+   |---|---|---|---|---|
+
+   Order the slices so each compiles on top of the previous one. **Do not move on to committing without this table.**
+
+7. **Commit in slices** — work through the table in order. Stage with `git add <paths>`, or `git add -p` when one file has to be split across slices. After staging each slice, re-run `git status` to confirm no secret files (`application*.yml`, Firebase `*.json`) are staged, then commit with:
    ```
    [#<issue-number>] - <message>
 
    - <item>
    - <item>
    ```
-   (Korean header, per `rules/agent/commit-message.md`. The `commit-msg` hook enforces the format.)
+   (Korean header, per `rules/agent/commit-message.md`. The `commit-msg` hook enforces both the format and the **no-AI-signature** rule — never add `Co-Authored-By: <model>` or `🤖 Generated with…` trailers.)
 
-8. **Push**:
+   After the last slice, assert that **`git status --porcelain` is empty**. That is what proves the committed HEAD tree is identical to the tree `verify.sh` already passed in step 5 — so the full gate does not need re-running. If anything is left over, a slice was missed: go back to the table.
+
+8. **Per-commit gate** — sweep the finished branch so every intermediate commit is known to compile:
+   ```bash
+   git rebase origin/develop --exec './gradlew.bat compileJava compileTestJava'
+   ```
+   (Verified working in Git Bash on Windows; `gradlew.bat` needs no `cmd //c` wrapper.) On failure the rebase halts at the offending commit — fix it, `git commit --amend`, then `git rebase --continue`.
+
+   **Never use `git stash` for this.** Rebase leaves untracked and gitignored files alone, so the local-only config restored in step 3 survives; `git stash -a` / `--all` would sweep those up (see `rules/agent/protected-local-files.md`).
+
+   Then confirm the rebase changed nothing: `git diff <pre-rebase HEAD> HEAD --stat` must be empty. If it is not, re-run `bash maintenance/verify.sh`. The full test suite runs **once** on the final tree, not per commit.
+
+9. **Record** — append a dated section to `IMPLEMENTATION.md`, following its existing format (see prior entries: dated header, 주요 작업 내용, 기술적 세부 사항, 업데이트된 파일, 최종 확인 사항). Written after the code commits so it can describe the actual commit breakdown. Do not sign the entry with a model name.
+
+10. **Push**:
    ```bash
    git push -u origin "<prefix>/#<issue-number>"
    ```
-   The `pre-push` hook enforces branch naming, blocks force-push, and blocks direct pushes to `main`/`develop` — do not bypass it.
+   The `pre-push` hook enforces branch naming, blocks force-push, and blocks direct pushes to `main`/`develop` — do not bypass it. (Step 8's rebase rewrites commit hashes, but this is the branch's first push, so no force is needed.)
 
-9. **Create the PR** against `develop`, using only the upper half of `.github/PULL_REQUEST_TEMPLATE.md` (everything above the "아래 부터 `develop -> main` PR 템플릿입니다" divider — the release-PR section below it does not apply here). The title must follow [`rules/agent/pr-title.md`](../../../rules/agent/pr-title.md): `<작업 내용> (<branch> -> develop)` — Korean 작업 내용, no issue number in the title (the branch already carries `#<issue>`):
+11. **Create the PR** against `develop`, using only the upper half of `.github/PULL_REQUEST_TEMPLATE.md` (everything above the "아래 부터 `develop -> main` PR 템플릿입니다" divider — the release-PR section below it does not apply here). The title must follow [`rules/agent/pr-title.md`](../../../rules/agent/pr-title.md): `<작업 내용> (<branch> -> develop)` — Korean 작업 내용, no issue number in the title (the branch already carries `#<issue>`):
    ```bash
    gh pr create --base develop --head "<branch>" --title "<작업 내용> (<branch> -> develop)" --body-file <generated PR body> --label "<mapped label>"
    ```
-   e.g. `--title "파일 업로드 로직 개선 (refactor/#326 -> develop)"`. Auto-check the checklist items you can actually verify (로컬 테스트 완료 — since verify.sh passed; 라벨을 붙혔나요 — yes; 팀 코드 컨벤션 준수 — yes), fill in 관련 이슈 with `#<issue-number>`, and summarize the change in 기타 참고 사항.
+   e.g. `--title "파일 업로드 로직 개선 (refactor/#326 -> develop)"`. Auto-check the checklist items you can actually verify (로컬 테스트 완료 — since verify.sh passed; 라벨을 붙혔나요 — yes; 팀 코드 컨벤션 준수 — yes), fill in 관련 이슈 with `#<issue-number>`, and summarize the change in 기타 참고 사항. **No AI signatures in the PR body either** — no model names, no `🤖 Generated with…` footer.
 
-10. **Cleanup** — leave the worktree and branch on disk (for review follow-up commits); do not remove them automatically. If you used `EnterWorktree`, you may call `ExitWorktree({action: "keep"})` to return the parent session to its original directory without deleting anything.
+12. **Cleanup** — leave the worktree and branch on disk (for review follow-up commits); do not remove them automatically. If you used `EnterWorktree`, you may call `ExitWorktree({action: "keep"})` to return the parent session to its original directory without deleting anything.
 
-11. **Report** — output the issue URL, PR URL, branch name, worktree path, and a one-line verify-status summary.
+13. **Report** — output the issue URL, PR URL, branch name, worktree path, the commit breakdown (`git log --oneline origin/develop..HEAD`), and a one-line verify-status summary.
 
 ## Safety
 
-- Never bypass the git hooks in `maintenance/hooks/` (secret guard, protected-branch guard, branch-naming/commit-message checks, no-force-push). They already enforce the conventions this skill relies on.
+- Never bypass the git hooks in `maintenance/hooks/` (secret guard, protected-branch guard, branch-naming/commit-message checks, AI-signature check, no-force-push). They already enforce the conventions this skill relies on.
 - Never claim the task is done if `verify.sh` hasn't gone green in this run.
+- Never squash the slices back into one commit to "keep it simple" — the split is the deliverable, not an optimization.
 - If asked for a `release`, refuse this pipeline and point at the release-PR section of `.github/PULL_REQUEST_TEMPLATE.md` instead.
