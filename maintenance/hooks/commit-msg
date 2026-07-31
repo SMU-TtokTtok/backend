@@ -20,4 +20,14 @@ if ! printf '%s' "$first_line" | grep -Eq '^\[#[0-9]+\] - .+'; then
         "형식: [#이슈번호] - 메시지   (예: [#312] - 즐겨찾기 도메인 로직 추가)"
 fi
 
+# ④ Block AI attribution (model names / bot emails). Human Co-Authored-By stays allowed.
+if grep -Eiq '^[[:space:]]*co-authored-by:.*(claude|anthropic|noreply@|gemini|gpt|copilot|cursor|codex)' "$msg_file" \
+   || grep -Eiq 'generated with \[?claude' "$msg_file" \
+   || grep -q '🤖' "$msg_file"; then
+  block "커밋 메시지에 AI 서명(모델명/봇 이메일)을 넣지 않습니다." \
+        "제거 대상: 'Co-Authored-By: <모델> <noreply@...>', 'Generated with Claude Code', '🤖'" \
+        "사람 공동 작업자의 Co-Authored-By는 허용됩니다." \
+        "규칙: rules/agent/commit-message.md"
+fi
+
 exit 0
