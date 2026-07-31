@@ -14,6 +14,7 @@ import org.project.ttokttok.domain.applyform.domain.ApplyForm;
 import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
 import org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus;
 import org.project.ttokttok.domain.club.domain.enums.ClubCategory;
+import org.project.ttokttok.domain.club.domain.enums.ClubSortType;
 import org.project.ttokttok.domain.club.domain.enums.ClubType;
 import org.project.ttokttok.domain.club.domain.enums.ClubUniv;
 import org.project.ttokttok.domain.club.repository.dto.ClubCardQueryResponse;
@@ -179,12 +180,10 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
             sqlBuilder.append(" AND id < :cursor ");
         }
 
-        if ("popular".equals(sort)) {
-            sqlBuilder.append(" ORDER BY score DESC, id DESC ");
-        } else if ("member_count".equals(sort)) {
-            sqlBuilder.append(" ORDER BY member_count DESC, id DESC ");
-        } else {
-            sqlBuilder.append(" ORDER BY id DESC, created_at DESC ");
+        switch (ClubSortType.from(sort)) {
+            case POPULAR -> sqlBuilder.append(" ORDER BY score DESC, id DESC ");
+            case MEMBER_COUNT -> sqlBuilder.append(" ORDER BY member_count DESC, id DESC ");
+            case LATEST -> sqlBuilder.append(" ORDER BY id DESC, created_at DESC ");
         }
 
         sqlBuilder.append(" LIMIT :limit ");
@@ -321,14 +320,15 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
      * 정렬 조건에 따른 OrderBy 절을 적용합니다.
      */
     private void applySorting(JPAQuery<ClubCardQueryResponse> query, String sort) {
-        if ("popular".equals(sort)) {
-            query.orderBy(getPopularityScoreExpression().desc(), club.id.desc());
-        } else if ("member_count".equals(sort)) {
-            JPQLQuery<Long> memberCountSubQuery = JPAExpressions.select(clubMember.count()).from(clubMember)
-                    .where(clubMember.club.id.eq(club.id));
-            query.orderBy(Expressions.numberTemplate(Long.class, "({0})", memberCountSubQuery).desc(), club.id.desc());
-        } else {
-            query.orderBy(club.id.desc(), club.createdAt.desc());
+        switch (ClubSortType.from(sort)) {
+            case POPULAR -> query.orderBy(getPopularityScoreExpression().desc(), club.id.desc());
+            case MEMBER_COUNT -> {
+                JPQLQuery<Long> memberCountSubQuery = JPAExpressions.select(clubMember.count()).from(clubMember)
+                        .where(clubMember.club.id.eq(club.id));
+                query.orderBy(Expressions.numberTemplate(Long.class, "({0})", memberCountSubQuery).desc(),
+                        club.id.desc());
+            }
+            case LATEST -> query.orderBy(club.id.desc(), club.createdAt.desc());
         }
     }
 

@@ -6,6 +6,7 @@ import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
 import org.project.ttokttok.domain.club.controller.docs.ClubUserApiDocs;
 import org.project.ttokttok.domain.club.controller.dto.response.ClubDetailResponse;
 import org.project.ttokttok.domain.club.controller.dto.response.ClubListResponse;
+import org.project.ttokttok.domain.club.controller.dto.response.FilterOptionsResponse;
 import org.project.ttokttok.domain.club.domain.enums.ClubCategory;
 import org.project.ttokttok.domain.club.domain.enums.ClubType;
 import org.project.ttokttok.domain.club.domain.enums.ClubUniv;
@@ -16,9 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Arrays;
-import java.util.HashMap;
 
 /**
  * 동아리 관련 API 컨트롤러
@@ -64,7 +62,6 @@ public class ClubUserApiController implements ClubUserApiDocs {
      * @param sort 정렬 방식 (latest: 최신순, popular: 인기순) - 기본값: latest
      * @return 필터링된 동아리 목록과 페이징 정보
      */
-    //FIXME - 마감 임박 추가 (지원 마감기간이 일주일 이내로 남은 동아리 boolean 필드 추가)
     @Override
     @GetMapping
     public ResponseEntity<ClubListResponse> getClubList(
@@ -144,7 +141,6 @@ public class ClubUserApiController implements ClubUserApiDocs {
      * @param sort 정렬 방식 (popular : 인기도순, member_count : 멤버많은 순, latest : 최신등록 순) - 기본값 : popular
      * @return 멤버수 기준으로 정렬된 인기 동아리 목록
      * */
-    //FIXME - 마감 임박 추가 (지원 마감기간이 일주일 이내로 남은 동아리 boolean 필드 추가)
     @Override
     @GetMapping("/popular")
     public ResponseEntity<ClubListResponse> getPopularClubs(
@@ -166,38 +162,8 @@ public class ClubUserApiController implements ClubUserApiDocs {
      */
     @Override
     @GetMapping("/filter-options")
-    public ResponseEntity<Map<String, Object>> getFilterOptions() {
-        Map<String, Object> options = new HashMap<>();
-        
-        // 동아리 타입 옵션
-        List<Map<String, String>> typeOptions = Arrays.asList(
-                Map.of("value", "null", "label", "전체"),
-                Map.of("value", "CENTRAL", "label", "중앙동아리"),
-                Map.of("value", "UNION", "label", "연합동아리"),
-                Map.of("value", "DEPARTMENT", "label", "과동아리")
-        );
-        
-        // 모집여부 옵션
-        List<Map<String, String>> recruitingOptions = Arrays.asList(
-                Map.of("value", "null", "label", "전체"),
-                Map.of("value", "true", "label", "모집중"),
-                Map.of("value", "false", "label", "모집마감")
-        );
-        
-        // 대학 구분 옵션 (과동아리 선택 시 사용)
-        List<Map<String, String>> universityOptions = Arrays.asList(
-                Map.of("value", "GLOBAL_AREA", "label", "글로벌지역학부"),
-                Map.of("value", "DESIGN", "label", "디자인대학"),
-                Map.of("value", "ENGINEERING", "label", "공대"),
-                Map.of("value", "CONVERGENCE_TECHNOLOGY", "label", "융합기술대"),
-                Map.of("value", "ARTS", "label", "예술대")
-        );
-        
-        options.put("types", typeOptions);
-        options.put("recruitingOptions", recruitingOptions);
-        options.put("universities", universityOptions);
-        
-        return ResponseEntity.ok(options);
+    public ResponseEntity<FilterOptionsResponse> getFilterOptions() {
+        return ResponseEntity.ok(FilterOptionsResponse.create());
     }
 
     /**
@@ -211,7 +177,6 @@ public class ClubUserApiController implements ClubUserApiDocs {
      * @param cursor 커서 기반 페이지네이션을 위한 기준 ID
      * @param size 페이지당 로드할 개수 (기본값 20)
      */
-    //FIXME - 마감 임박 추가 (지원 마감기간이 일주일 이내로 남은 동아리 boolean 필드 추가)
     @Override
     @GetMapping("/search")
     public ResponseEntity<ClubListResponse> searchClubs(

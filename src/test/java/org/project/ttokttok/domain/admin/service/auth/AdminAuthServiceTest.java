@@ -24,6 +24,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.project.ttokttok.domain.admin.domain.Admin;
 import org.project.ttokttok.domain.admin.exception.AdminEmailConflictException;
 import org.project.ttokttok.domain.admin.exception.AdminNotFoundException;
+import org.project.ttokttok.domain.admin.exception.AdminPasswordConfirmNotMatchException;
 import org.project.ttokttok.domain.admin.exception.AdminPasswordNotMatchException;
 import org.project.ttokttok.domain.admin.exception.AdminUsernameConflictException;
 import org.project.ttokttok.domain.admin.repository.AdminRepository;
@@ -41,6 +42,8 @@ import org.project.ttokttok.global.auth.jwt.dto.response.TokenResponse;
 import org.project.ttokttok.global.auth.jwt.exception.InvalidRefreshTokenException;
 import org.project.ttokttok.global.auth.jwt.service.TokenProvider;
 import org.project.ttokttok.global.entity.Role;
+import org.project.ttokttok.global.exception.exception.CustomException;
+import org.springframework.http.HttpStatus;
 import org.project.ttokttok.infrastructure.redis.service.RefreshTokenRedisService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -522,7 +525,7 @@ class AdminAuthServiceTest {
         }
 
         @Test
-        @DisplayName("새 비밀번호와 확인 비밀번호가 일치하지 않으면 IllegalArgumentException이 발생한다")
+        @DisplayName("새 비밀번호와 확인 비밀번호가 일치하지 않으면 AdminPasswordConfirmNotMatchException이 발생한다")
         void resetPasswordWithMismatchedPasswords() {
             // given
             final String username = "testadmin123";
@@ -537,7 +540,14 @@ class AdminAuthServiceTest {
 
             // when & then
             assertThatThrownBy(() -> adminAuthService.resetPassword(request))
-                    .isInstanceOf(IllegalArgumentException.class);
+                    .isInstanceOf(AdminPasswordConfirmNotMatchException.class)
+                    // 기존 IllegalArgumentException과 응답 메시지가 동일해야 한다.
+                    // GlobalExceptionHandler가 두 예외 모두 getMessage()를 details로 내려주므로,
+                    // 메시지가 같으면 클라이언트가 받는 응답 본문도 동일하다.
+                    .hasMessage("새 비밀번호와 새 비밀번호 확인이 일치하지 않습니다.")
+                    // 기존 IllegalArgumentException과 동일하게 400을 유지해야 한다
+                    .extracting(thrown -> ((CustomException) thrown).getStatus())
+                    .isEqualTo(HttpStatus.BAD_REQUEST);
 
             verify(adminRepository, never()).findByUsername(anyString());
         }
