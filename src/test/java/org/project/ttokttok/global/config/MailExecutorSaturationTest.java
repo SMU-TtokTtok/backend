@@ -32,8 +32,14 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
  *   제출 106     → 큐 만석 + max 도달 → 거부 → CallerRunsPolicy → 호출 스레드가 직접 실행
  * </pre>
  *
- * <p>{@code AsyncConfig}의 상한 값을 바꾸면 이 테스트는 깨진다. 상한은 외부 SMTP의 동시 연결
- * 제한에 맞춘 계약이므로, 계약을 바꾸는 변경에는 위 표와 아래 상수도 함께 갱신해야 한다는 신호다.
+ * <p><b>이 상한이 제한하는 대상.</b> 태스크 1개 = {@code EmailService#sendResultMail} 호출 1회다.
+ * 이 메서드는 {@code List<String>}을 받아 내부에서 순회하므로, 200통을 발송해도 태스크는 1개이고
+ * SMTP 전송은 그 태스크 안에서 순차로 일어난다({@code ApplicantAdminService}는 합격/불합격
+ * 두 번만 호출한다). 따라서 max=5가 제한하는 것은 <b>동시에 진행 중인 벌크 발송 요청 수</b>이지
+ * 메일 통수가 아니다. 메일 통수는 이 풀의 동시성과 무관하다.
+ *
+ * <p>{@code AsyncConfig}의 상한 값을 바꾸면 이 테스트는 깨진다. 계약을 바꾸는 변경에는
+ * 위 표와 아래 상수도 함께 갱신해야 한다는 신호다.
  *
  * <p>Spring 컨텍스트 없이 빈 생성 메서드를 직접 호출한다({@link AsyncConfigTest}와 동일).
  * DB/Redis/SMTP가 필요 없고 밀리초 단위로 끝난다.
