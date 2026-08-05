@@ -1,0 +1,47 @@
+# Observability 프로파일 — 운영 관측성 및 무중단 배포용 설정
+#
+# 이 파일은 다른 application-*.yml 과 달리 **커밋된다** (.gitignore 의 negation 규칙).
+# 시크릿이 전혀 없고, "어떤 엔드포인트를 어느 포트로 여는지"는 보안에 직결되므로
+# PC 디스크에서 손으로 고치는 대신 코드 리뷰를 거쳐야 하기 때문이다.
+#
+# 활성화: SPRING_PROFILES_ACTIVE=prod,observability
+# (compose 를 도입하는 후속 이슈에서 연결한다. 현재 EB 파이프라인은 prod 단독으로 뜨므로
+#  이 파일은 아직 로드되지 않는다 — 설정값 자체는 ObservabilityProfileConfigTest 로 검증한다.)
+
+management:
+  server:
+    # 서비스 포트(8080)와 분리한다. 이 포트는 호스트에 publish 하지 않고
+    # 컴포즈 내부 네트워크에서 Prometheus 만 접근한다 — 인증 대신 네트워크로 격리한다.
+    port: 9080
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus,info
+  endpoint:
+    health:
+      # 운영에서 DB 호스트명/드라이버/디스크 경로가 새지 않도록 한다.
+      # (application-loadtest.yml 은 always 지만 그건 로컬 부하테스트 전용이다.)
+      show-details: never
+      probes:
+        enabled: true
+  health:
+    group:
+      readiness:
+        # ★ Spring 의 기본 readiness 그룹은 readinessState 만 본다 — DB 를 검사하지 않는다.
+        #   블루-그린 전환 게이트로 쓰려면 db/redis 를 명시적으로 넣어야 한다.
+        #   이게 빠지면 DB 가 끊긴 green 컨테이너도 UP 을 반환해 트래픽을 넘겨받는다.
+        include: readinessState,db,redis
+  metrics:
+    tags:
+      application: ttokttok
+      # 블루-그린 전환 시 Grafana 에서 두 색상을 나란히 비교하기 위한 라벨
+      color: ${DEPLOY_COLOR:unknown}
+
+server:
+  # 구컨테이너 종료 시 인플라이트 요청과 @Async 작업(FCMService, EmailService)이
+  # 잘려나가지 않도록 드레인 시간을 준다. 배포 스크립트의 드레인 대기는 이 값보다 길어야 한다.
+  shutdown: graceful
+
+spring:
+  lifecycle:
+    timeout-per-shutdown-phase: 30s

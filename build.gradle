@@ -82,6 +82,12 @@ dependencies {
     // Firebase
     implementation 'com.google.firebase:firebase-admin:9.4.1'
 
+	// Actuator + Prometheus 메트릭 노출
+	// load-test/prometheus.yml 이 /actuator/prometheus 를 스크레이프하도록 이미 설정돼 있으나
+	// 그동안 이 의존성이 없어 엔드포인트 자체가 존재하지 않았다(404).
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
+
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
