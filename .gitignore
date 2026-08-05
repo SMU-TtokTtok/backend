@@ -39,6 +39,10 @@ out/
 /src/main/resources/application-prod.yml
 /src/main/resources/application-test.yml
 
+# 예외: observability 프로파일은 시크릿이 없는 순수 노출 설정이다.
+# 어떤 엔드포인트를 어느 포트로 여는지는 보안에 직결되므로 코드 리뷰 대상이어야 한다.
+!/src/main/resources/application-observability.yml
+
 # DB Seed 파일들 (테스트용 데이터)
 /src/main/resources/db/seed/
 /src/test/resources/db/seed/

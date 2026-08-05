@@ -36,6 +36,14 @@ is_secret_path() {
   local base
   base="$(basename "$path")"
 
+  # Allowlist: the observability profile holds no secrets — only which actuator
+  # endpoints are exposed on which port. That is security-relevant config that
+  # belongs in code review, so it is committed on purpose. Pairs with the
+  # matching negation rule in .gitignore.
+  case "$path" in
+    src/main/resources/application-observability.yml) return 1 ;;
+  esac
+
   case "$path" in
     src/main/resources/application*.yml|src/test/resources/application*.yml) return 0 ;;
     */db/seed/*|src/main/resources/db/seed/*|src/test/resources/db/seed/*)   return 0 ;;
