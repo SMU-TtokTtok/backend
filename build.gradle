@@ -88,6 +88,11 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
 
+	// ShedLock — 다중 인스턴스(블루-그린) 환경에서 @Scheduled 중복 실행 방지.
+	// 락 저장소로 이미 사용 중인 Redis 를 그대로 쓴다(신규 인프라 불필요).
+	implementation 'net.javacrumbs.shedlock:shedlock-spring:5.16.0'
+	implementation 'net.javacrumbs.shedlock:shedlock-provider-redis-spring:5.16.0'
+
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
