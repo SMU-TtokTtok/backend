@@ -1,0 +1,49 @@
+# 빌드 컨텍스트에서 제외할 것들.
+#
+# 두 가지 목적이 있다.
+#  1) 컨텍스트 전송량을 줄여 빌드를 빠르게 한다.
+#  2) 시크릿이 이미지 레이어에 굽히는 것을 막는다. 이미지에 한 번 들어간 파일은
+#     이후 레이어에서 지워도 히스토리에 남으므로, 애초에 컨텍스트에 넣지 않는다.
+
+### 빌드 산출물 / 로컬 환경 ###
+.git
+.gitignore
+.gradle
+build
+bin
+out
+.idea
+.vscode
+
+### 에이전트 / 하네스 ###
+.claude
+.omc
+.agents
+.gemini
+maintenance
+rules
+load-test
+*.md
+
+### 시크릿 — 이미지에 굽지 않고 런타임에 /app/config 로 마운트한다 ###
+src/main/resources/application.yml
+src/main/resources/application-*.yml
+src/test/resources/application.yml
+src/test/resources/application-*.yml
+src/main/resources/ttokttok-push*.json
+
+### 로컬 전용 픽스처 (운영 이미지에 불필요) ###
+src/main/resources/db/seed
+src/test/resources/db/seed
+**/*.csv
+
+### 인프라 정의 자체는 이미지 안에서 쓰이지 않는다 ###
+Dockerfile
+.dockerignore
+docker-compose*.yml
+docker
+.env
+.env.*
+!.env.example
+data
+config
