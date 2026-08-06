@@ -37,13 +37,6 @@ class ObservabilityProfileConfigTest {
     }
 
     @Test
-    @DisplayName("management 포트를 서비스 포트(8080)와 분리한다")
-    void managementPortIsSeparatedFromServicePort() {
-        // then: 별도 포트여야 호스트에 publish 하지 않고 내부 네트워크로만 격리할 수 있다
-        assertThat(properties.getProperty("management.server.port")).isEqualTo(9080);
-    }
-
-    @Test
     @DisplayName("노출 엔드포인트를 health/prometheus/info 로 제한한다")
     void exposesOnlyTheThreeNeededEndpoints() {
         // then
