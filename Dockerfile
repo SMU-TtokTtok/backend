@@ -15,7 +15,18 @@ RUN ./gradlew bootJar -x test --no-daemon
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
-RUN addgroup -S ttokttok && adduser -S -G ttokttok ttokttok
+# UID/GID 를 호스트와 같은 값으로 고정한다. adduser -S 에 맡기면 Alpine 이 100 부터
+# 자동 할당하는데, 그러면 마운트되는 /app/config 를 읽지 못한다 —
+# setup.sh 가 그 디렉터리를 ttokttokuser(1001):ttokttok(1003) 0770 으로 두고,
+# CI(ttokttok-cicd, 1002)가 설정 파일을 0640 으로 배치하기 때문이다.
+#
+# 더 나쁜 것은 실패가 조용하다는 점이다. Spring 의 기본 탐색 경로는
+# optional:file:./config/ 라 읽을 수 없으면 예외 없이 건너뛴다. 설정이 통째로
+# 무시된 채 기동하다가 한참 뒤 첫 플레이스홀더(jwt.secret)에서 터진다.
+#
+# 파일 권한을 0644 로 넓히는 방법도 있지만, 여기 들어 있는 것은 JWT 시크릿과
+# Firebase 서비스 계정 키다. MinIO 를 user: "1001:1003" 으로 고정한 것과 같은 판단.
+RUN addgroup -g 1003 -S ttokttok && adduser -u 1001 -S -G ttokttok ttokttok
 
 # bootJar 는 실행 가능한 부트 jar 하나만 만든다(`build` 와 달리 *-plain.jar 를 만들지 않는다).
 COPY --from=builder /build/build/libs/*-SNAPSHOT.jar app.jar
