@@ -113,10 +113,16 @@ sed -e 's/^DOMAIN=.*/DOMAIN=localhost/' \
     -e 's/^MINIO_APP_SECRET_KEY=.*/MINIO_APP_SECRET_KEY=test-minio-app-pw/' \
     "$SRC/.env.example" > "$TESTROOT/app/.env"
 echo none > "$TESTROOT/app/state"
+
+# deploy.sh 의 사전 검사를 통과시키기 위한 더미. 이 테스트의 앱 이미지는 nginx 라
+# 내용을 읽지 않는다. 파일 존재 여부만 검사 대상이다.
+printf '# dummy\n' > "$TESTROOT/config/app/application.yml"
+printf '# dummy\n' > "$TESTROOT/config/app/application-prod.yml"
 pass "구성 완료"
 
 export APP_DIR="$TESTROOT/app"
 export UPSTREAM_FILE="$TESTROOT/config/nginx/upstream.conf"
+export CONFIG_DIR="$TESTROOT/config/app"
 export INFRA_SERVICES="minio minio-init nginx"   # db/redis/smtp 는 이 테스트에 불필요
 export DRAIN_SECONDS=3
 export HEALTH_TIMEOUT=60

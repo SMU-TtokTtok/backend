@@ -16,6 +16,7 @@ APP_DIR="${APP_DIR:-/opt/ttokttok/app}"
 ENV_FILE="$APP_DIR/.env"
 STATE_FILE="$APP_DIR/state"
 UPSTREAM_FILE="${UPSTREAM_FILE:-/opt/ttokttok/config/nginx/upstream.conf}"
+CONFIG_DIR="${CONFIG_DIR:-/opt/ttokttok/config/app}"
 
 HEALTH_TIMEOUT="${HEALTH_TIMEOUT:-120}"   # 초
 DRAIN_SECONDS="${DRAIN_SECONDS:-30}"      # 구 컨테이너 드레인 시간
@@ -33,6 +34,21 @@ docker image inspect "ttokttok:$TAG" >/dev/null 2>&1 \
 
 cd "$APP_DIR"
 [[ -f "$ENV_FILE" ]] || die "$ENV_FILE 없음"
+
+# 앱 설정 파일 사전 검사.
+#
+# 이 파일들이 없으면 앱은 어차피 부팅에 실패한다 — jwt.secret, server.url,
+# super.admin.* 처럼 기본값 없는 @Value 가 여럿이라 환경변수만으로는 뜨지 않는다.
+# 검사가 없어도 서비스는 안전하지만(헬스체크 실패 → 전환 없이 중단 → 구 버전 유지),
+# 그 사실이 드러나기까지 HEALTH_TIMEOUT 만큼을 버린다. 여기는 컨테이너를 아직
+# 하나도 건드리지 않은 지점이라, 지금 중단하는 것이 가장 싸다.
+#
+# -s 는 "존재 + 비어있지 않음". base64 디코딩이 빈 파일을 만드는 경우까지 잡는다.
+# Firebase 키는 CI 에서도 선택 사항이므로 검사하지 않는다.
+for f in application.yml application-prod.yml; do
+  [[ -s "$CONFIG_DIR/$f" ]] \
+    || die "$CONFIG_DIR/$f 가 없거나 비어 있다. CI 의 시크릿 배치 단계를 확인할 것."
+done
 
 # ── 색 결정 ──────────────────────────────────────────────────────────────
 active="$(cat "$STATE_FILE" 2>/dev/null || echo none)"
