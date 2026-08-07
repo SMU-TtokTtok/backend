@@ -143,6 +143,26 @@ fi
 log "nginx 트래픽 전환: $active → $target"
 printf 'set $backend "http://app-%s:8080";\n' "$target" >"$UPSTREAM_FILE"
 
+# 컨테이너가 실제로 새 내용을 보는지 확인한다.
+#
+# 바인드 마운트는 inode 를 물고 있다. 호스트에서 이 파일의 inode 가 한 번이라도
+# 바뀌면(install, sed -i, 일부 편집기의 저장 방식 — 전부 교체로 동작한다) 컨테이너는
+# 옛 inode 를 계속 보고, 위의 쓰기는 컨테이너에 닿지 않는다.
+#
+# 이 확인이 없으면 전환 절차가 전부 "성공" 한다. 컨테이너 입장에서는 내용이 안 바뀌었으니
+# nginx -t 도 reload 도 통과하고, state 갱신까지 끝난다. 그리고 구 색을 정리하는
+# 순간 nginx 가 사라진 컨테이너를 가리킨 채 전 요청이 502 가 된다. 배포는 성공으로
+# 보고되고 사이트만 죽는다. 실제로 그렇게 서비스가 내려갔다 — 이슈 #376.
+#
+# 아직 구 색이 살아 있는 지점이라, 여기서 멈추면 서비스는 무사하다.
+if ! docker compose exec -T nginx cat /etc/nginx/upstream.conf 2>/dev/null | grep -q "app-$target"; then
+  printf 'set $backend "http://app-%s:8080";\n' "$active" >"$UPSTREAM_FILE"
+  cleanup_target
+  die "nginx 컨테이너가 upstream.conf 갱신을 보지 못한다 (바인드 마운트 inode 불일치).
+       호스트 파일이 교체된 적이 있다. 'docker compose up -d --force-recreate nginx' 로
+       마운트를 다시 걸어야 한다. 트래픽은 $active 에 그대로 있다."
+fi
+
 if ! docker compose exec -T nginx nginx -t; then
   printf 'set $backend "http://app-%s:8080";\n' "$active" >"$UPSTREAM_FILE"
   cleanup_target

@@ -151,6 +151,25 @@ Postfix 는 `mynetworks` 안에서 오는 요청을 인증 없이 받으므로 �
   `/actuator/health` 는 404 다. `/health` 는 `SecurityWhiteList` 에 등록된 공개 경로다.
 - **`upstream.conf` 는 단일 파일 바인드 마운트**다. `sed -i` 처럼 inode 를 바꾸는 방식으로
   고치면 컨테이너가 옛 파일을 계속 본다. `deploy.sh` 는 truncate-write 를 쓴다.
+  `install`·`cp`·일부 편집기의 저장도 전부 교체로 동작하니 같은 함정이다. 그래서
+  `setup.sh` 는 이 파일만 "없을 때만 생성" 으로 다루고, `deploy.sh` 는 전환 직후
+  컨테이너가 새 내용을 실제로 보는지 확인한 뒤에야 구 색을 정리한다.
+
+  inode 가 갈리면 전환 절차가 **전부 성공한 것처럼 끝난다.** 컨테이너 입장에서는
+  내용이 안 바뀌었으니 `nginx -t` 도 `reload` 도 통과하고, 구 색을 정리하는 순간
+  전 요청이 502 가 된다. 배포는 초록인데 사이트만 죽는다. 복구는 nginx 재생성이다.
+
+  ```bash
+  # 호스트와 컨테이너가 같은 것을 보는지
+  cat /opt/ttokttok/config/nginx/upstream.conf
+  docker exec ttokttok-nginx cat /etc/nginx/upstream.conf
+  # 다르면
+  cd /opt/ttokttok/app && docker compose up -d --force-recreate nginx
+  ```
+
+- **`upstream.conf` 는 설정이 아니라 런타임 상태다.** 현재 활성 색을 가리킨다.
+  레포 쪽 파일은 `app-blue` 로 고정돼 있어, 덮어쓰면 실제 상태와 무관하게 blue 를
+  가리키게 된다. `.env`·`state` 와 같은 성격이다.
 - **`proxy_pass` 에 변수를 쓴다.** 그래야 nginx 기동 시점에 대상 색 컨테이너가 없어도
   "host not found in upstream" 으로 죽지 않는다. 블루-그린이 nginx 재기동 없이 되는 이유.
 - **`minio-public.inc` 는 `set` 이 `rewrite` 보다 먼저 와야 한다.** 둘 다 rewrite 모듈

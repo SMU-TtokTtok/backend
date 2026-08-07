@@ -54,7 +54,24 @@ install -m 0775 "$SRC/deploy.sh"                                 "$ROOT/app/depl
 install -m 0664 "$SRC/docker/postfix/Dockerfile"                 "$ROOT/docker/postfix/Dockerfile"
 install -m 0775 "$SRC/docker/postfix/entrypoint.sh"              "$ROOT/docker/postfix/entrypoint.sh"
 install -m 0775 "$SRC/docker/minio/init.sh"                      "$ROOT/docker/minio/init.sh"
-install -m 0664 "$SRC/config/nginx/upstream.conf"                "$ROOT/config/nginx/upstream.conf"
+# upstream.conf 는 여기서 다룬다 — 다른 파일과 달리 덮어쓰면 안 된다.
+#
+# (1) 이건 설정이 아니라 런타임 상태다. 현재 활성 색을 가리키고 deploy.sh 가 갱신한다.
+#     레포 쪽 파일은 app-blue 로 고정돼 있어서, 재실행하면 실제 상태와 무관하게
+#     blue 로 되돌아간다. 지금이 green 이면 트래픽 없는 색을 가리키게 된다.
+#
+# (2) install 은 덮어쓰는 게 아니라 파일을 교체해서 inode 가 바뀐다. nginx 는 이 파일을
+#     단일 파일 바인드 마운트로 물고 있어, 교체되면 컨테이너는 옛 inode 를 계속 본다.
+#     그 뒤 deploy.sh 의 truncate-write 는 컨테이너에 닿지 않는다. 전환 절차는 전부
+#     "성공" 으로 끝나고(nginx -t / reload 도 통과한다) 구 색을 정리하는 순간 전 요청이
+#     502 가 된다. 실제로 그렇게 서비스가 내려갔다 — 이슈 #376.
+#
+# .env / state 와 같은 성격이라 같은 방식으로 다룬다.
+if [[ -f "$ROOT/config/nginx/upstream.conf" ]]; then
+    log "upstream.conf 이미 존재 — 건드리지 않음 (현재 활성 색 상태)"
+else
+    install -m 0664 "$SRC/config/nginx/upstream.conf"            "$ROOT/config/nginx/upstream.conf"
+fi
 install -m 0664 "$SRC/config/nginx/conf.d/proxy-common.inc"      "$ROOT/config/nginx/conf.d/proxy-common.inc"
 install -m 0664 "$SRC/config/nginx/templates/http-only.conf"     "$ROOT/config/nginx/templates/http-only.conf"
 install -m 0664 "$SRC/config/nginx/templates/https.conf"         "$ROOT/config/nginx/templates/https.conf"
