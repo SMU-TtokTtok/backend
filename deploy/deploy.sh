@@ -88,6 +88,15 @@ docker compose up -d $INFRA_SERVICES
 log "app-$target 기동"
 docker compose --profile "$target" up -d --no-deps "app-$target"
 
+# 대상 색 컨테이너가 running 인지 compose 에게 직접 묻는다.
+# compose ps -q 는 자기 프로젝트의 컨테이너 ID 를 정확히 돌려주므로 이름 규약과 무관하다.
+target_running() {
+  local cid
+  cid="$(docker compose --profile "$1" ps -q "app-$1" 2>/dev/null | head -1)"
+  [[ -n "$cid" ]] || return 1
+  [[ "$(docker inspect -f '{{.State.Running}}' "$cid" 2>/dev/null)" == "true" ]]
+}
+
 cleanup_target() {
   warn "app-$target 정리 중"
   docker compose --profile "$target" logs --tail 100 "app-$target" || true
@@ -100,10 +109,15 @@ cleanup_target() {
 log "헬스체크 대기 (최대 ${HEALTH_TIMEOUT}s)"
 healthy=0
 for ((i = 0; i < HEALTH_TIMEOUT; i++)); do
-  # 컨테이너가 죽었으면 기다릴 이유가 없다
-  if ! docker ps --filter "name=ttokttok-app-$target" --filter status=running -q | grep -q .; then
+  # 컨테이너가 죽었으면 기다릴 이유가 없다.
+  #
+  # 컨테이너를 이름으로 찾지 않고 compose 에게 묻는다. `docker ps --filter name=` 은
+  # (1) container_name 이나 프로젝트명이 바뀌면 멀쩡히 도는 컨테이너를 못 찾아
+  # 배포를 영구히 실패시키고, (2) 부분 일치라서 ttokttok-app-blue-old 같은
+  # 잔여 컨테이너에도 매칭돼 죽은 배포를 살아있다고 오판한다.
+  if ! target_running "$target"; then
     sleep 1
-    if ! docker ps --filter "name=ttokttok-app-$target" --filter status=running -q | grep -q .; then
+    if ! target_running "$target"; then
       cleanup_target
       die "app-$target 컨테이너가 기동 중 종료됐다"
     fi
