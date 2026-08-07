@@ -42,6 +42,7 @@ Dockerfile
 .dockerignore
 docker-compose*.yml
 docker
+deploy
 .env
 .env.*
 !.env.example

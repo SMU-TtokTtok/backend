@@ -70,7 +70,7 @@ IMPLEMENTATION.md
 # Firebase 서비스 계정 키 파일
 ttokttok-push*.json
 
-### Docker 운영 스택 (docker-compose.yml) ###
+### Docker 운영 스택 (deploy/) ###
 # 실제 시크릿이 담기는 환경변수 파일. 템플릿인 .env.example 만 커밋한다.
 .env
 .env.*
@@ -82,3 +82,6 @@ ttokttok-push*.json
 
 # 컨테이너 데이터 볼륨 (PostgreSQL, Redis, MinIO). 백업 대상이지 커밋 대상이 아니다.
 /data/
+
+# 위쪽 STS 섹션의 `bin/` 규칙이 배포 스크립트까지 잡아먹는다. 예외 처리.
+!/deploy/bin/

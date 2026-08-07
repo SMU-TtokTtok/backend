@@ -1,0 +1,324 @@
+# ttokttok 운영 스택 — 개인 우분투 서버 단일 호스트 구성.
+#
+# 이 파일은 레포가 아니라 /opt/ttokttok/app/ 에서 실행된다. setup.sh 가 배치한다.
+# self-hosted runner 의 워크스페이스는 actions/checkout 이 매 배포마다 정리하므로,
+# 데이터(./data)와 시크릿(.env)이 그 안에 있으면 배포 한 번에 날아간다.
+#
+# 사용법:
+#   1) sudo <레포>/deploy/setup.sh
+#   2) /opt/ttokttok/app/.env 값을 채운다
+#   3) /opt/ttokttok/app/deploy.sh <이미지태그>
+#
+# ── 포트 정책 ────────────────────────────────────────────────────────────────
+# 외부에 노출하는 것은 nginx 의 80/443 뿐이고, 나머지는 전부 127.0.0.1 에만 바인딩한다.
+# "15432:5432" 처럼 주소를 생략하면 0.0.0.0 에 열려 외부에서 스캔되며, UFW 는 Docker 가
+# 삽입한 iptables 규칙보다 뒤에 평가되기 때문에 이 포트를 막아주지 못한다.
+# 그래서 포트 번호를 바꾸는 것이 아니라 바인드 주소를 제한하는 것이 실제 방어선이다.
+#
+# 관리 접속은 SSH 터널을 쓴다:
+#   ssh -L 15432:127.0.0.1:15432 <user>@<host>   # 이후 로컬 15432 로 psql 접속
+#
+# 컨테이너끼리는 아래 ttokttok 네트워크 안에서 "서비스명 + 기본 포트"로 통신하므로
+# (예: postgres:5432), 호스트 포트를 바꿔도 앱 설정에는 영향이 없다.
+
+name: ttokttok
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
+# blue/green 두 컨테이너는 이미지 태그와 헬스체크용 호스트 포트만 다르다.
+x-app-base: &app-base
+  restart: unless-stopped
+  environment:
+    SPRING_PROFILES_ACTIVE: prod
+    TZ: Asia/Seoul
+
+    # 아래 값들은 마운트된 application-prod.yml 보다 우선순위가 높다.
+    # (Spring 의 설정 우선순위: 환경변수 > 설정 파일)
+    # 덕분에 인프라 주소/자격증명만 여기서 덮어쓰고, 나머지 운영 설정은
+    # application-prod.yml 을 그대로 재사용할 수 있다.
+    SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+    SPRING_DATASOURCE_USERNAME: ${APP_DB_USER}
+    SPRING_DATASOURCE_PASSWORD: ${APP_DB_PASSWORD}
+
+    SPRING_DATA_REDIS_HOST: redis
+    SPRING_DATA_REDIS_PORT: 6379
+    SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
+
+    # 메일은 Postfix 릴레이 컨테이너를 거친다. 릴레이 계정 정보는 앱이 아니라
+    # Postfix 에만 있고, 앱은 인증 없이 내부망으로 넘기기만 한다.
+    SPRING_MAIL_HOST: smtp
+    SPRING_MAIL_PORT: "25"
+    SPRING_MAIL_USERNAME: ""
+    SPRING_MAIL_PASSWORD: ""
+
+    # MinIO 를 S3 API 로 사용한다. endpoint 가 주어지면 S3Config 가 path-style 로
+    # 전환한다 — MinIO 는 버킷을 호스트명이 아니라 경로에 두기 때문이다.
+    CLOUD_AWS_S3_ENDPOINT: http://minio:9000
+    CLOUD_AWS_S3_BUCKET: ${MINIO_BUCKET}
+    CLOUD_AWS_CREDENTIALS_ACCESS_KEY: ${MINIO_APP_ACCESS_KEY}
+    CLOUD_AWS_CREDENTIALS_SECRET_KEY: ${MINIO_APP_SECRET_KEY}
+
+    # 저장된 파일 URL 의 도메인. 이관 전 CloudFront 도메인을 그대로 유지한다 —
+    # DB(clubs.content 마크다운 본문, 지원서 답변 JSON, temp_applicant.temp_data)에
+    # 절대 URL 로 박혀 있어, 도메인이 바뀌면 전수 치환이 필요해진다.
+    FILE_CLOUD_URL: ${FILE_CLOUD_URL}
+
+    # Firebase 키는 이미지에 없고 /app/config 에 마운트되므로 file: 로 지정한다.
+    FIREBASE_CREDENTIALS_LOCATION: file:/app/config/${FIREBASE_JSON_NAME}
+  volumes:
+    # application.yml / application-prod.yml 과 Firebase 키가 들어있는 디렉터리.
+    # Spring Boot 가 ./config/ 를 기본 설정 탐색 경로에 포함한다(WORKDIR 이 /app).
+    - /opt/ttokttok/config/app:/app/config:ro
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+    minio:
+      condition: service_healthy
+  healthcheck:
+    # /health 는 SecurityWhiteList 에 등록된 공개 엔드포인트다.
+    # 이 앱에는 actuator 의존성이 없어 /actuator/health 는 404 다.
+    test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health || exit 1"]
+    interval: 15s
+    timeout: 5s
+    retries: 20
+    start_period: 90s
+  deploy:
+    resources:
+      limits:
+        memory: 2G
+  networks: [ttokttok]
+  logging: *logging
+
+services:
+  # ── 애플리케이션 (블루-그린) ──────────────────────────────────────────────
+  # deploy.sh 가 한 번에 한 색만 띄운다. profiles 덕분에 `docker compose up -d`
+  # 로는 둘 다 뜨지 않고, 명시적으로 지목해야만 기동된다.
+  app-blue:
+    <<: *app-base
+    profiles: ["blue"]
+    container_name: ttokttok-app-blue
+    image: ttokttok:${BLUE_TAG:-none}
+    ports:
+      - "127.0.0.1:18081:8080"   # 헬스체크 전용. 외부 노출 없음
+
+  app-green:
+    <<: *app-base
+    profiles: ["green"]
+    container_name: ttokttok-app-green
+    image: ttokttok:${GREEN_TAG:-none}
+    ports:
+      - "127.0.0.1:18082:8080"
+
+  # ── 리버스 프록시 — 유일한 공개 지점 ──────────────────────────────────────
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: ttokttok-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /opt/ttokttok/config/nginx/conf.d:/etc/nginx/conf.d:ro
+      # deploy.sh 가 이 파일만 바꿔 쓰고 nginx -s reload 한다.
+      # 단일 파일 바인드 마운트이므로 반드시 in-place 로 써야 한다(sed -i 금지).
+      - /opt/ttokttok/config/nginx/upstream.conf:/etc/nginx/upstream.conf:ro
+      - /opt/ttokttok/data/certbot/conf:/etc/letsencrypt:ro
+      - /opt/ttokttok/data/certbot/www:/var/www/certbot:ro
+    # app 에 의존하지 않는다. 블루-그린 전환 중에는 대상 색이 없을 수 있고,
+    # nginx 는 변수 proxy_pass + resolver 로 요청 시점에 이름을 해석한다.
+    networks: [ttokttok]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost/nginx-health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging: *logging
+
+  certbot:
+    image: certbot/certbot:latest
+    container_name: ttokttok-certbot
+    restart: unless-stopped
+    volumes:
+      - /opt/ttokttok/data/certbot/conf:/etc/letsencrypt
+      - /opt/ttokttok/data/certbot/www:/var/www/certbot
+    # 12시간마다 갱신 시도. 실제 갱신 후 nginx reload 는 호스트 cron 이 담당한다.
+    entrypoint: /bin/sh -c 'trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 12h & wait $${!}; done'
+    logging: *logging
+
+  # ── PostgreSQL ────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:17.4-alpine
+    container_name: ttokttok-postgres
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:15432:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      # init-db/01-app-user.sh 가 사용 (최초 1회 초기화 시에만)
+      APP_DB_USER: ${APP_DB_USER}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD}
+      TZ: Asia/Seoul
+    volumes:
+      # named volume 대신 호스트 경로 바인드를 쓴다 — 백업 스크립트가 경로를
+      # 그대로 다룰 수 있고, 볼륨 실수 삭제로 데이터가 날아가는 경로를 줄인다.
+      - /opt/ttokttok/data/postgres:/var/lib/postgresql/data
+      # 데이터 디렉터리가 비었을 때에만 알파벳 순으로 실행된다:
+      #   00-restore.sql  → EB/RDS 덤프 복원
+      #   01-app-user.sh  → 앱 전용 롤 생성 + 권한 부여
+      - /opt/ttokttok/init-db:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+    networks: [ttokttok]
+    logging: *logging
+
+  # ── Redis ─────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7.2-alpine
+    container_name: ttokttok-redis
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:16379:6379"
+    command: >
+      redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    environment:
+      # redis-cli 가 이 값을 자동으로 사용한다. 헬스체크 명령줄에 비밀번호를 직접
+      # 쓰면 `ps` 에 노출되므로 환경변수로 넘긴다.
+      REDISCLI_AUTH: ${REDIS_PASSWORD}
+      TZ: Asia/Seoul
+    volumes:
+      - /opt/ttokttok/data/redis:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep -q PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+    networks: [ttokttok]
+    logging: *logging
+
+  # ── MinIO (S3 호환 오브젝트 스토리지) ─────────────────────────────────────
+  minio:
+    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
+    container_name: ttokttok-minio
+    restart: unless-stopped
+    # 기본이 root 라 바인드 마운트에 root 소유 파일을 만든다. 그러면 백업 cron 이
+    # ttokttokuser 로 읽지 못한다. 호스트 계정(ttokttokuser:ttokttok)에 맞춰 고정한다.
+    user: "1001:1003"
+    command: server /data --console-address ":9001"
+    ports:
+      - "127.0.0.1:19000:9000"
+      - "127.0.0.1:19001:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      TZ: Asia/Seoul
+    volumes:
+      - /opt/ttokttok/data/minio:/data
+    healthcheck:
+      test: ["CMD-SHELL", "mc ready local || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+    networks: [ttokttok]
+    logging: *logging
+
+  # ── MinIO 초기화 (일회성, 멱등) ───────────────────────────────────────────
+  # 버킷 생성 + 익명 읽기 정책 + 앱 전용 서비스 계정. 자세한 근거는 init.sh 참고.
+  minio-init:
+    image: minio/mc:RELEASE.2025-08-13T08-35-41Z
+    container_name: ttokttok-minio-init
+    restart: "no"
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_BUCKET: ${MINIO_BUCKET}
+      MINIO_APP_ACCESS_KEY: ${MINIO_APP_ACCESS_KEY}
+      MINIO_APP_SECRET_KEY: ${MINIO_APP_SECRET_KEY}
+    volumes:
+      - /opt/ttokttok/docker/minio/init.sh:/init.sh:ro
+    entrypoint: ["/bin/sh", "/init.sh"]
+    networks: [ttokttok]
+    logging: *logging
+
+  # ── Postfix — 운영 메일 릴레이 ────────────────────────────────────────────
+  # 이 서버에서 직접 발송하는 것은 불가능하다. 공인 IP 에 PTR 레코드가 없고
+  # Spamhaus PBL 에 등재되어 있어, SPF/DKIM 을 맞춰도 수신측에서 거절/스팸 처리된다.
+  # 그래서 외부 릴레이(smtp.naver.com 등)로 넘기기만 한다.
+  #
+  # 앱이 릴레이에 직접 붙지 않고 한 단계 경유하는 이유:
+  #   - 릴레이가 느리거나 일시 장애일 때 로컬 큐에 쌓여 인증 메일이 유실되지 않는다
+  #   - 릴레이 계정 정보가 앱 설정이 아니라 Postfix 에만 존재한다
+  # 호스트에 25 를 publish 하지 않으므로 외부에서 이 SMTP 에 접속할 수 없다.
+  smtp:
+    build:
+      context: ../docker/postfix
+    image: ttokttok-postfix:local
+    container_name: ttokttok-smtp
+    restart: unless-stopped
+    environment:
+      RELAYHOST: ${SMTP_RELAYHOST}
+      RELAY_USER: ${SMTP_RELAY_USER}
+      RELAY_PASSWORD: ${SMTP_RELAY_PASSWORD}
+      MY_HOSTNAME: mail.${DOMAIN}
+      MY_NETWORKS: ${COMPOSE_SUBNET:-172.28.0.0/16}
+      TZ: Asia/Seoul
+    healthcheck:
+      test: ["CMD-SHELL", "postfix status >/dev/null 2>&1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    networks: [ttokttok]
+    logging: *logging
+
+  # ── Mailpit — 개발/테스트용 SMTP 싱크 ─────────────────────────────────────
+  # 보내지 않고 받아서 UI 에 쌓아두기만 한다. `--profile dev` 로만 뜬다.
+  mailpit:
+    image: axllent/mailpit:v1.24
+    container_name: ttokttok-mailpit
+    profiles: ["dev"]
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:11025:1025"
+      - "127.0.0.1:18025:8025"
+    environment:
+      MP_MAX_MESSAGES: 500
+    networks: [ttokttok]
+    logging: *logging
+
+networks:
+  ttokttok:
+    name: ttokttok
+    driver: bridge
+    ipam:
+      config:
+        # Postfix 의 mynetworks 가 이 대역으로 제한된다(오픈 릴레이 방지).
+        - subnet: ${COMPOSE_SUBNET:-172.28.0.0/16}
