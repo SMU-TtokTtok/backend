@@ -21,15 +21,23 @@ EMAIL="${CERT_EMAIL:-${1:-}}"
 
 cd "$ROOT/app"
 
-# 프로브는 certbot 이 실제로 쓰는 경로에 둬야 한다. nginx 는
+# 프로브 파일에는 조건이 둘 있다.
+#
+# 경로: certbot 이 실제로 쓰는 자리에 둬야 한다. nginx 는
 #   location /.well-known/acme-challenge/ { root /var/www/certbot; }
 # 이므로 /var/www/certbot/.well-known/acme-challenge/<파일> 을 찾는다. root 는 alias 와
 # 달리 요청 경로를 잘라내지 않는다. 웹루트 최상단에 두면 전부 정상이어도 404 다.
+#
+# 쓰는 주체: 호스트가 아니라 certbot 컨테이너다. certbot 은 컨테이너 안에서 root 로
+# 돌면서 .well-known/acme-challenge/ 를 만든다. 그 뒤로 그 디렉터리는 root 소유가 되고,
+# ttokttokuser 로 실행되는 이 스크립트는 거기에 파일을 만들 수 없다 — 재발급할 때마다
+# "허가 거부" 로 막힌다. 컨테이너는 같은 웹루트를 rw 로 마운트하고 root 로 도므로
+# 호스트 소유권과 무관하게 항상 쓸 수 있다.
 probe="acme-probe-$$"
-probe_dir="$ROOT/data/certbot/www/.well-known/acme-challenge"
-mkdir -p "$probe_dir"
-echo ok > "$probe_dir/$probe"
-trap 'rm -f "$probe_dir/$probe"' EXIT
+webroot_sh() { docker compose run --rm --entrypoint sh certbot -c "$1"; }
+webroot_sh "mkdir -p /var/www/certbot/.well-known/acme-challenge \
+            && echo ok > /var/www/certbot/.well-known/acme-challenge/$probe" >/dev/null
+trap 'webroot_sh "rm -f /var/www/certbot/.well-known/acme-challenge/'"$probe"'" >/dev/null 2>&1 || true' EXIT
 
 # 이름 해석은 공개 리졸버에 직접 묻는다. 로컬 리졸버(systemd-resolved → ISP)가
 # 죽어 있어도 Let's Encrypt 는 자기 리졸버로 우리를 찾으므로, 로컬 해석 실패는
