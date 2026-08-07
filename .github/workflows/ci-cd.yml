@@ -35,10 +35,6 @@ jobs:
 
       - name: Materialize secrets into runtime config directory
         env:
-          PROD_DB_PASSWORD: ${{ secrets.PROD_DB_PASSWORD }}
-          PROD_REDIS_PASSWORD: ${{ secrets.PROD_REDIS_PASSWORD }}
-          PROD_MAIL_PASSWORD: ${{ secrets.PROD_MAIL_PASSWORD }}
-          PROD_JWT_SECRET: ${{ secrets.PROD_JWT_SECRET }}
           APPLICATION_YML: ${{ secrets.APPLICATION_YML }}
           APPLICATION_PROD_YAML: ${{ secrets.APPLICATION_PROD_YAML }}
           FIREBASE_JSON: ${{ secrets.FIREBASE_JSON }}
@@ -53,8 +49,13 @@ jobs:
           # 컨테이너가 /app/config 로 읽는 위치. Spring Boot 가 ./config/ 를 기본 설정
           # 탐색 경로에 포함하므로(WORKDIR=/app) 별도 옵션 없이 읽힌다.
           # .dockerignore 가 이 파일들을 빌드 컨텍스트에서 제외하므로 이미지에는 없다.
-          echo "$APPLICATION_YML"       | tr -d '\n' | base64 --decode             > "$CONF/application.yml"
-          echo "$APPLICATION_PROD_YAML" | tr -d '\n' | base64 --decode | envsubst  > "$CONF/application-prod.yml"
+          #
+          # envsubst 를 쓰지 않는다. DB/Redis/메일 자격증명은 compose 환경변수로
+          # 주입되므로 yml 에 치환할 플레이스홀더가 남아있지 않고, 인자 없는 envsubst 는
+          # 값 안의 모든 $VAR 를 치환하면서 정의되지 않은 것은 빈 문자열로 지워버린다.
+          # 비밀번호에 $ 가 하나만 들어가도 값이 조용히 잘린다.
+          echo "$APPLICATION_YML"       | tr -d '\n' | base64 --decode > "$CONF/application.yml"
+          echo "$APPLICATION_PROD_YAML" | tr -d '\n' | base64 --decode > "$CONF/application-prod.yml"
           chmod 640 "$CONF/application.yml" "$CONF/application-prod.yml"
 
           if [ -n "$FIREBASE_JSON" ] && [ -n "$FIREBASE_JSON_NAME" ]; then

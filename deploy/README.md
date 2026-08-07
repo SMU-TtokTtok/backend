@@ -64,9 +64,18 @@ ssh -L 19001:127.0.0.1:19001 -L 15432:127.0.0.1:15432 <서버>
 
 ## 앱 설정
 
-인프라 주소와 자격증명은 compose 의 환경변수가 `application-prod.yml` 을 덮어쓴다
-(Spring 우선순위: 환경변수 > 설정 파일). 덕분에 `APPLICATION_PROD_YAML` 시크릿을
-거의 손대지 않아도 된다. compose 가 넘기는 값:
+인프라 주소와 자격증명은 `application-prod.yml` 이 아니라 compose 환경변수로 주입한다
+(Spring 우선순위: 환경변수 > 설정 파일). 편의 때문이 아니라, **같은 비밀번호가 두 군데서
+쓰이기 때문**이다 — `APP_DB_PASSWORD` 는 `init-db/01-app-user.sh` 가 롤을 만들 때와 앱이
+접속할 때 모두 필요하고, `REDIS_PASSWORD` 는 `--requirepass` 와 앱 양쪽, `MINIO_APP_SECRET_KEY`
+는 `minio-init` 의 계정 생성과 앱 양쪽에 쓰인다. `.env` 한 곳에만 두면 둘이 어긋날 수 없다.
+서비스명(`postgres`, `redis`, `minio`, `smtp`)도 앱 설정이 아니라 compose 토폴로지 사실이라
+여기에 둔다.
+
+**그래서 `APPLICATION_PROD_YAML` 시크릿에는 아래 키가 들어 있으면 안 된다.** 남아 있으면
+환경변수에 밀려 무시되는 죽은 값이 되고, 환경변수 주입이 누락됐을 때 fallback 으로 동작해
+엉뚱한 곳(옛 RDS 등)에 조용히 붙는다. 키가 아예 없어야 Boot 가 즉시 실패한다.
+compose 가 넘기는 값:
 
 `SPRING_DATASOURCE_*`, `SPRING_DATA_REDIS_*`, `SPRING_MAIL_HOST/PORT`,
 `CLOUD_AWS_S3_ENDPOINT/BUCKET`, `CLOUD_AWS_CREDENTIALS_*`, `FILE_CLOUD_URL`,
@@ -83,6 +92,19 @@ server:
   shutdown: graceful
 spring.lifecycle.timeout-per-shutdown-phase: 25s
 ```
+
+반대로 **환경변수가 덮어쓰는데도 yml 에서 지우면 안 되는 키가 두 개** 있다.
+
+- `cloud.aws.region.static` — MinIO 에 리전 개념은 없지만 `S3Config` 가 `endpointOverride`
+  여부와 무관하게 `Region.of(region)` 을 호출한다. `@Value` 에 기본값이 없어 기동 실패한다.
+- `firebase.json` — `FIREBASE_CREDENTIALS_LOCATION` 이 덮어쓰지만,
+  `@Value("${firebase.credentials-location:classpath:${firebase.json}}")` 에서 Spring 이
+  바깥 키를 조회하기 **전에** 플레이스홀더 문자열을 재귀 파싱한다. 기본값을 쓰지 않는
+  경우에도 안쪽 `${firebase.json}` 이 먼저 해석되므로, 없으면 기동 실패한다.
+
+`spring.mail.properties.*` 는 반대로 **넣어도 읽히지 않는다.** `EmailConfig` 가
+`JavaMailSender` 빈을 직접 만들어서 Boot 의 메일 자동설정이 물러나기 때문이다.
+SMTP 속성을 바꾸려면 yml 이 아니라 `EmailConfig` 를 고쳐야 한다.
 
 `EmailConfig` 가 `mail.smtp.auth=true` / `starttls=true` 를 고정으로 켜지만,
 Postfix 는 `mynetworks` 안에서 오는 요청을 인증 없이 받으므로 사용자/비밀번호는
