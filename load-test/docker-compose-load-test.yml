@@ -1,4 +1,3 @@
-version: '3.8'
 
 services:
   # Nginx 리버스 프록시 (포트 포워딩 및 로드밸런서 역할 모방)

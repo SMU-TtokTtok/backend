@@ -97,8 +97,4 @@ public class Club extends BaseTimeEntity {
             setter.accept(nullable.get());
         }
     }
-
-    public void updateViewCount() {
-        viewCount += 1;
-    }
 }

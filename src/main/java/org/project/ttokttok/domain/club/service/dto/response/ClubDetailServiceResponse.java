@@ -1,12 +1,12 @@
 package org.project.ttokttok.domain.club.service.dto.response;
 
 import lombok.Builder;
+import org.project.ttokttok.domain.applyform.domain.ApplyDeadlinePolicy;
 import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
 import org.project.ttokttok.domain.club.domain.enums.ClubCategory;
 import org.project.ttokttok.domain.club.domain.enums.ClubType;
 import org.project.ttokttok.domain.club.repository.dto.ClubDetailQueryResponse;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -31,14 +31,7 @@ public record ClubDetailServiceResponse(
         String content // 동아리 소개 내용
 ) {
     public static ClubDetailServiceResponse from(ClubDetailQueryResponse response) {
-        // 마감 임박 여부 계산 (지원 마감일이 일주일 이내인지 확인)
-        boolean isDeadlineImminent = false;
-        if (response.applyDeadLine() != null) {
-            LocalDate today = LocalDate.now();
-            LocalDate deadline = response.applyDeadLine();
-            long daysUntilDeadline = today.until(deadline, java.time.temporal.ChronoUnit.DAYS);
-            isDeadlineImminent = daysUntilDeadline >= 0 && daysUntilDeadline <= 7;
-        }
+        boolean isDeadlineImminent = ApplyDeadlinePolicy.isImminent(response.applyDeadLine());
 
         return ClubDetailServiceResponse.builder()
                 .name(response.name())
