@@ -4,11 +4,15 @@
 # "사내 SMTP 수신 → 외부 릴레이로 전달" 만 한다.
 FROM alpine:3.20
 
+# PLAIN 메커니즘(libplain.so)은 별도 패키지가 아니라 cyrus-sasl 본체에 들어 있다.
+# Alpine 에 cyrus-sasl-plain 이라는 패키지는 존재하지 않아, 넣으면 빌드가
+# "unable to select packages" 로 실패한다. LOGIN 만 별도 패키지다.
 RUN apk add --no-cache \
       postfix \
-      cyrus-sasl cyrus-sasl-plain cyrus-sasl-login \
+      cyrus-sasl cyrus-sasl-login \
       ca-certificates tzdata \
- && rm -rf /var/cache/apk/*
+ && rm -rf /var/cache/apk/* \
+ && test -f /usr/lib/sasl2/libplain.so   # PLAIN 가용 여부를 빌드 시점에 못박는다
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
