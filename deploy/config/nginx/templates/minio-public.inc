@@ -37,4 +37,7 @@ proxy_hide_header x-amz-meta-server-side-encryption;
 proxy_hide_header Server;
 
 # 정적 파일이므로 캐시를 길게 (키에 UUID 가 들어가 내용이 바뀌지 않는다).
-add_header Cache-Control "public, max-age=31536000, immutable" always;
+# always 를 쓰지 않는다. 붙이면 404/403 응답까지 1년 immutable 로 캐시되어,
+# 업로드 전파 지연으로 404 를 한 번 받은 클라이언트가 파일이 올라온 뒤에도
+# 계속 깨진 이미지를 보게 된다. 기본 동작(2xx/3xx 에만 적용)이 정확히 원하는 것이다.
+add_header Cache-Control "public, max-age=31536000, immutable";
