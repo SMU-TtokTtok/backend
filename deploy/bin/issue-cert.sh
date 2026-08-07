@@ -21,15 +21,53 @@ EMAIL="${CERT_EMAIL:-${1:-}}"
 
 cd "$ROOT/app"
 
+# 프로브 파일에는 조건이 둘 있다.
+#
+# 경로: certbot 이 실제로 쓰는 자리에 둬야 한다. nginx 는
+#   location /.well-known/acme-challenge/ { root /var/www/certbot; }
+# 이므로 /var/www/certbot/.well-known/acme-challenge/<파일> 을 찾는다. root 는 alias 와
+# 달리 요청 경로를 잘라내지 않는다. 웹루트 최상단에 두면 전부 정상이어도 404 다.
+#
+# 쓰는 주체: 호스트가 아니라 certbot 컨테이너다. certbot 은 컨테이너 안에서 root 로
+# 돌면서 .well-known/acme-challenge/ 를 만든다. 그 뒤로 그 디렉터리는 root 소유가 되고,
+# ttokttokuser 로 실행되는 이 스크립트는 거기에 파일을 만들 수 없다 — 재발급할 때마다
+# "허가 거부" 로 막힌다. 컨테이너는 같은 웹루트를 rw 로 마운트하고 root 로 도므로
+# 호스트 소유권과 무관하게 항상 쓸 수 있다.
 probe="acme-probe-$$"
-echo ok > "$ROOT/data/certbot/www/$probe"
-trap 'rm -f "$ROOT/data/certbot/www/$probe"' EXIT
+webroot_sh() { docker compose run --rm --entrypoint sh certbot -c "$1"; }
+webroot_sh "mkdir -p /var/www/certbot/.well-known/acme-challenge \
+            && echo ok > /var/www/certbot/.well-known/acme-challenge/$probe" >/dev/null
+trap 'webroot_sh "rm -f /var/www/certbot/.well-known/acme-challenge/'"$probe"'" >/dev/null 2>&1 || true' EXIT
+
+# 이름 해석은 공개 리졸버에 직접 묻는다. 로컬 리졸버(systemd-resolved → ISP)가
+# 죽어 있어도 Let's Encrypt 는 자기 리졸버로 우리를 찾으므로, 로컬 해석 실패는
+# 발급 가능 여부와 아무 상관이 없다. 실제로 네임서버 변경 직후 ISP 리졸버가
+# 오래된 SERVFAIL 을 붙들고 있어 발급이 막히는 일이 있었다. 여기서 확인하려는 것은
+# "공개 DNS 가 가리키는 곳이 우리 nginx 인가" 이지 "이 PC 가 이름을 풀 수 있는가"
+# 가 아니다. DoH 를 쓰는 이유는 dig 의존성을 늘리지 않기 위해서다 (curl 은 이미 쓴다).
+resolve_public() {
+    local host="$1" r ip
+    for r in 1.1.1.1 8.8.8.8 9.9.9.9; do
+        ip="$(curl -fsS --max-time 6 -H 'accept: application/dns-json' \
+                "https://${r}/dns-query?name=${host}&type=A" 2>/dev/null \
+              | grep -oE '"data":"[0-9]{1,3}(\.[0-9]{1,3}){3}"' | tail -1 | cut -d'"' -f4)" || true
+        [[ -n "$ip" ]] && { echo "$ip"; return 0; }
+    done
+    return 1
+}
 
 for d in $SERVER_NAMES $FILE_SERVER_NAMES; do
     echo "[cert] 사전 점검: $d 의 ACME 경로가 외부에서 열려 있는지 확인"
-    if ! curl -fsS --max-time 10 "http://${d}/.well-known/acme-challenge/${probe}" | grep -q ok; then
-        echo "[cert] 실패: http://${d}/.well-known/acme-challenge/ 로 외부 접근이 안 된다." >&2
-        echo "       DNS A 레코드와 공유기 80 포트 포워딩을 먼저 확인할 것." >&2
+    if ! ip="$(resolve_public "$d")"; then
+        echo "[cert] 실패: 공개 DNS 가 $d 의 A 레코드를 돌려주지 않는다." >&2
+        echo "       네임서버 위임과 A/CNAME 레코드를 먼저 확인할 것." >&2
+        exit 1
+    fi
+    echo "[cert]   공개 DNS 해석: $d → $ip"
+    if ! curl -fsS --max-time 10 --resolve "${d}:80:${ip}" \
+              "http://${d}/.well-known/acme-challenge/${probe}" | grep -q ok; then
+        echo "[cert] 실패: http://${d}/.well-known/acme-challenge/ 로 접근이 안 된다 (→ $ip)." >&2
+        echo "       공유기 80 포트 포워딩과 nginx 상태를 확인할 것." >&2
         exit 1
     fi
 done
@@ -56,3 +94,15 @@ issue "$FILE_DOMAIN" $FILE_SERVER_NAMES
 
 echo "[cert] 발급 완료. HTTPS 로 전환한다."
 "$ROOT/bin/nginx-apply.sh" --https
+
+# 갱신 데몬을 여기서 띄운다. compose 에 정의는 있지만 기동 목록에서 빠지기 쉽고,
+# 배포가 한 번도 없으면 deploy.sh 의 INFRA_SERVICES 도 실행되지 않는다.
+# 발급 직후가 갱신 경로를 세우기에 가장 자연스러운 지점이다.
+echo "[cert] 갱신 데몬 기동 (12시간 주기)"
+docker compose up -d certbot
+
+echo
+echo "갱신 체계:"
+echo "  - ttokttok-certbot   12시간마다 certbot renew (만료 30일 전부터 실제 갱신)"
+echo "  - cron 04:30         nginx reload (갱신된 인증서 반영)"
+echo "  - cron 05:00         check-certs.sh — 만료 임박 시 경고 메일"

@@ -16,6 +16,7 @@ EB → 자체 우분투 서버(`/opt/ttokttok`) 이관용 인프라 코드. 이�
 | `bin/nginx-apply.sh` | 도메인 치환 후 nginx 설정 적용 (`--https` 로 HTTPS 전환) |
 | `bin/issue-cert.sh` | Let's Encrypt 최초 발급 (API/파일 도메인 각각, 사전 도달성 점검 포함) |
 | `bin/import-files.sh` | 기존 S3 백업(`resources.tar`)을 MinIO 버킷에 적재 |
+| `bin/check-certs.sh` | 서빙 중인 인증서 만료 감시 → 임박 시 경고 메일 |
 | `bin/backup-db.sh` | 일일 pg_dump + 주간 파일 백업 |
 | `test/bluegreen-test.sh` | 앱 없이 배포·프록시 로직 검증 |
 
@@ -60,6 +61,34 @@ cd /opt/ttokttok/app && docker compose logs -f app-$(cat ./state)
 
 # MinIO 콘솔 / psql (외부 노출 없음. SSH 터널로만)
 ssh -L 19001:127.0.0.1:19001 -L 15432:127.0.0.1:15432 <서버>
+```
+
+## 인증서 갱신
+
+세 고리가 물려 돌아간다. 하나라도 빠지면 만료가 조용히 진행된다.
+
+| 주체 | 주기 | 하는 일 |
+|---|---|---|
+| `ttokttok-certbot` 컨테이너 | 12시간 | `certbot renew` — 만료 30일 전부터 실제 갱신 |
+| cron `04:30` | 매일 | `nginx -s reload` — 갱신된 인증서를 실제로 내보내게 |
+| cron `05:00` | 매일 | `check-certs.sh` — 남은 일수 확인, 21일 미만이면 경고 메일 |
+
+`reload` 는 조건 없이 매일 돈다. graceful 이라 비용이 없고, "갱신은 됐는데 reload 를
+놓쳤다"를 원천 차단하는 쪽이 조건 판정보다 싸다.
+
+**감시가 핵심이다.** `certbot renew --quiet` 의 오류는 컨테이너 로그로만 간다. 갱신은
+만료 30일 전부터 시도하므로, 실패가 누적되면 30일 뒤 HTTPS 가 죽고 나서야 알게 된다.
+`check-certs.sh` 는 파일이 아니라 **실제로 서빙 중인 인증서**(`openssl s_client` 로
+`127.0.0.1:443`)를 보므로, 갱신은 됐지만 reload 가 안 된 상태까지 잡는다. 경고는
+이미 검증된 Postfix 릴레이로 `CERT_EMAIL` 에 보낸다.
+
+발급 전에는 조용히 넘어간다. 아직 HTTPS 로 전환하지 않은 단계에서 매일 경고가 오면
+진짜 경고를 무시하게 되기 때문이다.
+
+```bash
+/opt/ttokttok/bin/check-certs.sh          # 수동 확인
+tail -20 /opt/ttokttok/logs/certs.log
+docker logs --tail 50 ttokttok-certbot
 ```
 
 ## 앱 설정
