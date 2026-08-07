@@ -24,8 +24,15 @@ log() { printf '[check-certs] %s\n' "$*"; }
 
 # 발급 전이면 조용히 끝낸다. 아직 HTTPS 로 전환하지 않은 단계에서 매일 경고가
 # 오면 진짜 경고를 무시하게 된다.
-if ! compgen -G "$ROOT/data/certbot/conf/live/*/" >/dev/null; then
-    log "발급된 인증서 없음 — 건너뜀"
+#
+# 판정 기준은 인증서 파일이 아니라 **적용된 nginx 설정**이다. certbot 이 live/ 를
+# 0700 root 로 만들어서 ttokttokuser 는 그 안을 들여다볼 수 없다. 파일로 판정하면
+# 발급이 끝난 뒤에도 영영 "없음" 으로 보고 감시가 한 번도 돌지 않는다.
+# nginx 설정에 ssl_certificate 가 있다는 것은 nginx-apply.sh --https 가 성공했다는
+# 뜻이고, 그때부터가 감시할 가치가 있는 구간이다.
+NGINX_CONF="$ROOT/config/nginx/conf.d/ttokttok.conf"
+if ! grep -q '^\s*ssl_certificate' "$NGINX_CONF" 2>/dev/null; then
+    log "HTTPS 미전환 상태 — 건너뜀"
     exit 0
 fi
 

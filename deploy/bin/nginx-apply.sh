@@ -37,9 +37,15 @@ render() {
 
 if [[ "${1:-}" == "--https" ]]; then
     src="$TPL_DIR/https.conf"
+    # 존재 확인은 컨테이너 안에서 한다. certbot 은 live/ 와 archive/ 를 0700 root 로
+    # 만들기 때문에, 호스트에서 ttokttokuser 로 stat 하면 발급이 정상으로 끝났어도
+    # "없음" 으로 보인다. 실제로 이 인증서를 읽는 주체는 nginx 컨테이너(root)이고,
+    # 거기서 읽히는지가 유일하게 의미 있는 판정이다.
     for d in "$DOMAIN" "$FILE_DOMAIN"; do
-        cert="$ROOT/data/certbot/conf/live/$d/fullchain.pem"
-        [[ -f "$cert" ]] || { echo "인증서가 없다: $cert — 먼저 issue-cert.sh 를 실행해야 한다" >&2; exit 1; }
+        docker run --rm --entrypoint test \
+            -v "$ROOT/data/certbot/conf:/etc/letsencrypt:ro" \
+            certbot/certbot:latest -f "/etc/letsencrypt/live/$d/fullchain.pem" \
+          || { echo "인증서가 없다: live/$d/fullchain.pem — 먼저 issue-cert.sh 를 실행해야 한다" >&2; exit 1; }
     done
 else
     src="$TPL_DIR/http-only.conf"
