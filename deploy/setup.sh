@@ -37,6 +37,13 @@ if ! grep -qF " $ROOT/data " /etc/fstab; then
     printf '%s %s none bind 0 0\n' "$DATA_SRC" "$ROOT/data" >> /etc/fstab
 fi
 
+# 마운트를 단언한다. 이게 없으면 스택이 루트 파티션의 빈 디렉터리 위에서 뜨고,
+# postgres 는 PGDATA 가 비었으니 initdb → 00-restore.sql 순으로 "최초 덤프"를 복원한다.
+# 서비스는 정상으로 보이지만 낡은 데이터로 운영되고, 진짜 데이터는 /home 에 방치된 채
+# 양쪽이 갈라진다. 조용히 일어나므로 여기서 막는다.
+mountpoint -q "$ROOT/data" \
+    || { echo "[setup] $ROOT/data 가 마운트되지 않았다. $DATA_SRC 확인 필요." >&2; exit 1; }
+
 # ── 4. 파일 배치 ─────────────────────────────────────────────────────────
 log "설정/스크립트 배치"
 install -m 0664 "$SRC/docker-compose.yml"                        "$ROOT/app/docker-compose.yml"
