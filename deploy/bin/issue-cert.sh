@@ -21,9 +21,15 @@ EMAIL="${CERT_EMAIL:-${1:-}}"
 
 cd "$ROOT/app"
 
+# 프로브는 certbot 이 실제로 쓰는 경로에 둬야 한다. nginx 는
+#   location /.well-known/acme-challenge/ { root /var/www/certbot; }
+# 이므로 /var/www/certbot/.well-known/acme-challenge/<파일> 을 찾는다. root 는 alias 와
+# 달리 요청 경로를 잘라내지 않는다. 웹루트 최상단에 두면 전부 정상이어도 404 다.
 probe="acme-probe-$$"
-echo ok > "$ROOT/data/certbot/www/$probe"
-trap 'rm -f "$ROOT/data/certbot/www/$probe"' EXIT
+probe_dir="$ROOT/data/certbot/www/.well-known/acme-challenge"
+mkdir -p "$probe_dir"
+echo ok > "$probe_dir/$probe"
+trap 'rm -f "$probe_dir/$probe"' EXIT
 
 for d in $SERVER_NAMES $FILE_SERVER_NAMES; do
     echo "[cert] 사전 점검: $d 의 ACME 경로가 외부에서 열려 있는지 확인"
@@ -56,3 +62,15 @@ issue "$FILE_DOMAIN" $FILE_SERVER_NAMES
 
 echo "[cert] 발급 완료. HTTPS 로 전환한다."
 "$ROOT/bin/nginx-apply.sh" --https
+
+# 갱신 데몬을 여기서 띄운다. compose 에 정의는 있지만 기동 목록에서 빠지기 쉽고,
+# 배포가 한 번도 없으면 deploy.sh 의 INFRA_SERVICES 도 실행되지 않는다.
+# 발급 직후가 갱신 경로를 세우기에 가장 자연스러운 지점이다.
+echo "[cert] 갱신 데몬 기동 (12시간 주기)"
+docker compose up -d certbot
+
+echo
+echo "갱신 체계:"
+echo "  - ttokttok-certbot   12시간마다 certbot renew (만료 30일 전부터 실제 갱신)"
+echo "  - cron 04:30         nginx reload (갱신된 인증서 반영)"
+echo "  - cron 05:00         check-certs.sh — 만료 임박 시 경고 메일"

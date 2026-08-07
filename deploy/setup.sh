@@ -61,6 +61,7 @@ install -m 0664 "$SRC/config/nginx/templates/https.conf"         "$ROOT/config/n
 install -m 0664 "$SRC/config/nginx/templates/minio-public.inc"   "$ROOT/config/nginx/templates/minio-public.inc"
 install -m 0775 "$SRC/bin/nginx-apply.sh"                        "$ROOT/bin/nginx-apply.sh"
 install -m 0775 "$SRC/bin/issue-cert.sh"                         "$ROOT/bin/issue-cert.sh"
+install -m 0775 "$SRC/bin/check-certs.sh"                        "$ROOT/bin/check-certs.sh"
 install -m 0775 "$SRC/bin/backup-db.sh"                          "$ROOT/bin/backup-db.sh"
 install -m 0775 "$SRC/bin/import-files.sh"                       "$ROOT/bin/import-files.sh"
 install -m 0775 "$SRC/init-db/01-app-user.sh"                    "$ROOT/init-db/01-app-user.sh"
@@ -150,13 +151,27 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 EOF
 chmod 0644 /etc/cron.d/ttokttok-backup
 
-# ── 10. certbot 갱신 후 nginx reload ─────────────────────────────────────
-cat > /etc/cron.d/ttokttok-nginx-reload <<EOF
+# ── 10. 인증서 갱신 체계 ─────────────────────────────────────────────────
+# 갱신 자체는 ttokttok-certbot 컨테이너가 12시간마다 시도한다(compose 정의).
+# 여기서 거는 것은 나머지 두 고리다.
+#
+#   04:30  reload — 갱신된 인증서를 nginx 가 실제로 내보내게 한다.
+#                   조건 없이 매일 돌린다. reload 는 graceful 이라 비용이 없고,
+#                   "갱신됐는데 reload 를 놓쳤다" 를 원천 차단하는 쪽이 싸다.
+#   05:00  감시  — 실제 서빙 중인 인증서의 남은 일수를 보고, 임계치 미만이면
+#                   메일로 알린다. 갱신 실패는 컨테이너 로그로만 가서 아무도
+#                   보지 않는다. 만료 30일 전부터 시도하므로, 알림이 없으면
+#                   실패가 30일간 누적된 뒤 조용히 만료된다.
+log "인증서 갱신 cron 등록 (reload 04:30, 만료 감시 05:00)"
+cat > /etc/cron.d/ttokttok-certs <<EOF
 SHELL=/bin/bash
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 30 4 * * * $RUN_USER cd $ROOT/app && docker compose exec -T nginx nginx -s reload >/dev/null 2>&1
+0  5 * * * $RUN_USER $ROOT/bin/check-certs.sh >> $ROOT/logs/certs.log 2>&1
 EOF
-chmod 0644 /etc/cron.d/ttokttok-nginx-reload
+chmod 0644 /etc/cron.d/ttokttok-certs
+# 이름이 바뀌었으므로 옛 파일을 지운다. 남겨두면 reload 가 두 번 등록된다.
+rm -f /etc/cron.d/ttokttok-nginx-reload
 
 log "완료."
 echo
@@ -164,5 +179,6 @@ echo "다음 순서:"
 echo "  1) $ROOT/app/.env 값 채우기 (DOMAIN/FILE_DOMAIN, 비밀번호들, SMTP 릴레이 계정)"
 echo "  2) sudo -u $RUN_USER $ROOT/bin/nginx-apply.sh              # HTTP 설정 생성"
 echo "  3) cd $ROOT/app && docker compose up -d postgres redis minio minio-init smtp nginx"
+echo "     (certbot 갱신 데몬은 5) 의 issue-cert.sh 가 발급 직후 띄운다)"
 echo "  4) sudo -u $RUN_USER $ROOT/bin/import-files.sh <resources.tar>  # 기존 S3 파일 적재"
 echo "  5) sudo -u $RUN_USER $ROOT/bin/issue-cert.sh <이메일>       # 인증서 발급"
