@@ -137,6 +137,21 @@ Postfix 는 `mynetworks` 안에서 오는 요청을 인증 없이 받으므로 �
   root 소유 파일을 만들고, 그러면 백업 cron 이 `ttokttokuser` 로 읽지 못한다.
 - **ufw 는 Docker 가 publish 한 포트를 막지 못한다.** iptables 평가 순서 때문이다.
   그래서 인프라 포트를 전부 `127.0.0.1:` 에 묶는다.
+- **`/opt/ttokttok/data` 의 bind mount 가 없으면 낡은 DB 로 조용히 뜬다.** compose 가
+  `/opt/ttokttok/data/postgres` 를 직접 참조하는데, 마운트가 없으면 그건 루트 파티션의 빈
+  디렉터리다. postgres 는 PGDATA 가 비었으니 `initdb` 를 돌리고 이어서 `00-restore.sql` 로
+  **최초 덤프**를 복원한다. 서비스는 멀쩡해 보이지만 덤프 시점 데이터로 운영되고, 진짜
+  데이터는 `/home` 에 방치된 채 양쪽이 갈라진다. `setup.sh` 가 마운트를 단언하지만,
+  재부팅 후에는 직접 확인하는 습관이 필요하다.
+
+  ```bash
+  mountpoint /opt/ttokttok/data    # "is a mountpoint" 여야 한다
+  df -h /opt/ttokttok/data         # /dev/nvme0n1p3(/home) 이어야 한다
+  ```
+
+  fstab 항목에 `nofail` 은 일부러 넣지 않았다. 넣으면 마운트 실패해도 부팅이 되어 위 상황이
+  조용히 발생한다. 지금은 마운트 실패 시 부팅이 멈추므로 즉시 알아챌 수 있다 — 대신
+  헤드리스 서버에서는 콘솔 접근이 필요하다. 트레이드오프를 알고 선택한 것이다.
 
 ## 남은 리스크
 
