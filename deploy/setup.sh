@@ -85,7 +85,23 @@ find "$ROOT" -type d -not -path "$ROOT/data/*" -exec chmod 2775 {} +
 chmod 0660 "$ROOT/app/.env"
 chmod 0770 "$ROOT/config/app"     # 시크릿(application-prod.yml, firebase.json)
 
-# ── 7. CI 사용자에게 docker 권한 ─────────────────────────────────────────
+# ── 7. docker 권한 ───────────────────────────────────────────────────────
+# 두 사용자 다 필요하다.
+#   - $CICD_USER: 러너가 이미지 빌드와 deploy.sh 를 돌린다.
+#   - $RUN_USER : 운영 주체다. bin/ 아래 스크립트가 전부 docker 를 호출한다 —
+#     import-files.sh(docker run), issue-cert.sh(compose run), nginx-apply.sh
+#     (compose exec ... -s reload), backup-db.sh(compose exec pg_dump).
+#     뒤의 둘은 cron 으로 도는 무인 경로라, 빠뜨리면 백업과 인증서 갱신이
+#     아무 신호 없이 계속 실패한다.
+if ! id -nG "$RUN_USER" | tr ' ' '\n' | grep -qx docker; then
+    log "$RUN_USER 를 docker 그룹에 추가 (bin/ 스크립트·백업 cron 에 필수)"
+    usermod -aG docker "$RUN_USER"
+    # 러너처럼 재시작할 대상이 없다. $RUN_USER 는 상주 세션이 없고
+    # sudo -u 와 cron 이 실행 시점에 그룹을 새로 계산하므로 바로 반영된다.
+else
+    log "$RUN_USER 는 이미 docker 그룹 소속"
+fi
+
 if ! id -nG "$CICD_USER" | tr ' ' '\n' | grep -qx docker; then
     log "$CICD_USER 를 docker 그룹에 추가 (배포에 필수)"
     usermod -aG docker "$CICD_USER"
