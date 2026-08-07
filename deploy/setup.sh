@@ -21,7 +21,10 @@ log() { printf '\033[36m[setup]\033[0m %s\n' "$*"; }
 # /opt 은 루트 파티션(46G 중 34G 여유)이라 DB+업로드가 쌓이면 위험하다.
 log "데이터 디렉터리: $DATA_SRC"
 mkdir -p "$DATA_SRC"/{postgres,redis,minio,certbot/conf,certbot/www}
-chown -R "$RUN_USER:$RUN_GROUP" "$DATA_SRC"
+# 디렉터리 자체만 chown 한다. -R 을 쓰면 실행 중인 컨테이너의 데이터 파일까지
+# 소유권이 바뀐다 — 6단계 주석 참고.
+chown "$RUN_USER:$RUN_GROUP" \
+      "$DATA_SRC" "$DATA_SRC"/{postgres,redis,minio,certbot,certbot/conf,certbot/www}
 
 # ── 2. /opt/ttokttok 구조 ────────────────────────────────────────────────
 log "디렉터리 구조 생성"
@@ -79,9 +82,24 @@ fi
 # ── 6. 소유권/권한 ───────────────────────────────────────────────────────
 # setgid(2775): ttokttok-cicd 가 만든 파일도 ttokttok 그룹을 상속 →
 # ttokttokuser 와 파일을 주고받을 수 있다.
+#
+# data/ 안쪽은 건드리지 않는다. 거기는 각 컨테이너가 자기 uid 로 소유하는 영역이고,
+# 호스트에서 소유권을 강제할 이유가 없다. 반대로 강제하면 실행 중인 서비스가 깨진다 —
+# postgres 는 user: 지정 없이 내부 uid 70 으로 도는데, PGDATA 를 1001:1003 으로
+# 바꾸는 순간 자기 파일을 못 읽고 PANIC 한다.
+#
+#   FATAL: could not open file "global/pg_filenode.map": Permission denied
+#   PANIC: could not open file "global/pg_control": Permission denied
+#
+# 이 스크립트는 멱등이라 스택이 뜬 상태에서도 재실행될 수 있으므로 실제로 일어난다.
+# postgres 는 엔트리포인트가 root 로 시작하면서 PGDATA 를 다시 chown 해 복구하지만,
+# 그건 이 이미지의 우연한 성질이다. redis/minio 에는 그런 복구 경로가 없다.
+#
+# 마운트 포인트($ROOT/data) 자체는 제외하지 않는다. 그건 /home 쪽 디렉터리 하나이고
+# 1단계에서 이미 같은 소유권으로 맞춰둔다.
 log "소유권/권한 설정"
-chown -R "$RUN_USER:$RUN_GROUP" "$ROOT"
-find "$ROOT" -type d -not -path "$ROOT/data/*" -exec chmod 2775 {} +
+find "$ROOT" -path "$ROOT/data/*" -prune -o -exec chown "$RUN_USER:$RUN_GROUP" {} +
+find "$ROOT" -path "$ROOT/data/*" -prune -o -type d -exec chmod 2775 {} +
 chmod 0660 "$ROOT/app/.env"
 chmod 0770 "$ROOT/config/app"     # 시크릿(application-prod.yml, firebase.json)
 
