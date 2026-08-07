@@ -1,129 +1,89 @@
 name: Deploy master
+
+# EB → 자체 서버 이관 (#354)
+#   - runs-on: ubuntu-latest → self-hosted (이 서버에서 러너가 돈다)
+#   - Elastic Beanstalk 관련 전부 제거 (Procfile, .platform, zip, beanstalk-deploy)
+#   - 시크릿은 이미지에 굽지 않고 /opt/ttokttok/config/app 에 배치해 런타임 마운트
+#   - docker build 후 deploy.sh 로 블루-그린 무중단 전환
+#
+# 러너 워크스페이스는 actions/checkout 이 매 실행마다 정리하므로, 운영 스택
+# (compose, .env, data)은 워크스페이스가 아니라 $TTOK_ROOT 아래에 있다.
+
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
+
+# 동시 배포는 색 전환 상태(state 파일)를 망가뜨린다. 큐잉하되 취소하지 않는다.
+concurrency:
+  group: ttokttok-deploy
+  cancel-in-progress: false
+
+env:
+  TTOK_ROOT: /opt/ttokttok
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux]
 
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'corretto'
-          java-version: '17'
+      # JDK/Gradle 세팅은 필요 없다. 빌드는 Dockerfile 안(멀티스테이지)에서 일어난다.
 
-      - name: Generate application-prod.yml and Firebase JSON from secrets
+      - name: Materialize secrets into runtime config directory
         env:
-          PROD_DB_PASSWORD: ${{ secrets.PROD_DB_PASSWORD }}
-          PROD_REDIS_PASSWORD: ${{ secrets.PROD_REDIS_PASSWORD }}
-          PROD_MAIL_PASSWORD: ${{ secrets.PROD_MAIL_PASSWORD }}
-          PROD_JWT_SECRET: ${{ secrets.PROD_JWT_SECRET }}
-          PROD_AWS_ACCESS_KEY: ${{ secrets.PROD_AWS_ACCESS_KEY }}
-          PROD_AWS_SECRET_KEY: ${{ secrets.PROD_AWS_SECRET_KEY }}
+          APPLICATION_YML: ${{ secrets.APPLICATION_YML }}
+          APPLICATION_PROD_YAML: ${{ secrets.APPLICATION_PROD_YAML }}
           FIREBASE_JSON: ${{ secrets.FIREBASE_JSON }}
           FIREBASE_JSON_NAME: ${{ secrets.FIREBASE_JSON_NAME }}
-          PROXY_CONF: ${{ secrets.PROXY_CONF }}
         run: |
-          mkdir -p ./src/main/resources
-          
-          echo "Processing application.yml..."
-          if [ -n "${{ secrets.APPLICATION_YML }}" ]; then
-            echo "${{ secrets.APPLICATION_YML }}" | tr -d '\n' | base64 --decode > ./src/main/resources/application.yml
-          else
-            echo "::error::APPLICATION_YML secret is empty!"
-            exit 1
-          fi
-          
-          echo "Processing application-prod.yml..."
-          if [ -n "${{ secrets.APPLICATION_PROD_YAML }}" ]; then
-            # 변수에 담지 않고 바로 처리 (메모리/포맷 에러 방지)
-            echo "${{ secrets.APPLICATION_PROD_YAML }}" | tr -d '\n' | base64 --decode | envsubst > ./src/main/resources/application-prod.yml
-          else
-            echo "::error::APPLICATION_PROD_YAML secret is empty!"
-            exit 1
-          fi
-          
-          echo "Processing Firebase JSON..."
+          set -euo pipefail
+          CONF="$TTOK_ROOT/config/app"
+
+          [ -n "$APPLICATION_YML" ]       || { echo "::error::APPLICATION_YML secret is empty!"; exit 1; }
+          [ -n "$APPLICATION_PROD_YAML" ] || { echo "::error::APPLICATION_PROD_YAML secret is empty!"; exit 1; }
+
+          # 컨테이너가 /app/config 로 읽는 위치. Spring Boot 가 ./config/ 를 기본 설정
+          # 탐색 경로에 포함하므로(WORKDIR=/app) 별도 옵션 없이 읽힌다.
+          # .dockerignore 가 이 파일들을 빌드 컨텍스트에서 제외하므로 이미지에는 없다.
+          #
+          # envsubst 를 쓰지 않는다. DB/Redis/메일 자격증명은 compose 환경변수로
+          # 주입되므로 yml 에 치환할 플레이스홀더가 남아있지 않고, 인자 없는 envsubst 는
+          # 값 안의 모든 $VAR 를 치환하면서 정의되지 않은 것은 빈 문자열로 지워버린다.
+          # 비밀번호에 $ 가 하나만 들어가도 값이 조용히 잘린다.
+          echo "$APPLICATION_YML"       | tr -d '\n' | base64 --decode > "$CONF/application.yml"
+          echo "$APPLICATION_PROD_YAML" | tr -d '\n' | base64 --decode > "$CONF/application-prod.yml"
+          chmod 640 "$CONF/application.yml" "$CONF/application-prod.yml"
+
           if [ -n "$FIREBASE_JSON" ] && [ -n "$FIREBASE_JSON_NAME" ]; then
-            echo "$FIREBASE_JSON" | tr -d '\n' | base64 --decode > "./src/main/resources/$FIREBASE_JSON_NAME"
-            echo "Firebase JSON file created successfully."
+            echo "$FIREBASE_JSON" | tr -d '\n' | base64 --decode > "$CONF/$FIREBASE_JSON_NAME"
+            chmod 640 "$CONF/$FIREBASE_JSON_NAME"
+            echo "Firebase JSON 배치 완료"
           else
-            echo "Warning: Firebase JSON secrets are missing. Skipping."
-          fi
-          
-          echo "Processing proxy.conf for Nginx..."
-          # if [ -n "$PROXY_CONF" ]; then
-          #   mkdir -p ./.platform/nginx/conf.d
-          #   echo "$PROXY_CONF" | tr -d '\n' | base64 --decode > ./.platform/nginx/conf.d/proxy.conf
-          #   echo "proxy.conf file created successfully at .platform/nginx/conf.d/proxy.conf"
-          #   if [ -f "./.platform/nginx/conf.d/proxy.conf" ]; then
-          #     echo "File size: $(wc -c < "./.platform/nginx/conf.d/proxy.conf") bytes"
-          #   fi
-          # else
-          #   echo "Warning: PROXY_CONF secret is missing. Skipping nginx configuration."
-          # fi
-          if [ -n "$PROXY_CONF" ]; then
-            # 디렉토리 경로에 elasticbeanstalk 추가 (server 블록 내부 주입용)
-            mkdir -p ./.platform/nginx/conf.d/elasticbeanstalk
-            
-            # 파일명을 00_custom.conf 로 지정하여 우선순위 확보
-            echo "$PROXY_CONF" | tr -d '\n' | base64 --decode > ./.platform/nginx/conf.d/elasticbeanstalk/00_custom.conf
-            
-            echo "Nginx config created successfully at .platform/nginx/conf.d/elasticbeanstalk/00_custom.conf"
-            if [ -f "./.platform/nginx/conf.d/elasticbeanstalk/00_custom.conf" ]; then
-              echo "File size: $(wc -c < "./.platform/nginx/conf.d/elasticbeanstalk/00_custom.conf") bytes"
-            fi
-          else
-            echo "Warning: PROXY_CONF secret is missing. Skipping nginx configuration."
+            echo "::warning::FIREBASE_JSON 시크릿 없음 — 건너뜀"
           fi
 
-      - name: Build with Gradle
-        run: ./gradlew clean build -x test
-
-      - name: Create Procfile dynamically
+      - name: Build image
+        id: image
         run: |
-          JAR_NAME=$(ls build/libs/*.jar | grep -v 'plain' | head -n 1)
-          JAR_BASENAME=$(basename $JAR_NAME)
-          echo "web: java -Dspring.profiles.active=prod -jar $JAR_BASENAME" > Procfile
+          set -euo pipefail
+          TAG="${GITHUB_SHA::7}"
+          docker build -t "ttokttok:$TAG" .
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
-      - name: Prepare deployment package
+      - name: Blue-green deploy
+        run: $TTOK_ROOT/app/deploy.sh "${{ steps.image.outputs.tag }}"
+
+      - name: Smoke test
         run: |
-          mkdir deploy
-          cp build/libs/*.jar deploy/
-          cp Procfile deploy/
-          cp src/main/resources/application.yml deploy/
-          cp src/main/resources/application-prod.yml deploy/
-          # Copy Firebase JSON file if it exists
-          if [ -n "${{ secrets.FIREBASE_JSON_NAME }}" ] && [ -f "src/main/resources/${{ secrets.FIREBASE_JSON_NAME }}" ]; then
-            cp "src/main/resources/${{ secrets.FIREBASE_JSON_NAME }}" deploy/
-          fi
-          # Copy .platform directory for nginx configuration
-          if [ -d .platform ]; then 
-            cp -r .platform deploy/
-            echo ".platform directory copied to deployment package"
-          fi
-          if [ -d .ebextensions ]; then cp -r .ebextensions deploy/; fi
-          cd deploy
-          zip -r ../deploy.zip .
-          cd ..
-
-      - name: Set version label
-        id: version
-        run: echo "VERSION_LABEL=$(date +%Y%m%d%H%M%S)-${GITHUB_SHA::7}" >> $GITHUB_ENV
-
-      - name: Deploy to Elastic Beanstalk
-        uses: einaregilsson/beanstalk-deploy@v22
-        with:
-          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_key: ${{ secrets.AWS_ACCESS_KEY_SECRET }}
-          application_name: ${{ secrets.EB_APP_NAME }}
-          environment_name: ${{ Secrets.EB_ENV_NAME }}
-          version_label: ${{ env.VERSION_LABEL }}
-          region: ap-northeast-2
-          deployment_package: deploy.zip
+          set -euo pipefail
+          # 이 앱에는 actuator 의존성이 없다. /health 가 공개 헬스 엔드포인트다.
+          for _ in $(seq 1 10); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "https://${{ secrets.SERVICE_DOMAIN }}/health")
+            [ "$code" = "200" ] || { echo "예상 200, 실제 $code"; exit 1; }
+            sleep 1
+          done
+          echo "스모크 테스트 통과"
