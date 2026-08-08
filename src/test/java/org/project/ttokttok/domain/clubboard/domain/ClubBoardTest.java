@@ -38,7 +38,7 @@ class ClubBoardTest {
 
             assertThatThrownBy(() -> ClubBoard.create(" ", "내용", THUMBNAIL_URL, club))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("Title cannot be null or blank.");
+                    .hasMessage("제목은 비어 있을 수 없습니다.");
         }
 
         @Test
@@ -48,7 +48,7 @@ class ClubBoardTest {
 
             assertThatThrownBy(() -> ClubBoard.create(null, "내용", THUMBNAIL_URL, club))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("Title cannot be null or blank.");
+                    .hasMessage("제목은 비어 있을 수 없습니다.");
         }
 
         @Test
@@ -78,7 +78,7 @@ class ClubBoardTest {
 
             assertThatThrownBy(() -> ClubBoard.create("제목", "내용", null, club))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("Thumbnail URL cannot be null or blank.");
+                    .hasMessage("대표 이미지가 없습니다.");
         }
 
         @Test
@@ -88,7 +88,7 @@ class ClubBoardTest {
 
             assertThatThrownBy(() -> ClubBoard.create("제목", "내용", " ", club))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("Thumbnail URL cannot be null or blank.");
+                    .hasMessage("대표 이미지가 없습니다.");
         }
 
         @Test
@@ -96,7 +96,7 @@ class ClubBoardTest {
         void createFailNullClub() {
             assertThatThrownBy(() -> ClubBoard.create("제목", "내용", THUMBNAIL_URL, null))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("Club cannot be null.");
+                    .hasMessage("동아리 정보가 없습니다.");
         }
     }
 
@@ -159,7 +159,7 @@ class ClubBoardTest {
 
             assertThatThrownBy(() -> board.update(" ", null))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("Title cannot be null or blank.");
+                    .hasMessage("제목은 비어 있을 수 없습니다.");
         }
 
         @Test
@@ -196,10 +196,10 @@ class ClubBoardTest {
 
             assertThatThrownBy(() -> board.updateThumbnailUrl(null))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("Thumbnail URL cannot be null or blank.");
+                    .hasMessage("대표 이미지가 없습니다.");
             assertThatThrownBy(() -> board.updateThumbnailUrl(" "))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("Thumbnail URL cannot be null or blank.");
+                    .hasMessage("대표 이미지가 없습니다.");
         }
     }
 }
