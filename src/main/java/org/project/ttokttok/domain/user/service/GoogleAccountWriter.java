@@ -3,6 +3,7 @@ package org.project.ttokttok.domain.user.service;
 import lombok.RequiredArgsConstructor;
 import org.project.ttokttok.domain.user.domain.User;
 import org.project.ttokttok.domain.user.domain.enums.AuthProvider;
+import org.project.ttokttok.domain.user.exception.GoogleLinkTargetNotFoundException;
 import org.project.ttokttok.domain.user.repository.UserRepository;
 import org.project.ttokttok.global.auth.jwt.service.OnboardingTokenProvider.OnboardingClaims;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -57,11 +58,13 @@ public class GoogleAccountWriter {
      * 관리 상태 엔티티를 다루기 위해 트랜잭션 내부에서 재조회 후 연동한다.
      *
      * @throws DataIntegrityViolationException 병렬 연동 경쟁 시 (호출부에서 멱등 복구)
+     * @throws GoogleLinkTargetNotFoundException 재조회 시점에 대상 계정이 사라진 경우
      */
     @Transactional
     public User autoLink(String email, String sub) {
+        // 트랜잭션 밖 조회와 이 재조회 사이에 계정이 삭제된 경쟁 상황. 이메일은 메시지에 담지 않는다.
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalStateException("연동 대상 사용자가 존재하지 않습니다: " + email));
+                .orElseThrow(GoogleLinkTargetNotFoundException::new);
         user.linkGoogle(sub); // 다른 sub 와 이미 연동 시 GoogleAccountConflictException
         return userRepository.saveAndFlush(user);
     }
