@@ -29,6 +29,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -147,6 +148,27 @@ class ClubBoardAdminControllerTest {
                         .file(thumbnailPart())
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + otherAccessToken))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("createBoard(): 본문의 줄바꿈이 저장 후에도 그대로 유지된다.")
+    void createBoard_preservesLineBreaks() throws Exception {
+        String content = "첫째 줄\n둘째 줄\n\n넷째 줄";
+        CreateBoardRequest request = new CreateBoardRequest("제목입니다", content);
+
+        String response = mockMvc.perform(multipart("/api/admin/clubs/{clubId}/boards", myClub.getId())
+                        .file(jsonPart(request))
+                        .file(thumbnailPart())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + myAccessToken))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        String boardId = objectMapper.readTree(response).get("boardId").asText();
+
+        assertThat(clubBoardRepository.findById(boardId))
+                .get()
+                .extracting(ClubBoard::getContent)
+                .isEqualTo(content);
     }
 
     @Test
