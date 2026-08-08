@@ -104,7 +104,8 @@ public enum ErrorMessage {
     OAUTH_ONLY_ACCOUNT("구글 로그인으로 가입된 계정입니다. 구글 로그인을 이용해주세요.", HttpStatus.CONFLICT),
     INVALID_ONBOARDING_TOKEN("유효하지 않은 가입 세션입니다. 다시 로그인해주세요.", HttpStatus.UNAUTHORIZED),
     ONBOARDING_TOKEN_EXPIRED("가입 세션이 만료되었습니다. 다시 로그인해주세요.", HttpStatus.UNAUTHORIZED),
-    ONBOARDING_ALREADY_COMPLETED("이미 처리된 가입 요청입니다.", HttpStatus.CONFLICT);
+    ONBOARDING_ALREADY_COMPLETED("이미 처리된 가입 요청입니다.", HttpStatus.CONFLICT),
+    GOOGLE_LINK_TARGET_NOT_FOUND("계정 상태가 변경되었습니다. 다시 로그인해주세요.", HttpStatus.CONFLICT);
 
     private final String message;
     private final HttpStatus status;
