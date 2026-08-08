@@ -30,11 +30,12 @@ public interface ClubBoardAdminDocs {
                     **요청 형식**: Multipart Form Data
 
                     **요청 파라미터**:
-                    - `request`: JSON 형태의 게시글 정보 (CreateBoardRequest, 제목/내용 필수)
+                    - `request`: JSON 형태의 게시글 정보 (CreateBoardRequest, 제목 필수 / 내용 선택)
                     - `thumbnail`: 대표(썸네일) 이미지 파일 (**필수**)
 
                     *주의사항*:
                     - 해당 동아리의 관리자만 작성 가능합니다.
+                    - 내용은 생략하거나 null로 보낼 수 있으며, 이 경우 빈 내용으로 저장됩니다.
                     - 썸네일은 JPG, PNG, WEBP, GIF, HEIC 형식만 지원됩니다. (최대 20MB)
                     - 업로드된 썸네일은 S3(board-images/)에 저장되며 목록 조회 응답의 thumbnailUrl로 내려갑니다.
                     """
@@ -43,7 +44,7 @@ public interface ClubBoardAdminDocs {
             content = @Content(
                     mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
                     schemaProperties = {
-                            @SchemaProperty(name = "request", schema = @Schema(type = "string", format = "json", description = "게시글 생성 데이터 (title, content)")),
+                            @SchemaProperty(name = "request", schema = @Schema(type = "string", format = "json", description = "게시글 생성 데이터 (title 필수, content 선택)")),
                             @SchemaProperty(name = "thumbnail", schema = @Schema(type = "string", format = "binary", description = "대표(썸네일) 이미지 파일 (필수)"))
                     }
             )
