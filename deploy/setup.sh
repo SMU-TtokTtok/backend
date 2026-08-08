@@ -21,10 +21,36 @@ log() { printf '\033[36m[setup]\033[0m %s\n' "$*"; }
 # /opt 은 루트 파티션(46G 중 34G 여유)이라 DB+업로드가 쌓이면 위험하다.
 log "데이터 디렉터리: $DATA_SRC"
 mkdir -p "$DATA_SRC"/{postgres,redis,minio,certbot/conf,certbot/www}
-# 디렉터리 자체만 chown 한다. -R 을 쓰면 실행 중인 컨테이너의 데이터 파일까지
-# 소유권이 바뀐다 — 6단계 주석 참고.
-chown "$RUN_USER:$RUN_GROUP" \
-      "$DATA_SRC" "$DATA_SRC"/{postgres,redis,minio,certbot,certbot/conf,certbot/www}
+
+# data/<서비스> 의 소유자는 "그 디렉터리에 실제로 쓰는 컨테이너의 uid" 여야 한다.
+# 전부 $RUN_USER 로 통일하면 안 된다. 컨테이너마다 uid 가 다르고, 어긋나면 컨테이너가
+# 자기 데이터 디렉터리에 못 쓴다.
+#
+#   postgres  uid 70      이미지가 강제한다. user: 를 줄 수 없다.
+#   redis     compose user: "1001:1003"   (기본값은 uid 999 — #382)
+#   minio     compose user: "1001:1003"
+#   certbot   root 로 돈다. root 는 권한을 안 타므로 호스트 도구가 읽기 좋은 쪽에 맞춘다.
+#
+# 이 표는 docker-compose.yml 의 user: 와 반드시 같이 움직여야 한다. 아래 12단계가
+# 실제로 대조하므로, 어긋난 채로 이 스크립트가 끝나지는 않는다.
+#
+# redis 를 $RUN_USER 로 맞춰둔 채 이미지 기본 uid(999)로 돌렸다가 BGSAVE 가 막혀
+# 쓰기 전체가 MISCONF 로 거부된 적이 있다. 로그인이 20시간 죽었는데 컨테이너는
+# 내내 healthy 였다 — #382.
+declare -A DATA_OWNER=(
+    [postgres]="70:70"
+    [redis]="$RUN_USER:$RUN_GROUP"
+    [minio]="$RUN_USER:$RUN_GROUP"
+    [certbot]="$RUN_USER:$RUN_GROUP"
+    [certbot/conf]="$RUN_USER:$RUN_GROUP"
+    [certbot/www]="$RUN_USER:$RUN_GROUP"
+)
+chown "$RUN_USER:$RUN_GROUP" "$DATA_SRC"
+for d in "${!DATA_OWNER[@]}"; do
+    # 디렉터리 자체만 chown 한다. -R 을 쓰면 실행 중인 컨테이너의 데이터 파일까지
+    # 소유권이 바뀐다 — 6단계 주석 참고.
+    chown "${DATA_OWNER[$d]}" "$DATA_SRC/$d"
+done
 
 # ── 2. /opt/ttokttok 구조 ────────────────────────────────────────────────
 log "디렉터리 구조 생성"
@@ -49,7 +75,10 @@ mountpoint -q "$ROOT/data" \
 
 # ── 4. 파일 배치 ─────────────────────────────────────────────────────────
 log "설정/스크립트 배치"
+# compose 정의가 이번 실행으로 바뀌었는지 기록해둔다. 11단계에서 쓴다.
+compose_before="$(sha256sum "$ROOT/app/docker-compose.yml" 2>/dev/null | cut -d' ' -f1 || true)"
 install -m 0664 "$SRC/docker-compose.yml"                        "$ROOT/app/docker-compose.yml"
+compose_after="$(sha256sum "$ROOT/app/docker-compose.yml" | cut -d' ' -f1)"
 install -m 0775 "$SRC/deploy.sh"                                 "$ROOT/app/deploy.sh"
 install -m 0664 "$SRC/docker/postfix/Dockerfile"                 "$ROOT/docker/postfix/Dockerfile"
 install -m 0775 "$SRC/docker/postfix/entrypoint.sh"              "$ROOT/docker/postfix/entrypoint.sh"
@@ -189,6 +218,84 @@ EOF
 chmod 0644 /etc/cron.d/ttokttok-certs
 # 이름이 바뀌었으므로 옛 파일을 지운다. 남겨두면 reload 가 두 번 등록된다.
 rm -f /etc/cron.d/ttokttok-nginx-reload
+
+# ── 11. compose 정의 반영 ────────────────────────────────────────────────
+# 이 스크립트가 docker-compose.yml 을 서버에 옮기는 유일한 경로다. CI 는
+# deploy.sh 만 부르고, deploy.sh 는 이미 서버에 있는 compose 를 읽을 뿐이다.
+# 그래서 compose 를 고쳐 머지해도 setup.sh 를 돌리기 전까지는 아무 일도 안 일어난다.
+#
+# 파일만 갈아끼우고 끝내면 "배치했다" 는 로그만 남고 실행 중인 컨테이너는 옛 정의
+# 그대로 돈다. 다음 배포(deploy.sh 의 up -d)까지 반영이 미뤄지는데, 그 사이에
+# 재발한 게 #382 였다. 그래서 여기서 바로 재조정한다.
+#
+# 내용이 안 바뀌었으면 건드리지 않는다. up -d 는 정의가 바뀐 서비스만 재생성하지만,
+# 굳이 매번 부를 이유도 없다.
+INFRA_SERVICES="${INFRA_SERVICES:-postgres redis minio minio-init smtp nginx certbot}"
+compose_up() { sudo -u "$RUN_USER" sh -c "cd '$ROOT/app' && docker compose $*"; }
+
+if [[ -z "$compose_before" ]]; then
+    log "compose 최초 배치 — 기동은 아래 '다음 순서' 참고"
+elif [[ "$compose_before" == "$compose_after" ]]; then
+    log "compose 정의 변경 없음"
+elif ! compose_up ps -q 2>/dev/null | grep -q .; then
+    log "compose 정의가 바뀌었지만 스택이 떠 있지 않다 — 재조정 생략"
+else
+    log "compose 정의가 바뀌었다 — 인프라 서비스 재조정"
+    # shellcheck disable=SC2086
+    compose_up up -d $INFRA_SERVICES
+fi
+
+# ── 12. 소유권 검증 ──────────────────────────────────────────────────────
+# 1단계의 DATA_OWNER 표가 compose 의 user: 와 어긋나지 않았는지, 표가 아니라
+# 실제로 확인한다. 각 컨테이너의 실행 uid 로 자기 데이터 디렉터리에 파일을
+# 만들어 본다.
+#
+# 이 검증이 필요한 이유는 실패가 조용하기 때문이다. redis 를 예로 들면
+#   - 컨테이너는 계속 healthy 다. 헬스체크가 PING 이고 PONG 은 정상적으로 온다.
+#   - 읽기는 전부 된다. 쓰기만 죽는다.
+#   - 소유권이 바뀐 직후에 안 터진다. 이미 열어둔 AOF fd 로 append 는 계속되므로
+#     최대 1시간 뒤 첫 자동 BGSAVE 에서야 실패한다.
+# postgres 만 PANIC 으로 즉시 티가 났고, 그건 이 이미지의 성질이지 규칙이 아니다.
+log "데이터 디렉터리 쓰기 권한 검증"
+probe_failed=0
+for cid in $(compose_up ps -q 2>/dev/null); do
+    name="$(docker inspect -f '{{.Name}}' "$cid" 2>/dev/null | tr -d /)" || continue
+    [[ "$(docker inspect -f '{{.State.Running}}' "$cid")" == true ]] || continue
+    pid="$(docker inspect -f '{{.State.Pid}}' "$cid")"
+    uid="$(awk '/^Uid:/{print $2}' "/proc/$pid/status" 2>/dev/null)" || continue
+    gid="$(awk '/^Gid:/{print $2}' "/proc/$pid/status" 2>/dev/null)"
+
+    # 읽기 전용 마운트와 data/ 밖은 검사 대상이 아니다. 경로 필터는 셸에서 한다 —
+    # docker inspect 의 템플릿 함수에는 접두사 비교가 없다.
+    while read -r src dest; do
+        [[ -n "$dest" ]] || continue
+        [[ "$src" == "$ROOT/data/"* || "$src" == "$DATA_SRC/"* ]] || continue
+        if docker exec -u "$uid:$gid" "$cid" \
+             sh -c "touch '$dest/.setup-probe' 2>/dev/null && rm -f '$dest/.setup-probe'" 2>/dev/null
+        then
+            printf '  \033[32mOK\033[0m      %-14s uid %-10s %s\n' "${name#ttokttok-}" "$uid:$gid" "$dest"
+        else
+            printf '  \033[31mDENIED\033[0m  %-14s uid %-10s %s\n' "${name#ttokttok-}" "$uid:$gid" "$dest"
+            probe_failed=1
+        fi
+    done < <(docker inspect -f \
+        '{{range .Mounts}}{{if and (eq .Type "bind") .RW}}{{.Source}} {{println .Destination}}{{end}}{{end}}' \
+        "$cid" 2>/dev/null)
+done
+
+if (( probe_failed )); then
+    cat >&2 <<EOF
+
+[setup] 컨테이너가 자기 데이터 디렉터리에 쓰지 못한다.
+
+  compose 의 user: 와 1단계 DATA_OWNER 표가 어긋났다는 뜻이다. 둘을 맞춘 뒤
+  해당 서비스를 재생성해야 한다. 이대로 두면 서비스는 healthy 인 채로 쓰기만
+  실패한다 — redis 는 MISCONF 로 로그인이 죽고, minio 는 업로드가 죽는다.
+
+    cd $ROOT/app && docker compose up -d --force-recreate <서비스>
+EOF
+    exit 1
+fi
 
 log "완료."
 echo
