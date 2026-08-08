@@ -38,7 +38,7 @@ class ClubBoardTest {
 
             assertThatThrownBy(() -> ClubBoard.create(" ", "내용", THUMBNAIL_URL, club))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("Title cannot be null or blank.");
+                    .hasMessage("제목은 비어 있을 수 없습니다.");
         }
 
         @Test
@@ -48,17 +48,27 @@ class ClubBoardTest {
 
             assertThatThrownBy(() -> ClubBoard.create(null, "내용", THUMBNAIL_URL, club))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("Title cannot be null or blank.");
+                    .hasMessage("제목은 비어 있을 수 없습니다.");
         }
 
         @Test
-        @DisplayName("내용이 비어있으면 예외가 발생한다.")
-        void createFailBlankContent() {
+        @DisplayName("내용이 null이면 빈 문자열로 저장된다.")
+        void createWithNullContent() {
             Club club = mock(Club.class);
 
-            assertThatThrownBy(() -> ClubBoard.create("제목", " ", THUMBNAIL_URL, club))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("Content cannot be null or blank.");
+            ClubBoard board = ClubBoard.create("제목", null, THUMBNAIL_URL, club);
+
+            assertThat(board.getContent()).isEmpty();
+        }
+
+        @Test
+        @DisplayName("내용이 비어있어도 생성에 성공한다.")
+        void createWithBlankContent() {
+            Club club = mock(Club.class);
+
+            ClubBoard board = ClubBoard.create("제목", "", THUMBNAIL_URL, club);
+
+            assertThat(board.getContent()).isEmpty();
         }
 
         @Test
@@ -68,7 +78,7 @@ class ClubBoardTest {
 
             assertThatThrownBy(() -> ClubBoard.create("제목", "내용", null, club))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("Thumbnail URL cannot be null or blank.");
+                    .hasMessage("대표 이미지가 없습니다.");
         }
 
         @Test
@@ -78,7 +88,7 @@ class ClubBoardTest {
 
             assertThatThrownBy(() -> ClubBoard.create("제목", "내용", " ", club))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("Thumbnail URL cannot be null or blank.");
+                    .hasMessage("대표 이미지가 없습니다.");
         }
 
         @Test
@@ -86,7 +96,7 @@ class ClubBoardTest {
         void createFailNullClub() {
             assertThatThrownBy(() -> ClubBoard.create("제목", "내용", THUMBNAIL_URL, null))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("Club cannot be null.");
+                    .hasMessage("동아리 정보가 없습니다.");
         }
     }
 
@@ -143,13 +153,24 @@ class ClubBoardTest {
         }
 
         @Test
-        @DisplayName("빈 문자열로 수정을 시도하면 예외가 발생한다.")
+        @DisplayName("빈 문자열로 제목 수정을 시도하면 예외가 발생한다.")
         void updateBlankTitleThrows() {
             ClubBoard board = newBoard();
 
             assertThatThrownBy(() -> board.update(" ", null))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("Title cannot be null or blank.");
+                    .hasMessage("제목은 비어 있을 수 없습니다.");
+        }
+
+        @Test
+        @DisplayName("빈 문자열을 전달하면 내용을 비울 수 있다.")
+        void updateContentToBlank() {
+            ClubBoard board = newBoard();
+
+            board.update(null, "");
+
+            assertThat(board.getTitle()).isEqualTo("원제목");
+            assertThat(board.getContent()).isEmpty();
         }
     }
 
@@ -175,10 +196,10 @@ class ClubBoardTest {
 
             assertThatThrownBy(() -> board.updateThumbnailUrl(null))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("Thumbnail URL cannot be null or blank.");
+                    .hasMessage("대표 이미지가 없습니다.");
             assertThatThrownBy(() -> board.updateThumbnailUrl(" "))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("Thumbnail URL cannot be null or blank.");
+                    .hasMessage("대표 이미지가 없습니다.");
         }
     }
 }

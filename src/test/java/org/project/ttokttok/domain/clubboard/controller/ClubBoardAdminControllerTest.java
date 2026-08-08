@@ -29,6 +29,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -147,6 +148,133 @@ class ClubBoardAdminControllerTest {
                         .file(thumbnailPart())
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + otherAccessToken))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("createBoard(): 본문의 줄바꿈이 저장 후에도 그대로 유지된다.")
+    void createBoard_preservesLineBreaks() throws Exception {
+        String content = "첫째 줄\n둘째 줄\n\n넷째 줄";
+        CreateBoardRequest request = new CreateBoardRequest("제목입니다", content);
+
+        String response = mockMvc.perform(multipart("/api/admin/clubs/{clubId}/boards", myClub.getId())
+                        .file(jsonPart(request))
+                        .file(thumbnailPart())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + myAccessToken))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        String boardId = objectMapper.readTree(response).get("boardId").asText();
+
+        assertThat(clubBoardRepository.findById(boardId))
+                .get()
+                .extracting(ClubBoard::getContent)
+                .isEqualTo(content);
+    }
+
+    @Test
+    @DisplayName("createBoard(): 내용이 null이어도 생성에 성공하고 빈 내용으로 저장된다.")
+    void createBoard_withoutContent() throws Exception {
+        CreateBoardRequest request = new CreateBoardRequest("제목입니다", null);
+
+        String response = mockMvc.perform(multipart("/api/admin/clubs/{clubId}/boards", myClub.getId())
+                        .file(jsonPart(request))
+                        .file(thumbnailPart())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + myAccessToken))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        String boardId = objectMapper.readTree(response).get("boardId").asText();
+
+        assertThat(clubBoardRepository.findById(boardId))
+                .get()
+                .extracting(ClubBoard::getContent)
+                .isEqualTo("");
+    }
+
+    @Test
+    @DisplayName("createBoard(): 내용이 빈 문자열이어도 생성에 성공한다.")
+    void createBoard_withBlankContent() throws Exception {
+        CreateBoardRequest request = new CreateBoardRequest("제목입니다", "");
+
+        mockMvc.perform(multipart("/api/admin/clubs/{clubId}/boards", myClub.getId())
+                        .file(jsonPart(request))
+                        .file(thumbnailPart())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + myAccessToken))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    @DisplayName("createBoard(): 제목이 255자를 넘으면 400이 발생한다.")
+    void createBoard_titleTooLong() throws Exception {
+        CreateBoardRequest request = new CreateBoardRequest("가".repeat(256), "본문입니다");
+
+        mockMvc.perform(multipart("/api/admin/clubs/{clubId}/boards", myClub.getId())
+                        .file(jsonPart(request))
+                        .file(thumbnailPart())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + myAccessToken))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("createBoard(): 제목이 255자면 생성에 성공한다.")
+    void createBoard_titleAtMaxLength() throws Exception {
+        CreateBoardRequest request = new CreateBoardRequest("가".repeat(255), "본문입니다");
+
+        mockMvc.perform(multipart("/api/admin/clubs/{clubId}/boards", myClub.getId())
+                        .file(jsonPart(request))
+                        .file(thumbnailPart())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + myAccessToken))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    @DisplayName("createBoard(): 내용이 10000자를 넘으면 400이 발생한다.")
+    void createBoard_contentTooLong() throws Exception {
+        CreateBoardRequest request = new CreateBoardRequest("제목입니다", "가".repeat(10001));
+
+        mockMvc.perform(multipart("/api/admin/clubs/{clubId}/boards", myClub.getId())
+                        .file(jsonPart(request))
+                        .file(thumbnailPart())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + myAccessToken))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("createBoard(): 내용이 10000자면 생성에 성공한다.")
+    void createBoard_contentAtMaxLength() throws Exception {
+        CreateBoardRequest request = new CreateBoardRequest("제목입니다", "가".repeat(10000));
+
+        mockMvc.perform(multipart("/api/admin/clubs/{clubId}/boards", myClub.getId())
+                        .file(jsonPart(request))
+                        .file(thumbnailPart())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + myAccessToken))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    @DisplayName("updateBoard(): 내용이 10000자를 넘으면 400이 발생한다.")
+    void updateBoard_contentTooLong() throws Exception {
+        ClubBoard board = saveBoard("원래 제목", "원래 내용");
+
+        ClubBoardUpdateRequest request = new ClubBoardUpdateRequest(null, "가".repeat(10001));
+
+        mockMvc.perform(multipart(HttpMethod.PATCH, "/api/admin/clubs/{clubId}/boards/{boardId}", myClub.getId(), board.getId())
+                        .file(jsonPart(request))
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + myAccessToken))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("updateBoard(): 제목이 255자를 넘으면 400이 발생한다.")
+    void updateBoard_titleTooLong() throws Exception {
+        ClubBoard board = saveBoard("원래 제목", "원래 내용");
+
+        ClubBoardUpdateRequest request = new ClubBoardUpdateRequest("가".repeat(256), null);
+
+        mockMvc.perform(multipart(HttpMethod.PATCH, "/api/admin/clubs/{clubId}/boards/{boardId}", myClub.getId(), board.getId())
+                        .file(jsonPart(request))
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + myAccessToken))
+                .andExpect(status().isBadRequest());
     }
 
     @Test

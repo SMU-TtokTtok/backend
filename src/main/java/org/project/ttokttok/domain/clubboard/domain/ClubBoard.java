@@ -55,7 +55,6 @@ public class ClubBoard extends BaseTimeEntity {
             this.title = title;
         }
         if (content != null) {
-            validateContent(content);
             this.content = content;
         }
     }
@@ -68,13 +67,12 @@ public class ClubBoard extends BaseTimeEntity {
     // ------- 정적 메서드 -------
     public static ClubBoard create(String title, String content, String thumbnailUrl, Club club) {
         validateTitle(title);
-        validateContent(content);
         validateThumbnailUrl(thumbnailUrl);
         validateClub(club);
 
         return ClubBoard.builder()
                 .title(title)
-                .content(content)
+                .content(normalizeContent(content))
                 .thumbnailUrl(thumbnailUrl)
                 .club(club)
                 .build();
@@ -83,25 +81,24 @@ public class ClubBoard extends BaseTimeEntity {
     // ------- 유효성 검사 메서드 -------
     private static void validateClub(Club club) {
         if (club == null) {
-            throw new IllegalArgumentException("Club cannot be null.");
+            throw new IllegalArgumentException("동아리 정보가 없습니다.");
         }
     }
 
-    private static void validateContent(String content) {
-        if (content == null || content.isBlank()) {
-            throw new IllegalArgumentException("Content cannot be null or blank.");
-        }
+    // 내용은 선택 입력이다. 저장 컬럼이 NOT NULL 이라 미입력은 빈 문자열로 맞춰 둔다.
+    private static String normalizeContent(String content) {
+        return content != null ? content : "";
     }
 
     private static void validateTitle(String title) {
         if (title == null || title.isBlank()) {
-            throw new IllegalArgumentException("Title cannot be null or blank.");
+            throw new IllegalArgumentException("제목은 비어 있을 수 없습니다.");
         }
     }
 
     private static void validateThumbnailUrl(String thumbnailUrl) {
         if (thumbnailUrl == null || thumbnailUrl.isBlank()) {
-            throw new IllegalArgumentException("Thumbnail URL cannot be null or blank.");
+            throw new IllegalArgumentException("대표 이미지가 없습니다.");
         }
     }
 }
