@@ -147,6 +147,15 @@ Postfix 는 `mynetworks` 안에서 오는 요청을 인증 없이 받으므로 �
   **내부 문자열**에도 박혀 있다. 도메인을 유지하는 대가로 DB 를 한 줄도 안 건드린다.
 - **`POSTGRES_USER` 는 `postgres` 여야 한다.** 백업 덤프의 객체 소유자가 `postgres` 라,
   다른 이름으로 초기화하면 `ALTER ... OWNER TO postgres` 가 "role does not exist" 로 실패한다.
+- **`docker-compose.yml` 은 CI 로 배포되지 않는다.** GitHub Actions 는 `deploy.sh` 만 부르고,
+  `deploy.sh` 는 **이미 서버에 있는** compose 를 읽을 뿐이다. 서버의
+  `/opt/ttokttok/app/docker-compose.yml` 을 갱신하는 경로는 `setup.sh` 하나뿐이다.
+  compose·nginx 템플릿·`bin/` 스크립트를 고쳐 머지했다면 **`sudo deploy/setup.sh` 를
+  따로 돌려야 한다.** 앱 코드만 고쳤다면 배포로 충분하다.
+
+  `setup.sh` 는 compose 내용이 실제로 바뀐 경우에만 인프라 서비스를 재조정한다.
+  파일만 갈아끼우고 끝내면 로그는 "배치 완료" 인데 컨테이너는 옛 정의로 계속 돈다.
+
 - **`data/` 를 쓰는 컨테이너는 uid 를 명시해야 한다.** `setup.sh` 는 `data/*` 를
   `ttokttokuser:ttokttok`(1001:1003) 로 통일한다. 이미지 기본 uid 가 그와 다르면 컨테이너가
   자기 데이터 디렉터리에 못 쓴다. `minio`·`redis` 는 그래서 `user: "1001:1003"` 을 박아뒀다.
