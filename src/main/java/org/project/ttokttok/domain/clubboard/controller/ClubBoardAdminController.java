@@ -49,7 +49,7 @@ public class ClubBoardAdminController implements ClubBoardAdminDocs {
             @AuthUserInfo String username,
             @PathVariable String clubId,
             @PathVariable String boardId,
-            @RequestPart(value = "request", required = false) ClubBoardUpdateRequest request,
+            @RequestPart(value = "request", required = false) @Valid ClubBoardUpdateRequest request,
             @RequestPart(value = "thumbnail", required = false) MultipartFile thumbnail
     ) {
         ClubBoardUpdateRequest safeRequest = request != null

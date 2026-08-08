@@ -150,6 +150,43 @@ class ClubBoardAdminControllerTest {
     }
 
     @Test
+    @DisplayName("createBoard(): 제목이 255자를 넘으면 400이 발생한다.")
+    void createBoard_titleTooLong() throws Exception {
+        CreateBoardRequest request = new CreateBoardRequest("가".repeat(256), "본문입니다");
+
+        mockMvc.perform(multipart("/api/admin/clubs/{clubId}/boards", myClub.getId())
+                        .file(jsonPart(request))
+                        .file(thumbnailPart())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + myAccessToken))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("createBoard(): 제목이 255자면 생성에 성공한다.")
+    void createBoard_titleAtMaxLength() throws Exception {
+        CreateBoardRequest request = new CreateBoardRequest("가".repeat(255), "본문입니다");
+
+        mockMvc.perform(multipart("/api/admin/clubs/{clubId}/boards", myClub.getId())
+                        .file(jsonPart(request))
+                        .file(thumbnailPart())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + myAccessToken))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    @DisplayName("updateBoard(): 제목이 255자를 넘으면 400이 발생한다.")
+    void updateBoard_titleTooLong() throws Exception {
+        ClubBoard board = saveBoard("원래 제목", "원래 내용");
+
+        ClubBoardUpdateRequest request = new ClubBoardUpdateRequest("가".repeat(256), null);
+
+        mockMvc.perform(multipart(HttpMethod.PATCH, "/api/admin/clubs/{clubId}/boards/{boardId}", myClub.getId(), board.getId())
+                        .file(jsonPart(request))
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + myAccessToken))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     @DisplayName("updateBoard(): 게시글 수정에 성공한다.")
     void updateBoard_success() throws Exception {
         ClubBoard board = saveBoard("원래 제목", "원래 내용");
