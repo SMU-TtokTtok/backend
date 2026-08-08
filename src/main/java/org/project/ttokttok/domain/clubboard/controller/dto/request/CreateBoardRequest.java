@@ -13,7 +13,9 @@ public record CreateBoardRequest(
         String title,
 
         // 내용은 선택 입력이다. 생략하면 빈 내용으로 저장된다.
+        // 저장 컬럼은 TEXT 라 무제한이지만, 저장소·응답 비대화를 막으려면 API 단에서 상한이 필요하다.
         @Schema(description = "선택적 필드 (생략 또는 null이면 빈 내용으로 저장)", nullable = true)
+        @Size(max = 10000, message = "내용은 최대 10000자까지 입력할 수 있습니다.")
         String content
 ) {
     public CreateBoardServiceRequest toServiceRequest(String username, String clubId, MultipartFile thumbnail) {

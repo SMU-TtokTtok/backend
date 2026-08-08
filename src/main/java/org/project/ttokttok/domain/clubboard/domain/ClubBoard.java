@@ -81,7 +81,7 @@ public class ClubBoard extends BaseTimeEntity {
     // ------- 유효성 검사 메서드 -------
     private static void validateClub(Club club) {
         if (club == null) {
-            throw new IllegalArgumentException("Club cannot be null.");
+            throw new IllegalArgumentException("동아리 정보가 없습니다.");
         }
     }
 
@@ -92,13 +92,13 @@ public class ClubBoard extends BaseTimeEntity {
 
     private static void validateTitle(String title) {
         if (title == null || title.isBlank()) {
-            throw new IllegalArgumentException("Title cannot be null or blank.");
+            throw new IllegalArgumentException("제목은 비어 있을 수 없습니다.");
         }
     }
 
     private static void validateThumbnailUrl(String thumbnailUrl) {
         if (thumbnailUrl == null || thumbnailUrl.isBlank()) {
-            throw new IllegalArgumentException("Thumbnail URL cannot be null or blank.");
+            throw new IllegalArgumentException("대표 이미지가 없습니다.");
         }
     }
 }
