@@ -151,8 +151,8 @@ class RefreshTokenRedisServiceTest {
         }
 
         @ParameterizedTest
-        @DisplayName("다양한 만료시간이 주어져도 블랙리스트에 추가한다")
-        @ValueSource(longs = {1000L, 60000L, 3600000L, 0L})
+        @DisplayName("남은 만료시간이 양수면 블랙리스트에 추가한다")
+        @ValueSource(longs = {1L, 1000L, 60000L, 3600000L})
         void addAccessTokenToBlacklist_withVariousExpiryTimes_addsToBlacklist(long expiryTime) {
             // given
             when(redisTemplate.opsForValue()).thenReturn(valueOperations);
@@ -166,6 +166,17 @@ class RefreshTokenRedisServiceTest {
                     "blacklisted",
                     Duration.ofMillis(expiryTime)
             );
+        }
+
+        @ParameterizedTest
+        @DisplayName("남은 만료시간이 0 이하면 Redis 를 호출하지 않는다")
+        @ValueSource(longs = {0L, -1L, -1000L})
+        void addAccessTokenToBlacklist_withNonPositiveExpiry_skipsRedis(long expiryTime) {
+            // when
+            service.addAccessTokenToBlacklist(TEST_ACCESS_TOKEN, expiryTime);
+
+            // then
+            verify(redisTemplate, never()).opsForValue();
         }
     }
 

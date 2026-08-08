@@ -64,6 +64,13 @@ public class RefreshTokenRedisService {
 
     // 액세스 토큰 블랙리스트 추가 - 로그아웃 시
     public void addAccessTokenToBlacklist(String accessToken, long expiryTime) {
+        // 이미 만료된 토큰은 만료 검증만으로 거부되므로 블랙리스트가 필요 없다.
+        // 게다가 Redis 는 TTL 이 0 이하인 SET 을 거부하므로(ERR invalid expire time) 그대로 넘기면 500 이 된다.
+        if (expiryTime <= 0) {
+            log.debug("이미 만료된 액세스 토큰이라 블랙리스트 등록을 생략한다");
+            return;
+        }
+
         // 액세스 토큰의 남은 만료 시간만큼 블랙리스트에 저장
         redisTemplate.opsForValue().set(
                 ACCESS_BLACKLIST_KEY + accessToken,
