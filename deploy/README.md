@@ -147,6 +147,28 @@ Postfix 는 `mynetworks` 안에서 오는 요청을 인증 없이 받으므로 �
   **내부 문자열**에도 박혀 있다. 도메인을 유지하는 대가로 DB 를 한 줄도 안 건드린다.
 - **`POSTGRES_USER` 는 `postgres` 여야 한다.** 백업 덤프의 객체 소유자가 `postgres` 라,
   다른 이름으로 초기화하면 `ALTER ... OWNER TO postgres` 가 "role does not exist" 로 실패한다.
+- **`data/` 를 쓰는 컨테이너는 uid 를 명시해야 한다.** `setup.sh` 는 `data/*` 를
+  `ttokttokuser:ttokttok`(1001:1003) 로 통일한다. 이미지 기본 uid 가 그와 다르면 컨테이너가
+  자기 데이터 디렉터리에 못 쓴다. `minio`·`redis` 는 그래서 `user: "1001:1003"` 을 박아뒀다.
+  `postgres` 만 이미지가 uid 70 을 강제해서 예외이고, 대신 `data/postgres` 를 70:70 으로 둔다.
+
+  | 서비스 | 프로세스 uid | `data/` 소유 |
+  |---|---|---|
+  | postgres | 70 (이미지 고정) | 70:70 |
+  | minio | 1001:1003 (`user:`) | 1001:1003 |
+  | redis | 1001:1003 (`user:`) | 1001:1003 |
+
+  redis 에서 이게 어긋나면 **읽기는 되고 쓰기만 죽는다.** BGSAVE 가 temp 파일을 못 만들고,
+  `stop-writes-on-bgsave-error` 기본값이 `yes` 라 모든 쓰기가 `MISCONF` 로 거부된다.
+  컨테이너는 healthy 고 `PING` 도 `PONG` 이라 헬스체크로는 안 잡힌다. 게다가 이미 열어둔
+  AOF fd 로 append 는 계속되므로, 소유권이 바뀐 직후가 아니라 **다음 자동 BGSAVE 시점에**
+  터진다. 증상은 로그인 실패로 나타난다.
+
+  ```bash
+  docker exec ttokttok-redis id -u                          # user: 값과 같아야 한다
+  docker logs ttokttok-redis | grep -i 'bgsave\|permission'
+  ```
+
 - **헬스 엔드포인트는 `/health` 다.** 이 앱에는 actuator 의존성이 없어서
   `/actuator/health` 는 404 다. `/health` 는 `SecurityWhiteList` 에 등록된 공개 경로다.
 - **`upstream.conf` 는 단일 파일 바인드 마운트**다. `sed -i` 처럼 inode 를 바꾸는 방식으로
