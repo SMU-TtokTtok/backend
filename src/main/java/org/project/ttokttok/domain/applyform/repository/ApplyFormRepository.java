@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Optional;
 import org.project.ttokttok.domain.applyform.domain.ApplyForm;
 import org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus;
+import org.project.ttokttok.domain.applyform.repository.dto.ClubRecruitmentQueryDto;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -39,4 +40,17 @@ public interface ApplyFormRepository extends JpaRepository<ApplyForm, String> {
 
     @Query("SELECT a FROM ApplyForm a WHERE a.status = 'ACTIVE' AND a.applyEndDate < :currentDate")
     List<ApplyForm> findExpiredApplyForms(@Param("currentDate") LocalDate currentDate);
+
+    /**
+     * 여러 동아리의 모집중 지원폼을 한 번에 조회
+     *
+     * <p>모집 종료는 {@code isRecruiting} 만 false 로 바뀌고 {@code status} 는 ACTIVE 로 남는다
+     * ({@code ApplyFormScheduler}, {@code ClubAdminService#toggleRecruitment}). 그래서 모집 여부를
+     * 판정하려면 두 조건을 함께 봐야 한다.
+     */
+    @Query("SELECT new org.project.ttokttok.domain.applyform.repository.dto.ClubRecruitmentQueryDto("
+            + "a.club.id, a.applyEndDate) "
+            + "FROM ApplyForm a "
+            + "WHERE a.club.id IN :clubIds AND a.status = 'ACTIVE' AND a.isRecruiting = true")
+    List<ClubRecruitmentQueryDto> findRecruitingFormsByClubIds(@Param("clubIds") List<String> clubIds);
 }
