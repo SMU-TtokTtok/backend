@@ -1,7 +1,5 @@
 package org.project.ttokttok.domain.favorite.service;
 
-import static org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus.ACTIVE;
-
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -10,12 +8,15 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.project.ttokttok.domain.applyform.domain.ApplyForm;
+import org.project.ttokttok.domain.applyform.domain.ApplyDeadlinePolicy;
 import org.project.ttokttok.domain.applyform.repository.ApplyFormRepository;
+import org.project.ttokttok.domain.applyform.repository.dto.ClubRecruitmentQueryDto;
 import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.exception.ClubNotFoundException;
 import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.domain.club.service.dto.response.ClubCardServiceResponse;
+import org.project.ttokttok.domain.clubMember.repository.ClubMemberRepository;
+import org.project.ttokttok.domain.clubMember.repository.dto.ClubMemberCountQueryDto;
 import org.project.ttokttok.domain.favorite.domain.Favorite;
 import org.project.ttokttok.domain.favorite.repository.FavoriteRepository;
 import org.project.ttokttok.domain.favorite.repository.dto.ClubFavoriteCountQueryDto;
@@ -41,6 +42,7 @@ public class FavoriteService {
     private final ClubRepository clubRepository;
     private final UserRepository userRepository;
     private final ApplyFormRepository applyFormRepository;
+    private final ClubMemberRepository clubMemberRepository;
     private final PopularityCalculator popularityCalculator;
 
     /**
@@ -81,11 +83,11 @@ public class FavoriteService {
         List<Favorite> actualFavorites = hasNext ? favorites.subList(0, request.size()) : favorites;
         String nextCursor = hasNext ? actualFavorites.get(actualFavorites.size() - 1).getId() : null;
 
-        List<ClubCardServiceResponse> favoriteClubs = actualFavorites.stream()
-                .map(favorite -> toClubCardServiceResponse(favorite.getClub()))
+        List<Club> clubs = actualFavorites.stream()
+                .map(Favorite::getClub)
                 .toList();
 
-        return new FavoriteListServiceResponse(favoriteClubs, nextCursor, hasNext);
+        return new FavoriteListServiceResponse(toClubCardServiceResponses(clubs), nextCursor, hasNext);
     }
 
     /**
@@ -96,33 +98,32 @@ public class FavoriteService {
             return new FavoriteListServiceResponse(Collections.emptyList(), null, false);
         }
 
-        List<Favorite> allFavorites = favoriteRepository.findAllByUserEmailWithClub(request.userEmail());
-
-        List<String> clubIds = allFavorites.stream()
-                .map(f -> f.getClub().getId())
+        List<Club> clubs = favoriteRepository.findAllByUserEmailWithClub(request.userEmail()).stream()
+                .map(Favorite::getClub)
                 .toList();
-        
+
+        if (clubs.isEmpty()) {
+            return new FavoriteListServiceResponse(Collections.emptyList(), null, false);
+        }
+
+        List<String> clubIds = toClubIds(clubs);
+
         Map<String, Long> favoriteCountMap = favoriteRepository.countClubFavoritesForEach(clubIds).stream()
                 .collect(Collectors.toMap(ClubFavoriteCountQueryDto::clubId, ClubFavoriteCountQueryDto::count));
+        // 정렬 비교자가 전체 즐겨찾기를 훑으므로, 멤버 수는 정렬 이전에 한 번에 모아둔다
+        Map<String, Long> memberCountMap = findMemberCounts(clubIds);
 
-        List<ClubCardServiceResponse> resultClubs = allFavorites.stream()
-                .map(Favorite::getClub)
-                .sorted((club1, club2) -> {
-                    double score1 = popularityCalculator.calculate(
-                            club1.getClubMembers().size(), 
-                            favoriteCountMap.getOrDefault(club1.getId(), 0L),
-                            club1.getViewCount());
-                    double score2 = popularityCalculator.calculate(
-                            club2.getClubMembers().size(), 
-                            favoriteCountMap.getOrDefault(club2.getId(), 0L),
-                            club2.getViewCount());
-                    return Double.compare(score2, score1);
-                })
+        List<Club> sortedClubs = clubs.stream()
+                .sorted(Comparator.comparingDouble(
+                        (Club club) -> popularityCalculator.calculate(
+                                memberCountMap.getOrDefault(club.getId(), 0L),
+                                favoriteCountMap.getOrDefault(club.getId(), 0L),
+                                club.getViewCount())).reversed())
                 .limit(request.size())
-                .map(this::toClubCardServiceResponse)
                 .toList();
 
-        return new FavoriteListServiceResponse(resultClubs, null, false);
+        return new FavoriteListServiceResponse(
+                toClubCardServiceResponses(sortedClubs, memberCountMap), null, false);
     }
 
     @Transactional(readOnly = true)
@@ -130,13 +131,46 @@ public class FavoriteService {
         return favoriteRepository.existsByUserEmailAndClubId(userEmail, clubId);
     }
 
-    private ClubCardServiceResponse toClubCardServiceResponse(Club club) {
-        Optional<ApplyForm> activeApplyForm = applyFormRepository.findByClubIdAndStatus(club.getId(), ACTIVE);
-        boolean recruiting = activeApplyForm.isPresent();
+    private List<ClubCardServiceResponse> toClubCardServiceResponses(List<Club> clubs) {
+        if (clubs.isEmpty()) {
+            return List.of();
+        }
+        return toClubCardServiceResponses(clubs, findMemberCounts(toClubIds(clubs)));
+    }
 
-        boolean isDeadlineImminent = activeApplyForm
-                .map(ApplyForm::isDeadlineImminent)
-                .orElse(false);
+    /**
+     * 동아리 목록을 카드 응답으로 일괄 변환한다.
+     *
+     * <p>모집 여부와 멤버 수를 동아리마다 조회하면 즐겨찾기 개수에 비례해 쿼리가 늘어나므로,
+     * 두 값을 각각 배치 쿼리 한 번으로 모아 맵으로 조회한다.
+     *
+     * @param memberCountMap 이미 조회해 둔 동아리별 멤버 수 (인기순 경로는 정렬에 먼저 쓰므로 재사용한다)
+     */
+    private List<ClubCardServiceResponse> toClubCardServiceResponses(List<Club> clubs,
+                                                                     Map<String, Long> memberCountMap) {
+        if (clubs.isEmpty()) {
+            return List.of();
+        }
+
+        Map<String, ClubRecruitmentQueryDto> recruitingFormMap =
+                applyFormRepository.findRecruitingFormsByClubIds(toClubIds(clubs)).stream()
+                        .collect(Collectors.toMap(ClubRecruitmentQueryDto::clubId, dto -> dto, (first, ignored) -> first));
+
+        return clubs.stream()
+                .map(club -> toClubCardServiceResponse(club, recruitingFormMap.get(club.getId()),
+                        memberCountMap.getOrDefault(club.getId(), 0L)))
+                .toList();
+    }
+
+    /**
+     * @param recruitingForm 모집중인 지원폼. 모집중이 아니면 {@code null} 이다.
+     */
+    private ClubCardServiceResponse toClubCardServiceResponse(Club club,
+                                                              ClubRecruitmentQueryDto recruitingForm,
+                                                              long memberCount) {
+        boolean recruiting = recruitingForm != null;
+        boolean isDeadlineImminent =
+                recruiting && ApplyDeadlinePolicy.isImminent(recruitingForm.applyEndDate());
 
         return new ClubCardServiceResponse(
                 club.getId(),
@@ -146,10 +180,21 @@ public class FavoriteService {
                 club.getCustomCategory(),
                 club.getSummary(),
                 club.getProfileImageUrl(),
-                club.getClubMembers().size(),
+                (int) memberCount,
                 recruiting,
                 true,
                 isDeadlineImminent
         );
+    }
+
+    private Map<String, Long> findMemberCounts(List<String> clubIds) {
+        return clubMemberRepository.countClubMembersForEach(clubIds).stream()
+                .collect(Collectors.toMap(ClubMemberCountQueryDto::clubId, ClubMemberCountQueryDto::count));
+    }
+
+    private List<String> toClubIds(List<Club> clubs) {
+        return clubs.stream()
+                .map(Club::getId)
+                .toList();
     }
 }

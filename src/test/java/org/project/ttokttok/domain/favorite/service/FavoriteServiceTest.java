@@ -7,12 +7,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.project.ttokttok.domain.applyform.domain.ApplyForm;
 import org.project.ttokttok.domain.applyform.repository.ApplyFormRepository;
+import org.project.ttokttok.domain.applyform.repository.dto.ClubRecruitmentQueryDto;
 import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.exception.ClubNotFoundException;
 import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.domain.club.service.dto.response.ClubCardServiceResponse;
+import org.project.ttokttok.domain.clubMember.repository.ClubMemberRepository;
+import org.project.ttokttok.domain.clubMember.repository.dto.ClubMemberCountQueryDto;
 import org.project.ttokttok.domain.favorite.domain.Favorite;
 import org.project.ttokttok.domain.favorite.repository.FavoriteRepository;
 import org.project.ttokttok.domain.favorite.repository.dto.ClubFavoriteCountQueryDto;
@@ -54,7 +56,20 @@ class FavoriteServiceTest {
     private ApplyFormRepository applyFormRepository;
 
     @Mock
+    private ClubMemberRepository clubMemberRepository;
+
+    @Mock
     private PopularityCalculator popularityCalculator;
+
+    /** 모집중인 지원폼이 하나도 없는 상태를 만든다. */
+    private void givenNoRecruitingForm() {
+        given(applyFormRepository.findRecruitingFormsByClubIds(any())).willReturn(Collections.emptyList());
+    }
+
+    /** 멤버 수 집계 결과가 비어 있는 상태를 만든다 (모든 동아리 멤버 수 0). */
+    private void givenNoClubMembers() {
+        given(clubMemberRepository.countClubMembersForEach(any())).willReturn(Collections.emptyList());
+    }
 
     @Nested
     @DisplayName("toggleFavorite 메서드")
@@ -155,8 +170,8 @@ class FavoriteServiceTest {
             Favorite favorite = mock(Favorite.class);
             given(favorite.getClub()).willReturn(club);
             given(club.getId()).willReturn("club-1");
-            given(club.getClubMembers()).willReturn(Collections.emptyList());
-            given(applyFormRepository.findByClubIdAndStatus(any(), any())).willReturn(Optional.empty());
+            givenNoRecruitingForm();
+            givenNoClubMembers();
 
             given(favoriteRepository.findFavoritesByRequest(request)).willReturn(List.of(favorite));
 
@@ -207,8 +222,6 @@ class FavoriteServiceTest {
             Club club2 = mock(Club.class);
             given(club1.getId()).willReturn("club-1");
             given(club2.getId()).willReturn("club-2");
-            given(club1.getClubMembers()).willReturn(Collections.emptyList());
-            given(club2.getClubMembers()).willReturn(Collections.emptyList());
             given(club1.getViewCount()).willReturn(100L);
             given(club2.getViewCount()).willReturn(200L);
 
@@ -219,11 +232,12 @@ class FavoriteServiceTest {
 
             given(favoriteRepository.findAllByUserEmailWithClub(request.userEmail())).willReturn(List.of(fav1, fav2));
             given(favoriteRepository.countClubFavoritesForEach(any())).willReturn(Collections.emptyList());
-            
+            givenNoClubMembers();
+
             given(popularityCalculator.calculate(eq(0L), eq(0L), eq(100L))).willReturn(10.0);
             given(popularityCalculator.calculate(eq(0L), eq(0L), eq(200L))).willReturn(20.0);
 
-            given(applyFormRepository.findByClubIdAndStatus(any(), any())).willReturn(Optional.empty());
+            givenNoRecruitingForm();
 
             // when
             FavoriteListServiceResponse response = favoriteService.getFavoriteList(request);
@@ -302,11 +316,10 @@ class FavoriteServiceTest {
         }
 
         /**
-         * 마감일이 {@code applyEndDate} 인 활성 지원폼이 걸린 즐겨찾기 목록을 조회한다.
+         * 마감일이 {@code applyEndDate} 인 모집중 지원폼이 걸린 즐겨찾기 목록을 조회한다.
          *
-         * <p>{@link ApplyForm} 을 목이 아닌 <b>실제 엔티티</b>로 만든다.
-         * 마감 임박 판정이 {@code ApplyForm#isDeadlineImminent()} 에 위임되므로,
-         * 목을 쓰면 스텁한 boolean을 되돌려받을 뿐 실제 날짜 규칙을 검증하지 못한다.
+         * <p>마감 임박 판정은 {@code ApplyDeadlinePolicy} 에 위임되므로 boolean 을 스텁하지 않는다.
+         * 마감일만 주고 실제 날짜 규칙이 돌게 둬야 경계값이 검증된다.
          */
         private FavoriteListServiceResponse getFavoriteListWithDeadline(LocalDate applyEndDate) {
             FavoriteListServiceRequest request = givenRequest();
@@ -315,12 +328,10 @@ class FavoriteServiceTest {
             Favorite favorite = mock(Favorite.class);
             given(favorite.getClub()).willReturn(club);
             given(club.getId()).willReturn("club-1");
-            given(club.getClubMembers()).willReturn(Collections.emptyList());
+            givenNoClubMembers();
 
-            ApplyForm activeForm = ApplyForm.builder()
-                    .applyEndDate(applyEndDate)
-                    .build();
-            given(applyFormRepository.findByClubIdAndStatus(any(), any())).willReturn(Optional.of(activeForm));
+            given(applyFormRepository.findRecruitingFormsByClubIds(any()))
+                    .willReturn(List.of(new ClubRecruitmentQueryDto("club-1", applyEndDate)));
             given(favoriteRepository.findFavoritesByRequest(request)).willReturn(List.of(favorite));
 
             return favoriteService.getFavoriteList(request);
@@ -370,23 +381,121 @@ class FavoriteServiceTest {
         }
 
         @Test
-        @DisplayName("활성 지원폼이 없으면 모집중이 아니고 마감 임박도 아니다")
-        void toClubCardServiceResponse_NoActiveApplyForm() {
+        @DisplayName("모집중인 지원폼이 없으면 모집중이 아니고 마감 임박도 아니다")
+        void toClubCardServiceResponse_NoRecruitingApplyForm() {
             FavoriteListServiceRequest request = givenRequest();
 
             Club club = mock(Club.class);
             Favorite favorite = mock(Favorite.class);
             given(favorite.getClub()).willReturn(club);
             given(club.getId()).willReturn("club-1");
-            given(club.getClubMembers()).willReturn(Collections.emptyList());
+            givenNoClubMembers();
 
-            given(applyFormRepository.findByClubIdAndStatus(any(), any())).willReturn(Optional.empty());
+            givenNoRecruitingForm();
             given(favoriteRepository.findFavoritesByRequest(request)).willReturn(List.of(favorite));
 
             FavoriteListServiceResponse response = favoriteService.getFavoriteList(request);
 
             assertThat(response.favoriteClubs().get(0).recruiting()).isFalse();
             assertThat(response.favoriteClubs().get(0).isDeadlineImminent()).isFalse();
+        }
+
+        @Test
+        @DisplayName("멤버 수는 배치 집계 결과에서 가져온다")
+        void toClubCardServiceResponse_MemberCountFromBatch() {
+            FavoriteListServiceRequest request = givenRequest();
+
+            Club club = mock(Club.class);
+            Favorite favorite = mock(Favorite.class);
+            given(favorite.getClub()).willReturn(club);
+            given(club.getId()).willReturn("club-1");
+
+            given(clubMemberRepository.countClubMembersForEach(any()))
+                    .willReturn(List.of(new ClubMemberCountQueryDto("club-1", 7L)));
+            givenNoRecruitingForm();
+            given(favoriteRepository.findFavoritesByRequest(request)).willReturn(List.of(favorite));
+
+            FavoriteListServiceResponse response = favoriteService.getFavoriteList(request);
+
+            assertThat(response.favoriteClubs().get(0).clubMemberCount()).isEqualTo(7);
+            verify(club, never()).getClubMembers();
+        }
+
+        @Test
+        @DisplayName("집계 결과에 없는 동아리의 멤버 수는 0이다")
+        void toClubCardServiceResponse_MemberCountDefaultsToZero() {
+            FavoriteListServiceRequest request = givenRequest();
+
+            Club club = mock(Club.class);
+            Favorite favorite = mock(Favorite.class);
+            given(favorite.getClub()).willReturn(club);
+            given(club.getId()).willReturn("club-1");
+
+            givenNoClubMembers();
+            givenNoRecruitingForm();
+            given(favoriteRepository.findFavoritesByRequest(request)).willReturn(List.of(favorite));
+
+            FavoriteListServiceResponse response = favoriteService.getFavoriteList(request);
+
+            assertThat(response.favoriteClubs().get(0).clubMemberCount()).isZero();
+        }
+    }
+
+    @Nested
+    @DisplayName("배치 조회 횟수")
+    class BatchQueryCountTest {
+
+        private FavoriteListServiceRequest givenRequest() {
+            return FavoriteListServiceRequest.builder()
+                    .userEmail("test@test.com")
+                    .size(10)
+                    .sort("latest")
+                    .build();
+        }
+
+        private Favorite favoriteOf(String clubId) {
+            Club club = mock(Club.class);
+            Favorite favorite = mock(Favorite.class);
+            given(favorite.getClub()).willReturn(club);
+            given(club.getId()).willReturn(clubId);
+            return favorite;
+        }
+
+        /**
+         * 즐겨찾기 개수가 늘어도 지원폼/멤버수 조회는 각각 한 번씩만 나가야 한다.
+         *
+         * <p>이 검증이 없으면 동아리마다 조회하는 형태로 되돌아가도 다른 테스트는 모두 통과한다.
+         */
+        @Test
+        @DisplayName("즐겨찾기가 여러 개여도 지원폼/멤버수 조회는 각각 한 번씩만 실행된다")
+        void batchQueriesRunOncePerRequest() {
+            FavoriteListServiceRequest request = givenRequest();
+
+            // 스터빙 중첩(willReturn 인자 안에서 다시 given 호출)을 피하려고 먼저 만들어 둔다
+            List<Favorite> favorites = List.of(favoriteOf("club-1"), favoriteOf("club-2"), favoriteOf("club-3"));
+
+            givenNoRecruitingForm();
+            givenNoClubMembers();
+            given(favoriteRepository.findFavoritesByRequest(request)).willReturn(favorites);
+
+            favoriteService.getFavoriteList(request);
+
+            verify(applyFormRepository, times(1)).findRecruitingFormsByClubIds(any());
+            verify(clubMemberRepository, times(1)).countClubMembersForEach(any());
+        }
+
+        @Test
+        @DisplayName("즐겨찾기가 없으면 배치 조회를 실행하지 않는다")
+        void noBatchQueriesWhenEmpty() {
+            FavoriteListServiceRequest request = givenRequest();
+
+            given(favoriteRepository.findFavoritesByRequest(request)).willReturn(Collections.emptyList());
+
+            FavoriteListServiceResponse response = favoriteService.getFavoriteList(request);
+
+            assertThat(response.favoriteClubs()).isEmpty();
+            verify(applyFormRepository, never()).findRecruitingFormsByClubIds(any());
+            verify(clubMemberRepository, never()).countClubMembersForEach(any());
         }
     }
 }
