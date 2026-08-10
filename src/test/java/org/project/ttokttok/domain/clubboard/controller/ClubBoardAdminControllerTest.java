@@ -78,8 +78,8 @@ class ClubBoardAdminControllerTest {
 
     @BeforeEach
     void setUp() {
-        Admin myAdmin = adminRepository.save(Admin.adminJoin("boardadmin1", "password123!", "boardadmin1@sangmyung.kr"));
-        Admin otherAdmin = adminRepository.save(Admin.adminJoin("boardadmin2", "password123!", "boardadmin2@sangmyung.kr"));
+        Admin myAdmin = adminRepository.save(Admin.adminJoin("boardadmin1", "password123!"));
+        Admin otherAdmin = adminRepository.save(Admin.adminJoin("boardadmin2", "password123!"));
 
         myClub = clubRepository.save(Club.builder()
                 .admin(myAdmin)

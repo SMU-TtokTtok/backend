@@ -59,7 +59,7 @@ class ApplicantCustomRepositoryImplTest implements RepositoryTestSupport {
     @BeforeEach
     void setUp() {
         Admin admin = adminRepository.save(
-                Admin.adminJoin("applicantadmin", "password123!", "applicant-admin@sangmyung.kr"));
+                Admin.adminJoin("applicantadmin", "password123!"));
 
         Club club = clubRepository.save(Club.builder()
                 .admin(admin)

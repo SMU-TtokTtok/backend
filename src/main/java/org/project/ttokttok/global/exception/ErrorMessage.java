@@ -17,10 +17,11 @@ public enum ErrorMessage {
 
     //관리자 에러메시지
     ADMIN_NOT_FOUND("관리자를 찾을 수 없음.", HttpStatus.NOT_FOUND),
-    ADMIN_PASSWORD_NOT_MATCH("비밀번호가 틀렸습니다.", HttpStatus.UNAUTHORIZED),
+    // 로그인 시 관리자를 찾지 못한 경우. 잘못된 요청(아이디 오류)이므로 400으로 반환한다.
+    ADMIN_LOGIN_NOT_FOUND("관리자를 찾을 수 없음.", HttpStatus.BAD_REQUEST),
+    ADMIN_PASSWORD_NOT_MATCH("비밀번호가 틀렸습니다.", HttpStatus.BAD_REQUEST),
     INVALID_ADMIN("잘못된 관리자명입니다.", HttpStatus.NOT_FOUND),
     ADMIN_ALREADY_EXIST_NAME("이미 존재하는 아이디입니다.", HttpStatus.CONFLICT),
-    ADMIN_ALREADY_EXIST_EMAIL("이미 사용되는 이메일입니다.", HttpStatus.CONFLICT),
     ADMIN_PASSWORD_CONFIRM_NOT_MATCH("새 비밀번호와 새 비밀번호 확인이 일치하지 않습니다.", HttpStatus.BAD_REQUEST),
 
     //토큰 에러 메시지

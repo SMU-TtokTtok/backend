@@ -44,9 +44,9 @@ class ClubMemberCountQueryTest implements RepositoryTestSupport {
     @BeforeEach
     void setUp() {
         Admin admin1 = adminRepository.save(
-                Admin.adminJoin("membercountadmin1", "password123!", "membercount1@sangmyung.kr"));
+                Admin.adminJoin("membercountadmin1", "password123!"));
         Admin admin2 = adminRepository.save(
-                Admin.adminJoin("membercountadmin2", "password123!", "membercount2@sangmyung.kr"));
+                Admin.adminJoin("membercountadmin2", "password123!"));
 
         testClub1 = clubRepository.save(Club.builder()
                 .admin(admin1)

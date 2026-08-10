@@ -89,7 +89,7 @@ class ApplyFormAdminServiceTest {
     private ArgumentCaptor<ApplyForm> applyFormCaptor;
 
     private static Club givenClubOwnedBy(String adminUsername) {
-        Admin admin = Admin.adminJoin(adminUsername, "password123!", "admin@sangmyung.kr");
+        Admin admin = Admin.adminJoin(adminUsername, "password123!");
 
         return Club.builder()
                 .admin(admin)
