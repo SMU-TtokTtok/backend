@@ -51,8 +51,8 @@ class ClubMemberCustomRepositoryImplTest implements RepositoryTestSupport {
 
     @BeforeEach
     void setUp() {
-        Admin admin1 = adminRepository.save(Admin.adminJoin("testadmin1", "password123!", "admin1@sangmyung.kr"));
-        Admin admin2 = adminRepository.save(Admin.adminJoin("testadmin2", "password123!", "admin2@sangmyung.kr"));
+        Admin admin1 = adminRepository.save(Admin.adminJoin("testadmin1", "password123!"));
+        Admin admin2 = adminRepository.save(Admin.adminJoin("testadmin2", "password123!"));
 
         club1 = clubRepository.save(Club.builder()
                 .admin(admin1)

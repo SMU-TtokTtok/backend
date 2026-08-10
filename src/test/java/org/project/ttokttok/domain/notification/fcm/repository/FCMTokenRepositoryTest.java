@@ -61,11 +61,10 @@ class FCMTokenRepositoryTest {
         );
         testUser = userRepository.save(testUser);
 
-        // Admin 생성 (adminJoin 사용, @sangmyung.kr 규칙 준수)
+        // Admin 생성 (adminJoin 사용)
         Admin admin = Admin.adminJoin(
                 "admin_" + uniqueSuffix,
-                "admin-password",
-                "admin_" + uniqueSuffix + "@sangmyung.kr"
+                "admin-password"
         );
         Admin savedAdmin = adminRepository.save(admin);
 

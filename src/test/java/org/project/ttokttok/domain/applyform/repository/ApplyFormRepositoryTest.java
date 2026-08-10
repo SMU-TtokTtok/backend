@@ -43,9 +43,9 @@ class ApplyFormRepositoryTest implements RepositoryTestSupport {
     @BeforeEach
     void setUp() {
         Admin admin1 = adminRepository.save(
-                Admin.adminJoin("applyformadmin1", "password123!", "applyform1@sangmyung.kr"));
+                Admin.adminJoin("applyformadmin1", "password123!"));
         Admin admin2 = adminRepository.save(
-                Admin.adminJoin("applyformadmin2", "password123!", "applyform2@sangmyung.kr"));
+                Admin.adminJoin("applyformadmin2", "password123!"));
 
         testClub1 = clubRepository.save(Club.builder()
                 .admin(admin1)
