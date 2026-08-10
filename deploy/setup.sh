@@ -146,6 +146,15 @@ if [[ -f "$ROOT/init-db/01-app-user.sh" ]]; then
     rm -f "$ROOT/init-db/01-app-user.sh"
 fi
 
+# 이 스크립트 자신의 옛 사본. setup.sh 는 스스로를 $ROOT 에 설치하지 않으므로
+# ($SRC 는 레포의 deploy/ 다) 여기 있는 건 초기 세팅 때 손으로 복사된 잔재이고,
+# 이후로 갱신되지 않는다. 이름이 같아서 "서버에 있는 최신 스크립트"로 오인해
+# 실행하기 쉬운데, 실행하면 그 시점의 옛 구성이 통째로 덮인다.
+if [[ -f "$ROOT/setup.sh" ]]; then
+    log "갱신되지 않는 setup.sh 사본 제거: $ROOT/setup.sh (레포의 deploy/setup.sh 를 쓴다)"
+    rm -f "$ROOT/setup.sh"
+fi
+
 # ── 6. 소유권/권한 ───────────────────────────────────────────────────────
 # setgid(2775): ttokttok-cicd 가 만든 파일도 ttokttok 그룹을 상속 →
 # ttokttokuser 와 파일을 주고받을 수 있다.
