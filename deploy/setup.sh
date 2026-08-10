@@ -146,6 +146,15 @@ if [[ -f "$ROOT/init-db/01-app-user.sh" ]]; then
     rm -f "$ROOT/init-db/01-app-user.sh"
 fi
 
+# 이 스크립트 자신의 옛 사본. setup.sh 는 스스로를 $ROOT 에 설치하지 않으므로
+# ($SRC 는 레포의 deploy/ 다) 여기 있는 건 초기 세팅 때 손으로 복사된 잔재이고,
+# 이후로 갱신되지 않는다. 이름이 같아서 "서버에 있는 최신 스크립트"로 오인해
+# 실행하기 쉬운데, 실행하면 그 시점의 옛 구성이 통째로 덮인다.
+if [[ -f "$ROOT/setup.sh" ]]; then
+    log "갱신되지 않는 setup.sh 사본 제거: $ROOT/setup.sh (레포의 deploy/setup.sh 를 쓴다)"
+    rm -f "$ROOT/setup.sh"
+fi
+
 # ── 6. 소유권/권한 ───────────────────────────────────────────────────────
 # setgid(2775): ttokttok-cicd 가 만든 파일도 ttokttok 그룹을 상속 →
 # ttokttokuser 와 파일을 주고받을 수 있다.
@@ -169,6 +178,13 @@ find "$ROOT" -path "$ROOT/data/*" -prune -o -exec chown "$RUN_USER:$RUN_GROUP" {
 find "$ROOT" -path "$ROOT/data/*" -prune -o -type d -exec chmod 2775 {} +
 chmod 0660 "$ROOT/app/.env"
 chmod 0770 "$ROOT/config/app"     # 시크릿(application-prod.yml, firebase.json)
+
+# 위 chown 은 config/app 안의 시크릿 소유자도 $CICD_USER → $RUN_USER 로 바꾼다.
+# 그래서 러너는 이후 그 파일을 덮어쓰지도(truncate 는 쓰기 권한이 필요) chmod 하지도
+# (소유자만 가능) 못한다. ci-cd.yml 이 임시 파일 + rename 으로 배치하는 이유다 —
+# rename 은 디렉터리 쓰기 권한만 요구하고 러너는 $RUN_GROUP 자격으로 늘 갖는다.
+# 여기서 소유권을 되돌리지 않는 이유는, 되돌려도 다음 setup.sh 실행에서 다시
+# 뒤집히기 때문이다. 배치 쪽을 소유권에 무관하게 만드는 것이 유일한 안정 해법이다.
 
 # ── 7. docker 권한 ───────────────────────────────────────────────────────
 # 두 사용자 다 필요하다.
