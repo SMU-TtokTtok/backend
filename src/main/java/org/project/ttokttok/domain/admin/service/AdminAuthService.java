@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.project.ttokttok.domain.admin.controller.dto.response.AdminLoginResponse;
 import org.project.ttokttok.domain.admin.domain.Admin;
 import org.project.ttokttok.domain.admin.exception.AdminEmailConflictException;
+import org.project.ttokttok.domain.admin.exception.AdminLoginNotFoundException;
 import org.project.ttokttok.domain.admin.exception.AdminNotFoundException;
 import org.project.ttokttok.domain.admin.exception.AdminPasswordConfirmNotMatchException;
 import org.project.ttokttok.domain.admin.exception.AdminUsernameConflictException;
@@ -39,14 +40,14 @@ public class AdminAuthService {
 
     public AdminLoginServiceResponse login(AdminLoginServiceRequest request) {
         Admin targetAdmin = adminRepository.findByUsername(request.username())
-                .orElseThrow(AdminNotFoundException::new);
+                .orElseThrow(AdminLoginNotFoundException::new);
 
         targetAdmin.validatePassword(request.password(), passwordEncoder);
 
         TokenResponse tokenResponse = getTokenResponse(targetAdmin.getUsername());
 
         Club findClub = clubRepository.findByAdminUsername(targetAdmin.getUsername())
-                .orElseThrow(AdminNotFoundException::new);
+                .orElseThrow(AdminLoginNotFoundException::new);
 
         return AdminLoginServiceResponse.of(
                 tokenResponse, findClub.getId(), findClub.getName()

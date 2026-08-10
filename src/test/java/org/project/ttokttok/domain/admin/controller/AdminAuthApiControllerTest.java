@@ -114,7 +114,7 @@ class AdminAuthApiControllerTest {
         }
 
         @Test
-        @DisplayName("잘못된 비밀번호로 로그인하면 401 Unauthorized가 반환된다")
+        @DisplayName("잘못된 비밀번호로 로그인하면 400 Bad Request가 반환된다")
         void loginFailWithInvalidPassword() throws Exception {
             // given
             final String wrongPassword = "wrongPassword123";
@@ -131,13 +131,13 @@ class AdminAuthApiControllerTest {
 
             // then
             result
-                    .andExpect(status().isUnauthorized())
-                    .andExpect(jsonPath("$.statusCode").value(401))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.statusCode").value(400))
                     .andExpect(jsonPath("$.details").isString());
         }
 
         @Test
-        @DisplayName("존재하지 않는 사용자로 로그인하면 404 Not Found가 반환된다")
+        @DisplayName("존재하지 않는 사용자로 로그인하면 400 Bad Request가 반환된다")
         void loginFailWithUserNotFound() throws Exception {
             // given
             final String nonExistentUsername = "nonexistentadmin";
@@ -154,8 +154,8 @@ class AdminAuthApiControllerTest {
 
             // then
             result
-                    .andExpect(status().isNotFound())
-                    .andExpect(jsonPath("$.statusCode").value(404))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.statusCode").value(400))
                     .andExpect(jsonPath("$.details").isString());
         }
 

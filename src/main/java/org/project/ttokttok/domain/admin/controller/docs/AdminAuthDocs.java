@@ -81,16 +81,8 @@ public interface AdminAuthDocs {
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "잘못된 요청 (아이디/비밀번호 형식 오류)",
+                    description = "잘못된 요청 (아이디/비밀번호 형식 오류, 존재하지 않는 관리자, 비밀번호 불일치)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-            ),
-            @ApiResponse(
-                    responseCode = "401",
-                    description = "인증 실패 (잘못된 이메일 또는 비밀번호)"
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "관리자를 찾을 수 없음."
             ),
             @ApiResponse(
                     responseCode = "500",

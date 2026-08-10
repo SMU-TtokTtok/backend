@@ -23,6 +23,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.project.ttokttok.domain.admin.domain.Admin;
 import org.project.ttokttok.domain.admin.exception.AdminEmailConflictException;
+import org.project.ttokttok.domain.admin.exception.AdminLoginNotFoundException;
 import org.project.ttokttok.domain.admin.exception.AdminNotFoundException;
 import org.project.ttokttok.domain.admin.exception.AdminPasswordConfirmNotMatchException;
 import org.project.ttokttok.domain.admin.exception.AdminPasswordNotMatchException;
@@ -107,7 +108,7 @@ class AdminAuthServiceTest {
         }
 
         @Test
-        @DisplayName("존재하지 않는 사용자명으로 로그인하면 AdminNotFoundException이 발생한다")
+        @DisplayName("존재하지 않는 사용자명으로 로그인하면 AdminLoginNotFoundException이 발생한다")
         void loginWithNonExistentUsername() {
             // given
             final String nonExistentUsername = "nonexistent";
@@ -117,7 +118,9 @@ class AdminAuthServiceTest {
 
             // when & then
             assertThatThrownBy(() -> adminAuthService.login(request))
-                    .isInstanceOf(AdminNotFoundException.class);
+                    .isInstanceOf(AdminLoginNotFoundException.class)
+                    .extracting(thrown -> ((CustomException) thrown).getStatus())
+                    .isEqualTo(HttpStatus.BAD_REQUEST);
 
             verify(adminRepository).findByUsername(nonExistentUsername);
             verify(tokenProvider, never()).generateToken(any(TokenRequest.class));
@@ -138,7 +141,9 @@ class AdminAuthServiceTest {
 
             // when & then
             assertThatThrownBy(() -> adminAuthService.login(request))
-                    .isInstanceOf(AdminPasswordNotMatchException.class);
+                    .isInstanceOf(AdminPasswordNotMatchException.class)
+                    .extracting(thrown -> ((CustomException) thrown).getStatus())
+                    .isEqualTo(HttpStatus.BAD_REQUEST);
 
             verify(adminRepository).findByUsername(VALID_USERNAME);
             verify(mockAdmin).validatePassword(wrongPassword, passwordEncoder);
@@ -147,7 +152,7 @@ class AdminAuthServiceTest {
         }
 
         @Test
-        @DisplayName("관리자에게 연결된 클럽이 없으면 AdminNotFoundException이 발생한다")
+        @DisplayName("관리자에게 연결된 클럽이 없으면 AdminLoginNotFoundException이 발생한다")
         void loginWithNoAssociatedClub() {
             // given
             final AdminLoginServiceRequest request = createLoginRequest(VALID_USERNAME, VALID_PASSWORD);
@@ -158,7 +163,9 @@ class AdminAuthServiceTest {
 
             // when & then
             assertThatThrownBy(() -> adminAuthService.login(request))
-                    .isInstanceOf(AdminNotFoundException.class);
+                    .isInstanceOf(AdminLoginNotFoundException.class)
+                    .extracting(thrown -> ((CustomException) thrown).getStatus())
+                    .isEqualTo(HttpStatus.BAD_REQUEST);
 
             verify(adminRepository).findByUsername(VALID_USERNAME);
             verify(tokenProvider).generateToken(any(TokenRequest.class));
