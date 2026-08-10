@@ -170,6 +170,14 @@ find "$ROOT" -path "$ROOT/data/*" -prune -o -type d -exec chmod 2775 {} +
 chmod 0660 "$ROOT/app/.env"
 chmod 0770 "$ROOT/config/app"     # 시크릿(application-prod.yml, firebase.json)
 
+# config/app 안의 시크릿은 러너($CICD_USER)가 쓰고 앱($RUN_USER)이 읽는, 이 트리에서
+# 유일하게 소유자가 둘인 파일이다. 바로 위 chown 이 러너가 만든 파일을 $RUN_USER 로
+# 넘기므로, 그룹 쓰기를 복원하지 않으면 다음 배포의 시크릿 배치 단계가
+# "Permission denied" 로 죽는다(`>` 는 truncate 라 쓰기 권한이 필요하다).
+# 디렉터리가 0770 group=$RUN_GROUP 이라 그룹 멤버는 어차피 파일 교체가 가능하므로
+# 0660 이 실질 권한을 넓히지는 않는다.
+find "$ROOT/config/app" -type f -exec chmod 0660 {} +
+
 # ── 7. docker 권한 ───────────────────────────────────────────────────────
 # 두 사용자 다 필요하다.
 #   - $CICD_USER: 러너가 이미지 빌드와 deploy.sh 를 돌린다.
