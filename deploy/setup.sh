@@ -179,13 +179,12 @@ find "$ROOT" -path "$ROOT/data/*" -prune -o -type d -exec chmod 2775 {} +
 chmod 0660 "$ROOT/app/.env"
 chmod 0770 "$ROOT/config/app"     # 시크릿(application-prod.yml, firebase.json)
 
-# config/app 안의 시크릿은 러너($CICD_USER)가 쓰고 앱($RUN_USER)이 읽는, 이 트리에서
-# 유일하게 소유자가 둘인 파일이다. 바로 위 chown 이 러너가 만든 파일을 $RUN_USER 로
-# 넘기므로, 그룹 쓰기를 복원하지 않으면 다음 배포의 시크릿 배치 단계가
-# "Permission denied" 로 죽는다(`>` 는 truncate 라 쓰기 권한이 필요하다).
-# 디렉터리가 0770 group=$RUN_GROUP 이라 그룹 멤버는 어차피 파일 교체가 가능하므로
-# 0660 이 실질 권한을 넓히지는 않는다.
-find "$ROOT/config/app" -type f -exec chmod 0660 {} +
+# 위 chown 은 config/app 안의 시크릿 소유자도 $CICD_USER → $RUN_USER 로 바꾼다.
+# 그래서 러너는 이후 그 파일을 덮어쓰지도(truncate 는 쓰기 권한이 필요) chmod 하지도
+# (소유자만 가능) 못한다. ci-cd.yml 이 임시 파일 + rename 으로 배치하는 이유다 —
+# rename 은 디렉터리 쓰기 권한만 요구하고 러너는 $RUN_GROUP 자격으로 늘 갖는다.
+# 여기서 소유권을 되돌리지 않는 이유는, 되돌려도 다음 setup.sh 실행에서 다시
+# 뒤집히기 때문이다. 배치 쪽을 소유권에 무관하게 만드는 것이 유일한 안정 해법이다.
 
 # ── 7. docker 권한 ───────────────────────────────────────────────────────
 # 두 사용자 다 필요하다.
