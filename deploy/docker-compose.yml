@@ -44,6 +44,13 @@ x-app-base: &app-base
     SPRING_DATASOURCE_USERNAME: ${APP_DB_USER}
     SPRING_DATASOURCE_PASSWORD: ${APP_DB_PASSWORD}
 
+    # Flyway 는 위 런타임 datasource 를 재사용하지 않고 이 세 값이 있으면 자기
+    # 전용 커넥션을 새로 연다(Spring Boot 기본 동작). APP_DB_USER 는 DML 만
+    # 가능해 마이그레이션의 ALTER/DROP 을 실행할 수 없어서 분리했다 — #403.
+    SPRING_FLYWAY_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+    SPRING_FLYWAY_USER: ${MIGRATOR_DB_USER}
+    SPRING_FLYWAY_PASSWORD: ${MIGRATOR_DB_PASSWORD}
+
     SPRING_DATA_REDIS_HOST: redis
     SPRING_DATA_REDIS_PORT: 6379
     SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
@@ -162,17 +169,24 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      # init-db/01-app-user.sh 가 사용 (최초 1회 초기화 시에만)
+      # init-db/00-roles.sh, 02-grants.sh 가 사용 (최초 1회 초기화 시에만)
       APP_DB_USER: ${APP_DB_USER}
       APP_DB_PASSWORD: ${APP_DB_PASSWORD}
+      # 앱 런타임(APP_DB_USER)은 DML 만 가능해 Flyway 의 ALTER/DROP 을 실행할 수
+      # 없다. 소유권을 가진 이 별도 롤로 마이그레이션만 따로 접속한다 — #403.
+      MIGRATOR_DB_USER: ${MIGRATOR_DB_USER}
+      MIGRATOR_DB_PASSWORD: ${MIGRATOR_DB_PASSWORD}
       TZ: Asia/Seoul
     volumes:
       # named volume 대신 호스트 경로 바인드를 쓴다 — 백업 스크립트가 경로를
       # 그대로 다룰 수 있고, 볼륨 실수 삭제로 데이터가 날아가는 경로를 줄인다.
       - /opt/ttokttok/data/postgres:/var/lib/postgresql/data
       # 데이터 디렉터리가 비었을 때에만 알파벳 순으로 실행된다:
-      #   00-restore.sql  → EB/RDS 덤프 복원
-      #   01-app-user.sh  → 앱 전용 롤 생성 + 권한 부여
+      #   00-roles.sh     → 앱 전용 롤 + 마이그레이션 전용 롤 생성 (덤프 복원 전!
+      #                      복원되는 덤프가 마이그레이션 롤 소유로 찍혀 있어서,
+      #                      롤이 먼저 있어야 복원이 실패하지 않는다)
+      #   01-restore.sql  → EB/RDS 덤프 복원
+      #   02-grants.sh    → 권한 부여 + 소유권을 마이그레이션 롤로 이관
       - /opt/ttokttok/init-db:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]

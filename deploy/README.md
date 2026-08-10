@@ -40,9 +40,14 @@ sudo -u ttokttokuser /opt/ttokttok/bin/import-files.sh <resources.tar>
 sudo -u ttokttokuser /opt/ttokttok/bin/issue-cert.sh <이메일>
 ```
 
-`postgres` 최초 기동 시 `init-db/00-restore.sql`(백업 덤프)이 자동 복원된다.
+`postgres` 최초 기동 시 `init-db/01-restore.sql`(백업 덤프)이 자동 복원된다.
 `db/migration` 의 첫 스크립트가 `ALTER TABLE` 로 시작해서 Flyway 만으로는
 스키마를 만들 수 없기 때문에, 덤프 복원이 유일한 경로다.
+
+`init-db/` 는 데이터 디렉터리가 비어 있을 때만 알파벳 순으로 실행된다:
+`00-roles.sh`(앱 롤 + 마이그레이션 롤 생성) → `01-restore.sql`(덤프 복원) →
+`02-grants.sh`(권한 부여 + 소유권을 마이그레이션 롤로 이관). 롤을 복원보다
+먼저 만드는 이유는 아래 "설계상 주의점"의 `MIGRATOR_DB_USER` 항목 참고.
 
 ## 운영
 
@@ -106,7 +111,7 @@ docker logs --tail 50 ttokttok-certbot
 엉뚱한 곳(옛 RDS 등)에 조용히 붙는다. 키가 아예 없어야 Boot 가 즉시 실패한다.
 compose 가 넘기는 값:
 
-`SPRING_DATASOURCE_*`, `SPRING_DATA_REDIS_*`, `SPRING_MAIL_HOST/PORT`,
+`SPRING_DATASOURCE_*`, `SPRING_FLYWAY_*`, `SPRING_DATA_REDIS_*`, `SPRING_MAIL_HOST/PORT`,
 `CLOUD_AWS_S3_ENDPOINT/BUCKET`, `CLOUD_AWS_CREDENTIALS_*`, `FILE_CLOUD_URL`,
 `FIREBASE_CREDENTIALS_LOCATION`
 
@@ -147,6 +152,22 @@ Postfix 는 `mynetworks` 안에서 오는 요청을 인증 없이 받으므로 �
   **내부 문자열**에도 박혀 있다. 도메인을 유지하는 대가로 DB 를 한 줄도 안 건드린다.
 - **`POSTGRES_USER` 는 `postgres` 여야 한다.** 백업 덤프의 객체 소유자가 `postgres` 라,
   다른 이름으로 초기화하면 `ALTER ... OWNER TO postgres` 가 "role does not exist" 로 실패한다.
+- **`MIGRATOR_DB_USER`/`APP_DB_USER` 는 역할이 분리되어 있다 — 앱 컨테이너는 스키마를
+  바꿀 수 없다(#403).** `APP_DB_USER` 는 `init-db/02-grants.sh` 가 DML(SELECT/INSERT/
+  UPDATE/DELETE)만 GRANT 하는 최소권한 롤이고, 앱 런타임(`SPRING_DATASOURCE_*`)이 쓴다.
+  Flyway 는 `SPRING_FLYWAY_*` 로 별도 접속하는 `MIGRATOR_DB_USER` 를 쓰는데, 이 롤은
+  `REASSIGN OWNED BY postgres TO ...` 로 덤프 객체의 소유권을 이어받아 `ALTER`/`DROP`
+  같은 DDL 을 실행할 수 있다. 앱이 DML 만 가능한 이유는 앱 계정이 뚫려도 스키마
+  변경/DROP 은 못 하게 막기 위해서다 — Flyway 만 예외적으로 소유자 권한을 쓴다.
+
+  덤프(`00-restore.sql` → `01-restore.sql`)가 `01-restore.sql` **보다 먼저** 롤이
+  있어야 하는 이유도 이것이다: 다음 백업부터는 `pg_dump` 가 `ALTER TABLE ... OWNER TO
+  ttokttok_migrator` 를 포함하게 되므로, 복원 시점에 그 롤이 없으면 위 `POSTGRES_USER`
+  항목과 똑같은 이유로 복원이 실패한다. 그래서 롤 생성(`00-roles.sh`)이 복원보다 앞선다.
+
+  **이미 초기화된(데이터가 있는) 운영 DB에는 이 스크립트들이 다시 실행되지 않는다.**
+  `MIGRATOR_DB_USER` 를 새로 도입할 때는 SSH 터널로 접속해 위 SQL(역할 생성 → GRANT →
+  `REASSIGN OWNED BY postgres TO ...`)을 수동으로 한 번 실행해야 한다.
 - **`docker-compose.yml` 은 CI 로 배포되지 않는다.** GitHub Actions 는 `deploy.sh` 만 부르고,
   `deploy.sh` 는 **이미 서버에 있는** compose 를 읽을 뿐이다. 서버의
   `/opt/ttokttok/app/docker-compose.yml` 을 갱신하는 경로는 `setup.sh` 하나뿐이다.

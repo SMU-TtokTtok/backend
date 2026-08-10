@@ -67,7 +67,7 @@ if ! grep -qF " $ROOT/data " /etc/fstab; then
 fi
 
 # 마운트를 단언한다. 이게 없으면 스택이 루트 파티션의 빈 디렉터리 위에서 뜨고,
-# postgres 는 PGDATA 가 비었으니 initdb → 00-restore.sql 순으로 "최초 덤프"를 복원한다.
+# postgres 는 PGDATA 가 비었으니 initdb → 01-restore.sql 순으로 "최초 덤프"를 복원한다.
 # 서비스는 정상으로 보이지만 낡은 데이터로 운영되고, 진짜 데이터는 /home 에 방치된 채
 # 양쪽이 갈라진다. 조용히 일어나므로 여기서 막는다.
 mountpoint -q "$ROOT/data" \
@@ -110,7 +110,8 @@ install -m 0775 "$SRC/bin/issue-cert.sh"                         "$ROOT/bin/issu
 install -m 0775 "$SRC/bin/check-certs.sh"                        "$ROOT/bin/check-certs.sh"
 install -m 0775 "$SRC/bin/backup-db.sh"                          "$ROOT/bin/backup-db.sh"
 install -m 0775 "$SRC/bin/import-files.sh"                       "$ROOT/bin/import-files.sh"
-install -m 0775 "$SRC/init-db/01-app-user.sh"                    "$ROOT/init-db/01-app-user.sh"
+install -m 0775 "$SRC/init-db/00-roles.sh"                       "$ROOT/init-db/00-roles.sh"
+install -m 0775 "$SRC/init-db/02-grants.sh"                      "$ROOT/init-db/02-grants.sh"
 
 if [[ ! -f "$ROOT/app/.env" ]]; then
     log ".env 생성 (값은 직접 채워야 한다)"
@@ -121,9 +122,13 @@ fi
 [[ -f "$ROOT/app/state" ]] || { echo none > "$ROOT/app/state"; chmod 0664 "$ROOT/app/state"; }
 
 # ── 5. 덤프를 초기화 스크립트 위치로 ─────────────────────────────────────
-if [[ -f "$ROOT/init-db/ttokttok-backup.sql" && ! -f "$ROOT/init-db/00-restore.sql" ]]; then
-    log "덤프 → 00-restore.sql (알파벳 순서로 01-app-user.sh 보다 먼저 실행되게)"
-    mv "$ROOT/init-db/ttokttok-backup.sql" "$ROOT/init-db/00-restore.sql"
+# 롤(00-roles.sh)이 먼저, 덤프 복원(01-restore.sql)이 그다음, 권한 부여
+# (02-grants.sh)가 마지막이어야 한다 — 앞으로의 백업은 소유자가 postgres 가
+# 아니라 마이그레이션 롤로 찍히므로("ALTER ... OWNER TO ttokttok_migrator"),
+# 복원 시점에 그 롤이 이미 있어야 한다 (#403).
+if [[ -f "$ROOT/init-db/ttokttok-backup.sql" && ! -f "$ROOT/init-db/01-restore.sql" ]]; then
+    log "덤프 → 01-restore.sql (알파벳 순서로 00-roles.sh 다음, 02-grants.sh 이전에 실행되게)"
+    mv "$ROOT/init-db/ttokttok-backup.sql" "$ROOT/init-db/01-restore.sql"
 fi
 
 # ── 6. 소유권/권한 ───────────────────────────────────────────────────────
