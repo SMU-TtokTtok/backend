@@ -10,6 +10,21 @@
 #   3) nginx upstream 을 새 색으로 바꾸고 reload (진행 중 요청은 기존 워커가 끝까지 처리)
 #   4) 드레인 후 구 색 컨테이너를 정리한다
 #
+# DB 마이그레이션과의 관계 — 반드시 알고 있어야 한다.
+#
+# Flyway 는 1) 에서 새 색이 부팅할 때 실행된다. 그 시점에 구 색은 아직 살아 있고,
+# 4) 까지 DRAIN_SECONDS 만큼 같은 DB 로 요청을 계속 처리한다. 즉 마이그레이션
+# 직후 최소 30초 이상 "구 코드 + 신 스키마" 상태가 지속된다.
+#
+# 그래서 DROP COLUMN / RENAME / SET NOT NULL 처럼 하위호환이 깨지는 마이그레이션을
+# 코드 변경과 같은 배포에 넣으면, 그 구간 동안 구 코드의 쿼리가 실패한다.
+# 헬스체크(/health)는 스키마를 건드리지 않아 통과하므로 배포는 "성공" 으로 보고된다.
+# 파괴적 변경은 확장-수축으로 최소 2회 배포에 나눈다 (AGENTS.md 참고).
+#
+# 또한 이 스크립트는 마이그레이션을 롤백하지 않는다. 마이그레이션이 성공한 뒤
+# 헬스체크가 다른 이유로 실패하면 restore_env 로 .env 태그만 되돌아가고 스키마는
+# 새 상태로 남는다 — 그때도 구 코드가 신 스키마 위에서 돌 수 있어야 한다.
+#
 set -Eeuo pipefail
 
 APP_DIR="${APP_DIR:-/opt/ttokttok/app}"
@@ -119,7 +134,12 @@ for ((i = 0; i < HEALTH_TIMEOUT; i++)); do
     sleep 1
     if ! target_running "$target"; then
       cleanup_target
-      die "app-$target 컨테이너가 기동 중 종료됐다"
+      # cleanup_target 이 직전에 컨테이너 로그 100줄을 찍는다. 부팅 중 종료의
+      # 대표 원인이 Flyway 마이그레이션 실패라, 어디를 봐야 하는지 같이 알린다.
+      die "app-$target 컨테이너가 기동 중 종료됐다.
+       위 로그에 Flyway 예외가 있으면 마이그레이션 문제다. PostgreSQL 은 DDL 도
+       트랜잭션이라 실패한 마이그레이션은 통째로 롤백된다 — 스키마를 손으로
+       되돌리거나 flyway repair 를 돌릴 필요 없이, 원인만 고쳐 재배포하면 된다."
     fi
   fi
   # 이 앱에는 actuator 의존성이 없다. /health 가 SecurityWhiteList 에 등록된
