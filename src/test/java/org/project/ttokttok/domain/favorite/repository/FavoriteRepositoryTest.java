@@ -57,10 +57,10 @@ class FavoriteRepositoryTest implements RepositoryTestSupport {
     @BeforeEach
     void setUp() {
         // 관리자 생성
-        Admin admin1 = Admin.adminJoin("testadmin1", "password123!", "admin1@sangmyung.kr");
+        Admin admin1 = Admin.adminJoin("testadmin1", "password123!");
         admin1 = adminRepository.save(admin1);
 
-        Admin admin2 = Admin.adminJoin("testadmin2", "password123!", "admin2@sangmyung.kr");
+        Admin admin2 = Admin.adminJoin("testadmin2", "password123!");
         admin2 = adminRepository.save(admin2);
 
         // 동아리 생성

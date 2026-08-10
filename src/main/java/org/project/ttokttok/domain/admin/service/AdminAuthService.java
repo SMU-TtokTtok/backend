@@ -5,7 +5,7 @@ import static org.project.ttokttok.global.entity.Role.ROLE_ADMIN;
 import lombok.RequiredArgsConstructor;
 import org.project.ttokttok.domain.admin.controller.dto.response.AdminLoginResponse;
 import org.project.ttokttok.domain.admin.domain.Admin;
-import org.project.ttokttok.domain.admin.exception.AdminEmailConflictException;
+import org.project.ttokttok.domain.admin.exception.AdminLoginNotFoundException;
 import org.project.ttokttok.domain.admin.exception.AdminNotFoundException;
 import org.project.ttokttok.domain.admin.exception.AdminPasswordConfirmNotMatchException;
 import org.project.ttokttok.domain.admin.exception.AdminUsernameConflictException;
@@ -39,14 +39,14 @@ public class AdminAuthService {
 
     public AdminLoginServiceResponse login(AdminLoginServiceRequest request) {
         Admin targetAdmin = adminRepository.findByUsername(request.username())
-                .orElseThrow(AdminNotFoundException::new);
+                .orElseThrow(AdminLoginNotFoundException::new);
 
         targetAdmin.validatePassword(request.password(), passwordEncoder);
 
         TokenResponse tokenResponse = getTokenResponse(targetAdmin.getUsername());
 
         Club findClub = clubRepository.findByAdminUsername(targetAdmin.getUsername())
-                .orElseThrow(AdminNotFoundException::new);
+                .orElseThrow(AdminLoginNotFoundException::new);
 
         return AdminLoginServiceResponse.of(
                 tokenResponse, findClub.getId(), findClub.getName()
@@ -73,8 +73,7 @@ public class AdminAuthService {
 
         Admin admin = Admin.adminJoin(
                 request.username(),
-                passwordEncoder.encode(request.password()),
-                request.email()
+                passwordEncoder.encode(request.password())
         );
 
         Club club = Club.builder()
@@ -92,10 +91,6 @@ public class AdminAuthService {
     private void validateConflict(AdminJoinServiceRequest request) {
         if (adminRepository.existsByUsername(request.username())) {
             throw new AdminUsernameConflictException();
-        }
-
-        if (adminRepository.existsByEmail(request.email())) {
-            throw new AdminEmailConflictException();
         }
     }
 

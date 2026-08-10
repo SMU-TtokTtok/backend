@@ -29,27 +29,20 @@ public class Admin extends BaseTimeEntity {
     @Column(nullable = false)
     private String password;
 
-    // 아이디, 비밀번호 조회를 위한 인증용 이메일 필드
-    @Column(nullable = false, unique = true)
-    private String email;
-
     @Builder
-    private Admin(String username, String password, String email) {
+    private Admin(String username, String password) {
         validateUsernameFormat(username);
         validatePasswordFormat(password);
-        validateEmailFormat(email);
 
         this.username = username;
         this.password = password;
-        this.email = email;
     }
 
     // ------- 정적 메서드 -------
-    public static Admin adminJoin(String username, String password, String email) {
+    public static Admin adminJoin(String username, String password) {
         return Admin.builder()
                 .username(username)
                 .password(password)
-                .email(email)
                 .build();
     }
 
@@ -80,18 +73,6 @@ public class Admin extends BaseTimeEntity {
     private void validatePasswordFormat(String password) {
         if (password == null || password.trim().isEmpty()) {
             throw new IllegalArgumentException("비밀번호는 null이거나 비어 있을 수 없습니다.");
-        }
-    }
-
-    private void validateEmailFormat(String email) {
-        if (email == null || email.trim().isEmpty()) {
-            throw new IllegalArgumentException("이메일은 null이거나 비어있을 수 없습니다.");
-        }
-
-        // RFC 5322 기반 이메일 정규식 패턴
-        String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
-        if (!email.matches(emailRegex)) {
-            throw new IllegalArgumentException("유효한 이메일 형식이 아닙니다.");
         }
     }
 }

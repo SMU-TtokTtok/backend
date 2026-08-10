@@ -24,14 +24,13 @@ public interface AdminAuthDocs {
             summary = "관리자 회원가입",
             description = """
                     새로운 관리자 계정을 생성합니다.
-                    관리자 아이디, 비밀번호, 이메일, 동아리 정보를 입력받아 관리자 계정을 생성합니다.
+                    관리자 아이디, 비밀번호, 동아리 정보를 입력받아 관리자 계정을 생성합니다.
                     성공 시 생성된 관리자의 기본 정보가 반환됩니다.
-                    
+
                     *주의사항*
                     - 관리자 아이디는 최소 8글자 입력입니다.
                     - 비밀번호는 최소 12글자 입력입니다.
                     - 동일한 아이디로 중복 가입은 불가능합니다.
-                    - 동일한 이메일로 중복 가입은 불가능합니다.
                     """
     )
     @ApiResponses(value = {
@@ -47,7 +46,7 @@ public interface AdminAuthDocs {
             ),
             @ApiResponse(
                     responseCode = "409",
-                    description = "이미 존재하는 관리자 아이디거나 중복되는 이메일 입력",
+                    description = "이미 존재하는 관리자 아이디",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             ),
             @ApiResponse(
@@ -81,16 +80,8 @@ public interface AdminAuthDocs {
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "잘못된 요청 (아이디/비밀번호 형식 오류)",
+                    description = "잘못된 요청 (아이디/비밀번호 형식 오류, 존재하지 않는 관리자, 비밀번호 불일치)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-            ),
-            @ApiResponse(
-                    responseCode = "401",
-                    description = "인증 실패 (잘못된 이메일 또는 비밀번호)"
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "관리자를 찾을 수 없음."
             ),
             @ApiResponse(
                     responseCode = "500",

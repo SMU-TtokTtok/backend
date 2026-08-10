@@ -22,7 +22,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.project.ttokttok.domain.admin.domain.Admin;
-import org.project.ttokttok.domain.admin.exception.AdminEmailConflictException;
+import org.project.ttokttok.domain.admin.exception.AdminLoginNotFoundException;
 import org.project.ttokttok.domain.admin.exception.AdminNotFoundException;
 import org.project.ttokttok.domain.admin.exception.AdminPasswordConfirmNotMatchException;
 import org.project.ttokttok.domain.admin.exception.AdminPasswordNotMatchException;
@@ -107,7 +107,7 @@ class AdminAuthServiceTest {
         }
 
         @Test
-        @DisplayName("존재하지 않는 사용자명으로 로그인하면 AdminNotFoundException이 발생한다")
+        @DisplayName("존재하지 않는 사용자명으로 로그인하면 AdminLoginNotFoundException이 발생한다")
         void loginWithNonExistentUsername() {
             // given
             final String nonExistentUsername = "nonexistent";
@@ -117,7 +117,9 @@ class AdminAuthServiceTest {
 
             // when & then
             assertThatThrownBy(() -> adminAuthService.login(request))
-                    .isInstanceOf(AdminNotFoundException.class);
+                    .isInstanceOf(AdminLoginNotFoundException.class)
+                    .extracting(thrown -> ((CustomException) thrown).getStatus())
+                    .isEqualTo(HttpStatus.BAD_REQUEST);
 
             verify(adminRepository).findByUsername(nonExistentUsername);
             verify(tokenProvider, never()).generateToken(any(TokenRequest.class));
@@ -138,7 +140,9 @@ class AdminAuthServiceTest {
 
             // when & then
             assertThatThrownBy(() -> adminAuthService.login(request))
-                    .isInstanceOf(AdminPasswordNotMatchException.class);
+                    .isInstanceOf(AdminPasswordNotMatchException.class)
+                    .extracting(thrown -> ((CustomException) thrown).getStatus())
+                    .isEqualTo(HttpStatus.BAD_REQUEST);
 
             verify(adminRepository).findByUsername(VALID_USERNAME);
             verify(mockAdmin).validatePassword(wrongPassword, passwordEncoder);
@@ -147,7 +151,7 @@ class AdminAuthServiceTest {
         }
 
         @Test
-        @DisplayName("관리자에게 연결된 클럽이 없으면 AdminNotFoundException이 발생한다")
+        @DisplayName("관리자에게 연결된 클럽이 없으면 AdminLoginNotFoundException이 발생한다")
         void loginWithNoAssociatedClub() {
             // given
             final AdminLoginServiceRequest request = createLoginRequest(VALID_USERNAME, VALID_PASSWORD);
@@ -158,7 +162,9 @@ class AdminAuthServiceTest {
 
             // when & then
             assertThatThrownBy(() -> adminAuthService.login(request))
-                    .isInstanceOf(AdminNotFoundException.class);
+                    .isInstanceOf(AdminLoginNotFoundException.class)
+                    .extracting(thrown -> ((CustomException) thrown).getStatus())
+                    .isEqualTo(HttpStatus.BAD_REQUEST);
 
             verify(adminRepository).findByUsername(VALID_USERNAME);
             verify(tokenProvider).generateToken(any(TokenRequest.class));
@@ -339,7 +345,6 @@ class AdminAuthServiceTest {
 
         private static final String DEFAULT_USERNAME = "newadmin123";
         private static final String DEFAULT_PASSWORD = "password123";
-        private static final String DEFAULT_EMAIL = "admin@example.com";
         private static final String DEFAULT_CLUB_NAME = "테스트 동아리";
         // 임의의 대학 값 이용
         private static final ClubUniv DEFAULT_CLUB_UNIV = ClubUniv.ENGINEERING;
@@ -350,7 +355,7 @@ class AdminAuthServiceTest {
             // given
             final String expectedAdminId = "admin-uuid-123";
             AdminJoinServiceRequest request = createJoinRequest(
-                    DEFAULT_USERNAME, DEFAULT_PASSWORD, DEFAULT_EMAIL, DEFAULT_CLUB_NAME, DEFAULT_CLUB_UNIV);
+                    DEFAULT_USERNAME, DEFAULT_PASSWORD, DEFAULT_CLUB_NAME, DEFAULT_CLUB_UNIV);
 
             setupSuccessfulJoinMocks(DEFAULT_USERNAME, DEFAULT_PASSWORD, expectedAdminId);
 
@@ -370,7 +375,7 @@ class AdminAuthServiceTest {
             // given
             final String duplicateUsername = "existingadmin";
             AdminJoinServiceRequest request = createJoinRequest(
-                    duplicateUsername, DEFAULT_PASSWORD, DEFAULT_EMAIL, DEFAULT_CLUB_NAME, DEFAULT_CLUB_UNIV);
+                    duplicateUsername, DEFAULT_PASSWORD, DEFAULT_CLUB_NAME, DEFAULT_CLUB_UNIV);
 
             when(adminRepository.existsByUsername(duplicateUsername)).thenReturn(true);
 
@@ -384,33 +389,12 @@ class AdminAuthServiceTest {
         }
 
         @Test
-        @DisplayName("이미 존재하는 이메일로 회원가입하면 AdminEmailConflictException이 발생한다")
-        void joinWithDuplicateEmail() {
-            // given
-            final String duplicateEmail = "existing@example.com";
-            AdminJoinServiceRequest request = createJoinRequest(
-                    DEFAULT_USERNAME, DEFAULT_PASSWORD, duplicateEmail, DEFAULT_CLUB_NAME, DEFAULT_CLUB_UNIV);
-
-            when(adminRepository.existsByUsername(DEFAULT_USERNAME)).thenReturn(false);
-            when(adminRepository.existsByEmail(duplicateEmail)).thenReturn(true);
-
-            // when & then
-            assertThatThrownBy(() -> adminAuthService.join(request))
-                    .isInstanceOf(AdminEmailConflictException.class);
-
-            verify(adminRepository).existsByUsername(DEFAULT_USERNAME);
-            verify(adminRepository).existsByEmail(duplicateEmail);
-            verify(adminRepository, never()).save(any(Admin.class));
-            verify(clubRepository, never()).save(any(Club.class));
-        }
-
-        @Test
         @DisplayName("회원가입 시 비밀번호가 인코딩되어 저장된다")
         void joinEncodesPassword() {
             // given
             final String rawPassword = "rawPassword123";
             AdminJoinServiceRequest request = createJoinRequest(
-                    DEFAULT_USERNAME, rawPassword, DEFAULT_EMAIL, DEFAULT_CLUB_NAME, ClubUniv.DESIGN);
+                    DEFAULT_USERNAME, rawPassword, DEFAULT_CLUB_NAME, ClubUniv.DESIGN);
 
             setupSuccessfulJoinMocks(DEFAULT_USERNAME, rawPassword, "admin-id");
 
@@ -426,7 +410,7 @@ class AdminAuthServiceTest {
         void joinCreatesClub() {
             // given
             AdminJoinServiceRequest request = createJoinRequest(
-                    DEFAULT_USERNAME, DEFAULT_PASSWORD, DEFAULT_EMAIL, "새로운 동아리", ClubUniv.ARTS);
+                    DEFAULT_USERNAME, DEFAULT_PASSWORD, "새로운 동아리", ClubUniv.ARTS);
 
             setupSuccessfulJoinMocks(DEFAULT_USERNAME, DEFAULT_PASSWORD, "admin-id");
 
@@ -440,13 +424,11 @@ class AdminAuthServiceTest {
         // ===== Helper Methods =====
         private AdminJoinServiceRequest createJoinRequest(final String username,
                                                           final String password,
-                                                          final String email,
                                                           final String clubName,
                                                           final ClubUniv clubUniv) {
             return AdminJoinServiceRequest.builder()
                     .username(username)
                     .password(password)
-                    .email(email)
                     .clubName(clubName)
                     .clubUniv(clubUniv)
                     .build();
@@ -456,7 +438,6 @@ class AdminAuthServiceTest {
                                               final String password,
                                               final String adminId) {
             when(adminRepository.existsByUsername(username)).thenReturn(false);
-            when(adminRepository.existsByEmail(anyString())).thenReturn(false);
             when(passwordEncoder.encode(password)).thenReturn("encodedPassword");
             when(adminRepository.save(any(Admin.class))).thenAnswer(invocation -> {
                 final Admin savedAdmin = mock(Admin.class);

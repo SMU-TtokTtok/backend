@@ -72,7 +72,7 @@ class ClubCustomRepositorySortingTest implements RepositoryTestSupport {
         int sequence = adminSequence++;
 
         return adminRepository.save(Admin.adminJoin(
-                "sortadmin" + sequence, "password123!", "sort-admin" + sequence + "@sangmyung.kr"));
+                "sortadmin" + sequence, "password123!"));
     }
 
     /** 조회수와 멤버 수를 지정해 동아리를 만든다. */
