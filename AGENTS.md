@@ -10,6 +10,7 @@ This document defines the coding principles and guidelines that AI agents must f
 - [Domain-Driven Design (DDD)](#domain-driven-design-ddd)
 - [Spring Boot Guidelines](#spring-boot-guidelines)
 - [Coding Rules](#coding-rules)
+- [Database Migrations](#database-migrations)
 - [Git Conventions](#git-conventions)
 
 ---
@@ -209,6 +210,51 @@ public class ClubService {
 
 ### 6. Work-log management
 - Record work done by date in `IMPLEMENTATION.md`, updating it each time.
+
+---
+
+## 🗄️ Database Migrations
+
+Flyway scripts live in `src/main/resources/db/migration` and run at application startup.
+
+### 1. Never ship a destructive migration with the code change
+
+Deployment is blue-green (`deploy/deploy.sh`). Flyway runs while the **previous version is
+still serving traffic against the same database**, and it keeps serving for `DRAIN_SECONDS`
+(30s) after the switch. For at least 30 seconds, old code runs on the new schema.
+
+`/health` does not touch the schema, so it passes and the deploy is reported as **successful**
+while users get 500s.
+
+Split anything that breaks backward compatibility into at least two releases:
+
+| Release | Step | Example |
+|---|---|---|
+| N | **expand** — additive only | add column as nullable; `DROP NOT NULL`; add index |
+| N+1 | **contract** — remove | `DROP COLUMN`; `DROP CONSTRAINT`; `RENAME` |
+
+Between them, both versions must run correctly against the same schema.
+
+Statements that require this split: `DROP COLUMN`, `DROP TABLE`, `RENAME`,
+`SET NOT NULL`, narrowing a type, adding a `UNIQUE` constraint to existing data.
+
+> `DROP NOT NULL` is safe in the expand step, and PostgreSQL treats NULLs as distinct,
+> so an existing `UNIQUE` constraint can stay until the contract step.
+
+### 2. Do not write `GRANT` in migrations
+
+Migrations run as `MIGRATOR_DB_USER`, which owns every object in `public`. The runtime role
+(`APP_DB_USER`) receives DML on new tables automatically through default privileges — see
+`deploy/init-db/lib/ownership.sql`. Granting by hand drifts from that setup.
+
+### 3. Assume a failed migration rolls back cleanly
+
+PostgreSQL runs DDL inside transactions and Flyway commits the history row in the same
+transaction, so a failed script leaves no partial schema and no `flyway_schema_history` entry.
+Fix the cause and redeploy — do not reach for `flyway repair`.
+
+The exception is statements that cannot run in a transaction (`CREATE INDEX CONCURRENTLY`,
+`VACUUM`, `ALTER TYPE ... ADD VALUE`). Avoid them; if unavoidable, say so in the PR.
 
 ---
 

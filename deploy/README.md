@@ -40,7 +40,10 @@ sudo -u ttokttokuser /opt/ttokttok/bin/import-files.sh <resources.tar>
 sudo -u ttokttokuser /opt/ttokttok/bin/issue-cert.sh <이메일>
 ```
 
-`postgres` 최초 기동 시 `init-db/00-restore.sql`(백업 덤프)이 자동 복원된다.
+`postgres` 최초 기동 시 `init-db/` 가 알파벳 순으로 실행된다 —
+`00-roles.sh`(롤 생성) → `01-restore.sql`(백업 덤프 복원) → `02-grants.sh`(소유권/권한).
+롤 생성이 복원보다 먼저인 이유는, 소유권을 옮긴 뒤의 `pg_dump` 결과에
+`ALTER ... OWNER TO ttokttok_migrator` 가 포함되어 롤이 없으면 복원이 실패하기 때문이다.
 `db/migration` 의 첫 스크립트가 `ALTER TABLE` 로 시작해서 Flyway 만으로는
 스키마를 만들 수 없기 때문에, 덤프 복원이 유일한 경로다.
 
@@ -62,6 +65,28 @@ cd /opt/ttokttok/app && docker compose logs -f app-$(cat ./state)
 # MinIO 콘솔 / psql (외부 노출 없음. SSH 터널로만)
 ssh -L 19001:127.0.0.1:19001 -L 15432:127.0.0.1:15432 <서버>
 ```
+
+## DB 롤 — 런타임과 마이그레이션의 분리
+
+| 롤 | 쓰는 곳 | 권한 |
+|---|---|---|
+| `APP_DB_USER` (`ttokttok_app`) | 앱 런타임 (`spring.datasource`) | DML 만. 소유권 없음 |
+| `MIGRATOR_DB_USER` (`ttokttok_migrator`) | Flyway (`spring.flyway`) | `public` 스키마 객체의 소유자. DDL 가능 |
+
+PostgreSQL 에서 `ALTER TABLE` / `DROP COLUMN` 은 **GRANT 로 넘길 수 있는 권한이 아니라
+소유자에게만 허용된다.** 그래서 앱 롤에 권한을 더하는 방식으로는 마이그레이션이 통과하지
+않는다. 소유권을 별도 롤로 옮기고, 앱 롤은 DML 전용으로 남긴다 — 앱이 탈취되더라도
+`DROP TABLE` 이 불가능한 상태를 유지하기 위해서다.
+
+`init-db/` 는 PGDATA 가 비었을 때에만 실행되므로, **이미 운영 중인 DB 에는 소급되지
+않는다.** 그 경우 아래로 적용한다. 여러 번 실행해도 안전하다.
+
+```bash
+sudo -u ttokttokuser /opt/ttokttok/bin/db-grant-migrator.sh
+```
+
+새 마이그레이션이 만드는 테이블에는 default privileges 로 앱 권한이 자동으로 붙는다.
+마이그레이션 SQL 안에 `GRANT` 를 쓰지 말 것.
 
 ## 인증서 갱신
 
@@ -95,7 +120,7 @@ docker logs --tail 50 ttokttok-certbot
 
 인프라 주소와 자격증명은 `application-prod.yml` 이 아니라 compose 환경변수로 주입한다
 (Spring 우선순위: 환경변수 > 설정 파일). 편의 때문이 아니라, **같은 비밀번호가 두 군데서
-쓰이기 때문**이다 — `APP_DB_PASSWORD` 는 `init-db/01-app-user.sh` 가 롤을 만들 때와 앱이
+쓰이기 때문**이다 — `APP_DB_PASSWORD` 는 `init-db/00-roles.sh` 가 롤을 만들 때와 앱이
 접속할 때 모두 필요하고, `REDIS_PASSWORD` 는 `--requirepass` 와 앱 양쪽, `MINIO_APP_SECRET_KEY`
 는 `minio-init` 의 계정 생성과 앱 양쪽에 쓰인다. `.env` 한 곳에만 두면 둘이 어긋날 수 없다.
 서비스명(`postgres`, `redis`, `minio`, `smtp`)도 앱 설정이 아니라 compose 토폴로지 사실이라
@@ -218,7 +243,7 @@ Postfix 는 `mynetworks` 안에서 오는 요청을 인증 없이 받으므로 �
   그래서 인프라 포트를 전부 `127.0.0.1:` 에 묶는다.
 - **`/opt/ttokttok/data` 의 bind mount 가 없으면 낡은 DB 로 조용히 뜬다.** compose 가
   `/opt/ttokttok/data/postgres` 를 직접 참조하는데, 마운트가 없으면 그건 루트 파티션의 빈
-  디렉터리다. postgres 는 PGDATA 가 비었으니 `initdb` 를 돌리고 이어서 `00-restore.sql` 로
+  디렉터리다. postgres 는 PGDATA 가 비었으니 `initdb` 를 돌리고 이어서 `01-restore.sql` 로
   **최초 덤프**를 복원한다. 서비스는 멀쩡해 보이지만 덤프 시점 데이터로 운영되고, 진짜
   데이터는 `/home` 에 방치된 채 양쪽이 갈라진다. `setup.sh` 가 마운트를 단언하지만,
   재부팅 후에는 직접 확인하는 습관이 필요하다.

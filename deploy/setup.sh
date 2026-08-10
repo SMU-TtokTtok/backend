@@ -54,7 +54,7 @@ done
 
 # ── 2. /opt/ttokttok 구조 ────────────────────────────────────────────────
 log "디렉터리 구조 생성"
-mkdir -p "$ROOT"/{app,bin,docker/postfix,docker/minio,config/app,config/nginx/conf.d,config/nginx/templates,init-db,logs,data}
+mkdir -p "$ROOT"/{app,bin,docker/postfix,docker/minio,config/app,config/nginx/conf.d,config/nginx/templates,init-db/lib,logs,data}
 
 # ── 3. data 를 /home 으로 bind mount (재부팅 후에도 유지) ────────────────
 if ! mountpoint -q "$ROOT/data"; then
@@ -110,7 +110,10 @@ install -m 0775 "$SRC/bin/issue-cert.sh"                         "$ROOT/bin/issu
 install -m 0775 "$SRC/bin/check-certs.sh"                        "$ROOT/bin/check-certs.sh"
 install -m 0775 "$SRC/bin/backup-db.sh"                          "$ROOT/bin/backup-db.sh"
 install -m 0775 "$SRC/bin/import-files.sh"                       "$ROOT/bin/import-files.sh"
-install -m 0775 "$SRC/init-db/01-app-user.sh"                    "$ROOT/init-db/01-app-user.sh"
+install -m 0775 "$SRC/bin/db-grant-migrator.sh"                   "$ROOT/bin/db-grant-migrator.sh"
+install -m 0775 "$SRC/init-db/00-roles.sh"                       "$ROOT/init-db/00-roles.sh"
+install -m 0775 "$SRC/init-db/02-grants.sh"                      "$ROOT/init-db/02-grants.sh"
+install -m 0664 "$SRC/init-db/lib/ownership.sql"                 "$ROOT/init-db/lib/ownership.sql"
 
 if [[ ! -f "$ROOT/app/.env" ]]; then
     log ".env 생성 (값은 직접 채워야 한다)"
@@ -121,9 +124,26 @@ fi
 [[ -f "$ROOT/app/state" ]] || { echo none > "$ROOT/app/state"; chmod 0664 "$ROOT/app/state"; }
 
 # ── 5. 덤프를 초기화 스크립트 위치로 ─────────────────────────────────────
-if [[ -f "$ROOT/init-db/ttokttok-backup.sql" && ! -f "$ROOT/init-db/00-restore.sql" ]]; then
-    log "덤프 → 00-restore.sql (알파벳 순서로 01-app-user.sh 보다 먼저 실행되게)"
-    mv "$ROOT/init-db/ttokttok-backup.sql" "$ROOT/init-db/00-restore.sql"
+# 실행 순서는 알파벳 순이다: 00-roles.sh → 01-restore.sql → 02-grants.sh.
+# 롤 생성이 복원보다 앞에 와야 한다 — 소유권 이전 이후의 덤프에는
+# `ALTER ... OWNER TO ttokttok_migrator` 가 들어가서, 롤이 없으면 복원이
+# 실패하기 때문이다. (이슈 #403)
+if [[ -f "$ROOT/init-db/ttokttok-backup.sql" && ! -f "$ROOT/init-db/01-restore.sql" ]]; then
+    log "덤프 → 01-restore.sql"
+    mv "$ROOT/init-db/ttokttok-backup.sql" "$ROOT/init-db/01-restore.sql"
+fi
+
+# 구버전 배치물 정리. init 스크립트는 PGDATA 가 비었을 때만 도는데, 그때
+# 옛 파일이 남아 있으면 복원이 롤 생성보다 먼저 실행되거나(00-restore.sql),
+# 소유권 이전 없이 앱 권한만 부여되어(01-app-user.sh) 재해복구가 조용히
+# 잘못된 상태로 끝난다.
+if [[ -f "$ROOT/init-db/00-restore.sql" && ! -f "$ROOT/init-db/01-restore.sql" ]]; then
+    log "덤프 위치 이동: 00-restore.sql → 01-restore.sql"
+    mv "$ROOT/init-db/00-restore.sql" "$ROOT/init-db/01-restore.sql"
+fi
+if [[ -f "$ROOT/init-db/01-app-user.sh" ]]; then
+    log "구버전 init 스크립트 제거: 01-app-user.sh (00-roles.sh + 02-grants.sh 로 대체)"
+    rm -f "$ROOT/init-db/01-app-user.sh"
 fi
 
 # ── 6. 소유권/권한 ───────────────────────────────────────────────────────

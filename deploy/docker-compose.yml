@@ -44,6 +44,22 @@ x-app-base: &app-base
     SPRING_DATASOURCE_USERNAME: ${APP_DB_USER}
     SPRING_DATASOURCE_PASSWORD: ${APP_DB_PASSWORD}
 
+    # Flyway 는 런타임과 다른 롤로 접속한다.
+    #
+    # ALTER/DROP 은 GRANT 로 넘길 수 있는 권한이 아니라 테이블 소유자에게만
+    # 허용된다. 위의 APP_DB_USER 는 DML 전용이라 DDL 마이그레이션을 실행할 수
+    # 없다 — 실제로 V26 이 `must be owner of table admins` 로 배포를 실패시켰다.
+    # (이슈 #403)
+    #
+    # 소유권을 앱 롤에 주는 대신 마이그레이션 롤을 분리했다. 앱이 탈취돼도
+    # DROP TABLE 이 불가능한 최소권한 설계를 유지하기 위해서다.
+    #
+    # URL 은 지정하지 않는다. Spring Boot 는 spring.flyway.url 이 없으면
+    # datasource 에서 파생시켜 자격증명만 교체하므로, 접속 주소가 두 곳에
+    # 중복돼 어긋날 일이 없다.
+    SPRING_FLYWAY_USER: ${MIGRATOR_DB_USER}
+    SPRING_FLYWAY_PASSWORD: ${MIGRATOR_DB_PASSWORD}
+
     SPRING_DATA_REDIS_HOST: redis
     SPRING_DATA_REDIS_PORT: 6379
     SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
@@ -162,17 +178,23 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      # init-db/01-app-user.sh 가 사용 (최초 1회 초기화 시에만)
+      # init-db/00-roles.sh, 02-grants.sh 가 사용 (최초 1회 초기화 시에만).
+      # 이미 초기화된 DB 에는 bin/db-grant-migrator.sh 로 소급 적용한다.
       APP_DB_USER: ${APP_DB_USER}
       APP_DB_PASSWORD: ${APP_DB_PASSWORD}
+      MIGRATOR_DB_USER: ${MIGRATOR_DB_USER}
+      MIGRATOR_DB_PASSWORD: ${MIGRATOR_DB_PASSWORD}
       TZ: Asia/Seoul
     volumes:
       # named volume 대신 호스트 경로 바인드를 쓴다 — 백업 스크립트가 경로를
       # 그대로 다룰 수 있고, 볼륨 실수 삭제로 데이터가 날아가는 경로를 줄인다.
       - /opt/ttokttok/data/postgres:/var/lib/postgresql/data
       # 데이터 디렉터리가 비었을 때에만 알파벳 순으로 실행된다:
-      #   00-restore.sql  → EB/RDS 덤프 복원
-      #   01-app-user.sh  → 앱 전용 롤 생성 + 권한 부여
+      #   00-roles.sh     → 앱/마이그레이션 롤 생성
+      #   01-restore.sql  → EB/RDS 덤프 복원
+      #   02-grants.sh    → 소유권 이전 + 앱 권한 부여
+      # 롤 생성이 복원보다 앞이어야 한다 — 소유권 이전 이후의 덤프에는
+      # `ALTER ... OWNER TO ttokttok_migrator` 가 들어가기 때문이다.
       - /opt/ttokttok/init-db:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
