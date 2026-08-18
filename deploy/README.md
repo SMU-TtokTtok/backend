@@ -116,6 +116,47 @@ tail -20 /opt/ttokttok/logs/certs.log
 docker logs --tail 50 ttokttok-certbot
 ```
 
+## Swagger 문서 접근
+
+API 문서(`/swagger-ui/**`, `/v3/api-docs/**`)는 nginx 에서 Basic 인증 뒤에 둔다. 앱은
+이 경로들을 여전히 `permitAll` 로 열어두지만, 외부에서 앱에 닿는 길이 nginx 하나뿐이라
+(앱 컨테이너는 `127.0.0.1` 에만 바인딩) 여기가 실제 경계선이다.
+
+UI 만 막고 `/v3/api-docs` 를 열어두는 선택지는 쓰지 않는다. 그 JSON 하나에 전체
+엔드포인트·파라미터·응답 스키마가 다 들어 있어, 문서 뷰어만 숨기는 것에 그친다.
+
+설정은 `config/nginx/conf.d/swagger-auth.inc` 에 있고, 두 템플릿(`http-only.conf`,
+`https.conf`)이 같은 스니펫을 include 한다. 자격증명 파일은 비밀이라 레포에 없다.
+
+```bash
+# 계정 생성 / 비밀번호 교체 (비밀번호는 프롬프트로 입력 — 셸 히스토리에 남기지 않는다)
+printf '%s:%s\n' ttokttok-docs "$(openssl passwd -apr1)" \
+  | sudo -u ttokttokuser tee /opt/ttokttok/config/nginx/conf.d/swagger.htpasswd
+sudo chmod 0644 /opt/ttokttok/config/nginx/conf.d/swagger.htpasswd
+cd /opt/ttokttok/app && docker compose exec -T nginx nginx -s reload
+```
+
+`0644` 여야 한다. 파일을 읽는 주체는 호스트의 `ttokttokuser` 가 아니라 컨테이너 안
+nginx 워커(uid 101)다. 권한이 부족하면 문서 경로가 500, 파일이 없으면 403 이 되는데
+**둘 다 `nginx -t` 는 통과한다** — `auth_basic_user_file` 은 검증 시점이 아니라 요청
+시점에 읽히기 때문이다. 그래서 `nginx-apply.sh` 가 파일 존재 여부를 따로 경고한다.
+파일에는 apr1 해시만 들어간다.
+
+계정은 팀 공용 1개다. 학기 단위로 위 명령을 다시 돌려 교체하고, 새 비밀번호를 팀에 공유한다.
+
+**사용법**
+
+- 브라우저: `https://<도메인>/swagger-ui/index.html` → 인증 팝업에 공용 계정 입력.
+  이후 UI 가 내부적으로 부르는 `/v3/api-docs` 에는 브라우저가 같은 realm 자격증명을
+  자동으로 붙이므로 추가 입력은 없다.
+- 스크립트·codegen 툴: 자격증명을 직접 넘긴다. 예외 경로는 만들지 않는다.
+  ```bash
+  curl -u ttokttok-docs:<pw> https://<도메인>/v3/api-docs
+  ```
+
+`Try it out` 으로 호출하는 `/api/**` 는 Basic 인증 대상이 아니다. 문서 접근과 API 호출은
+별개이고, API 는 기존대로 JWT 로만 통제된다.
+
 ## 앱 설정
 
 인프라 주소와 자격증명은 `application-prod.yml` 이 아니라 compose 환경변수로 주입한다
