@@ -102,6 +102,7 @@ else
     install -m 0664 "$SRC/config/nginx/upstream.conf"            "$ROOT/config/nginx/upstream.conf"
 fi
 install -m 0664 "$SRC/config/nginx/conf.d/proxy-common.inc"      "$ROOT/config/nginx/conf.d/proxy-common.inc"
+install -m 0664 "$SRC/config/nginx/conf.d/swagger-auth.inc"      "$ROOT/config/nginx/conf.d/swagger-auth.inc"
 install -m 0664 "$SRC/config/nginx/templates/http-only.conf"     "$ROOT/config/nginx/templates/http-only.conf"
 install -m 0664 "$SRC/config/nginx/templates/https.conf"         "$ROOT/config/nginx/templates/https.conf"
 install -m 0664 "$SRC/config/nginx/templates/minio-public.inc"   "$ROOT/config/nginx/templates/minio-public.inc"
@@ -326,3 +327,7 @@ echo "  3) cd $ROOT/app && docker compose up -d postgres redis minio minio-init 
 echo "     (certbot 갱신 데몬은 5) 의 issue-cert.sh 가 발급 직후 띄운다)"
 echo "  4) sudo -u $RUN_USER $ROOT/bin/import-files.sh <resources.tar>  # 기존 S3 파일 적재"
 echo "  5) sudo -u $RUN_USER $ROOT/bin/issue-cert.sh <이메일>       # 인증서 발급"
+echo "  6) Swagger 문서용 Basic 인증 계정 생성 (없으면 문서 경로가 전부 403)"
+echo "     printf '%s:%s\\n' ttokttok-docs \"\$(openssl passwd -apr1)\" \\"
+echo "       | sudo -u $RUN_USER tee $ROOT/config/nginx/conf.d/swagger.htpasswd"
+echo "     sudo chmod 0644 $ROOT/config/nginx/conf.d/swagger.htpasswd"

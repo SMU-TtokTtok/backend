@@ -55,6 +55,14 @@ render "$src"                        > "$OUT"
 render "$TPL_DIR/minio-public.inc"   > "$CONF_DIR/minio-public.inc"
 echo "[nginx] $(basename "$src") → $OUT (api=$SERVER_NAMES / files=$FILE_SERVER_NAMES / bucket=$MINIO_BUCKET / max_body=$MAX_BODY)"
 
+# Swagger 경로는 Basic 인증 뒤에 있다. htpasswd 가 없어도 nginx -t 는 통과한다 —
+# auth_basic_user_file 은 기동/검증 시점이 아니라 요청 시점에 읽히기 때문이다.
+# 그래서 설정은 "성공" 으로 끝나고 문서 경로만 조용히 403 이 된다. 여기서 미리 알린다.
+if [[ ! -f "$CONF_DIR/swagger.htpasswd" ]]; then
+    echo "[nginx] 경고: conf.d/swagger.htpasswd 가 없다 — Swagger 문서 경로가 전부 403 이 된다" >&2
+    echo "[nginx]        printf '%s:%s\\n' ttokttok-docs \"\$(openssl passwd -apr1)\" | sudo -u ttokttokuser tee $CONF_DIR/swagger.htpasswd" >&2
+fi
+
 if docker ps --filter name=ttokttok-nginx --filter status=running -q | grep -q .; then
     cd "$ROOT/app"
     docker compose exec -T nginx nginx -t
