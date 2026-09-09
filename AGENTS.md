@@ -1,215 +1,85 @@
 # AGENTS Development Guidelines
 
-> **Maintenance work follows the 5-step loop in [`maintenance/HARNESS.md`](maintenance/HARNESS.md).** This document covers the "coding rules" part of that loop.
-
-This document defines the coding principles and guidelines that AI agents must follow during development.
+> **Maintenance work follows the 5-step loop in [`maintenance/HARNESS.md`](maintenance/HARNESS.md).** This document is the single entry point for any coding agent working on **ttokttok**: project facts, build/run instructions, and coding/git conventions.
 
 ## 📋 Table of Contents
-- [SOLID Principles](#solid-principles)
-- [Clean Code Principles](#clean-code-principles)
-- [Domain-Driven Design (DDD)](#domain-driven-design-ddd)
-- [Spring Boot Guidelines](#spring-boot-guidelines)
-- [Coding Rules](#coding-rules)
-- [Database Migrations](#database-migrations)
-- [Git Conventions](#git-conventions)
+- [Project Overview](#-project-overview)
+- [Tech Stack](#-tech-stack)
+- [Build & Run Guide](#-build--run-guide)
+- [Working Language](#-working-language)
+- [Coding Conventions](#-coding-conventions)
+- [Database Migrations](#️-database-migrations)
+- [Git Conventions](#-git-conventions)
+- [Prohibitions](#️-prohibitions)
+- [Code Review Checklist](#-code-review-checklist)
 
 ---
 
-## 🎯 SOLID Principles
+## 🚀 Project Overview
 
-### S - Single Responsibility Principle
-- **A class should have only one responsibility.**
-- Each class and method should have a clear, single purpose.
-- Controllers handle only HTTP request/response, Services only business logic, Repositories only data access.
+**ttokttok** is a backend service supporting club and organization recruiting at Sangmyung University. It provides application management, evaluation processes, notification services, and more.
 
-```java
-// ❌ Bad - a class with multiple responsibilities
-public class UserController {
-    public void saveUser() { /* save logic */ }
-    public void sendEmail() { /* email logic */ }
-    public void validateUser() { /* validation logic */ }
-}
+## 🛠 Tech Stack
+- **Language:** Java 17
+- **Framework:** Spring Boot 3.5.0
+- **Build Tool:** Gradle
+- **Database:** PostgreSQL (main), H2 (local/test)
+- **Persistence:** Spring Data JPA, QueryDSL 5.0.0
+- **Migration:** Flyway
+- **Cache/Session:** Redis
+- **Security:** Spring Security, JWT (io.jsonwebtoken)
+- **Documentation:** Springdoc (Swagger UI 2.8.9)
+- **Storage:** AWS S3 (SDK v2)
+- **Messaging:** Firebase Admin SDK (FCM)
+- **Misc:** Apache POI (Excel processing), Spring Mail
 
-// ✅ Good - separated responsibilities
-public class UserController { /* HTTP handling only */ }
-public class UserService { /* business logic only */ }
-public class EmailService { /* email sending only */ }
-```
-
-### O - Open/Closed Principle
-- **Open for extension, closed for modification.**
-- Use interfaces and abstract classes to extend functionality.
-- Add new features without modifying existing code.
-
-### L - Liskov Substitution Principle
-- **Subtypes must be substitutable for their base types.**
-- Interface implementations must honor the same contract.
-
-### I - Interface Segregation Principle
-- **Clients must not depend on interfaces they do not use.**
-- Prefer small, specific interfaces.
-
-### D - Dependency Inversion Principle
-- **High-level modules must not depend on low-level modules.**
-- Use dependency injection via the Spring DI container.
+Architecture and package layout follow DDD + a layered structure — see [`rules/reference/ddd-architecture.md`](rules/reference/ddd-architecture.md).
 
 ---
 
-## 🧹 Clean Code Principles
+## 🏗 Build & Run Guide
 
-### 1. Use meaningful names
-```java
-// ❌ Bad
-public List<Club> getData() { return clubs; }
+### Requirements
+- JDK 17
+- Docker (recommended for running Redis, PostgreSQL)
 
-// ✅ Good
-public List<Club> getActiveClubs() { return activeClubs; }
-```
+### Key commands
+- **Build:** `./gradlew build`
+- **Run:** `./gradlew bootRun`
+- **Run tests:** `./gradlew test`
+- **Clean build:** `./gradlew clean build`
 
-### 2. Functions should be small and single-purpose
-- A function should do one thing.
-- Recommended function length: under 20 lines.
-- Recommended arguments: 3 or fewer.
+### Configuration & profiles
+- `local`: local development environment (H2/local DB)
+- `dev`: development server environment
+- `prod`: production server environment
+- Config files live at `src/main/resources/application-{profile}.yml` and are excluded from Git to protect sensitive information — never commit them (see [`rules/agent/protected-local-files.md`](rules/agent/protected-local-files.md)).
 
-### 3. Explain with code, not comments
-```java
-// ❌ Bad
-// check if the user is active
-if (user.getStatus() == 1) { }
+### API documentation
+- Swagger UI: `http://localhost:8080/swagger-ui/index.html` (local)
 
-// ✅ Good
-if (user.isActive()) { }
-```
-
-### 4. Consistent formatting
-- 4-space indentation.
-- K&R brace style.
-- Max 120 characters per line.
-
-### 5. Exception handling
-- Prefer unchecked over checked exceptions.
-- Define specific exception types.
-- Handle exceptions at the top level.
-- **New code must throw `CustomException` subclasses, not `IllegalArgumentException`.** Add an `ErrorMessage`
-  entry (message + HTTP status) and a matching exception class, so the status is declared at the throw site
-  instead of relying on the catch-all `IllegalArgumentException` handler in `GlobalExceptionHandler`.
-  That handler still exists only for pre-existing call sites; do not add new dependencies on it.
+### QueryDSL
+- QClass generation runs during `./gradlew compileJava`.
 
 ---
 
-## 🏗️ Domain-Driven Design (DDD)
+## 🌐 Working Language
 
-### 1. Layered structure
-```
-Controller (Presentation Layer)
-    ↓
-Service (Application Layer)
-    ↓
-Domain (Domain Layer)
-    ↓
-Repository (Infrastructure Layer)
-```
-
-### 2. Domain-model-centric design
-- **Entity**: a domain object with a unique identifier.
-- **Value Object**: an immutable object distinguished only by its value.
-- **Aggregate**: the unit of data change.
-- **Repository**: an abstraction over domain object storage.
-
-### 3. Package structure
-```
-src/main/java/org/project/ttokttok/
-├── domain/
-│   ├── club/
-│   │   ├── controller/     # presentation layer
-│   │   ├── service/        # application layer
-│   │   ├── domain/         # domain layer
-│   │   └── repository/     # infrastructure layer
-│   └── user/
-└── global/                 # shared functionality
-```
-
-### 4. Domain rules
-- Business logic lives inside domain objects.
-- Services compose domain objects to implement use cases.
-- Controllers handle only request/response conversion.
+- Think in English, but answer in Korean.
 
 ---
 
-## 🌱 Spring Boot Guidelines
+## 🧭 Coding Conventions
 
-### 1. Annotation usage
-```java
-@RestController
-@RequiredArgsConstructor  // constructor injection
-@Slf4j                    // logging
-@Tag(name = "API name")   // Swagger documentation
-public class ClubController {
-    private final ClubService clubService; // use the final keyword
-}
-```
+Detailed conventions live under [`rules/reference/`](rules/reference/) — read the relevant file when you need the specifics, don't re-derive from first principles.
 
-### 2. Dependency injection
-- Use constructor injection (Lombok `@RequiredArgsConstructor`).
-- Avoid field injection and setter injection.
-
-### 3. Exception handling
-- Global exception handling via `@ControllerAdvice`.
-- Define custom exception classes.
-- Return appropriate HTTP status codes.
-
-### 4. Unified response format
-```java
-@GetMapping
-public ResponseEntity<ApiResponse<ClubListResponse>> getClubs() {
-    // use a consistent response format
-    return ResponseEntity.ok(ApiResponse.success(data));
-}
-```
-
----
-
-## 📝 Coding Rules
-
-### 1. Naming conventions
-- **Class**: PascalCase (e.g., ClubService)
-- **Method/variable**: camelCase (e.g., getActiveClubs)
-- **Constant**: UPPER_SNAKE_CASE (e.g., MAX_MEMBER_COUNT)
-- **Package**: lowercase (e.g., domain.club.service)
-
-### 2. Method-writing rules
-```java
-// ✅ Good - clear method name with a single responsibility
-public ClubDetailResponse getClubIntroduction(String userEmail, String clubId) {
-    validateUser(userEmail);
-    Club club = findClubById(clubId);
-    return ClubDetailResponse.from(club);
-}
-```
-
-### 3. DTO conversion rules
-- Use static factory methods for Entity ↔ DTO conversion.
-- Use method names `from()` and `to()`.
-
-### 4. Writing tests
-- Unit tests are mandatory.
-- Use the Given-When-Then pattern.
-- Korean test method names are allowed.
-
-### 5. Logging
-```java
-@Slf4j
-public class ClubService {
-    public void processClub(String clubId) {
-        log.info("Club processing started: clubId={}", clubId);
-        // business logic
-        log.info("Club processing finished: clubId={}", clubId);
-    }
-}
-```
-
-### 6. Work-log management
-- Record work done by date in `IMPLEMENTATION.md`, updating it each time.
+| Topic | Reference |
+|---|---|
+| SOLID principles | [`rules/reference/solid-principles.md`](rules/reference/solid-principles.md) |
+| Clean Code principles (naming, function size, exception types, formatting) | [`rules/reference/clean-code.md`](rules/reference/clean-code.md) |
+| DDD & package structure | [`rules/reference/ddd-architecture.md`](rules/reference/ddd-architecture.md) |
+| Spring Boot guidelines (annotations, DI, response format) | [`rules/reference/spring-boot-guidelines.md`](rules/reference/spring-boot-guidelines.md) |
+| Naming / DTO conversion / testing / logging rules | [`rules/reference/coding-rules.md`](rules/reference/coding-rules.md) |
 
 ---
 
@@ -260,7 +130,7 @@ The exception is statements that cannot run in a transaction (`CREATE INDEX CONC
 
 ## 🔀 Git Conventions
 
-Detailed, situational rules live under [`rules/`](rules/) — common agent rules in [`rules/agent/`](rules/agent/), runtime-specific rules in `rules/<runtime>/` (e.g. `rules/claude/`, pointed to from that runtime's entry doc). Git rules are enforced by the hooks in `maintenance/hooks/` (install once via `bash maintenance/hooks/install.sh`).
+Detailed, situational rules live under [`rules/`](rules/) — common agent rules in [`rules/agent/`](rules/agent/), coding-convention reference docs in [`rules/reference/`](rules/reference/), runtime-specific rules in `rules/<runtime>/` (e.g. `rules/claude/`, pointed to from that runtime's entry doc). Git rules are enforced by the hooks in `maintenance/hooks/` (install once via `bash maintenance/hooks/install.sh`).
 
 - **Commit messages** → [`rules/agent/commit-message.md`](rules/agent/commit-message.md)
 - **Commit granularity** → [`rules/agent/commit-granularity.md`](rules/agent/commit-granularity.md)
