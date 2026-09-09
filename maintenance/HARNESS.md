@@ -1,10 +1,9 @@
 # Maintenance Harness v1
 
 This document defines a **repeatable 5-step loop** for maintaining `ttokttok`.
-Whenever an agent (Claude Code / Gemini CLI / any runtime) starts a maintenance task, it **reads this document first** and follows the steps below.
+Whenever an agent (Claude Code or any other runtime) starts a maintenance task, it **reads this document first** and follows the steps below.
 
-- Coding rules & conventions live in [`AGENTS.md`](../AGENTS.md) (not duplicated here).
-- Project facts & build instructions live in [`GEMINI.md`](../GEMINI.md).
+- Coding rules, conventions, project facts & build instructions live in [`AGENTS.md`](../AGENTS.md) (not duplicated here).
 - Task intake form: [`task.md`](./task.md). Verification gate: [`verify.sh`](./verify.sh).
 
 > Applies to all task types: **bug fix / feature add & improve / refactor & performance / dependency & config**. All four run the same loop.
@@ -46,7 +45,7 @@ Fill in each step's **DoD (Definition of Done)** checkbox before moving on.
 
 - Read the **4 layers** of the affected domain and narrow the change surface:
   - `controller/` (presentation) → `service/` (application) → `domain/` (Entity·VO) → `repository/` (JPA/QueryDSL)
-- Check rules in [`AGENTS.md`](../AGENTS.md) and stack/structure in [`GEMINI.md`](../GEMINI.md).
+- Check rules and stack/structure in [`AGENTS.md`](../AGENTS.md).
 - Look for existing functions, utils, and patterns first (`global/`, `infrastructure/`). Prefer reuse over new code.
 
 > **Do not edit code in this step.** Understand and scope only.
@@ -81,7 +80,7 @@ bash maintenance/verify.sh
 ## 5. Record — Log the work
 
 - Append the work to [`../IMPLEMENTATION.md`](../IMPLEMENTATION.md) as a **dated section** (keep the existing format: key work / changed files / verification notes).
-- Commit message: `[#issue] - message` (Korean header), with each item as a `- item` line in the body. (See the commit convention in [`GEMINI.md`](../GEMINI.md).) No AI signatures — see [`rules/agent/commit-message.md`](../rules/agent/commit-message.md).
+- Commit message: `[#issue] - message` (Korean header), with each item as a `- item` line in the body. (See the commit convention in [`AGENTS.md`](../AGENTS.md).) No AI signatures — see [`rules/agent/commit-message.md`](../rules/agent/commit-message.md).
 - **Split the work into one commit per concern** rather than a single large commit — see [`rules/agent/commit-granularity.md`](../rules/agent/commit-granularity.md).
 - PR: fill in the [`.github/PULL_REQUEST_TEMPLATE.md`](../.github/PULL_REQUEST_TEMPLATE.md) checklist.
 
@@ -95,8 +94,7 @@ bash maintenance/verify.sh
 
 | What you need | Where |
 |---------------|-------|
-| Coding rules & conventions | [`AGENTS.md`](../AGENTS.md) |
-| Stack, build, run | [`GEMINI.md`](../GEMINI.md) |
+| Coding rules, conventions, stack, build, run | [`AGENTS.md`](../AGENTS.md) |
 | Task intake form | [`task.md`](./task.md) |
 | Verification gate | `bash maintenance/verify.sh` |
 | Work log | [`../IMPLEMENTATION.md`](../IMPLEMENTATION.md) |
