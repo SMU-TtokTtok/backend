@@ -34,6 +34,8 @@ import org.project.ttokttok.domain.clubMember.service.dto.response.ClubMemberPag
 import org.project.ttokttok.domain.clubMember.service.dto.response.ClubMemberSearchServiceResponse;
 import org.project.ttokttok.domain.clubMember.service.dto.response.ExcelServiceResponse;
 import org.project.ttokttok.global.excel.ExcelService;
+import org.project.ttokttok.global.exception.exception.CustomException;
+import org.springframework.http.HttpStatus;
 
 import java.io.IOException;
 import java.util.List;
@@ -77,7 +79,10 @@ class ClubMemberServiceTest {
     }
 
     private ClubMember createMember(MemberRole role) {
-        Club club = mock(Club.class);
+        return createMember(mock(Club.class), role);
+    }
+
+    private ClubMember createMember(Club club, MemberRole role) {
         return ClubMember.create(
                 club,
                 "홍길동",
@@ -166,6 +171,7 @@ class ClubMemberServiceTest {
             given(clubRepository.findById(CLUB_ID)).willReturn(Optional.of(club));
 
             ClubMember member = mock(ClubMember.class);
+            given(member.getClub()).willReturn(club);
             given(clubMemberRepository.findById("member-1")).willReturn(Optional.of(member));
 
             ChangeRoleServiceRequest request = ChangeRoleServiceRequest.of(USERNAME, CLUB_ID, "member-1", MEMBER);
@@ -200,6 +206,7 @@ class ClubMemberServiceTest {
             given(clubRepository.findById(CLUB_ID)).willReturn(Optional.of(club));
 
             ClubMember member = mock(ClubMember.class);
+            given(member.getClub()).willReturn(club);
             given(member.getId()).willReturn("member-1");
             given(clubMemberRepository.findById("member-1")).willReturn(Optional.of(member));
 
@@ -225,6 +232,7 @@ class ClubMemberServiceTest {
             given(clubRepository.findById(CLUB_ID)).willReturn(Optional.of(club));
 
             ClubMember member = mock(ClubMember.class);
+            given(member.getClub()).willReturn(club);
             given(member.getId()).willReturn("member-1");
             given(clubMemberRepository.findById("member-1")).willReturn(Optional.of(member));
 
@@ -238,6 +246,45 @@ class ClubMemberServiceTest {
 
             // then
             verify(member, times(1)).changeRole(PRESIDENT);
+        }
+
+        @Test
+        @DisplayName("자기 동아리 부원의 역할 변경은 성공한다.")
+        void changeRole_ownClubMember_success() {
+            // given
+            Club club = createClub(USERNAME);
+            ClubMember member = createMember(club, MEMBER);
+            given(clubRepository.findById(CLUB_ID)).willReturn(Optional.of(club));
+            given(clubMemberRepository.findById("member-1")).willReturn(Optional.of(member));
+            ChangeRoleServiceRequest request = ChangeRoleServiceRequest.of(
+                    USERNAME, CLUB_ID, "member-1", EXECUTIVE);
+
+            // when
+            clubMemberService.changeRole(USERNAME, request);
+
+            // then
+            assertThat(member.getRole()).isEqualTo(EXECUTIVE);
+        }
+
+        @Test
+        @DisplayName("다른 동아리 부원의 역할 변경은 거부되고 역할이 유지된다.")
+        void changeRole_otherClubMember_forbidden() {
+            // given
+            Club club = createClub(USERNAME);
+            Club otherClub = mock(Club.class);
+            lenient().when(otherClub.getId()).thenReturn("club-2");
+            ClubMember member = createMember(otherClub, MEMBER);
+            given(clubRepository.findById(CLUB_ID)).willReturn(Optional.of(club));
+            given(clubMemberRepository.findById("member-2")).willReturn(Optional.of(member));
+            ChangeRoleServiceRequest request = ChangeRoleServiceRequest.of(
+                    USERNAME, CLUB_ID, "member-2", EXECUTIVE);
+
+            // when & then
+            assertThatThrownBy(() -> clubMemberService.changeRole(USERNAME, request))
+                    .isInstanceOf(CustomException.class)
+                    .satisfies(exception -> assertThat(((CustomException) exception).getStatus())
+                            .isEqualTo(HttpStatus.FORBIDDEN));
+            assertThat(member.getRole()).isEqualTo(MEMBER);
         }
     }
 
@@ -253,6 +300,7 @@ class ClubMemberServiceTest {
             given(clubRepository.findById(CLUB_ID)).willReturn(Optional.of(club));
 
             ClubMember member = mock(ClubMember.class);
+            given(member.getClub()).willReturn(club);
             given(clubMemberRepository.findById("member-1")).willReturn(Optional.of(member));
 
             DeleteMemberServiceRequest request = DeleteMemberServiceRequest.of(USERNAME, CLUB_ID, "member-1");
@@ -278,6 +326,27 @@ class ClubMemberServiceTest {
             assertThatThrownBy(() -> clubMemberService.deleteMember(USERNAME, request))
                     .isInstanceOf(ClubMemberNotFoundException.class);
 
+            verify(clubMemberRepository, never()).delete(any());
+        }
+
+        @Test
+        @DisplayName("다른 동아리 부원의 삭제는 거부되고 부원이 남는다.")
+        void deleteMember_otherClubMember_forbidden() {
+            // given
+            Club club = createClub(USERNAME);
+            Club otherClub = mock(Club.class);
+            lenient().when(otherClub.getId()).thenReturn("club-2");
+            ClubMember member = createMember(otherClub, MEMBER);
+            given(clubRepository.findById(CLUB_ID)).willReturn(Optional.of(club));
+            given(clubMemberRepository.findById("member-2")).willReturn(Optional.of(member));
+            DeleteMemberServiceRequest request = DeleteMemberServiceRequest.of(
+                    USERNAME, CLUB_ID, "member-2");
+
+            // when & then
+            assertThatThrownBy(() -> clubMemberService.deleteMember(USERNAME, request))
+                    .isInstanceOf(CustomException.class)
+                    .satisfies(exception -> assertThat(((CustomException) exception).getStatus())
+                            .isEqualTo(HttpStatus.FORBIDDEN));
             verify(clubMemberRepository, never()).delete(any());
         }
     }

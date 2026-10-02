@@ -11,6 +11,7 @@ import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.domain.clubMember.domain.ClubMember;
 import org.project.ttokttok.domain.clubMember.domain.MemberRole;
 import org.project.ttokttok.domain.clubMember.exception.AlreadyClubMemberException;
+import org.project.ttokttok.domain.clubMember.exception.ClubMemberAccessDeniedException;
 import org.project.ttokttok.domain.clubMember.exception.ClubMemberNotFoundException;
 import org.project.ttokttok.domain.clubMember.exception.DuplicateRoleException;
 import org.project.ttokttok.domain.clubMember.exception.ExcelFileCreateFailException;
@@ -54,7 +55,7 @@ public class ClubMemberService {
     public void changeRole(String username, ChangeRoleServiceRequest request) {
         validateClubAndAdmin(request.clubId(), username);
 
-        ClubMember member = findClubMemberById(request.memberId());
+        ClubMember member = findClubMemberById(request.memberId(), request.clubId());
 
         validateRoleChange(request.clubId(), request.newRole(), member.getId());
         member.changeRole(request.newRole());
@@ -64,7 +65,7 @@ public class ClubMemberService {
     public void deleteMember(String username, DeleteMemberServiceRequest request) {
         validateClubAndAdmin(request.clubId(), username);
 
-        ClubMember member = findClubMemberById(request.memberId());
+        ClubMember member = findClubMemberById(request.memberId(), request.clubId());
 
         clubMemberRepository.delete(member);
     }
@@ -189,27 +190,24 @@ public class ClubMemberService {
 
     // 관리자 검증
     private Club validateClubAndAdmin(String clubId, String username) {
-        Club club = validateClubExists(clubId);
-        validateAdmin(username, club.getAdmin().getUsername());
+        Club club = clubRepository.findById(clubId)
+                .orElseThrow(ClubNotFoundException::new);
+
+        if (!username.equals(club.getAdmin().getUsername())) // join
+            throw new NotClubAdminException();
+
         return club;
     }
 
-    // 동아리 존재 여부 검증
-    private Club validateClubExists(String clubId) {
-        return clubRepository.findById(clubId)
-                .orElseThrow(ClubNotFoundException::new);
-    }
-
     // 동아리 부원 존재 여부 검증
-    private ClubMember findClubMemberById(String memberId) {
-        return clubMemberRepository.findById(memberId)
+    private ClubMember findClubMemberById(String memberId, String clubId) {
+        ClubMember member = clubMemberRepository.findById(memberId)
                 .orElseThrow(ClubMemberNotFoundException::new);
-    }
+        if (!member.getClub().getId().equals(clubId)) { // join
+            throw new ClubMemberAccessDeniedException();
+        }
 
-    // 동아리 관리자 검증
-    private void validateAdmin(String username, String clubUsername) {
-        if (!username.equals(clubUsername))
-            throw new NotClubAdminException();
+        return member;
     }
 
     // 역할 변경 시 역할 중복 검증
