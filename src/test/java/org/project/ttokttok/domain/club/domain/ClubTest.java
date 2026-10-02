@@ -1,17 +1,20 @@
 package org.project.ttokttok.domain.club.domain;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.openapitools.jackson.nullable.JsonNullable;
 import org.project.ttokttok.domain.admin.domain.Admin;
 import org.project.ttokttok.domain.club.domain.enums.ClubCategory;
 import org.project.ttokttok.domain.club.domain.enums.ClubType;
 import org.project.ttokttok.domain.club.domain.enums.ClubUniv;
 import org.project.ttokttok.domain.club.service.dto.request.ClubPatchRequest;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
 
 class ClubTest {
 
@@ -112,6 +115,29 @@ class ClubTest {
             assertThat(club.getCustomCategory()).isEqualTo("커스텀분류");
             assertThat(club.getSummary()).isEqualTo("새 한줄소개");
             assertThat(club.getContent()).isEqualTo("새 소개 내용");
+        }
+    }
+
+    @Nested
+    @DisplayName("isClubAdminName()")
+    class IsClubAdminName {
+
+        @ParameterizedTest
+        @DisplayName("관리자 이름이 같으면 true, 다르면 false 반환")
+        @CsvSource({
+                "validAdmin, true",
+                "invalidAdmin, false"
+        })
+        void testName(String adminName, boolean expected) throws Exception {
+            // given
+            Club club = createClub();
+            when(club.getAdmin().getUsername()).thenReturn("validAdmin");
+
+            // when
+            boolean result = club.isManagedBy(adminName);
+
+            // then
+            assertThat(result).isEqualTo(expected);
         }
     }
 }

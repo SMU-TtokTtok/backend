@@ -6,17 +6,20 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.project.ttokttok.domain.admin.domain.Admin;
 import org.project.ttokttok.domain.applicant.domain.enums.Gender;
 import org.project.ttokttok.domain.applicant.domain.enums.Grade;
 import org.project.ttokttok.domain.club.domain.Club;
+import org.project.ttokttok.domain.club.domain.enums.ClubUniv;
 import org.project.ttokttok.domain.club.exception.ClubNotFoundException;
 import org.project.ttokttok.domain.club.exception.NotClubAdminException;
 import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.domain.clubMember.domain.ClubMember;
 import org.project.ttokttok.domain.clubMember.domain.MemberRole;
 import org.project.ttokttok.domain.clubMember.exception.AlreadyClubMemberException;
+import org.project.ttokttok.domain.clubMember.exception.ClubMemberAccessDeniedException;
 import org.project.ttokttok.domain.clubMember.exception.ClubMemberNotFoundException;
 import org.project.ttokttok.domain.clubMember.exception.DuplicateRoleException;
 import org.project.ttokttok.domain.clubMember.exception.ExcelFileCreateFailException;
@@ -33,13 +36,14 @@ import org.project.ttokttok.domain.clubMember.service.dto.response.ClubMemberInE
 import org.project.ttokttok.domain.clubMember.service.dto.response.ClubMemberPageServiceResponse;
 import org.project.ttokttok.domain.clubMember.service.dto.response.ClubMemberSearchServiceResponse;
 import org.project.ttokttok.domain.clubMember.service.dto.response.ExcelServiceResponse;
+import org.project.ttokttok.domain.clubMember.service.policy.ClubAccessPolicy;
 import org.project.ttokttok.global.excel.ExcelService;
-import org.project.ttokttok.global.exception.exception.CustomException;
 import org.springframework.http.HttpStatus;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -61,6 +65,9 @@ class ClubMemberServiceTest {
     @Mock
     private ExcelService excelService;
 
+    @Spy
+    private ClubAccessPolicy clubAccessPolicy;
+
     @InjectMocks
     private ClubMemberService clubMemberService;
 
@@ -68,18 +75,24 @@ class ClubMemberServiceTest {
     private static final String CLUB_ID = "club-1";
 
     private Club createClub(String adminUsername) {
+        return createClub(CLUB_ID, adminUsername);
+    }
+
+    private Club createClub(String clubId, String adminUsername) {
         Admin admin = mock(Admin.class);
         lenient().when(admin.getUsername()).thenReturn(adminUsername);
 
-        Club club = mock(Club.class);
-        lenient().when(club.getId()).thenReturn(CLUB_ID);
-        lenient().when(club.getName()).thenReturn("테스트동아리");
-        lenient().when(club.getAdmin()).thenReturn(admin);
+        Club club = Club.builder()
+                .admin(admin)
+                .clubName("테스트동아리")
+                .clubUniv(ClubUniv.ENGINEERING)
+                .build();
+        ReflectionTestUtils.setField(club, "id", clubId);
         return club;
     }
 
     private ClubMember createMember(MemberRole role) {
-        return createMember(mock(Club.class), role);
+        return createMember(createClub(USERNAME), role);
     }
 
     private ClubMember createMember(Club club, MemberRole role) {
@@ -171,7 +184,7 @@ class ClubMemberServiceTest {
             given(clubRepository.findById(CLUB_ID)).willReturn(Optional.of(club));
 
             ClubMember member = mock(ClubMember.class);
-            given(member.getClub()).willReturn(club);
+            given(member.belongsToClub(CLUB_ID)).willReturn(true);
             given(clubMemberRepository.findById("member-1")).willReturn(Optional.of(member));
 
             ChangeRoleServiceRequest request = ChangeRoleServiceRequest.of(USERNAME, CLUB_ID, "member-1", MEMBER);
@@ -206,7 +219,7 @@ class ClubMemberServiceTest {
             given(clubRepository.findById(CLUB_ID)).willReturn(Optional.of(club));
 
             ClubMember member = mock(ClubMember.class);
-            given(member.getClub()).willReturn(club);
+            given(member.belongsToClub(CLUB_ID)).willReturn(true);
             given(member.getId()).willReturn("member-1");
             given(clubMemberRepository.findById("member-1")).willReturn(Optional.of(member));
 
@@ -232,7 +245,7 @@ class ClubMemberServiceTest {
             given(clubRepository.findById(CLUB_ID)).willReturn(Optional.of(club));
 
             ClubMember member = mock(ClubMember.class);
-            given(member.getClub()).willReturn(club);
+            given(member.belongsToClub(CLUB_ID)).willReturn(true);
             given(member.getId()).willReturn("member-1");
             given(clubMemberRepository.findById("member-1")).willReturn(Optional.of(member));
 
@@ -271,8 +284,7 @@ class ClubMemberServiceTest {
         void changeRole_otherClubMember_forbidden() {
             // given
             Club club = createClub(USERNAME);
-            Club otherClub = mock(Club.class);
-            lenient().when(otherClub.getId()).thenReturn("club-2");
+            Club otherClub = createClub("club-2", "otheradmin1");
             ClubMember member = createMember(otherClub, MEMBER);
             given(clubRepository.findById(CLUB_ID)).willReturn(Optional.of(club));
             given(clubMemberRepository.findById("member-2")).willReturn(Optional.of(member));
@@ -281,9 +293,7 @@ class ClubMemberServiceTest {
 
             // when & then
             assertThatThrownBy(() -> clubMemberService.changeRole(USERNAME, request))
-                    .isInstanceOf(CustomException.class)
-                    .satisfies(exception -> assertThat(((CustomException) exception).getStatus())
-                            .isEqualTo(HttpStatus.FORBIDDEN));
+                    .isInstanceOf(ClubMemberAccessDeniedException.class);
             assertThat(member.getRole()).isEqualTo(MEMBER);
         }
     }
@@ -300,7 +310,7 @@ class ClubMemberServiceTest {
             given(clubRepository.findById(CLUB_ID)).willReturn(Optional.of(club));
 
             ClubMember member = mock(ClubMember.class);
-            given(member.getClub()).willReturn(club);
+            given(member.belongsToClub(CLUB_ID)).willReturn(true);
             given(clubMemberRepository.findById("member-1")).willReturn(Optional.of(member));
 
             DeleteMemberServiceRequest request = DeleteMemberServiceRequest.of(USERNAME, CLUB_ID, "member-1");
@@ -334,8 +344,7 @@ class ClubMemberServiceTest {
         void deleteMember_otherClubMember_forbidden() {
             // given
             Club club = createClub(USERNAME);
-            Club otherClub = mock(Club.class);
-            lenient().when(otherClub.getId()).thenReturn("club-2");
+            Club otherClub = createClub("club-2", "otheradmin1");
             ClubMember member = createMember(otherClub, MEMBER);
             given(clubRepository.findById(CLUB_ID)).willReturn(Optional.of(club));
             given(clubMemberRepository.findById("member-2")).willReturn(Optional.of(member));
@@ -344,8 +353,8 @@ class ClubMemberServiceTest {
 
             // when & then
             assertThatThrownBy(() -> clubMemberService.deleteMember(USERNAME, request))
-                    .isInstanceOf(CustomException.class)
-                    .satisfies(exception -> assertThat(((CustomException) exception).getStatus())
+                    .isInstanceOf(ClubMemberAccessDeniedException.class)
+                    .satisfies(exception -> assertThat(((ClubMemberAccessDeniedException) exception).getStatus())
                             .isEqualTo(HttpStatus.FORBIDDEN));
             verify(clubMemberRepository, never()).delete(any());
         }
