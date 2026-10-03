@@ -38,4 +38,18 @@ class ClubAccessPolicyTest {
         assertThatThrownBy(() -> clubAccessPolicy.validateAdmin(club, USERNAME))
                 .isInstanceOf(NotClubAdminException.class);
     }
+
+    @Test
+    @DisplayName("요청한 동아리 ID가 대상 동아리 ID와 같으면 접근을 허용한다")
+    void validateSameClubId_sameId_success() {
+        assertThatCode(() -> clubAccessPolicy.validateSameClubId("club-a", "club-a"))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    @DisplayName("요청한 동아리 ID가 대상 동아리 ID와 다르면 NotClubAdminException이 발생한다")
+    void validateSameClubId_differentId_forbidden() {
+        assertThatThrownBy(() -> clubAccessPolicy.validateSameClubId("club-a", "club-b"))
+                .isInstanceOf(NotClubAdminException.class);
+    }
 }
