@@ -69,7 +69,7 @@ public class MemoService {
     }
 
     private void validateApplicantClub(Applicant applicant, String clubId) {
-        if (!applicant.getApplyForm().getClub().getId().equals(clubId)) {
+        if (!applicant.belongsToClub(clubId)) {
             throw new UnAuthorizedApplicantAccessException();
         }
     }
