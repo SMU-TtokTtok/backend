@@ -51,7 +51,8 @@ public class ApplicantAdminService {
     public ApplicantPageServiceResponse getApplicantPage(ApplicantPageServiceRequest request) {
         Club club = validateClubAdmin(request.username());
 
-        ApplyForm mostRecentApplyForm = applyFormRepository.findTopByClubIdAndStatusOrderByCreatedAtDesc(club.getId(), ACTIVE)
+        ApplyForm mostRecentApplyForm = applyFormRepository.findTopByClubIdAndStatusOrderByCreatedAtDesc(club.getId(),
+                        ACTIVE)
                 .orElse(null);
 
         if (mostRecentApplyForm == null) {
@@ -77,7 +78,9 @@ public class ApplicantAdminService {
         Applicant applicant = applicantRepository.findByIdWithDocumentPhase(applicantId)
                 .orElseThrow(ApplicantNotFoundException::new);
 
-        validateApplicantAccess(applicant.getApplyForm().getClub().getId(), club.getId());
+        if (!applicant.belongsToClub(club.getId())) {
+            throw new UnAuthorizedApplicantAccessException();
+        }
 
         List<MemoResponse> memos = new ArrayList<>();
         if (applicant.getDocumentPhase() != null) {
@@ -102,7 +105,8 @@ public class ApplicantAdminService {
     public ApplicantPageServiceResponse searchApplicantByKeyword(ApplicantSearchServiceRequest request) {
         Club club = validateClubAdmin(request.username());
 
-        ApplyForm mostRecentApplyForm = applyFormRepository.findTopByClubIdAndStatusOrderByCreatedAtDesc(club.getId(), ACTIVE)
+        ApplyForm mostRecentApplyForm = applyFormRepository.findTopByClubIdAndStatusOrderByCreatedAtDesc(club.getId(),
+                        ACTIVE)
                 .orElse(null);
 
         if (mostRecentApplyForm == null) {
@@ -126,7 +130,8 @@ public class ApplicantAdminService {
     public ApplicantPageServiceResponse getApplicantsByStatus(ApplicantStatusServiceRequest request) {
         Club club = validateClubAdmin(request.username());
 
-        ApplyForm mostRecentApplyForm = applyFormRepository.findTopByClubIdAndStatusOrderByCreatedAtDesc(club.getId(), ACTIVE)
+        ApplyForm mostRecentApplyForm = applyFormRepository.findTopByClubIdAndStatusOrderByCreatedAtDesc(club.getId(),
+                        ACTIVE)
                 .orElse(null);
 
         if (mostRecentApplyForm == null) {
@@ -151,7 +156,9 @@ public class ApplicantAdminService {
         Applicant applicant = applicantRepository.findById(request.applicantId())
                 .orElseThrow(ApplicantNotFoundException::new);
 
-        validateApplicantAccess(applicant.getApplyForm().getClub().getId(), club.getId());
+        if (!applicant.belongsToClub(club.getId())) {
+            throw new UnAuthorizedApplicantAccessException();
+        }
 
         ApplicantPhase phase = Kind.toApplicantPhase(request.kind());
         applicant.changeEvaluationStatus(phase, request.status());
@@ -160,13 +167,14 @@ public class ApplicantAdminService {
     @Transactional
     public ApplicantFinalizeServiceResponse finalizeApplicantsStatus(ApplicantFinalizationRequest request) {
         Club club = clubRepository.findById(request.clubId())
-                        .orElseThrow(ClubNotFoundException::new);
+                .orElseThrow(ClubNotFoundException::new);
         clubAccessPolicy.validateAdmin(club, request.username());
 
         ApplyForm currentApplyForm = findActiveApplyForm(request.clubId());
         ApplicantPhase phase = Kind.toApplicantPhase(request.kind());
         int passedApplicantCount = processApplicants(currentApplyForm, club, phase);
-        int finalizedApplicantCount = calculateFinalizedApplicantCount(currentApplyForm.getId(), phase) + passedApplicantCount;
+        int finalizedApplicantCount =
+                calculateFinalizedApplicantCount(currentApplyForm.getId(), phase) + passedApplicantCount;
 
         return ApplicantFinalizeServiceResponse.of(passedApplicantCount, finalizedApplicantCount);
     }
@@ -180,10 +188,10 @@ public class ApplicantAdminService {
                                            String kind) {
 
         Club club = clubRepository.findById(clubId)
-                        .orElseThrow(ClubNotFoundException::new);
+                .orElseThrow(ClubNotFoundException::new);
 
         clubAccessPolicy.validateAdmin(club, username);
-        
+
         ApplyForm currentApplyForm = findActiveApplyForm(clubId);
         ApplicantPhase phase = Kind.toApplicantPhase(kind);
 
@@ -282,9 +290,4 @@ public class ApplicantAdminService {
         );
     }
 
-    private void validateApplicantAccess(String applicantClubId, String targetClubId) {
-        if (!applicantClubId.equals(targetClubId)) {
-            throw new UnAuthorizedApplicantAccessException();
-        }
-    }
 }

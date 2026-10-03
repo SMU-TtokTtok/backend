@@ -213,4 +213,9 @@ public class Applicant extends BaseTimeEntity {
     public void setInterviewEvaluating() {
         this.interviewPhase.updateStatus(PhaseStatus.EVALUATING);
     }
+
+    // 이 지원자가 동아리에서 관리되는지 확인
+    public boolean belongsToClub(String clubId) {
+        return applyForm.getClub().getId().equals(clubId);
+    }
 }

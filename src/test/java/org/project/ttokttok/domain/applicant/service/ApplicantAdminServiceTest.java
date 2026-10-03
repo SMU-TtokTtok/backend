@@ -24,6 +24,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -58,6 +60,8 @@ import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.exception.ClubNotFoundException;
 import org.project.ttokttok.domain.club.exception.NotClubAdminException;
 import org.project.ttokttok.domain.club.repository.ClubRepository;
+import org.project.ttokttok.domain.clubMember.domain.ClubMember;
+import org.project.ttokttok.domain.clubMember.domain.MemberRole;
 import org.project.ttokttok.domain.clubMember.repository.ClubMemberRepository;
 import org.project.ttokttok.infrastructure.email.service.EmailService;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -279,9 +283,6 @@ class ApplicantAdminServiceTest {
             Club club = createClub(CLUB_ID);
             given(clubRepository.findByAdminUsername(USERNAME)).willReturn(Optional.of(club));
 
-            ApplyForm applyForm = mock(ApplyForm.class);
-            given(applyForm.getClub()).willReturn(club);
-
             List<Answer> answers = List.of(
                     new Answer("질문1", null, null, true, List.of(), "답변1"));
 
@@ -290,7 +291,7 @@ class ApplicantAdminServiceTest {
             given(documentPhase.getMemos()).willReturn(List.of());
 
             Applicant applicant = mock(Applicant.class);
-            given(applicant.getApplyForm()).willReturn(applyForm);
+            given(applicant.belongsToClub(CLUB_ID)).willReturn(true);
             given(applicant.getDocumentPhase()).willReturn(documentPhase);
             given(applicant.getName()).willReturn("홍길동");
             given(applicant.getAge()).willReturn(22);
@@ -322,11 +323,8 @@ class ApplicantAdminServiceTest {
             Club club = createClub(CLUB_ID);
             given(clubRepository.findByAdminUsername(USERNAME)).willReturn(Optional.of(club));
 
-            ApplyForm applyForm = mock(ApplyForm.class);
-            given(applyForm.getClub()).willReturn(club);
-
             Applicant applicant = mock(Applicant.class);
-            given(applicant.getApplyForm()).willReturn(applyForm);
+            given(applicant.belongsToClub(CLUB_ID)).willReturn(true);
             given(applicant.getDocumentPhase()).willReturn(null);
             given(applicant.getName()).willReturn("홍길동");
             given(applicant.getAge()).willReturn(22);
@@ -368,13 +366,8 @@ class ApplicantAdminServiceTest {
             Club club = createClub(CLUB_ID);
             given(clubRepository.findByAdminUsername(USERNAME)).willReturn(Optional.of(club));
 
-            Club otherClub = createClub(OTHER_CLUB_ID, OTHER_USERNAME);
-
-            ApplyForm applyForm = mock(ApplyForm.class);
-            given(applyForm.getClub()).willReturn(otherClub);
-
             Applicant applicant = mock(Applicant.class);
-            given(applicant.getApplyForm()).willReturn(applyForm);
+            given(applicant.belongsToClub(CLUB_ID)).willReturn(false);
 
             given(applicantRepository.findByIdWithDocumentPhase(APPLICANT_ID))
                     .willReturn(Optional.of(applicant));
@@ -519,15 +512,6 @@ class ApplicantAdminServiceTest {
     @DisplayName("updateApplicantStatus(): 지원자 전형 상태 변경")
     class UpdateApplicantStatusTest {
 
-        private Applicant createApplicantOfClub(Club club) {
-            ApplyForm applyForm = mock(ApplyForm.class);
-            given(applyForm.getClub()).willReturn(club);
-
-            Applicant applicant = mock(Applicant.class);
-            given(applicant.getApplyForm()).willReturn(applyForm);
-            return applicant;
-        }
-
         @ParameterizedTest(name = "{0} 전형을 {1} 상태로 변경한다")
         @CsvSource({
                 "DOCUMENT, PASS",
@@ -541,7 +525,8 @@ class ApplicantAdminServiceTest {
         void updateApplicantStatus_success(ApplicantPhase phase, PhaseStatus status) {
             // given
             Club club = createClub(CLUB_ID);
-            Applicant applicant = createApplicantOfClub(club);
+            Applicant applicant = mock(Applicant.class);
+            given(applicant.belongsToClub(CLUB_ID)).willReturn(true);
             given(clubRepository.findByAdminUsername(USERNAME)).willReturn(Optional.of(club));
             given(applicantRepository.findById(APPLICANT_ID)).willReturn(Optional.of(applicant));
             StatusUpdateServiceRequest request = StatusUpdateServiceRequest.of(
@@ -577,13 +562,8 @@ class ApplicantAdminServiceTest {
             Club club = createClub(CLUB_ID);
             given(clubRepository.findByAdminUsername(USERNAME)).willReturn(Optional.of(club));
 
-            Club otherClub = createClub(OTHER_CLUB_ID, OTHER_USERNAME);
-
-            ApplyForm applyForm = mock(ApplyForm.class);
-            given(applyForm.getClub()).willReturn(otherClub);
-
             Applicant applicant = mock(Applicant.class);
-            given(applicant.getApplyForm()).willReturn(applyForm);
+            given(applicant.belongsToClub(CLUB_ID)).willReturn(false);
             given(applicantRepository.findById(APPLICANT_ID)).willReturn(Optional.of(applicant));
 
             StatusUpdateServiceRequest request = StatusUpdateServiceRequest.of(
@@ -600,6 +580,29 @@ class ApplicantAdminServiceTest {
     @Nested
     @DisplayName("finalizeApplicantsStatus(): 전형 최종 마감 처리")
     class FinalizeApplicantsStatusTest {
+
+        @Captor
+        private ArgumentCaptor<List<ClubMember>> clubMembersCaptor;
+
+        @Test
+        @DisplayName("동아리가 없으면 ClubNotFoundException이 발생하고 후속 처리를 하지 않는다")
+        void finalizeApplicantsStatus_throwsClubNotFoundException() {
+            // given
+            given(clubRepository.findById(CLUB_ID))
+                    .willReturn(Optional.empty());
+
+            ApplicantFinalizationRequest request = ApplicantFinalizationRequest.of(USERNAME, CLUB_ID, "DOCUMENT");
+
+            // when & then
+            assertThatThrownBy(() -> applicantAdminService.finalizeApplicantsStatus(request))
+                    .isExactlyInstanceOf(ClubNotFoundException.class);
+            verifyNoInteractions(
+                    applicantRepository,
+                    applyFormRepository,
+                    emailService,
+                    clubMemberRepository
+            );
+        }
 
         @Test
         @DisplayName("서류 전형 마감 시, 면접이 있는 지원폼이면 합격자를 면접 단계로 이동시킨다")
@@ -667,7 +670,12 @@ class ApplicantAdminServiceTest {
 
             // then
             assertThat(response.passedCount()).isEqualTo(1);
-            verify(clubMemberRepository).saveAll(anyList());
+            verify(clubMemberRepository).saveAll(clubMembersCaptor.capture());
+            assertThat(clubMembersCaptor.getValue()).singleElement().satisfies(member -> {
+                assertThat(member.getClub()).isSameAs(club);
+                assertThat(member.getEmail()).isEqualTo("hong@test.com");
+                assertThat(member.getRole()).isEqualTo(MemberRole.MEMBER);
+            });
         }
 
         @Test
