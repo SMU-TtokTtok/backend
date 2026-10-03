@@ -1,4 +1,4 @@
-package org.project.ttokttok.domain.clubMember.service.policy;
+package org.project.ttokttok.domain.club.service.policy;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;

@@ -36,7 +36,7 @@ import org.project.ttokttok.domain.clubMember.service.dto.response.ClubMemberInE
 import org.project.ttokttok.domain.clubMember.service.dto.response.ClubMemberPageServiceResponse;
 import org.project.ttokttok.domain.clubMember.service.dto.response.ClubMemberSearchServiceResponse;
 import org.project.ttokttok.domain.clubMember.service.dto.response.ExcelServiceResponse;
-import org.project.ttokttok.domain.clubMember.service.policy.ClubAccessPolicy;
+import org.project.ttokttok.domain.club.service.policy.ClubAccessPolicy;
 import org.project.ttokttok.global.excel.ExcelService;
 import org.springframework.http.HttpStatus;
 

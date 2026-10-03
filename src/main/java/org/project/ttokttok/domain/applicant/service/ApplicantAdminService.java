@@ -13,10 +13,12 @@ import org.project.ttokttok.domain.applicant.service.dto.response.ApplicantDetai
 import org.project.ttokttok.domain.applicant.service.dto.response.ApplicantFinalizeServiceResponse;
 import org.project.ttokttok.domain.applicant.service.dto.response.ApplicantPageServiceResponse;
 import org.project.ttokttok.domain.applicant.service.dto.response.MemoResponse;
+import org.project.ttokttok.domain.club.service.policy.ClubAccessPolicy;
 import org.project.ttokttok.domain.applyform.domain.ApplyForm;
 import org.project.ttokttok.domain.applyform.exception.ActiveApplyFormNotFoundException;
 import org.project.ttokttok.domain.applyform.repository.ApplyFormRepository;
 import org.project.ttokttok.domain.club.domain.Club;
+import org.project.ttokttok.domain.club.exception.ClubNotFoundException;
 import org.project.ttokttok.domain.club.exception.NotClubAdminException;
 import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.domain.clubMember.domain.ClubMember;
@@ -44,6 +46,7 @@ public class ApplicantAdminService {
     private final ClubRepository clubRepository;
     private final ClubMemberRepository clubMemberRepository;
     private final EmailService emailService;
+    private final ClubAccessPolicy clubAccessPolicy;
 
     public ApplicantPageServiceResponse getApplicantPage(ApplicantPageServiceRequest request) {
         Club club = validateClubAdmin(request.username());
@@ -156,7 +159,9 @@ public class ApplicantAdminService {
 
     @Transactional
     public ApplicantFinalizeServiceResponse finalizeApplicantsStatus(ApplicantFinalizationRequest request) {
-        Club club = validateClubAdmin(request.username());
+        Club club = clubRepository.findById(request.clubId())
+                        .orElseThrow(ClubNotFoundException::new);
+        clubAccessPolicy.validateAdmin(club, request.username());
 
         ApplyForm currentApplyForm = findActiveApplyForm(request.clubId());
         ApplicantPhase phase = Kind.toApplicantPhase(request.kind());
@@ -173,7 +178,11 @@ public class ApplicantAdminService {
                                            String username,
                                            String clubId,
                                            String kind) {
-        validateClubAdmin(username);
+
+        Club club = clubRepository.findById(clubId)
+                        .orElseThrow(ClubNotFoundException::new);
+
+        clubAccessPolicy.validateAdmin(club, username);
         
         ApplyForm currentApplyForm = findActiveApplyForm(clubId);
         ApplicantPhase phase = Kind.toApplicantPhase(kind);

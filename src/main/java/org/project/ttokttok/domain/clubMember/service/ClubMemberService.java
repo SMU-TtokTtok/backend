@@ -18,7 +18,7 @@ import org.project.ttokttok.domain.clubMember.repository.ClubMemberRepository;
 import org.project.ttokttok.domain.clubMember.repository.dto.ClubMemberPageQueryResponse;
 import org.project.ttokttok.domain.clubMember.service.dto.request.*;
 import org.project.ttokttok.domain.clubMember.service.dto.response.*;
-import org.project.ttokttok.domain.clubMember.service.policy.ClubAccessPolicy;
+import org.project.ttokttok.domain.club.service.policy.ClubAccessPolicy;
 import org.project.ttokttok.global.excel.ExcelService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
