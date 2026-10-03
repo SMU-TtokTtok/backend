@@ -64,6 +64,10 @@ public class ClubBoard extends BaseTimeEntity {
         this.thumbnailUrl = thumbnailUrl;
     }
 
+    public boolean belongsToClub(String clubId) {
+        return club.getId().equals(clubId);
+    }
+
     // ------- 정적 메서드 -------
     public static ClubBoard create(String title, String content, String thumbnailUrl, Club club) {
         validateTitle(title);

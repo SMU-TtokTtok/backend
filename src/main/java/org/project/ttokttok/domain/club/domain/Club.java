@@ -92,6 +92,10 @@ public class Club extends BaseTimeEntity {
         updateField(req.content(), v -> this.content = v);
     }
 
+    public boolean isManagedBy(String name) {
+        return admin.getUsername().equals(name);
+    }
+
     private <T> void updateField(JsonNullable<T> nullable, Consumer<T> setter) {
         if (nullable != null && nullable.isPresent()) {
             setter.accept(nullable.get());

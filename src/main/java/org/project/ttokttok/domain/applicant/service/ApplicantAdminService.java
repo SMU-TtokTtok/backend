@@ -13,10 +13,12 @@ import org.project.ttokttok.domain.applicant.service.dto.response.ApplicantDetai
 import org.project.ttokttok.domain.applicant.service.dto.response.ApplicantFinalizeServiceResponse;
 import org.project.ttokttok.domain.applicant.service.dto.response.ApplicantPageServiceResponse;
 import org.project.ttokttok.domain.applicant.service.dto.response.MemoResponse;
+import org.project.ttokttok.domain.club.service.policy.ClubAccessPolicy;
 import org.project.ttokttok.domain.applyform.domain.ApplyForm;
 import org.project.ttokttok.domain.applyform.exception.ActiveApplyFormNotFoundException;
 import org.project.ttokttok.domain.applyform.repository.ApplyFormRepository;
 import org.project.ttokttok.domain.club.domain.Club;
+import org.project.ttokttok.domain.club.exception.ClubNotFoundException;
 import org.project.ttokttok.domain.club.exception.NotClubAdminException;
 import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.domain.clubMember.domain.ClubMember;
@@ -44,11 +46,13 @@ public class ApplicantAdminService {
     private final ClubRepository clubRepository;
     private final ClubMemberRepository clubMemberRepository;
     private final EmailService emailService;
+    private final ClubAccessPolicy clubAccessPolicy;
 
     public ApplicantPageServiceResponse getApplicantPage(ApplicantPageServiceRequest request) {
         Club club = validateClubAdmin(request.username());
 
-        ApplyForm mostRecentApplyForm = applyFormRepository.findTopByClubIdAndStatusOrderByCreatedAtDesc(club.getId(), ACTIVE)
+        ApplyForm mostRecentApplyForm = applyFormRepository.findTopByClubIdAndStatusOrderByCreatedAtDesc(club.getId(),
+                        ACTIVE)
                 .orElse(null);
 
         if (mostRecentApplyForm == null) {
@@ -74,7 +78,9 @@ public class ApplicantAdminService {
         Applicant applicant = applicantRepository.findByIdWithDocumentPhase(applicantId)
                 .orElseThrow(ApplicantNotFoundException::new);
 
-        validateApplicantAccess(applicant.getApplyForm().getClub().getId(), club.getId());
+        if (!applicant.belongsToClub(club.getId())) {
+            throw new UnAuthorizedApplicantAccessException();
+        }
 
         List<MemoResponse> memos = new ArrayList<>();
         if (applicant.getDocumentPhase() != null) {
@@ -99,7 +105,8 @@ public class ApplicantAdminService {
     public ApplicantPageServiceResponse searchApplicantByKeyword(ApplicantSearchServiceRequest request) {
         Club club = validateClubAdmin(request.username());
 
-        ApplyForm mostRecentApplyForm = applyFormRepository.findTopByClubIdAndStatusOrderByCreatedAtDesc(club.getId(), ACTIVE)
+        ApplyForm mostRecentApplyForm = applyFormRepository.findTopByClubIdAndStatusOrderByCreatedAtDesc(club.getId(),
+                        ACTIVE)
                 .orElse(null);
 
         if (mostRecentApplyForm == null) {
@@ -123,7 +130,8 @@ public class ApplicantAdminService {
     public ApplicantPageServiceResponse getApplicantsByStatus(ApplicantStatusServiceRequest request) {
         Club club = validateClubAdmin(request.username());
 
-        ApplyForm mostRecentApplyForm = applyFormRepository.findTopByClubIdAndStatusOrderByCreatedAtDesc(club.getId(), ACTIVE)
+        ApplyForm mostRecentApplyForm = applyFormRepository.findTopByClubIdAndStatusOrderByCreatedAtDesc(club.getId(),
+                        ACTIVE)
                 .orElse(null);
 
         if (mostRecentApplyForm == null) {
@@ -148,7 +156,9 @@ public class ApplicantAdminService {
         Applicant applicant = applicantRepository.findById(request.applicantId())
                 .orElseThrow(ApplicantNotFoundException::new);
 
-        validateApplicantAccess(applicant.getApplyForm().getClub().getId(), club.getId());
+        if (!applicant.belongsToClub(club.getId())) {
+            throw new UnAuthorizedApplicantAccessException();
+        }
 
         ApplicantPhase phase = Kind.toApplicantPhase(request.kind());
         applicant.changeEvaluationStatus(phase, request.status());
@@ -156,12 +166,15 @@ public class ApplicantAdminService {
 
     @Transactional
     public ApplicantFinalizeServiceResponse finalizeApplicantsStatus(ApplicantFinalizationRequest request) {
-        Club club = validateClubAdmin(request.username());
+        Club club = clubRepository.findById(request.clubId())
+                .orElseThrow(ClubNotFoundException::new);
+        clubAccessPolicy.validateAdmin(club, request.username());
 
         ApplyForm currentApplyForm = findActiveApplyForm(request.clubId());
         ApplicantPhase phase = Kind.toApplicantPhase(request.kind());
         int passedApplicantCount = processApplicants(currentApplyForm, club, phase);
-        int finalizedApplicantCount = calculateFinalizedApplicantCount(currentApplyForm.getId(), phase) + passedApplicantCount;
+        int finalizedApplicantCount =
+                calculateFinalizedApplicantCount(currentApplyForm.getId(), phase) + passedApplicantCount;
 
         return ApplicantFinalizeServiceResponse.of(passedApplicantCount, finalizedApplicantCount);
     }
@@ -173,8 +186,12 @@ public class ApplicantAdminService {
                                            String username,
                                            String clubId,
                                            String kind) {
-        validateClubAdmin(username);
-        
+
+        Club club = clubRepository.findById(clubId)
+                .orElseThrow(ClubNotFoundException::new);
+
+        clubAccessPolicy.validateAdmin(club, username);
+
         ApplyForm currentApplyForm = findActiveApplyForm(clubId);
         ApplicantPhase phase = Kind.toApplicantPhase(kind);
 
@@ -273,9 +290,4 @@ public class ApplicantAdminService {
         );
     }
 
-    private void validateApplicantAccess(String applicantClubId, String targetClubId) {
-        if (!applicantClubId.equals(targetClubId)) {
-            throw new UnAuthorizedApplicantAccessException();
-        }
-    }
 }

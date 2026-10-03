@@ -4,6 +4,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.exception.FileIsNotImageException;
@@ -40,6 +42,29 @@ class ClubBoardAdminServiceTest {
             new ClubBoardAdminService(clubRepository, clubBoardRepository, s3Service);
 
     private static final String THUMBNAIL_URL = "https://cdn.example.com/board-images/uuid_thumb.png";
+
+    @ParameterizedTest(name = "{0}: 다른 동아리 요청 거부")
+    @ValueSource(strings = {"CREATE", "UPDATE", "DELETE"})
+    @DisplayName("다른 동아리 ID 요청은 게시글 조회와 S3 호출 전에 거부한다")
+    void rejectsOtherClubRequest(String operation) {
+        Club club = mockClub("club123");
+        when(clubRepository.findByAdminUsername("admin")).thenReturn(Optional.of(club));
+
+        assertThatThrownBy(() -> {
+            switch (operation) {
+                case "CREATE" -> clubBoardService.createBoard(new CreateBoardServiceRequest(
+                        "admin", "otherClub", "title", "content", imageFile()));
+                case "UPDATE" -> clubBoardService.updateBoard(ClubBoardUpdateServiceRequest.builder()
+                        .username("admin").clubId("otherClub").boardId("board123")
+                        .title("title").content("content").thumbnail(imageFile()).build());
+                case "DELETE" -> clubBoardService.deleteBoard(
+                        new DeleteBoardServiceRequest("admin", "otherClub", "board123"));
+                default -> throw new AssertionError("지원하지 않는 작업: " + operation);
+            }
+        }).isExactlyInstanceOf(ClubAdminNameNotMatchException.class);
+
+        verifyNoInteractions(clubBoardRepository, s3Service);
+    }
 
     private Club mockClub(String clubId) {
         Club club = mock(Club.class);
@@ -160,7 +185,7 @@ class ClubBoardAdminServiceTest {
             when(clubRepository.findByAdminUsername("admin")).thenReturn(Optional.of(club));
 
             ClubBoard board = mock(ClubBoard.class);
-            when(board.getClub()).thenReturn(club);
+            when(board.belongsToClub("club123")).thenReturn(true);
             when(clubBoardRepository.findById("board123")).thenReturn(Optional.of(board));
 
             ClubBoardUpdateServiceRequest request = ClubBoardUpdateServiceRequest.builder()
@@ -185,7 +210,7 @@ class ClubBoardAdminServiceTest {
 
             String oldUrl = "https://cdn.example.com/board-images/uuid_old.png";
             ClubBoard board = mock(ClubBoard.class);
-            when(board.getClub()).thenReturn(club);
+            when(board.belongsToClub("club123")).thenReturn(true);
             when(board.getThumbnailUrl()).thenReturn(oldUrl);
             when(clubBoardRepository.findById("board123")).thenReturn(Optional.of(board));
             when(s3Service.uploadFile(any(MultipartFile.class), eq(BOARD_IMAGE.getDirectoryName())))
@@ -213,7 +238,7 @@ class ClubBoardAdminServiceTest {
             when(clubRepository.findByAdminUsername("admin")).thenReturn(Optional.of(club));
 
             ClubBoard board = mock(ClubBoard.class);
-            when(board.getClub()).thenReturn(club);
+            when(board.belongsToClub("club123")).thenReturn(true);
             when(clubBoardRepository.findById("board123")).thenReturn(Optional.of(board));
 
             ClubBoardUpdateServiceRequest request = ClubBoardUpdateServiceRequest.builder()
@@ -253,11 +278,10 @@ class ClubBoardAdminServiceTest {
         @DisplayName("게시글이 다른 동아리 소속이면 예외가 발생한다.")
         void updateBoardClubMismatch() {
             Club myClub = mockClub("club123");
-            Club otherClub = mockClub("otherClub");
             when(clubRepository.findByAdminUsername("admin")).thenReturn(Optional.of(myClub));
 
             ClubBoard board = mock(ClubBoard.class);
-            when(board.getClub()).thenReturn(otherClub);
+            when(board.belongsToClub("club123")).thenReturn(false);
             when(clubBoardRepository.findById("board123")).thenReturn(Optional.of(board));
 
             ClubBoardUpdateServiceRequest request = ClubBoardUpdateServiceRequest.builder()
@@ -272,6 +296,9 @@ class ClubBoardAdminServiceTest {
                     .isInstanceOf(ClubAdminNameNotMatchException.class);
 
             verify(board, never()).update(any(), any());
+            verify(board, never()).updateThumbnailUrl(anyString());
+            verify(clubBoardRepository, never()).save(any());
+            verifyNoInteractions(s3Service);
         }
     }
 
@@ -286,7 +313,7 @@ class ClubBoardAdminServiceTest {
             when(clubRepository.findByAdminUsername("admin")).thenReturn(Optional.of(club));
 
             ClubBoard board = mock(ClubBoard.class);
-            when(board.getClub()).thenReturn(club);
+            when(board.belongsToClub("club123")).thenReturn(true);
             when(board.getThumbnailUrl()).thenReturn(THUMBNAIL_URL);
             when(clubBoardRepository.findById("board123")).thenReturn(Optional.of(board));
 
@@ -305,7 +332,7 @@ class ClubBoardAdminServiceTest {
             when(clubRepository.findByAdminUsername("admin")).thenReturn(Optional.of(club));
 
             ClubBoard board = mock(ClubBoard.class);
-            when(board.getClub()).thenReturn(club);
+            when(board.belongsToClub("club123")).thenReturn(true);
             when(board.getThumbnailUrl()).thenReturn(null);
             when(clubBoardRepository.findById("board123")).thenReturn(Optional.of(board));
 
@@ -321,11 +348,10 @@ class ClubBoardAdminServiceTest {
         @DisplayName("게시글이 다른 동아리 소속이면 예외가 발생하고 삭제되지 않는다.")
         void deleteBoardClubMismatch() {
             Club myClub = mockClub("club123");
-            Club otherClub = mockClub("otherClub");
             when(clubRepository.findByAdminUsername("admin")).thenReturn(Optional.of(myClub));
 
             ClubBoard board = mock(ClubBoard.class);
-            when(board.getClub()).thenReturn(otherClub);
+            when(board.belongsToClub("club123")).thenReturn(false);
             when(clubBoardRepository.findById("board123")).thenReturn(Optional.of(board));
 
             DeleteBoardServiceRequest request = new DeleteBoardServiceRequest("admin", "club123", "board123");

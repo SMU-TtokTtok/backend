@@ -6,11 +6,11 @@ import org.project.ttokttok.domain.applicant.domain.enums.Gender;
 import org.project.ttokttok.domain.applicant.domain.enums.Grade;
 import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.exception.ClubNotFoundException;
-import org.project.ttokttok.domain.club.exception.NotClubAdminException;
 import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.domain.clubMember.domain.ClubMember;
 import org.project.ttokttok.domain.clubMember.domain.MemberRole;
 import org.project.ttokttok.domain.clubMember.exception.AlreadyClubMemberException;
+import org.project.ttokttok.domain.clubMember.exception.ClubMemberAccessDeniedException;
 import org.project.ttokttok.domain.clubMember.exception.ClubMemberNotFoundException;
 import org.project.ttokttok.domain.clubMember.exception.DuplicateRoleException;
 import org.project.ttokttok.domain.clubMember.exception.ExcelFileCreateFailException;
@@ -18,14 +18,13 @@ import org.project.ttokttok.domain.clubMember.repository.ClubMemberRepository;
 import org.project.ttokttok.domain.clubMember.repository.dto.ClubMemberPageQueryResponse;
 import org.project.ttokttok.domain.clubMember.service.dto.request.*;
 import org.project.ttokttok.domain.clubMember.service.dto.response.*;
+import org.project.ttokttok.domain.club.service.policy.ClubAccessPolicy;
 import org.project.ttokttok.global.excel.ExcelService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.List;
-
-import static org.project.ttokttok.domain.clubMember.domain.MemberRole.*;
 
 @Slf4j
 @Service
@@ -35,6 +34,7 @@ public class ClubMemberService {
     private final ClubMemberRepository clubMemberRepository;
     private final ClubRepository clubRepository;
     private final ExcelService excelService;
+    private final ClubAccessPolicy clubAccessPolicy;
 
     // 상명대 이메일 접미사
     private static final String EMAIL_SUFFIX = "@sangmyung.kr";
@@ -54,7 +54,7 @@ public class ClubMemberService {
     public void changeRole(String username, ChangeRoleServiceRequest request) {
         validateClubAndAdmin(request.clubId(), username);
 
-        ClubMember member = findClubMemberById(request.memberId());
+        ClubMember member = findMemberOfClub(request.memberId(), request.clubId());
 
         validateRoleChange(request.clubId(), request.newRole(), member.getId());
         member.changeRole(request.newRole());
@@ -64,7 +64,7 @@ public class ClubMemberService {
     public void deleteMember(String username, DeleteMemberServiceRequest request) {
         validateClubAndAdmin(request.clubId(), username);
 
-        ClubMember member = findClubMemberById(request.memberId());
+        ClubMember member = findMemberOfClub(request.memberId(), request.clubId());
 
         clubMemberRepository.delete(member);
     }
@@ -114,12 +114,12 @@ public class ClubMemberService {
     public String addMember(String username,
                             String clubId,
                             ClubMemberServiceRequest request,
-                            String role) {
+                            String roleName) {
         Club club = validateClubAndAdmin(clubId, username);
 
         String targetEmail = getTargetEmail(request.studentNum());
 
-        MemberRole memberRole = executeOrMember(role);
+        MemberRole memberRole = MemberRole.fromRegistrationRole(roleName);
 
         return createClubMember(
                 club,
@@ -143,12 +143,7 @@ public class ClubMemberService {
                                         String phoneNumber,
                                         Gender gender) {
         // 회장 혹은 부회장이 있는지 검증
-        if (role == PRESIDENT || role == VICE_PRESIDENT) {
-            clubMemberRepository.findByClubIdAndRole(club.getId(), role)
-                    .ifPresent(member -> {
-                        throw new DuplicateRoleException();
-                    });
-        }
+        validateRoleChange(club.getId(), role, null);
 
         // 겹치는 이메일이 존재하는지 검증 (User ID 대신 email 사용)
         if (clubMemberRepository.existsByClubIdAndEmail(club.getId(), email)) {
@@ -189,46 +184,41 @@ public class ClubMemberService {
 
     // 관리자 검증
     private Club validateClubAndAdmin(String clubId, String username) {
-        Club club = validateClubExists(clubId);
-        validateAdmin(username, club.getAdmin().getUsername());
+        Club club = clubRepository.findById(clubId)
+                .orElseThrow(ClubNotFoundException::new);
+
+        clubAccessPolicy.validateAdmin(club, username);
         return club;
     }
 
-    // 동아리 존재 여부 검증
-    private Club validateClubExists(String clubId) {
-        return clubRepository.findById(clubId)
-                .orElseThrow(ClubNotFoundException::new);
-    }
-
     // 동아리 부원 존재 여부 검증
-    private ClubMember findClubMemberById(String memberId) {
-        return clubMemberRepository.findById(memberId)
+    private ClubMember findMemberOfClub(String memberId, String clubId) {
+        ClubMember member = clubMemberRepository.findById(memberId)
                 .orElseThrow(ClubMemberNotFoundException::new);
-    }
-
-    // 동아리 관리자 검증
-    private void validateAdmin(String username, String clubUsername) {
-        if (!username.equals(clubUsername))
-            throw new NotClubAdminException();
-    }
-
-    // 역할 변경 시 역할 중복 검증
-    private void validateRoleChange(String clubId, MemberRole newRole, String currentMemberId) {
-        if (newRole == PRESIDENT || newRole == VICE_PRESIDENT) {
-            clubMemberRepository.findByClubIdAndRole(clubId, newRole)
-                    .ifPresent(existingMember -> {
-                        if (!existingMember.getId().equals(currentMemberId)) {
-                            throw new DuplicateRoleException();
-                        }
-                    });
+        if (!member.belongsToClub(clubId)) {
+            throw new ClubMemberAccessDeniedException();
         }
+
+        return member;
     }
 
-    private MemberRole executeOrMember(String role) {
-        if (!role.equalsIgnoreCase(EXECUTIVE.name())) {
-            return MEMBER;
-        } else {
-            return EXECUTIVE;
+    // 역할 변경 시 중복 검증
+    private void validateRoleChange(
+            String clubId,
+            MemberRole role,
+            String excludedMemberId
+    ) {
+        if (!role.isExclusive()) {
+            return;
+        }
+        // 변경하려는 역할이 회장 혹은 부회장이며, 동일한 부원이 아닌지 확인.
+        boolean occupiedByAnotherMember = clubMemberRepository
+                .findByClubIdAndRole(clubId, role)
+                .filter(member -> !member.getId().equals(excludedMemberId))
+                .isPresent();
+
+        if (occupiedByAnotherMember) {
+            throw new DuplicateRoleException();
         }
     }
 }
