@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.project.ttokttok.domain.applyform.domain.ApplyForm;
 import org.project.ttokttok.domain.applyform.exception.ApplyFormNotFoundException;
@@ -16,6 +17,7 @@ import org.project.ttokttok.domain.club.exception.FileIsNotImageException;
 import org.project.ttokttok.domain.club.exception.NotClubAdminException;
 import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.domain.club.service.dto.request.MarkdownImageUpdateRequest;
+import org.project.ttokttok.domain.club.service.policy.ClubAccessPolicy;
 import org.project.ttokttok.domain.notification.fcm.repository.FCMTokenRepository;
 import org.project.ttokttok.infrastructure.firebase.service.FCMService;
 import org.project.ttokttok.infrastructure.firebase.service.dto.FCMRequest;
@@ -42,6 +44,7 @@ class ClubAdminServiceBehaviorTest {
     @Mock private FCMTokenRepository fcmTokenRepository;
     @Mock private S3Service s3Service;
     @Mock private FCMService fcmService;
+    @Spy private ClubAccessPolicy clubAccessPolicy;
 
     @InjectMocks private ClubAdminService clubAdminService;
 
@@ -114,6 +117,7 @@ class ClubAdminServiceBehaviorTest {
         @DisplayName("프로필 이미지가 있으면 S3 업로드 후 URL을 갱신한다")
         void updatesProfileImage() {
             Club club = mock(Club.class);
+            given(club.getId()).willReturn(CLUB_ID);
             given(clubRepository.findByAdminUsername(USERNAME)).willReturn(Optional.of(club));
             given(club.getProfileImageUrl()).willReturn(null);
             MultipartFile profile = mock(MultipartFile.class);
@@ -162,6 +166,7 @@ class ClubAdminServiceBehaviorTest {
         @DisplayName("이미 모집중이던 폼을 끄면 알림을 보내지 않는다")
         void togglesOffWithoutNotification() {
             Club club = mock(Club.class);
+            given(club.getId()).willReturn(CLUB_ID);
             given(clubRepository.findByAdminUsername(USERNAME)).willReturn(Optional.of(club));
 
             ApplyForm form = mock(ApplyForm.class);
@@ -178,6 +183,7 @@ class ClubAdminServiceBehaviorTest {
         @DisplayName("활성 폼이 없으면 최신 폼을 활성화한다")
         void activatesLatestWhenNoActiveForm() {
             Club club = mock(Club.class);
+            given(club.getId()).willReturn(CLUB_ID);
             given(clubRepository.findByAdminUsername(USERNAME)).willReturn(Optional.of(club));
             given(applyFormRepository.findByClubIdAndStatus(any(), any())).willReturn(Optional.empty());
 
@@ -195,6 +201,7 @@ class ClubAdminServiceBehaviorTest {
         @DisplayName("활성 폼도 없고 최신 폼도 없으면 ApplyFormNotFoundException을 던진다")
         void throwsWhenNoFormAtAll() {
             Club club = mock(Club.class);
+            given(club.getId()).willReturn(CLUB_ID);
             given(clubRepository.findByAdminUsername(USERNAME)).willReturn(Optional.of(club));
             given(applyFormRepository.findByClubIdAndStatus(any(), any())).willReturn(Optional.empty());
             given(applyFormRepository.findTopByClubIdOrderByCreatedAtDesc(CLUB_ID))

@@ -22,6 +22,7 @@ import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.domain.club.service.dto.request.ClubContentUpdateServiceRequest;
 import org.project.ttokttok.domain.club.service.dto.request.MarkdownImageUpdateRequest;
 import org.project.ttokttok.domain.club.service.dto.response.ClubDetailAdminServiceResponse;
+import org.project.ttokttok.domain.club.service.policy.ClubAccessPolicy;
 import org.project.ttokttok.domain.notification.fcm.repository.FCMTokenRepository;
 import org.project.ttokttok.infrastructure.firebase.service.FCMService;
 import org.project.ttokttok.infrastructure.firebase.service.dto.FCMRequest;
@@ -42,6 +43,7 @@ public class ClubAdminService {
 
     private final S3Service s3Service;
     private final FCMService fcmService;
+    private final ClubAccessPolicy clubAccessPolicy;
 
     @Transactional
     public void updateContent(String username,
@@ -50,6 +52,7 @@ public class ClubAdminService {
                               Optional<MultipartFile> profileImage) {
 
         Club club = validateClubAdmin(username);
+        clubAccessPolicy.validateSameClubId(club.getId(), clubId);
 
         if (hasProfileImage(profileImage)) {
             updateProfileImage(club, profileImage.get());
@@ -75,6 +78,8 @@ public class ClubAdminService {
     @Transactional
     public void toggleRecruitment(String username, String clubId) {
         Club club = validateClubAdmin(username);
+
+        clubAccessPolicy.validateSameClubId(club.getId(), clubId);
 
         Optional<ApplyForm> form = applyFormRepository.findByClubIdAndStatus(clubId, ACTIVE);
 
