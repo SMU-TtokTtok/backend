@@ -8,6 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.project.ttokttok.domain.applicant.service.answer.AnswerAssembler;
+import org.project.ttokttok.domain.applicant.service.answer.AnswerValidator;
 import org.project.ttokttok.domain.applicant.service.answer.FileAnswerUploader;
 import org.project.ttokttok.domain.applicant.controller.dto.request.AnswerRequest;
 import org.project.ttokttok.domain.applicant.controller.dto.request.ApplyFormRequest;
@@ -81,7 +82,7 @@ class ApplicantUserServiceTest {
      */
     @BeforeEach
     void setUp() {
-        AnswerAssembler answerAssembler = new AnswerAssembler(new FileAnswerUploader(s3Service));
+        AnswerAssembler answerAssembler = new AnswerAssembler(new FileAnswerUploader(s3Service), new AnswerValidator());
 
         applicantUserService = new ApplicantUserService(
                 userRepository,

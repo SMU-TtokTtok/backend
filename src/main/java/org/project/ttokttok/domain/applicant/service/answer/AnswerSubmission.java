@@ -1,6 +1,5 @@
 package org.project.ttokttok.domain.applicant.service.answer;
 
-import org.project.ttokttok.domain.applicant.controller.dto.request.AnswerRequest;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -18,10 +17,13 @@ import java.util.Optional;
  * @param files       업로드된 파일 목록 (null 허용)
  */
 public record AnswerSubmission(
-        List<AnswerRequest> answers,
+        List<AnswerInput> answers,
         List<String> questionIds,
         List<MultipartFile> files
 ) {
+    public AnswerSubmission {
+        answers = answers == null ? List.of() : answers;
+    }
 
     /** 파일 관련 입력이 아예 없는지 여부 */
     public boolean hasNoFileInput() {
