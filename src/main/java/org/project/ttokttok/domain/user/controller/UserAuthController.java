@@ -11,6 +11,8 @@ import org.project.ttokttok.domain.user.controller.dto.response.ApiResponse;
 import org.project.ttokttok.domain.user.controller.dto.response.LoginResponse;
 import org.project.ttokttok.domain.user.controller.dto.response.UserResponse;
 import org.project.ttokttok.domain.user.service.UserAuthService;
+import org.project.ttokttok.domain.user.service.PasswordResetService;
+import org.project.ttokttok.domain.user.service.EmailVerificationService;
 import org.project.ttokttok.domain.user.service.dto.response.LoginServiceResponse;
 import org.project.ttokttok.domain.user.service.dto.response.UserReissueServiceResponse;
 import org.project.ttokttok.domain.user.service.dto.response.UserServiceResponse;
@@ -30,6 +32,8 @@ import java.util.Map;
 public class UserAuthController {
 
     private final UserAuthService userAuthService;
+    private final EmailVerificationService emailVerificationService;
+    private final PasswordResetService passwordResetService;
 
     /**
      * 이메일 인증코드 발송 API
@@ -57,7 +61,7 @@ public class UserAuthController {
             @Parameter(description = "이메일 인증 요청 (상명대 이메일 주소)")
             @RequestBody @Valid SendVerificationRequest request) {
 
-        userAuthService.sendVerificationCode(request.email());
+        emailVerificationService.sendVerificationCode(request.email());
 
         return ResponseEntity.ok(
                 ApiResponse.success("인증코드가 발송되었습니다.")
@@ -90,7 +94,7 @@ public class UserAuthController {
             @Parameter(description = "이메일 인증 검증 요청 (이메일 주소, 6자리 인증코드)")
             @RequestBody @Valid VerifyEmailRequest request) {
 
-        userAuthService.verifyEmail(request.email(), request.code());
+        emailVerificationService.verifyEmail(request.email(), request.code());
 
         return ResponseEntity.ok(
                 ApiResponse.success("이메일 인증이 완료되었습니다.")
@@ -271,7 +275,7 @@ public class UserAuthController {
             @Parameter(description = "비밀번호 재설정 코드 발송 요청 (가입된 이메일 주소")
             @RequestBody @Valid SendVerificationRequest request) {
 
-        userAuthService.sendPasswordResetCode(request.email());
+        passwordResetService.sendPasswordResetCode(request.email());
 
         return ResponseEntity.ok(
                 ApiResponse.success("비밀번호 재설정 코드가 발송되었습니다.")
@@ -308,7 +312,7 @@ public class UserAuthController {
             @Parameter(description = "비밀번호 재설정 요청 (이메일, 6자리 재설정 코드, 새 비밀번호)")
             @RequestBody @Valid ResetPasswordRequest request) {
 
-        userAuthService.resetPassword(request.toServiceRequest());
+        passwordResetService.resetPassword(request.toServiceRequest());
 
         return ResponseEntity.ok(
                 ApiResponse.success("비밀번호가 재설정되었습니다.")

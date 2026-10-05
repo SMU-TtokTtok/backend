@@ -4,27 +4,22 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
+import org.junit.jupiter.api.BeforeEach;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.project.ttokttok.domain.user.domain.EmailVerification;
 import org.project.ttokttok.domain.user.domain.User;
 import org.project.ttokttok.domain.user.repository.EmailVerificationRepository;
 import org.project.ttokttok.domain.user.repository.UserRepository;
 import org.project.ttokttok.domain.user.service.dto.request.LoginServiceRequest;
-import org.project.ttokttok.domain.user.service.dto.request.ResetPasswordServiceRequest;
 import org.project.ttokttok.domain.user.service.dto.request.SignupServiceRequest;
 import org.project.ttokttok.domain.user.service.dto.response.LoginServiceResponse;
-import org.project.ttokttok.domain.user.service.dto.response.UserReissueServiceResponse;
 import org.project.ttokttok.domain.user.service.dto.response.UserServiceResponse;
 import org.project.ttokttok.global.auth.jwt.dto.response.TokenResponse;
-import org.project.ttokttok.global.auth.jwt.exception.InvalidRefreshTokenException;
 import org.project.ttokttok.global.auth.jwt.service.TokenProvider;
 import org.project.ttokttok.infrastructure.email.service.EmailService;
 import org.project.ttokttok.infrastructure.redis.service.RefreshTokenRedisService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -54,8 +49,14 @@ class UserAuthServiceTest {
     @Mock
     private RefreshTokenRedisService refreshTokenRedisService;
 
-    @InjectMocks
     private UserAuthService userAuthService;
+
+    @BeforeEach
+    void setUp() {
+        EmailVerificationService verificationService = new EmailVerificationService(emailVerificationRepository, emailService);
+        userAuthService = new UserAuthService(userRepository, verificationService,
+                tokenProvider, passwordEncoder, refreshTokenRedisService);
+    }
 
     @Nested
     @DisplayName("회원가입 테스트")
@@ -126,36 +127,4 @@ class UserAuthServiceTest {
         }
     }
 
-    @Nested
-    @DisplayName("비밀번호 재설정 테스트")
-    class ResetPassword {
-
-        @Test
-        @DisplayName("새 비밀번호가 일치하고 인증코드가 유효하면 비밀번호를 재설정한다")
-        void resetPassword_success() {
-            // given
-            String email = "test@sangmyung.kr";
-            String code = "123456";
-            String newPassword = "newPassword123";
-            ResetPasswordServiceRequest request = ResetPasswordServiceRequest.builder()
-                    .email(email)
-                    .verificationCode(code)
-                    .newPassword(newPassword)
-                    .newPasswordConfirm(newPassword)
-                    .build();
-
-            User user = User.signUp(email, "old-password", "홍길동", true);
-
-            given(emailVerificationRepository.existsByEmailAndCodeAndIsVerifiedTrue(email, code)).willReturn(true);
-            given(userRepository.findByEmail(email)).willReturn(Optional.of(user));
-            given(passwordEncoder.encode(newPassword)).willReturn("encoded-new-password");
-
-            // when
-            userAuthService.resetPassword(request);
-
-            // then
-            assertThat(user.getPassword()).isEqualTo("encoded-new-password");
-            verify(userRepository, times(1)).save(user);
-        }
-    }
 }
