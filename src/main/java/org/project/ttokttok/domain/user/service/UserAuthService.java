@@ -8,7 +8,6 @@ import org.project.ttokttok.domain.user.domain.User;
 import org.project.ttokttok.domain.user.exception.OAuthOnlyAccountException;
 import org.project.ttokttok.domain.user.repository.UserRepository;
 import org.project.ttokttok.domain.user.service.dto.request.LoginServiceRequest;
-import org.project.ttokttok.domain.user.service.dto.request.ResetPasswordServiceRequest;
 import org.project.ttokttok.domain.user.service.dto.request.SignupServiceRequest;
 import org.project.ttokttok.domain.user.service.dto.response.LoginServiceResponse;
 import org.project.ttokttok.domain.user.service.dto.response.UserReissueServiceResponse;
@@ -115,59 +114,6 @@ public class UserAuthService {
         log.info("로그인 성공: {}", user.getEmail());
 
         return LoginServiceResponse.from(tokens, UserServiceResponse.from(user));
-    }
-
-    /**
-     * 5. 비밀번호 재설정
-     *
-     * 새 비밀번호 확인 일치를 검증하고, 인증코드를 검증한 후 비밀번호를 업데이트 합니다.
-     *
-     * @param request 비밀번호 재설정 요청 정보
-     * @throws IllegalArgumentException 새 비밀번호 불일치, 인증코드 오류, 존재하지 않는 사용자 등의 경우
-     * */
-    public void resetPassword(ResetPasswordServiceRequest request) {
-        // 5-1. 새 비밀번호 확인 일치 검증
-        if (!request.newPassword().equals(request.newPasswordConfirm())) {
-            throw new IllegalArgumentException("새 비밀번호가 일치하지 않습니다.");
-        }
-
-        // 5-2. 인증코드 검증
-        emailVerificationService.requireVerifiedCode(request.email(), request.verificationCode());
-
-        // 5-3. 사용자 조회 및 비밀번호 업데이트
-        User user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
-
-        // OAuth 전용 계정은 비밀번호 재설정 불가 (구글 로그인 이용 안내)
-        if (user.isOAuthOnly()) {
-            throw new OAuthOnlyAccountException();
-        }
-
-        user.updatePassword(passwordEncoder.encode(request.newPassword()));
-        userRepository.save(user);
-
-        log.info("비밀번호 재설정 완료 : {}", user.getEmail());
-    }
-
-    /**
-     * 6. 비밀번호 재설정용 인증코드 발송합니다.
-     *
-     * 사용자 존재 여부를 확인하고, 기존 미인증 코드를 만료 처리한 후 새로운 인증코드를 생성하여 발송합니다.
-     *
-     * @param email 비밀번호 재설정 코드를 발송할 이메일 주소
-     * @throws IllegalArgumentException 존재하지 않는 사용자인 경우
-     * */
-    public void sendPasswordResetCode(String email) {
-        // 사용자 존재 확인
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
-
-        // OAuth 전용 계정은 비밀번호 재설정 코드 발송 불가 (구글 로그인 이용 안내)
-        if (user.isOAuthOnly()) {
-            throw new OAuthOnlyAccountException();
-        }
-
-        emailVerificationService.sendPasswordResetCode(email);
     }
 
     /**

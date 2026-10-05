@@ -3,6 +3,7 @@ package org.project.ttokttok.domain.user.controller;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.project.ttokttok.domain.user.service.UserAuthService;
+import org.project.ttokttok.domain.user.service.PasswordResetService;
 import org.project.ttokttok.domain.user.service.EmailVerificationService;
 import org.project.ttokttok.domain.user.service.dto.request.LoginServiceRequest;
 import org.project.ttokttok.domain.user.service.dto.request.ResetPasswordServiceRequest;
@@ -23,6 +24,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -39,6 +41,9 @@ class UserAuthControllerTest {
 
     @MockitoBean
     private EmailVerificationService emailVerificationService;
+
+    @MockitoBean
+    private PasswordResetService passwordResetService;
 
     @MockitoBean
     private TokenProvider tokenProvider;
@@ -60,6 +65,7 @@ class UserAuthControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value("인증코드가 발송되었습니다."));
+        verify(emailVerificationService).sendVerificationCode(EMAIL);
     }
 
     @Test
@@ -73,6 +79,7 @@ class UserAuthControllerTest {
                         .content("{\"email\":\"" + EMAIL + "\",\"code\":\"123456\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("이메일 인증이 완료되었습니다."));
+        verify(emailVerificationService).verifyEmail(EMAIL, "123456");
     }
 
     @Test
@@ -153,20 +160,21 @@ class UserAuthControllerTest {
     @WithMockUser
     @DisplayName("비밀번호 재설정 코드 발송 API를 호출하면 200을 반환한다")
     void sendPasswordResetCode() throws Exception {
-        doNothing().when(userAuthService).sendPasswordResetCode(any());
+        doNothing().when(passwordResetService).sendPasswordResetCode(any());
 
         mockMvc.perform(post("/api/user/auth/send-reset-code").with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"email\":\"" + EMAIL + "\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("비밀번호 재설정 코드가 발송되었습니다."));
+        verify(passwordResetService).sendPasswordResetCode(EMAIL);
     }
 
     @Test
     @WithMockUser
     @DisplayName("비밀번호 재설정 API를 호출하면 200을 반환한다")
     void resetPassword() throws Exception {
-        doNothing().when(userAuthService).resetPassword(any(ResetPasswordServiceRequest.class));
+        doNothing().when(passwordResetService).resetPassword(any(ResetPasswordServiceRequest.class));
 
         String body = "{\"email\":\"" + EMAIL + "\",\"verificationCode\":\"123456\","
                 + "\"newPassword\":\"Password123!\",\"newPasswordConfirm\":\"Password123!\"}";
@@ -176,6 +184,8 @@ class UserAuthControllerTest {
                         .content(body))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("비밀번호가 재설정되었습니다."));
+        verify(passwordResetService).resetPassword(new ResetPasswordServiceRequest(
+                EMAIL, "123456", "Password123!", "Password123!"));
     }
 
     @Test

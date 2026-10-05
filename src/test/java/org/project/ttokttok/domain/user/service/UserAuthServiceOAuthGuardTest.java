@@ -11,7 +11,6 @@ import org.project.ttokttok.domain.user.exception.OAuthOnlyAccountException;
 import org.project.ttokttok.domain.user.repository.EmailVerificationRepository;
 import org.project.ttokttok.domain.user.repository.UserRepository;
 import org.project.ttokttok.domain.user.service.dto.request.LoginServiceRequest;
-import org.project.ttokttok.domain.user.service.dto.request.ResetPasswordServiceRequest;
 import org.project.ttokttok.global.auth.jwt.service.TokenProvider;
 import org.project.ttokttok.infrastructure.email.service.EmailService;
 import org.project.ttokttok.infrastructure.redis.service.RefreshTokenRedisService;
@@ -77,31 +76,4 @@ class UserAuthServiceOAuthGuardTest {
         verify(passwordEncoder, never()).matches(any(), any()); // BCrypt 도달 전 차단
     }
 
-    @Test
-    @DisplayName("OAuth 전용 계정으로 비밀번호 재설정 코드 발송을 시도하면 OAuthOnlyAccountException을 던진다")
-    void sendPasswordResetCode_withOAuthOnlyAccount_throwsOAuthOnlyException() {
-        // given
-        given(userRepository.findByEmail(GMAIL)).willReturn(Optional.of(oauthOnlyUser()));
-
-        // when & then
-        assertThatThrownBy(() -> userAuthService.sendPasswordResetCode(GMAIL))
-                .isInstanceOf(OAuthOnlyAccountException.class);
-        verify(emailService, never()).sendPasswordResetCode(any());
-    }
-
-    @Test
-    @DisplayName("OAuth 전용 계정으로 비밀번호 재설정을 시도하면 OAuthOnlyAccountException을 던진다")
-    void resetPassword_withOAuthOnlyAccount_throwsOAuthOnlyException() {
-        // given
-        given(emailVerificationRepository.existsByEmailAndCodeAndIsVerifiedTrue(GMAIL, "123456"))
-                .willReturn(true);
-        given(userRepository.findByEmail(GMAIL)).willReturn(Optional.of(oauthOnlyUser()));
-        ResetPasswordServiceRequest request = new ResetPasswordServiceRequest(
-                GMAIL, "123456", "NewPassword123!", "NewPassword123!");
-
-        // when & then
-        assertThatThrownBy(() -> userAuthService.resetPassword(request))
-                .isInstanceOf(OAuthOnlyAccountException.class);
-        verify(userRepository, never()).save(any());
-    }
 }

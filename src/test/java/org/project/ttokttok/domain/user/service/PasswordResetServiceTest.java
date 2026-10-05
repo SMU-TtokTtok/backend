@@ -15,9 +15,7 @@ import org.project.ttokttok.domain.user.exception.OAuthOnlyAccountException;
 import org.project.ttokttok.domain.user.repository.EmailVerificationRepository;
 import org.project.ttokttok.domain.user.repository.UserRepository;
 import org.project.ttokttok.domain.user.service.dto.request.ResetPasswordServiceRequest;
-import org.project.ttokttok.global.auth.jwt.service.TokenProvider;
 import org.project.ttokttok.infrastructure.email.service.EmailService;
-import org.project.ttokttok.infrastructure.redis.service.RefreshTokenRedisService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -31,15 +29,13 @@ class PasswordResetServiceTest {
     @Mock private UserRepository userRepository;
     @Mock private EmailVerificationRepository verificationRepository;
     @Mock private EmailService emailService;
-    @Mock private TokenProvider tokenProvider;
     @Mock private PasswordEncoder passwordEncoder;
-    @Mock private RefreshTokenRedisService refreshTokenRedisService;
-    private UserAuthService service;
+    private PasswordResetService service;
 
     @BeforeEach
     void setUp() {
-        service = new UserAuthService(userRepository, new EmailVerificationService(verificationRepository, emailService),
-                tokenProvider, passwordEncoder, refreshTokenRedisService);
+        service = new PasswordResetService(userRepository,
+                new EmailVerificationService(verificationRepository, emailService), passwordEncoder);
     }
 
     @Test
