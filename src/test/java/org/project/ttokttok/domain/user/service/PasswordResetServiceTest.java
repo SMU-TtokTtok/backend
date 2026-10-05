@@ -38,7 +38,7 @@ class PasswordResetServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new UserAuthService(userRepository, verificationRepository, emailService,
+        service = new UserAuthService(userRepository, new EmailVerificationService(verificationRepository, emailService),
                 tokenProvider, passwordEncoder, refreshTokenRedisService);
     }
 

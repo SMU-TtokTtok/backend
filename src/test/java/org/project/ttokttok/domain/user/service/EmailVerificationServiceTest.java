@@ -11,11 +11,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.project.ttokttok.domain.user.domain.EmailVerification;
 import org.project.ttokttok.domain.user.repository.EmailVerificationRepository;
-import org.project.ttokttok.domain.user.repository.UserRepository;
-import org.project.ttokttok.global.auth.jwt.service.TokenProvider;
 import org.project.ttokttok.infrastructure.email.service.EmailService;
-import org.project.ttokttok.infrastructure.redis.service.RefreshTokenRedisService;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -27,16 +23,11 @@ class EmailVerificationServiceTest {
     private static final String CODE = "123456";
     @Mock private EmailVerificationRepository verificationRepository;
     @Mock private EmailService emailService;
-    @Mock private UserRepository userRepository;
-    @Mock private TokenProvider tokenProvider;
-    @Mock private PasswordEncoder passwordEncoder;
-    @Mock private RefreshTokenRedisService refreshTokenRedisService;
-    private UserAuthService service;
+    private EmailVerificationService service;
 
     @BeforeEach
     void setUp() {
-        service = new UserAuthService(userRepository, verificationRepository, emailService,
-                tokenProvider, passwordEncoder, refreshTokenRedisService);
+        service = new EmailVerificationService(verificationRepository, emailService);
     }
 
     @Test

@@ -4,10 +4,8 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.project.ttokttok.domain.user.domain.EmailVerification;
 import org.project.ttokttok.domain.user.domain.User;
 import org.project.ttokttok.domain.user.exception.OAuthOnlyAccountException;
-import org.project.ttokttok.domain.user.repository.EmailVerificationRepository;
 import org.project.ttokttok.domain.user.repository.UserRepository;
 import org.project.ttokttok.domain.user.service.dto.request.LoginServiceRequest;
 import org.project.ttokttok.domain.user.service.dto.request.ResetPasswordServiceRequest;
@@ -19,15 +17,12 @@ import org.project.ttokttok.global.auth.jwt.dto.request.TokenRequest;
 import org.project.ttokttok.global.auth.jwt.dto.response.TokenResponse;
 import org.project.ttokttok.global.auth.jwt.exception.InvalidRefreshTokenException;
 import org.project.ttokttok.global.auth.jwt.service.TokenProvider;
-import org.project.ttokttok.infrastructure.email.service.EmailService;
 import org.project.ttokttok.infrastructure.redis.service.RefreshTokenRedisService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.Date;
-import java.util.UUID;
 
 import static org.project.ttokttok.global.entity.Role.ROLE_USER;
 
@@ -38,64 +33,10 @@ import static org.project.ttokttok.global.entity.Role.ROLE_USER;
 public class UserAuthService {
 
     private final UserRepository userRepository;
-    private final EmailVerificationRepository emailVerificationRepository;
-    private final EmailService emailService;
+    private final EmailVerificationService emailVerificationService;
     private final TokenProvider tokenProvider;
     private final PasswordEncoder passwordEncoder;
     private final RefreshTokenRedisService refreshTokenRedisService;
-
-    /**
-     * 1. 이메일 인증코드 전송
-     *
-     * 상명대학교 이메일 형식을 검증하고, 기존 미인증 코드를 만료 처리한 후 새로운 인증코드를 생성하여 발송합니다.
-     *
-     * @param email 인증코드를 발송할 이메일 주소 (상명대학교 이메일만 허용)
-     * @throws IllegalArgumentException 상명대학교 이메일이 아닌 경우
-     * */
-    public void sendVerificationCode(String email) {
-        // 1-1. 상명대 이메일 형식 검증
-        if (!emailService.isValidSangmyungEmail(email)) {
-            throw new IllegalArgumentException("상명대학교 이메일만 사용 가능합니다.");
-        }
-
-        // 1-2. 기존 미인증 코드를 만료 처리
-        emailVerificationRepository.expireAllPendingVerifications(email);
-
-        // 1-3. 새 인증코드 생성 및 발송
-        String code = emailService.sendVerificationCode(email);
-
-        // 1-4. DB 에 인증 정보 저장
-        EmailVerification verification = EmailVerification.builder()
-                .email(email)
-                .code(code)
-                .expiresAt(LocalDateTime.now().plusMinutes(5))
-                .build();
-
-        emailVerificationRepository.save(verification);
-        log.info("인증코드 발송 및 저장 완료 : {}", email);
-    }
-
-    /**
-     * 2. 이메일 인증코드 검증 - 이메일 인증코드를 검증합니다.
-     *
-     * @param email 검증할 이메일 주소
-     * @param code 검증할 인증코드
-     * @return 인증 성공 시 true
-     * @throws IllegalArgumentException 올바르지 않은 인증코드이거나 만료된 경우
-     * */
-    public boolean verifyEmail(String email, String code) {
-        EmailVerification verification = emailVerificationRepository
-                .findByEmailAndCodeAndIsVerifiedFalse(email, code)
-                .orElseThrow(() -> new IllegalArgumentException("올바르지 않은 인증코드입니다."));
-
-        if (verification.isExpired()) {
-            throw new IllegalArgumentException("인증코드가 만료되었습니다.");
-        }
-
-        verification.markAsVerified();
-        log.info("이메일 인증 완료 : {}", email);
-        return true;
-    }
 
     /**
      * 3. 회원가입 처리 메서드
@@ -118,9 +59,7 @@ public class UserAuthService {
         }
 
         // 3-3. 이메일 인증 확인
-        if (!emailVerificationRepository.existsByEmailAndIsVerifiedTrue(request.email())) {
-            throw new IllegalArgumentException("이메일 인증이 완료되지 않았습니다.");
-        }
+        emailVerificationService.requireVerifiedEmail(request.email());
 
         // 3-4. 사용자 정보 저장
         User user = User.signUp(
@@ -193,7 +132,7 @@ public class UserAuthService {
         }
 
         // 5-2. 인증코드 검증
-        checkVerificationCode(request.email(), request.verificationCode());
+        emailVerificationService.requireVerifiedCode(request.email(), request.verificationCode());
 
         // 5-3. 사용자 조회 및 비밀번호 업데이트
         User user = userRepository.findByEmail(request.email())
@@ -228,21 +167,7 @@ public class UserAuthService {
             throw new OAuthOnlyAccountException();
         }
 
-        // 기존 미인증 코드들 만료 처리
-        emailVerificationRepository.expireAllPendingVerifications(email);
-
-        // 새 인증코드 생성 및 발송
-        String code = emailService.sendPasswordResetCode(email);
-
-        // DB에 인증 정보 저장
-        EmailVerification verification = EmailVerification.builder()
-                .email(email)
-                .code(code)
-                .expiresAt(LocalDateTime.now().plusMinutes(5))
-                .build();
-
-        emailVerificationRepository.save(verification);
-        log.info("비밀번호 재설정 코드 발송 완료: {}", email);
+        emailVerificationService.sendPasswordResetCode(email);
     }
 
     /**
@@ -309,9 +234,4 @@ public class UserAuthService {
         }
     }
 
-    private void checkVerificationCode(String email, String code) {
-        if (!emailVerificationRepository.existsByEmailAndCodeAndIsVerifiedTrue(email, code)) {
-            throw new IllegalArgumentException("인증 코드 성공 여부가 존재하지 않습니다.");
-        }
-    }
 }

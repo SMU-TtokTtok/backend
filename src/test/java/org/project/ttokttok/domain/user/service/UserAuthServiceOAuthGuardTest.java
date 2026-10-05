@@ -3,7 +3,7 @@ package org.project.ttokttok.domain.user.service;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
+import org.junit.jupiter.api.BeforeEach;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.project.ttokttok.domain.user.domain.User;
@@ -49,8 +49,14 @@ class UserAuthServiceOAuthGuardTest {
     @Mock
     private RefreshTokenRedisService refreshTokenRedisService;
 
-    @InjectMocks
     private UserAuthService userAuthService;
+
+    @BeforeEach
+    void setUp() {
+        EmailVerificationService verificationService = new EmailVerificationService(emailVerificationRepository, emailService);
+        userAuthService = new UserAuthService(userRepository, verificationService,
+                tokenProvider, passwordEncoder, refreshTokenRedisService);
+    }
 
     private static final String GMAIL = "user@gmail.com";
 

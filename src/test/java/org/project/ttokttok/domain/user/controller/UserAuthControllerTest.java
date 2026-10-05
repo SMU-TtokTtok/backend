@@ -3,6 +3,7 @@ package org.project.ttokttok.domain.user.controller;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.project.ttokttok.domain.user.service.UserAuthService;
+import org.project.ttokttok.domain.user.service.EmailVerificationService;
 import org.project.ttokttok.domain.user.service.dto.request.LoginServiceRequest;
 import org.project.ttokttok.domain.user.service.dto.request.ResetPasswordServiceRequest;
 import org.project.ttokttok.domain.user.service.dto.request.SignupServiceRequest;
@@ -37,6 +38,9 @@ class UserAuthControllerTest {
     private UserAuthService userAuthService;
 
     @MockitoBean
+    private EmailVerificationService emailVerificationService;
+
+    @MockitoBean
     private TokenProvider tokenProvider;
 
     @MockitoBean
@@ -48,7 +52,7 @@ class UserAuthControllerTest {
     @WithMockUser
     @DisplayName("이메일 인증코드 발송 API를 호출하면 200을 반환한다")
     void sendVerificationCode() throws Exception {
-        doNothing().when(userAuthService).sendVerificationCode(any());
+        doNothing().when(emailVerificationService).sendVerificationCode(any());
 
         mockMvc.perform(post("/api/user/auth/send-verification").with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -62,7 +66,7 @@ class UserAuthControllerTest {
     @WithMockUser
     @DisplayName("이메일 인증코드 검증 API를 호출하면 200을 반환한다")
     void verifyEmail() throws Exception {
-        given(userAuthService.verifyEmail(any(), any())).willReturn(true);
+        given(emailVerificationService.verifyEmail(any(), any())).willReturn(true);
 
         mockMvc.perform(post("/api/user/auth/verify-email").with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
