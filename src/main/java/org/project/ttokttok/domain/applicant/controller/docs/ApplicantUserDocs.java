@@ -42,6 +42,13 @@ public interface ApplicantUserDocs {
                     즉, `questionIds`가 비어있다면 `files`도 비어 있어야 하고, 
                     반대로 `files`가 비어있다면 `questionIds`도 비어 있어야 합니다.
                     
+                    **답변 값 규약**:
+                    - SHORT_ANSWER/LONG_ANSWER: 문자열, RADIO: 등록된 선택지 문자열 하나
+                    - CHECKBOX: 등록된 선택지 문자열 목록 (중복 불가)
+                    - FILE: value는 null, 실제 파일은 questionIds/files의 같은 인덱스로 전달
+                    - 선택 질문 미응답은 null 허용. 필수 질문/파일 누락, 중복/알 수 없는 질문 ID는 400
+                    - 전체 답변 및 파일 대응 검증 완료 후 파일을 업로드합니다.
+
                     **열거형**
                     - grades:
                         - FIRST_GRADE (1학년)
@@ -68,8 +75,8 @@ public interface ApplicantUserDocs {
                             mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
                             schemaProperties = {
                                     @SchemaProperty(name = "request", schema = @Schema(type = "string", format = "json", description = "지원서 데이터")),
-                                    @SchemaProperty(name = "profileImage", schema = @Schema(type = "string", format = "json", description = "응답 형식이 파일인 질문 id")),
-                                    @SchemaProperty(name = "profileImage", schema = @Schema(type = "form", format = "multipart/formData", description = "파일 리스트"))
+                                    @SchemaProperty(name = "questionIds", schema = @Schema(type = "string", format = "json", description = "파일 질문 ID 목록")),
+                                    @SchemaProperty(name = "files", schema = @Schema(type = "array", description = "ID 순서에 대응하는 파일 목록"))
                             }
                     )
             }
