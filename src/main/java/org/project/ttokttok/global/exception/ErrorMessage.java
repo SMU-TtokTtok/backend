@@ -57,6 +57,7 @@ public enum ErrorMessage {
     UNAUTHORIZED_APPLICANT_ACCESS("지원자 조회에 대한 권한이 없습니다.", HttpStatus.FORBIDDEN),
     INVALID_PHASE_TRANSITION("지원자의 상태를 변경할 수 없습니다.", HttpStatus.BAD_REQUEST),
     INVALID_KIND("지원자의 상태를 변경할 수 없습니다. 잘못된 kind 값입니다.", HttpStatus.BAD_REQUEST),
+    INVALID_ANSWER("질문 규칙에 맞지 않는 답변입니다.", HttpStatus.BAD_REQUEST),
     LIST_SIZE_NOT_MATCH("지원서 질문 ID 리스트와 파일 리스트의 크기는 같아야 합니다.", HttpStatus.BAD_REQUEST),
     ANSWER_REQUEST_NOT_MATCH("지원서 질문 ID와 답변 요청, 어느 한쪽이 Null 입니다.", HttpStatus.BAD_REQUEST),
     INVALID_PHASE_STATUS("잘못된 STATUS 입력입니다.", HttpStatus.BAD_REQUEST),

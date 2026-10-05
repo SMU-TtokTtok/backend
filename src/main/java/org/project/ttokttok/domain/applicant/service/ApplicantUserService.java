@@ -9,6 +9,7 @@ import org.project.ttokttok.domain.applicant.exception.AlreadyApplicantExistsExc
 import org.project.ttokttok.domain.applicant.repository.ApplicantRepository;
 import org.project.ttokttok.domain.applicant.repository.dto.UserApplicationHistoryQueryResponse;
 import org.project.ttokttok.domain.applicant.service.answer.AnswerAssembler;
+import org.project.ttokttok.domain.applicant.service.answer.AnswerInput;
 import org.project.ttokttok.domain.applicant.service.answer.AnswerSubmission;
 import org.project.ttokttok.domain.applyform.domain.ApplyDeadlinePolicy;
 import org.project.ttokttok.domain.applyform.domain.ApplyForm;
@@ -56,7 +57,7 @@ public class ApplicantUserService {
 
         // 3. 답변 검증 및 조립 (파일 질문 처리 포함)
         List<Answer> answers = answerAssembler.assemble(
-                new AnswerSubmission(request.answers(), questionIds, files),
+                new AnswerSubmission(toAnswerInputs(request), questionIds, files),
                 form.getFormJson(),
                 email
         );
@@ -83,6 +84,15 @@ public class ApplicantUserService {
 
         return applicantRepository.save(applicant)
                 .getId();
+    }
+
+    private List<AnswerInput> toAnswerInputs(ApplyFormRequest request) {
+        if (request.answers() == null) {
+            return List.of();
+        }
+        return request.answers().stream()
+                .map(answer -> answer == null ? null : new AnswerInput(answer.questionId(), answer.value()))
+                .toList();
     }
 
     private void validateApplicantExists(String email, String formId) {
