@@ -112,6 +112,8 @@ Access at `http://localhost:3000` (admin/admin). Dashboard: **Load Test Overview
 
 ## Tips
 
+- #426 duplicate application measurements: [reproduction and benchmark instructions](results/issue-b/BENCHMARK.md). This experiment uses its own disposable database and does not use the general Compose setup.
+
 - Start with low VUs (10-20) to verify the environment works before scaling up
 - Use `-RemoveVolumes` on cleanup to reset the database between test runs
 - Check `k6/results/` for JSON output from each run

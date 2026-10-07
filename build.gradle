@@ -92,6 +92,15 @@ tasks.named('test') {
 	finalizedBy jacocoTestReport
 }
 
+// Only classes and dependency jars: never copy local application/Firebase credentials to the benchmark runtime.
+tasks.register('prepareDuplicateApplyBenchmark', Sync) {
+	dependsOn testClasses
+	into layout.buildDirectory.dir('duplicate-apply-runtime')
+	from(sourceSets.main.output.classesDirs) { into 'main' }
+	from(sourceSets.test.output.classesDirs) { into 'test' }
+	from(configurations.testRuntimeClasspath) { into 'lib' }
+}
+
 jacoco {
 	toolVersion = "0.8.12"
 }

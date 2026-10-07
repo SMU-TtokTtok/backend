@@ -1,0 +1,248 @@
+{
+  "hot-20": {
+    "repetitions": 1,
+    "all_checks_passed": true,
+    "metrics": {
+      "request_rps": {
+        "median": 106.33772862611654,
+        "min": 106.33772862611654,
+        "max": 106.33772862611654
+      },
+      "new_application_rps": {
+        "median": 5.316886431305828,
+        "min": 5.316886431305828,
+        "max": 5.316886431305828
+      },
+      "measured_seconds": {
+        "median": 9.404,
+        "min": 9.404,
+        "max": 9.404
+      },
+      "accepted_p(50)_ms": {
+        "median": 110.9993,
+        "min": 110.9993,
+        "max": 110.9993
+      },
+      "accepted_p(95)_ms": {
+        "median": 194.32408,
+        "min": 194.32408,
+        "max": 194.32408
+      },
+      "accepted_p(99)_ms": {
+        "median": 203.954953,
+        "min": 203.954953,
+        "max": 203.954953
+      },
+      "conflict_p(50)_ms": {
+        "median": 181.5813,
+        "min": 181.5813,
+        "max": 181.5813
+      },
+      "conflict_p(95)_ms": {
+        "median": 205.53807999999998,
+        "min": 205.53807999999998,
+        "max": 205.53807999999998
+      },
+      "conflict_p(99)_ms": {
+        "median": 288.01599999999996,
+        "min": 288.01599999999996,
+        "max": 288.01599999999996
+      }
+    }
+  },
+  "hot-50": {
+    "repetitions": 1,
+    "all_checks_passed": true,
+    "metrics": {
+      "request_rps": {
+        "median": 187.913409500902,
+        "min": 187.913409500902,
+        "max": 187.913409500902
+      },
+      "new_application_rps": {
+        "median": 3.7582681900180397,
+        "min": 3.7582681900180397,
+        "max": 3.7582681900180397
+      },
+      "measured_seconds": {
+        "median": 13.304,
+        "min": 13.304,
+        "max": 13.304
+      },
+      "accepted_p(50)_ms": {
+        "median": 105.44555,
+        "min": 105.44555,
+        "max": 105.44555
+      },
+      "accepted_p(95)_ms": {
+        "median": 199.74643500000002,
+        "min": 199.74643500000002,
+        "max": 199.74643500000002
+      },
+      "accepted_p(99)_ms": {
+        "median": 203.737666,
+        "min": 203.737666,
+        "max": 203.737666
+      },
+      "conflict_p(50)_ms": {
+        "median": 197.066,
+        "min": 197.066,
+        "max": 197.066
+      },
+      "conflict_p(95)_ms": {
+        "median": 295.969,
+        "min": 295.969,
+        "max": 295.969
+      },
+      "conflict_p(99)_ms": {
+        "median": 304.57518699999986,
+        "min": 304.57518699999986,
+        "max": 304.57518699999986
+      }
+    }
+  },
+  "users-20": {
+    "repetitions": 1,
+    "all_checks_passed": true,
+    "metrics": {
+      "request_rps": {
+        "median": 200.44097013429547,
+        "min": 200.44097013429547,
+        "max": 200.44097013429547
+      },
+      "new_application_rps": {
+        "median": 200.44097013429547,
+        "min": 200.44097013429547,
+        "max": 200.44097013429547
+      },
+      "measured_seconds": {
+        "median": 4.989,
+        "min": 4.989,
+        "max": 4.989
+      },
+      "accepted_p(50)_ms": {
+        "median": 91.5147,
+        "min": 91.5147,
+        "max": 91.5147
+      },
+      "accepted_p(95)_ms": {
+        "median": 100.973585,
+        "min": 100.973585,
+        "max": 100.973585
+      },
+      "accepted_p(99)_ms": {
+        "median": 122.825194,
+        "min": 122.825194,
+        "max": 122.825194
+      }
+    }
+  },
+  "users-50": {
+    "repetitions": 1,
+    "all_checks_passed": true,
+    "metrics": {
+      "request_rps": {
+        "median": 215.55440593205725,
+        "min": 215.55440593205725,
+        "max": 215.55440593205725
+      },
+      "new_application_rps": {
+        "median": 215.55440593205725,
+        "min": 215.55440593205725,
+        "max": 215.55440593205725
+      },
+      "measured_seconds": {
+        "median": 11.598,
+        "min": 11.598,
+        "max": 11.598
+      },
+      "accepted_p(50)_ms": {
+        "median": 184.0916,
+        "min": 184.0916,
+        "max": 184.0916
+      },
+      "accepted_p(95)_ms": {
+        "median": 212.44671499999987,
+        "min": 212.44671499999987,
+        "max": 212.44671499999987
+      },
+      "accepted_p(99)_ms": {
+        "median": 280.481137,
+        "min": 280.481137,
+        "max": 280.481137
+      }
+    }
+  },
+  "forms-20": {
+    "repetitions": 1,
+    "all_checks_passed": true,
+    "metrics": {
+      "request_rps": {
+        "median": 233.1002331002331,
+        "min": 233.1002331002331,
+        "max": 233.1002331002331
+      },
+      "new_application_rps": {
+        "median": 233.1002331002331,
+        "min": 233.1002331002331,
+        "max": 233.1002331002331
+      },
+      "measured_seconds": {
+        "median": 4.29,
+        "min": 4.29,
+        "max": 4.29
+      },
+      "accepted_p(50)_ms": {
+        "median": 75.3157,
+        "min": 75.3157,
+        "max": 75.3157
+      },
+      "accepted_p(95)_ms": {
+        "median": 95.91308,
+        "min": 95.91308,
+        "max": 95.91308
+      },
+      "accepted_p(99)_ms": {
+        "median": 104.426,
+        "min": 104.426,
+        "max": 104.426
+      }
+    }
+  },
+  "forms-50": {
+    "repetitions": 1,
+    "all_checks_passed": true,
+    "metrics": {
+      "request_rps": {
+        "median": 243.19066147859922,
+        "min": 243.19066147859922,
+        "max": 243.19066147859922
+      },
+      "new_application_rps": {
+        "median": 243.19066147859922,
+        "min": 243.19066147859922,
+        "max": 243.19066147859922
+      },
+      "measured_seconds": {
+        "median": 10.28,
+        "min": 10.28,
+        "max": 10.28
+      },
+      "accepted_p(50)_ms": {
+        "median": 109.4928,
+        "min": 109.4928,
+        "max": 109.4928
+      },
+      "accepted_p(95)_ms": {
+        "median": 197.7576,
+        "min": 197.7576,
+        "max": 197.7576
+      },
+      "accepted_p(99)_ms": {
+        "median": 228.4088349999999,
+        "min": 228.4088349999999,
+        "max": 228.4088349999999
+      }
+    }
+  }
+}

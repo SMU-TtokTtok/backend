@@ -1,0 +1,1011 @@
+{
+  "variant": "V1",
+  "scenario": "users",
+  "vus": 50,
+  "repetition": 1,
+  "servers": 2,
+  "summary": {
+    "scenario": "users",
+    "vus": 50,
+    "rounds": 50,
+    "warmup_rounds": 10,
+    "accepted": 2500,
+    "conflicts": 0,
+    "unexpected": 0,
+    "measured_seconds": 11.598,
+    "warmup_seconds": 2.437,
+    "request_rps": 215.55440593205725,
+    "new_application_rps": 215.55440593205725,
+    "accepted_latency_ms": {
+      "avg": 159.81428928000005,
+      "min": 17.9109,
+      "p(50)": 184.0916,
+      "p(95)": 212.44671499999987,
+      "p(99)": 280.481137,
+      "max": 290.3338
+    },
+    "conflict_latency_ms": null
+  },
+  "verification": {
+    "missingGroups": 0,
+    "uniqueConflicts": 0,
+    "applications": 3000,
+    "documents": 3000,
+    "duplicateGroups": 0,
+    "expectedGroups": 3000
+  },
+  "checks": {
+    "complete_measured_requests": true,
+    "no_unexpected_http": true,
+    "expected_group_count": true,
+    "no_missing_groups": true,
+    "documents_match_applications": true,
+    "one_application_per_group": true,
+    "no_duplicate_groups": true,
+    "expected_successes": true,
+    "expected_conflicts": true
+  },
+  "passed": true,
+  "db_samples": [
+    {
+      "elapsed_seconds": 0.008999099998618476,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 0,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 0.1098920999938855,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 0,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 0.2159590999945067,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 6,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 0.32283239999378566,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 5,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 0.4299286999957985,
+      "lockWaiting": 0,
+      "pendingConnections": 4,
+      "activeConnections": 9,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 0.5362866999930702,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 4,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 0.641926299998886,
+      "lockWaiting": 0,
+      "pendingConnections": 5,
+      "activeConnections": 9,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 0.7615525000001071,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 8,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 0.8708191999976407,
+      "lockWaiting": 0,
+      "pendingConnections": 2,
+      "activeConnections": 9,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 0.9767579999970621,
+      "lockWaiting": 0,
+      "pendingConnections": 13,
+      "activeConnections": 7,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 1.0824955999996746,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 8,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 1.1874465999935637,
+      "lockWaiting": 0,
+      "pendingConnections": 2,
+      "activeConnections": 9,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 1.292894599995634,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 0,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 1.3994679999959772,
+      "lockWaiting": 0,
+      "pendingConnections": 11,
+      "activeConnections": 8,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 1.5051039999962086,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 6,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 1.61140929999965,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 0,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 1.7178724999976112,
+      "lockWaiting": 0,
+      "pendingConnections": 6,
+      "activeConnections": 8,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 1.8247704999957932,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 6,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 1.9322587999995449,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 8,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 2.0399579999939306,
+      "lockWaiting": 0,
+      "pendingConnections": 3,
+      "activeConnections": 9,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 2.1453129000001354,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 0,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 2.2499806999985594,
+      "lockWaiting": 0,
+      "pendingConnections": 8,
+      "activeConnections": 9,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 2.3550003999989713,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 0,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 2.4623331999973743,
+      "lockWaiting": 0,
+      "pendingConnections": 1,
+      "activeConnections": 9,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 2.5673829999941518,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 0,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 2.673038099994301,
+      "lockWaiting": 0,
+      "pendingConnections": 5,
+      "activeConnections": 9,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 2.779385199995886,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 0,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 2.8851050999946892,
+      "lockWaiting": 0,
+      "pendingConnections": 6,
+      "activeConnections": 9,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 2.990180499997223,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 4,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 3.0957261999938055,
+      "lockWaiting": 0,
+      "pendingConnections": 4,
+      "activeConnections": 7,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 3.203964799999085,
+      "lockWaiting": 0,
+      "pendingConnections": 6,
+      "activeConnections": 9,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 3.309325099995476,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 0,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 3.414889599996968,
+      "lockWaiting": 0,
+      "pendingConnections": 4,
+      "activeConnections": 7,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 3.5216908999937004,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 1,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 3.629171199994744,
+      "lockWaiting": 0,
+      "pendingConnections": 10,
+      "activeConnections": 9,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 3.7369033999930252,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 5,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 3.8438446999934968,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 0,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 3.9502073999974527,
+      "lockWaiting": 0,
+      "pendingConnections": 4,
+      "activeConnections": 7,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 4.057119299999613,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 1,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 4.164415899998858,
+      "lockWaiting": 0,
+      "pendingConnections": 1,
+      "activeConnections": 9,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 4.270868299994618,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 0,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 4.377869999996619,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 6,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 4.484941199996683,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 3,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 4.592523299994355,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 7,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 4.699739099996805,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 0,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 4.8060536999983015,
+      "lockWaiting": 0,
+      "pendingConnections": 2,
+      "activeConnections": 9,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 4.911859799998638,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 2,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 5.0191109999941546,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 9,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 5.123837699997239,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 9,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 5.230016800000158,
+      "lockWaiting": 0,
+      "pendingConnections": 2,
+      "activeConnections": 10,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 5.336552899992967,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 5,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 5.442185999992944,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 0,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 5.548522299999604,
+      "lockWaiting": 0,
+      "pendingConnections": 7,
+      "activeConnections": 9,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 5.654940399996121,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 1,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 5.7609752999997,
+      "lockWaiting": 0,
+      "pendingConnections": 3,
+      "activeConnections": 10,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 5.866835099994205,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 0,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 5.9746556999962195,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 5,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 6.080838299996685,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 0,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 6.18700899999385,
+      "lockWaiting": 0,
+      "pendingConnections": 3,
+      "activeConnections": 8,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 6.291859399992973,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 5,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 6.399182599998312,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 7,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 6.505334399997082,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 6,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 6.612140199998976,
+      "lockWaiting": 0,
+      "pendingConnections": 4,
+      "activeConnections": 9,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 6.72024469999451,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 9,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 6.82632499999454,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 4,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 6.933500199993432,
+      "lockWaiting": 0,
+      "pendingConnections": 10,
+      "activeConnections": 9,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 7.038983099999314,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 0,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 7.146503899995878,
+      "lockWaiting": 0,
+      "pendingConnections": 8,
+      "activeConnections": 9,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 7.253894199995557,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 5,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 7.3608504999938305,
+      "lockWaiting": 0,
+      "pendingConnections": 5,
+      "activeConnections": 8,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 7.46746809999604,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 1,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 7.573200599996198,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 6,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 7.6796183999977075,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 0,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 7.785777599994617,
+      "lockWaiting": 0,
+      "pendingConnections": 5,
+      "activeConnections": 9,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 7.891770299997006,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 1,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 7.998766999997315,
+      "lockWaiting": 0,
+      "pendingConnections": 9,
+      "activeConnections": 4,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 8.106486299999233,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 3,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 8.213491099995736,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 4,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 8.319784499995876,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 2,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 8.424558899998374,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 0,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 8.529146299995773,
+      "lockWaiting": 0,
+      "pendingConnections": 9,
+      "activeConnections": 9,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 8.634995899999922,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 3,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 8.741069199997582,
+      "lockWaiting": 0,
+      "pendingConnections": 13,
+      "activeConnections": 5,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 8.84589330000017,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 0,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 8.95988689999649,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 4,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 9.066529399999126,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 2,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 9.180981799996516,
+      "lockWaiting": 0,
+      "pendingConnections": 4,
+      "activeConnections": 9,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 9.288520999994944,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 0,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 9.394972199996118,
+      "lockWaiting": 0,
+      "pendingConnections": 2,
+      "activeConnections": 9,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 9.499768899993796,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 3,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 9.60759269999835,
+      "lockWaiting": 0,
+      "pendingConnections": 5,
+      "activeConnections": 9,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 9.715297299997474,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 7,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 9.82036220000009,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 9,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 9.925770199995895,
+      "lockWaiting": 0,
+      "pendingConnections": 2,
+      "activeConnections": 9,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 10.032761699992989,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 0,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 10.138091599998006,
+      "lockWaiting": 0,
+      "pendingConnections": 1,
+      "activeConnections": 8,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 10.243100799998501,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 2,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 10.348858399993333,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 7,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 10.458043599996017,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 0,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 10.562180299995816,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 5,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 10.668313999995007,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 4,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 10.774570199995651,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 0,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 10.880584999998973,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 8,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 10.986187499998778,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 1,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 11.09300809999695,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 8,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 11.20085179999296,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 7,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 11.308673499996075,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 7,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 11.41492009999638,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 5,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 11.520046599995112,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 9,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 11.627882399996452,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 8,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 11.733873699995456,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 0,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 11.839010499999858,
+      "lockWaiting": 0,
+      "pendingConnections": 8,
+      "activeConnections": 9,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 11.944913499995891,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 2,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 12.052814999995462,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 9,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 12.159055699994497,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 0,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 12.266539999996894,
+      "lockWaiting": 0,
+      "pendingConnections": 3,
+      "activeConnections": 9,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 12.373079299999517,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 0,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 12.480080999994243,
+      "lockWaiting": 0,
+      "pendingConnections": 3,
+      "activeConnections": 9,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 12.587495799998578,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 3,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 12.694629699995858,
+      "lockWaiting": 0,
+      "pendingConnections": 16,
+      "activeConnections": 10,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 12.801912899994932,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 6,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 12.907885799999349,
+      "lockWaiting": 0,
+      "pendingConnections": 2,
+      "activeConnections": 10,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 13.014200499994331,
+      "lockWaiting": 0,
+      "pendingConnections": 2,
+      "activeConnections": 9,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 13.119715599998017,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 7,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 13.22573129999364,
+      "lockWaiting": 0,
+      "pendingConnections": 4,
+      "activeConnections": 9,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 13.331344999998691,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 0,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 13.437621699995361,
+      "lockWaiting": 0,
+      "pendingConnections": 3,
+      "activeConnections": 9,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 13.54204039999604,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 0,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 13.648204199998872,
+      "lockWaiting": 0,
+      "pendingConnections": 13,
+      "activeConnections": 9,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 13.756123799998022,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 0,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 13.861619499999506,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 7,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 13.968027399998391,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 0,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 14.074564899994584,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 9,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 14.182557799998904,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 0,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 14.28890209999372,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 0,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 14.393435499994666,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 0,
+      "uniqueConflicts": 0
+    },
+    {
+      "elapsed_seconds": 14.501028799997584,
+      "lockWaiting": 0,
+      "pendingConnections": 0,
+      "activeConnections": 0,
+      "uniqueConflicts": 0
+    }
+  ],
+  "db_sample_window": "whole k6 invocation including startup, warmup and measured rounds"
+}

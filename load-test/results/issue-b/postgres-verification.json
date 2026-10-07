@@ -1,0 +1,27 @@
+[
+  {
+    "name": "org.project.ttokttok.domain.applicant.controller.ApplicantDuplicateApplyPostgresTest",
+    "tests": "5",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "4.14",
+    "test_names": [
+      "twentyRequestsMustPersistOnlyOneApplication()",
+      "differentUsersCanApplyToTheSameFormConcurrently()",
+      "overlappingRequestsMustNotBothPersist()",
+      "sequentialDuplicateIsRejected()",
+      "uniqueConflictRollsBackTemporaryApplicationDeletion()"
+    ],
+    "observations": [
+      "DUPLICATE_APPLY_REGRESSION scenario=start-together-20 statuses=[409, 409, 409, 409, 409, 409, 409, 200, 409, 409, 409, 409, 409, 409, 409, 409, 409, 409, 409, 409] applicants=1 documents=1",
+      "APPLICANTS_CONSTRAINTS [{contype=c, definition=CHECK (((current_phase)::text = ANY ((ARRAY['DOCUMENT'::character varying, 'INTERVIEW'::character varying])::text[])))}, {contype=c, definition=CHECK (((gender)::text = ANY ((ARRAY['MALE'::character varying, 'FEMALE'::character varying])::text[])))}, {contype=c, definition=CHECK (((grade)::text = ANY ((ARRAY['FIRST_GRADE'::character varying, 'SECOND_GRADE'::character varying, 'THIRD_GRADE'::character varying, 'FOURTH_GRADE'::character varying])::text[])))}, {contype=c, definition=CHECK (((student_status)::text = ANY ((ARRAY['ENROLLED'::character varying, 'ABSENCE'::character varying])::text[])))}, {contype=f, definition=FOREIGN KEY (applyform_id) REFERENCES applyforms(id)}, {contype=p, definition=PRIMARY KEY (id)}, {contype=u, definition=UNIQUE (user_email, applyform_id)}]",
+      "DUPLICATE_APPLY_REGRESSION scenario=overlap-2 statuses=[200, 409] applicants=1 documents=1",
+      "APPLICANTS_CONSTRAINTS [{contype=c, definition=CHECK (((current_phase)::text = ANY ((ARRAY['DOCUMENT'::character varying, 'INTERVIEW'::character varying])::text[])))}, {contype=c, definition=CHECK (((gender)::text = ANY ((ARRAY['MALE'::character varying, 'FEMALE'::character varying])::text[])))}, {contype=c, definition=CHECK (((grade)::text = ANY ((ARRAY['FIRST_GRADE'::character varying, 'SECOND_GRADE'::character varying, 'THIRD_GRADE'::character varying, 'FOURTH_GRADE'::character varying])::text[])))}, {contype=c, definition=CHECK (((student_status)::text = ANY ((ARRAY['ENROLLED'::character varying, 'ABSENCE'::character varying])::text[])))}, {contype=f, definition=FOREIGN KEY (applyform_id) REFERENCES applyforms(id)}, {contype=p, definition=PRIMARY KEY (id)}, {contype=u, definition=UNIQUE (user_email, applyform_id)}]",
+      "DUPLICATE_APPLY_REGRESSION scenario=sequential-2 statuses=[200, 409] applicants=1 documents=1",
+      "APPLICANTS_CONSTRAINTS [{contype=c, definition=CHECK (((current_phase)::text = ANY ((ARRAY['DOCUMENT'::character varying, 'INTERVIEW'::character varying])::text[])))}, {contype=c, definition=CHECK (((gender)::text = ANY ((ARRAY['MALE'::character varying, 'FEMALE'::character varying])::text[])))}, {contype=c, definition=CHECK (((grade)::text = ANY ((ARRAY['FIRST_GRADE'::character varying, 'SECOND_GRADE'::character varying, 'THIRD_GRADE'::character varying, 'FOURTH_GRADE'::character varying])::text[])))}, {contype=c, definition=CHECK (((student_status)::text = ANY ((ARRAY['ENROLLED'::character varying, 'ABSENCE'::character varying])::text[])))}, {contype=f, definition=FOREIGN KEY (applyform_id) REFERENCES applyforms(id)}, {contype=p, definition=PRIMARY KEY (id)}, {contype=u, definition=UNIQUE (user_email, applyform_id)}]",
+      "DUPLICATE_APPLY_REGRESSION scenario=unique-conflict-draft-rollback statuses=[409] applicants=1 documents=1",
+      "APPLICANTS_CONSTRAINTS [{contype=c, definition=CHECK (((current_phase)::text = ANY ((ARRAY['DOCUMENT'::character varying, 'INTERVIEW'::character varying])::text[])))}, {contype=c, definition=CHECK (((gender)::text = ANY ((ARRAY['MALE'::character varying, 'FEMALE'::character varying])::text[])))}, {contype=c, definition=CHECK (((grade)::text = ANY ((ARRAY['FIRST_GRADE'::character varying, 'SECOND_GRADE'::character varying, 'THIRD_GRADE'::character varying, 'FOURTH_GRADE'::character varying])::text[])))}, {contype=c, definition=CHECK (((student_status)::text = ANY ((ARRAY['ENROLLED'::character varying, 'ABSENCE'::character varying])::text[])))}, {contype=f, definition=FOREIGN KEY (applyform_id) REFERENCES applyforms(id)}, {contype=p, definition=PRIMARY KEY (id)}, {contype=u, definition=UNIQUE (user_email, applyform_id)}]"
+    ]
+  }
+]
