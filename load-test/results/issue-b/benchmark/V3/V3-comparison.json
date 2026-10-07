@@ -1,0 +1,248 @@
+{
+  "hot-20": {
+    "repetitions": 3,
+    "all_checks_passed": true,
+    "metrics": {
+      "request_rps": {
+        "median": 146.7782181124321,
+        "min": 96.32983334938831,
+        "max": 153.68065160596282
+      },
+      "new_application_rps": {
+        "median": 7.338910905621606,
+        "min": 4.816491667469415,
+        "max": 7.684032580298141
+      },
+      "measured_seconds": {
+        "median": 6.813,
+        "min": 6.507,
+        "max": 10.381
+      },
+      "accepted_p(50)_ms": {
+        "median": 83.99905000000001,
+        "min": 80.8982,
+        "max": 106.7761
+      },
+      "accepted_p(95)_ms": {
+        "median": 98.196575,
+        "min": 97.973905,
+        "max": 186.46158
+      },
+      "accepted_p(99)_ms": {
+        "median": 139.48664399999987,
+        "min": 134.07545999999988,
+        "max": 228.75649199999984
+      },
+      "conflict_p(50)_ms": {
+        "median": 99.62465,
+        "min": 97.79939999999999,
+        "max": 184.20299999999997
+      },
+      "conflict_p(95)_ms": {
+        "median": 180.976645,
+        "min": 174.702385,
+        "max": 276.973115
+      },
+      "conflict_p(99)_ms": {
+        "median": 187.65332800000002,
+        "min": 186.909958,
+        "max": 296.248576
+      }
+    }
+  },
+  "hot-50": {
+    "repetitions": 3,
+    "all_checks_passed": true,
+    "metrics": {
+      "request_rps": {
+        "median": 203.28508700601725,
+        "min": 135.98781549173194,
+        "max": 224.61814914645103
+      },
+      "new_application_rps": {
+        "median": 4.065701740120344,
+        "min": 2.7197563098346387,
+        "max": 4.49236298292902
+      },
+      "measured_seconds": {
+        "median": 12.298,
+        "min": 11.13,
+        "max": 18.384
+      },
+      "accepted_p(50)_ms": {
+        "median": 78.36834999999999,
+        "min": 75.69005,
+        "max": 89.7194
+      },
+      "accepted_p(95)_ms": {
+        "median": 100.04592499999997,
+        "min": 92.443615,
+        "max": 258.7332299999999
+      },
+      "accepted_p(99)_ms": {
+        "median": 157.93472,
+        "min": 96.99578699999999,
+        "max": 309.084569
+      },
+      "conflict_p(50)_ms": {
+        "median": 190.4413,
+        "min": 183.6624,
+        "max": 246.17970000000003
+      },
+      "conflict_p(95)_ms": {
+        "median": 271.96344,
+        "min": 216.60877999999997,
+        "max": 631.3243699999994
+      },
+      "conflict_p(99)_ms": {
+        "median": 283.41679799999986,
+        "min": 270.64295899999996,
+        "max": 770.2085779999999
+      }
+    }
+  },
+  "users-20": {
+    "repetitions": 3,
+    "all_checks_passed": true,
+    "metrics": {
+      "request_rps": {
+        "median": 151.3317191283293,
+        "min": 100.08006405124098,
+        "max": 175.16202487300754
+      },
+      "new_application_rps": {
+        "median": 151.3317191283293,
+        "min": 100.08006405124098,
+        "max": 175.16202487300754
+      },
+      "measured_seconds": {
+        "median": 6.608,
+        "min": 5.709,
+        "max": 9.992
+      },
+      "accepted_p(50)_ms": {
+        "median": 96.7582,
+        "min": 95.2339,
+        "max": 184.4424
+      },
+      "accepted_p(95)_ms": {
+        "median": 270.9335,
+        "min": 185.8145,
+        "max": 373.624085
+      },
+      "accepted_p(99)_ms": {
+        "median": 298.91671399999996,
+        "min": 281.031612,
+        "max": 475.5725509999993
+      }
+    }
+  },
+  "users-50": {
+    "repetitions": 3,
+    "all_checks_passed": true,
+    "metrics": {
+      "request_rps": {
+        "median": 123.76850339125698,
+        "min": 113.2554136087705,
+        "max": 130.8557969118032
+      },
+      "new_application_rps": {
+        "median": 123.76850339125698,
+        "min": 113.2554136087705,
+        "max": 130.8557969118032
+      },
+      "measured_seconds": {
+        "median": 20.199,
+        "min": 19.105,
+        "max": 22.074
+      },
+      "accepted_p(50)_ms": {
+        "median": 270.03970000000004,
+        "min": 268.1429,
+        "max": 291.6277
+      },
+      "accepted_p(95)_ms": {
+        "median": 654.4855,
+        "min": 590.5629049999998,
+        "max": 882.5622
+      },
+      "accepted_p(99)_ms": {
+        "median": 882.3624,
+        "min": 817.7309789999997,
+        "max": 1157.0112199999996
+      }
+    }
+  },
+  "forms-20": {
+    "repetitions": 3,
+    "all_checks_passed": true,
+    "metrics": {
+      "request_rps": {
+        "median": 154.2971763616726,
+        "min": 88.386070355312,
+        "max": 199.9600079984003
+      },
+      "new_application_rps": {
+        "median": 154.2971763616726,
+        "min": 88.386070355312,
+        "max": 199.9600079984003
+      },
+      "measured_seconds": {
+        "median": 6.481,
+        "min": 5.001,
+        "max": 11.314
+      },
+      "accepted_p(50)_ms": {
+        "median": 92.1575,
+        "min": 90.2213,
+        "max": 171.7594
+      },
+      "accepted_p(95)_ms": {
+        "median": 213.1341,
+        "min": 106.540645,
+        "max": 476.166285
+      },
+      "accepted_p(99)_ms": {
+        "median": 286.8114,
+        "min": 173.46871499999997,
+        "max": 498.27216599999997
+      }
+    }
+  },
+  "forms-50": {
+    "repetitions": 3,
+    "all_checks_passed": true,
+    "metrics": {
+      "request_rps": {
+        "median": 110.72725662148994,
+        "min": 68.89899407468651,
+        "max": 131.59972627256934
+      },
+      "new_application_rps": {
+        "median": 110.72725662148994,
+        "min": 68.89899407468651,
+        "max": 131.59972627256934
+      },
+      "measured_seconds": {
+        "median": 22.578,
+        "min": 18.997,
+        "max": 36.285
+      },
+      "accepted_p(50)_ms": {
+        "median": 290.58995,
+        "min": 270.30195,
+        "max": 502.0219
+      },
+      "accepted_p(95)_ms": {
+        "median": 894.6455,
+        "min": 690.9688,
+        "max": 1107.8294099999998
+      },
+      "accepted_p(99)_ms": {
+        "median": 1067.3255229999997,
+        "min": 857.5533,
+        "max": 1208.2449939999997
+      }
+    }
+  }
+}

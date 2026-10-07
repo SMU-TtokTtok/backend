@@ -1,0 +1,89 @@
+{
+  "hot-20": {
+    "repetitions": 2,
+    "all_checks_passed": true,
+    "metrics": {
+      "request_rps": {
+        "median": 85.96367815239012,
+        "min": 70.89684509039347,
+        "max": 101.03051121438675
+      },
+      "new_application_rps": {
+        "median": 4.298183907619506,
+        "min": 3.544842254519674,
+        "max": 5.0515255607193374
+      },
+      "measured_seconds": {
+        "median": 12.0015,
+        "min": 9.898,
+        "max": 14.105
+      },
+      "accepted_p(50)_ms": {
+        "median": 153.166,
+        "min": 107.38705,
+        "max": 198.94495
+      },
+      "accepted_p(95)_ms": {
+        "median": 248.23228,
+        "min": 201.682765,
+        "max": 294.781795
+      },
+      "accepted_p(99)_ms": {
+        "median": 252.18540299999998,
+        "min": 203.363964,
+        "max": 301.00684199999995
+      },
+      "conflict_p(50)_ms": {
+        "median": 198.946525,
+        "min": 191.1562,
+        "max": 206.73685
+      },
+      "conflict_p(95)_ms": {
+        "median": 256.7241175,
+        "min": 208.36253499999998,
+        "max": 305.0857
+      },
+      "conflict_p(99)_ms": {
+        "median": 344.89105,
+        "min": 292.0516,
+        "max": 397.7305
+      }
+    }
+  },
+  "forms-20": {
+    "repetitions": 2,
+    "all_checks_passed": true,
+    "metrics": {
+      "request_rps": {
+        "median": 121.22229879642796,
+        "min": 108.7547580206634,
+        "max": 133.6898395721925
+      },
+      "new_application_rps": {
+        "median": 121.22229879642796,
+        "min": 108.7547580206634,
+        "max": 133.6898395721925
+      },
+      "measured_seconds": {
+        "median": 8.3375,
+        "min": 7.48,
+        "max": 9.195
+      },
+      "accepted_p(50)_ms": {
+        "median": 108.145475,
+        "min": 102.29325,
+        "max": 113.9977
+      },
+      "accepted_p(95)_ms": {
+        "median": 195.85326499999996,
+        "min": 188.4803,
+        "max": 203.22622999999996
+      },
+      "accepted_p(99)_ms": {
+        "median": 244.0658675,
+        "min": 195.29703999999998,
+        "max": 292.834695
+      }
+    }
+  }
+}

@@ -1,0 +1,248 @@
+{
+  "hot-20": {
+    "repetitions": 3,
+    "all_checks_passed": true,
+    "metrics": {
+      "request_rps": {
+        "median": 55.114638447971785,
+        "min": 44.50774434751647,
+        "max": 61.94251734390486
+      },
+      "new_application_rps": {
+        "median": 2.7557319223985894,
+        "min": 2.2253872173758236,
+        "max": 3.0971258671952433
+      },
+      "measured_seconds": {
+        "median": 18.144,
+        "min": 16.144,
+        "max": 22.468
+      },
+      "accepted_p(50)_ms": {
+        "median": 129.8909,
+        "min": 123.68575,
+        "max": 209.69819999999999
+      },
+      "accepted_p(95)_ms": {
+        "median": 365.06437999999997,
+        "min": 299.32586499999974,
+        "max": 408.29230499999994
+      },
+      "accepted_p(99)_ms": {
+        "median": 425.73808099999985,
+        "min": 393.94352499999997,
+        "max": 498.137094
+      },
+      "conflict_p(50)_ms": {
+        "median": 243.15985,
+        "min": 239.12035,
+        "max": 327.45315
+      },
+      "conflict_p(95)_ms": {
+        "median": 562.9981399999999,
+        "min": 461.75514499999997,
+        "max": 632.7355849999999
+      },
+      "conflict_p(99)_ms": {
+        "median": 650.31774,
+        "min": 600.056331,
+        "max": 820.8843529999999
+      }
+    }
+  },
+  "hot-50": {
+    "repetitions": 3,
+    "all_checks_passed": true,
+    "metrics": {
+      "request_rps": {
+        "median": 97.1855076970922,
+        "min": 69.52749117000862,
+        "max": 100.7211635308811
+      },
+      "new_application_rps": {
+        "median": 1.9437101539418442,
+        "min": 1.3905498234001723,
+        "max": 2.014423270617622
+      },
+      "measured_seconds": {
+        "median": 25.724,
+        "min": 24.821,
+        "max": 35.957
+      },
+      "accepted_p(50)_ms": {
+        "median": 122.7274,
+        "min": 108.398,
+        "max": 146.6433
+      },
+      "accepted_p(95)_ms": {
+        "median": 215.64276999999998,
+        "min": 179.2345,
+        "max": 375.01757
+      },
+      "accepted_p(99)_ms": {
+        "median": 307.3474269999997,
+        "min": 193.477731,
+        "max": 433.0323159999998
+      },
+      "conflict_p(50)_ms": {
+        "median": 386.36670000000004,
+        "min": 374.0932,
+        "max": 489.69335
+      },
+      "conflict_p(95)_ms": {
+        "median": 606.4620799999999,
+        "min": 554.4135999999999,
+        "max": 1023.3376549999995
+      },
+      "conflict_p(99)_ms": {
+        "median": 918.4909549999993,
+        "min": 755.4619019999994,
+        "max": 1147.6911039999998
+      }
+    }
+  },
+  "users-20": {
+    "repetitions": 3,
+    "all_checks_passed": true,
+    "metrics": {
+      "request_rps": {
+        "median": 84.1538332071026,
+        "min": 74.0905386382159,
+        "max": 100.02000400080017
+      },
+      "new_application_rps": {
+        "median": 84.1538332071026,
+        "min": 74.0905386382159,
+        "max": 100.02000400080017
+      },
+      "measured_seconds": {
+        "median": 11.883,
+        "min": 9.998,
+        "max": 13.497
+      },
+      "accepted_p(50)_ms": {
+        "median": 184.6855,
+        "min": 176.56785000000002,
+        "max": 189.0933
+      },
+      "accepted_p(95)_ms": {
+        "median": 480.517435,
+        "min": 294.67812,
+        "max": 555.3062
+      },
+      "accepted_p(99)_ms": {
+        "median": 566.3491889999999,
+        "min": 403.913986,
+        "max": 608.096825
+      }
+    }
+  },
+  "users-50": {
+    "repetitions": 3,
+    "all_checks_passed": true,
+    "metrics": {
+      "request_rps": {
+        "median": 69.82655084769434,
+        "min": 59.40923457142178,
+        "max": 72.90117516694369
+      },
+      "new_application_rps": {
+        "median": 69.82655084769434,
+        "min": 59.40923457142178,
+        "max": 72.90117516694369
+      },
+      "measured_seconds": {
+        "median": 35.803,
+        "min": 34.293,
+        "max": 42.081
+      },
+      "accepted_p(50)_ms": {
+        "median": 467.83525,
+        "min": 397.2326,
+        "max": 659.7489
+      },
+      "accepted_p(95)_ms": {
+        "median": 1174.0164099999995,
+        "min": 1107.7557849999873,
+        "max": 1181.0896349999998
+      },
+      "accepted_p(99)_ms": {
+        "median": 1286.653065,
+        "min": 1279.3277150000001,
+        "max": 1385.835584
+      }
+    }
+  },
+  "forms-20": {
+    "repetitions": 3,
+    "all_checks_passed": true,
+    "metrics": {
+      "request_rps": {
+        "median": 65.88049278608604,
+        "min": 62.14654154496302,
+        "max": 67.58583400919167
+      },
+      "new_application_rps": {
+        "median": 65.88049278608604,
+        "min": 62.14654154496302,
+        "max": 67.58583400919167
+      },
+      "measured_seconds": {
+        "median": 15.179,
+        "min": 14.796,
+        "max": 16.091
+      },
+      "accepted_p(50)_ms": {
+        "median": 180.55984999999998,
+        "min": 174.69155,
+        "max": 201.26635
+      },
+      "accepted_p(95)_ms": {
+        "median": 445.3238599999999,
+        "min": 414.671985,
+        "max": 506.682105
+      },
+      "accepted_p(99)_ms": {
+        "median": 503.978005,
+        "min": 491.166138,
+        "max": 548.397769
+      }
+    }
+  },
+  "forms-50": {
+    "repetitions": 3,
+    "all_checks_passed": true,
+    "metrics": {
+      "request_rps": {
+        "median": 90.78364441862153,
+        "min": 75.41933148304572,
+        "max": 93.83327703336711
+      },
+      "new_application_rps": {
+        "median": 90.78364441862153,
+        "min": 75.41933148304572,
+        "max": 93.83327703336711
+      },
+      "measured_seconds": {
+        "median": 27.538,
+        "min": 26.643,
+        "max": 33.148
+      },
+      "accepted_p(50)_ms": {
+        "median": 361.834,
+        "min": 335.1753,
+        "max": 485.6104
+      },
+      "accepted_p(95)_ms": {
+        "median": 768.9599799999999,
+        "min": 708.2848399999996,
+        "max": 842.2639899999991
+      },
+      "accepted_p(99)_ms": {
+        "median": 946.2440169999984,
+        "min": 855.7030959999987,
+        "max": 1002.675149999999
+      }
+    }
+  }
+}
