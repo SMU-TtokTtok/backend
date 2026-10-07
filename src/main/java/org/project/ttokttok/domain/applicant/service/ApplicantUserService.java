@@ -2,6 +2,7 @@ package org.project.ttokttok.domain.applicant.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.exception.ConstraintViolationException;
 import org.project.ttokttok.domain.applicant.controller.dto.request.ApplyFormRequest;
 import org.project.ttokttok.domain.applicant.domain.Applicant;
 import org.project.ttokttok.domain.applicant.domain.json.Answer;
@@ -20,6 +21,7 @@ import org.project.ttokttok.domain.club.service.dto.response.ClubListServiceResp
 import org.project.ttokttok.domain.temp.applicant.repository.TempApplicantRepository;
 import org.project.ttokttok.domain.user.exception.UserNotFoundException;
 import org.project.ttokttok.domain.user.repository.UserRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -32,6 +34,8 @@ import static org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus
 @Service
 @RequiredArgsConstructor
 public class ApplicantUserService {
+
+    private static final String DUPLICATE_APPLICATION_CONSTRAINT = "uk_applicants_user_email_applyform";
 
     private final UserRepository userRepository;
     private final ApplicantRepository applicantRepository;
@@ -82,8 +86,21 @@ public class ApplicantUserService {
         tempApplicantRepository.findByUserEmailAndFormId(email, form.getId())
                 .ifPresent(tempApplicantRepository::delete);
 
-        return applicantRepository.save(applicant)
-                .getId();
+        return saveApplicant(applicant).getId();
+    }
+
+    private Applicant saveApplicant(Applicant applicant) {
+        try {
+            return applicantRepository.saveAndFlush(applicant);
+        } catch (DataIntegrityViolationException exception) {
+            for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
+                if (cause instanceof ConstraintViolationException violation
+                        && DUPLICATE_APPLICATION_CONSTRAINT.equals(violation.getConstraintName())) {
+                    throw new AlreadyApplicantExistsException();
+                }
+            }
+            throw exception;
+        }
     }
 
     private List<AnswerInput> toAnswerInputs(ApplyFormRequest request) {
