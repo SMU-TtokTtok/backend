@@ -3,6 +3,8 @@ package org.project.ttokttok.domain.applicant.domain;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.project.ttokttok.domain.applicant.domain.enums.ApplicantPhase;
 import org.project.ttokttok.domain.applicant.domain.enums.Gender;
 import org.project.ttokttok.domain.applicant.domain.enums.Grade;
@@ -14,6 +16,7 @@ import org.project.ttokttok.domain.applyform.domain.ApplyForm;
 
 import java.time.LocalDate;
 import java.util.List;
+import org.project.ttokttok.domain.club.domain.Club;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -21,6 +24,35 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
 class ApplicantTest {
+
+    @Nested
+    @DisplayName("belongsToClub() 테스트")
+    class BelongsToClubTest {
+
+        @ParameterizedTest(name = "조회 동아리 ID={0}, 소속 여부={1}")
+        @CsvSource({
+                "mockClub, true",
+                "otherClub, false"
+        })
+        @DisplayName("지원폼의 동아리 ID와 비교하여 소속 여부를 반환한다")
+        void belongsToClub_ReturnsExpectedResult(String targetClubId, boolean expected) {
+            // given
+            final String clubId = "mockClub";
+            Club club = mock(Club.class);
+            ApplyForm applyForm = mock(ApplyForm.class);
+
+            given(club.getId()).willReturn(clubId);
+            given(applyForm.getClub()).willReturn(club);
+
+            Applicant applicant = createApplicant(applyForm);
+
+            // when
+            boolean result = applicant.belongsToClub(targetClubId);
+
+            // then
+            assertThat(result).isEqualTo(expected);
+        }
+    }
 
     private Applicant createApplicant(ApplyForm applyForm) {
         return Applicant.createApplicant(

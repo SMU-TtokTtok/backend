@@ -12,7 +12,6 @@ import org.project.ttokttok.domain.applicant.domain.DocumentPhase;
 import org.project.ttokttok.domain.applicant.exception.ApplicantNotFoundException;
 import org.project.ttokttok.domain.applicant.exception.UnAuthorizedApplicantAccessException;
 import org.project.ttokttok.domain.applicant.repository.ApplicantRepository;
-import org.project.ttokttok.domain.applyform.domain.ApplyForm;
 import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.exception.NotClubAdminException;
 import org.project.ttokttok.domain.club.repository.ClubRepository;
@@ -47,14 +46,9 @@ class MemoServiceTest {
     private static final String APPLICANT_ID = "applicant-1";
     private static final String CONTENT = "면접 태도가 좋았음";
 
-    // 소속 동아리 id가 clubId인 지원자를 만든다. documentPhase는 별도로 stub하지 않는 한 null이다.
-    private Applicant applicantInClub(String clubId) {
+    private Applicant applicantWithClubAccess(boolean belongsToClub) {
         Applicant applicant = mock(Applicant.class);
-        ApplyForm applyForm = mock(ApplyForm.class);
-        Club applicantClub = mock(Club.class);
-        given(applicantClub.getId()).willReturn(clubId);
-        given(applyForm.getClub()).willReturn(applicantClub);
-        given(applicant.getApplyForm()).willReturn(applyForm);
+        given(applicant.belongsToClub(CLUB_ID)).willReturn(belongsToClub);
         return applicant;
     }
 
@@ -72,7 +66,7 @@ class MemoServiceTest {
 
             DocumentPhase documentPhase = mock(DocumentPhase.class);
             given(documentPhase.addMemo(CONTENT)).willReturn("memo-1");
-            Applicant applicant = applicantInClub(CLUB_ID);
+            Applicant applicant = applicantWithClubAccess(true);
             given(applicant.getDocumentPhase()).willReturn(documentPhase);
             given(applicantRepository.findById(APPLICANT_ID)).willReturn(Optional.of(applicant));
 
@@ -120,13 +114,14 @@ class MemoServiceTest {
             Club club = mock(Club.class);
             given(club.getId()).willReturn(CLUB_ID);
             given(clubRepository.findByAdminUsername(USERNAME)).willReturn(Optional.of(club));
-            Applicant applicant = applicantInClub("other-club");
+            Applicant applicant = applicantWithClubAccess(false);
             given(applicantRepository.findById(APPLICANT_ID)).willReturn(Optional.of(applicant));
             CreateMemoServiceRequest request = CreateMemoServiceRequest.of(USERNAME, APPLICANT_ID, CONTENT);
 
             // when & then
             assertThatThrownBy(() -> memoService.createMemo(USERNAME, request))
                     .isInstanceOf(UnAuthorizedApplicantAccessException.class);
+            verify(applicant, never()).getDocumentPhase();
         }
 
         @Test
@@ -136,7 +131,7 @@ class MemoServiceTest {
             Club club = mock(Club.class);
             given(club.getId()).willReturn(CLUB_ID);
             given(clubRepository.findByAdminUsername(USERNAME)).willReturn(Optional.of(club));
-            Applicant applicant = applicantInClub(CLUB_ID); // documentPhase는 stub하지 않아 기본값 null
+            Applicant applicant = applicantWithClubAccess(true); // documentPhase는 stub하지 않아 기본값 null
             given(applicantRepository.findById(APPLICANT_ID)).willReturn(Optional.of(applicant));
             CreateMemoServiceRequest request = CreateMemoServiceRequest.of(USERNAME, APPLICANT_ID, CONTENT);
 
@@ -160,7 +155,7 @@ class MemoServiceTest {
             given(clubRepository.findByAdminUsername(USERNAME)).willReturn(Optional.of(club));
 
             DocumentPhase documentPhase = mock(DocumentPhase.class);
-            Applicant applicant = applicantInClub(CLUB_ID);
+            Applicant applicant = applicantWithClubAccess(true);
             given(applicant.getDocumentPhase()).willReturn(documentPhase);
             given(applicantRepository.findById(APPLICANT_ID)).willReturn(Optional.of(applicant));
 
@@ -192,13 +187,14 @@ class MemoServiceTest {
             Club club = mock(Club.class);
             given(club.getId()).willReturn(CLUB_ID);
             given(clubRepository.findByAdminUsername(USERNAME)).willReturn(Optional.of(club));
-            Applicant applicant = applicantInClub("other-club");
+            Applicant applicant = applicantWithClubAccess(false);
             given(applicantRepository.findById(APPLICANT_ID)).willReturn(Optional.of(applicant));
             UpdateMemoServiceRequest request = UpdateMemoServiceRequest.of("memo-1", USERNAME, APPLICANT_ID, CONTENT);
 
             // when & then
             assertThatThrownBy(() -> memoService.updateMemo(USERNAME, request))
                     .isInstanceOf(UnAuthorizedApplicantAccessException.class);
+            verify(applicant, never()).getDocumentPhase();
         }
 
         @Test
@@ -208,7 +204,7 @@ class MemoServiceTest {
             Club club = mock(Club.class);
             given(club.getId()).willReturn(CLUB_ID);
             given(clubRepository.findByAdminUsername(USERNAME)).willReturn(Optional.of(club));
-            Applicant applicant = applicantInClub(CLUB_ID);
+            Applicant applicant = applicantWithClubAccess(true);
             given(applicantRepository.findById(APPLICANT_ID)).willReturn(Optional.of(applicant));
             UpdateMemoServiceRequest request = UpdateMemoServiceRequest.of("memo-1", USERNAME, APPLICANT_ID, CONTENT);
 
@@ -232,7 +228,7 @@ class MemoServiceTest {
             given(clubRepository.findByAdminUsername(USERNAME)).willReturn(Optional.of(club));
 
             DocumentPhase documentPhase = mock(DocumentPhase.class);
-            Applicant applicant = applicantInClub(CLUB_ID);
+            Applicant applicant = applicantWithClubAccess(true);
             given(applicant.getDocumentPhase()).willReturn(documentPhase);
             given(applicantRepository.findById(APPLICANT_ID)).willReturn(Optional.of(applicant));
 
@@ -265,13 +261,14 @@ class MemoServiceTest {
             Club club = mock(Club.class);
             given(club.getId()).willReturn(CLUB_ID);
             given(clubRepository.findByAdminUsername(USERNAME)).willReturn(Optional.of(club));
-            Applicant applicant = applicantInClub("other-club");
+            Applicant applicant = applicantWithClubAccess(false);
             given(applicantRepository.findById(APPLICANT_ID)).willReturn(Optional.of(applicant));
             DeleteMemoServiceRequest request = DeleteMemoServiceRequest.of("memo-1", APPLICANT_ID, USERNAME);
 
             // when & then
             assertThatThrownBy(() -> memoService.deleteMemo(USERNAME, request))
                     .isInstanceOf(UnAuthorizedApplicantAccessException.class);
+            verify(applicant, never()).getDocumentPhase();
         }
 
         @Test
@@ -281,7 +278,7 @@ class MemoServiceTest {
             Club club = mock(Club.class);
             given(club.getId()).willReturn(CLUB_ID);
             given(clubRepository.findByAdminUsername(USERNAME)).willReturn(Optional.of(club));
-            Applicant applicant = applicantInClub(CLUB_ID);
+            Applicant applicant = applicantWithClubAccess(true);
             given(applicantRepository.findById(APPLICANT_ID)).willReturn(Optional.of(applicant));
             DeleteMemoServiceRequest request = DeleteMemoServiceRequest.of("memo-1", APPLICANT_ID, USERNAME);
 

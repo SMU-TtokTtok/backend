@@ -3,15 +3,34 @@ package org.project.ttokttok.domain.clubboard.domain;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.project.ttokttok.domain.club.domain.Club;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
+import static org.mockito.BDDMockito.given;
 
 class ClubBoardTest {
 
     private static final String THUMBNAIL_URL = "https://cdn.example.com/board-images/uuid_thumb.png";
+
+    @ParameterizedTest(name = "조회 동아리 ID={0}, 소속 여부={1}")
+    @CsvSource({"club123, true", "otherClub, false"})
+    @DisplayName("게시글의 동아리 ID와 비교하여 소속 여부를 반환한다")
+    void belongsToClub(String targetClubId, boolean expected) {
+        // given
+        Club club = mock(Club.class);
+        given(club.getId()).willReturn("club123");
+        ClubBoard board = ClubBoard.create("제목", "내용", THUMBNAIL_URL, club);
+
+        // when
+        boolean result = board.belongsToClub(targetClubId);
+
+        // then
+        assertThat(result).isEqualTo(expected);
+    }
 
     @Nested
     @DisplayName("create()")

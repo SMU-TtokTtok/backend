@@ -94,6 +94,10 @@ public class ClubMember extends BaseTimeEntity {
         this.role = newRole;
     }
 
+    // 동아리 소속인지 확인하는 메서드.
+    public boolean belongsToClub(String clubId) {
+        return club.getId().equals(clubId);
+    }
 //    public boolean isPresident() {
 //        return this.role == MemberRole.PRESIDENT;
 //    }

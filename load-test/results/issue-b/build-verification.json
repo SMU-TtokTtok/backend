@@ -1,0 +1,2061 @@
+{
+  "command": "gradlew.bat --no-daemon clean build",
+  "build_successful": true,
+  "counts": {
+    "tests": 1071,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 5
+  },
+  "suites": [
+    {
+      "name": "GET /api/admin/auth/info",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.72"
+    },
+    {
+      "name": "POST /api/admin/auth/join",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.328"
+    },
+    {
+      "name": "POST /api/admin/auth/login",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.863"
+    },
+    {
+      "name": "POST /api/admin/auth/logout",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.451"
+    },
+    {
+      "name": "POST /api/admin/auth/re-issue",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.881"
+    },
+    {
+      "name": "POST /api/admin/auth/reset-password",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "3.65"
+    },
+    {
+      "name": "org.project.ttokttok.domain.admin.controller.AdminAuthApiControllerTest",
+      "tests": "0",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.0"
+    },
+    {
+      "name": "org.project.ttokttok.domain.admin.domain.AdminTest",
+      "tests": "39",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "1.623"
+    },
+    {
+      "name": "org.project.ttokttok.domain.admin.repository.AdminRepositoryTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.19"
+    },
+    {
+      "name": "getAdminInfo 메서드",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.107"
+    },
+    {
+      "name": "join 메서드",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.032"
+    },
+    {
+      "name": "login 메서드",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.057"
+    },
+    {
+      "name": "logout 메서드",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.014"
+    },
+    {
+      "name": "reissue 메서드",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.045"
+    },
+    {
+      "name": "resetPassword 메서드",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.918"
+    },
+    {
+      "name": "org.project.ttokttok.domain.applicant.controller.ApplicantAdminApiControllerIntegrationTest",
+      "tests": "9",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "1.496"
+    },
+    {
+      "name": "org.project.ttokttok.domain.applicant.controller.ApplicantAdminApiControllerTest",
+      "tests": "8",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.212"
+    },
+    {
+      "name": "org.project.ttokttok.domain.applicant.controller.ApplicantDuplicateApplyPostgresTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "5",
+      "time": "0.0"
+    },
+    {
+      "name": "org.project.ttokttok.domain.applicant.controller.ApplicantUserApiControllerIntegrationTest",
+      "tests": "14",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.982"
+    },
+    {
+      "name": "org.project.ttokttok.domain.applicant.controller.ApplicantUserApiControllerTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.057"
+    },
+    {
+      "name": "belongsToClub() 테스트",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.026"
+    },
+    {
+      "name": "편의 메서드 테스트",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.11"
+    },
+    {
+      "name": "createApplicant() 테스트",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.0"
+    },
+    {
+      "name": "서류 평가 결과 테스트",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.009"
+    },
+    {
+      "name": "면접 단계 테스트",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.005"
+    },
+    {
+      "name": "submitDocument() 테스트",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.003"
+    },
+    {
+      "name": "create() 테스트",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.002"
+    },
+    {
+      "name": "메모 관련 비즈니스 메서드 테스트",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.11"
+    },
+    {
+      "name": "updateStatus() 테스트",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.0"
+    },
+    {
+      "name": "create() 테스트",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.001"
+    },
+    {
+      "name": "updateInterviewDate() 테스트",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.001"
+    },
+    {
+      "name": "updateStatus() 테스트",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.002"
+    },
+    {
+      "name": "findApplicantsPageWithSortCriteria(): 단계별 지원자 페이지 조회",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.165"
+    },
+    {
+      "name": "findApplicantsByStatus(): 합격/불합격 조회",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.079"
+    },
+    {
+      "name": "kind 문자열 해석",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "1.425"
+    },
+    {
+      "name": "목록 쿼리와 개수 쿼리는 항상 같은 필터를 본다",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.197"
+    },
+    {
+      "name": "searchApplicantsByKeyword(): 이름 검색",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.058"
+    },
+    {
+      "name": "getUserApplicationHistory(): 사용자 지원내역",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.69"
+    },
+    {
+      "name": "org.project.ttokttok.domain.applicant.repository.ApplicantCustomRepositoryImplTest",
+      "tests": "0",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.0"
+    },
+    {
+      "name": "evaluatingOnly(): 평가중 필터",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.002"
+    },
+    {
+      "name": "from(): kind 문자열 매핑",
+      "tests": "8",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.016"
+    },
+    {
+      "name": "phaseLink(): 지원자-전형 연결 조건",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.002"
+    },
+    {
+      "name": "statusEq(): 상태 필터",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.002"
+    },
+    {
+      "name": "파일 질문 - 파일을 찾지 못하면 빈 값으로 처리한다",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.011"
+    },
+    {
+      "name": "파일 질문 - 업로드 성공 경로",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.011"
+    },
+    {
+      "name": "파일이 아닌 질문",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.005"
+    },
+    {
+      "name": "검증 실패",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.01"
+    },
+    {
+      "name": "AnswerAssembler - 지원서 답변 조립",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.006"
+    },
+    {
+      "name": "org.project.ttokttok.domain.applicant.service.answer.AnswerValidatorTest",
+      "tests": "42",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.063"
+    },
+    {
+      "name": "관리자 권한 및 요청 동아리 소속 검증",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.018"
+    },
+    {
+      "name": "finalizeApplicantsStatus(): 전형 최종 마감 처리",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.046"
+    },
+    {
+      "name": "getApplicantDetail(): 지원자 상세 조회",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.108"
+    },
+    {
+      "name": "getApplicantPage(): 지원자 페이지 조회",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.01"
+    },
+    {
+      "name": "getApplicantsByStatus(): 합격/불합격 지원자 조회",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.011"
+    },
+    {
+      "name": "searchApplicantByKeyword(): 이름으로 지원자 검색",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.012"
+    },
+    {
+      "name": "sendResultMailToApplicants(): 합불 결과 메일 발송",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.537"
+    },
+    {
+      "name": "updateApplicantStatus(): 지원자 전형 상태 변경",
+      "tests": "8",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.036"
+    },
+    {
+      "name": "apply(): 지원서 제출",
+      "tests": "14",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.149"
+    },
+    {
+      "name": "getUserApplicationHistory(): 사용자 지원내역 조회",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.248"
+    },
+    {
+      "name": "org.project.ttokttok.domain.applyform.controller.ApplyFormAdminApiControllerTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.156"
+    },
+    {
+      "name": "org.project.ttokttok.domain.applyform.controller.ApplyFormUserControllerTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.032"
+    },
+    {
+      "name": "ApplyDeadlinePolicy - 마감 임박 판정",
+      "tests": "9",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.008"
+    },
+    {
+      "name": "createApplyForm(): 지원폼 생성 테스트",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.002"
+    },
+    {
+      "name": "상태/모집 여부 변경 테스트",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.001"
+    },
+    {
+      "name": "updateApplyInfo(): 지원 정보 수정 테스트",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.003"
+    },
+    {
+      "name": "updateFormContent(): 지원폼 내용 수정 테스트",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.0"
+    },
+    {
+      "name": "findRecruitingFormsByClubIds 메서드",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.147"
+    },
+    {
+      "name": "org.project.ttokttok.domain.applyform.repository.ApplyFormRepositoryTest",
+      "tests": "0",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.0"
+    },
+    {
+      "name": "org.project.ttokttok.domain.applyform.scheduler.ApplyFormSchedulerTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.034"
+    },
+    {
+      "name": "생성 성공",
+      "tests": "7",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.112"
+    },
+    {
+      "name": "비정형 데이터 - 검증 없이 통과하는 입력 (현재 동작 기록)",
+      "tests": "10",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.031"
+    },
+    {
+      "name": "비정형 데이터 - 예외를 발생시키는 입력",
+      "tests": "10",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.033"
+    },
+    {
+      "name": "검증 순서",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.113"
+    },
+    {
+      "name": "org.project.ttokttok.domain.applyform.service.ApplyFormUserServiceTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.006"
+    },
+    {
+      "name": "org.project.ttokttok.domain.club.controller.ClubAdminApiControllerTest",
+      "tests": "7",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.4"
+    },
+    {
+      "name": "org.project.ttokttok.domain.club.controller.ClubUserApiControllerTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.116"
+    },
+    {
+      "name": "생성",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.001"
+    },
+    {
+      "name": "isClubAdminName()",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.002"
+    },
+    {
+      "name": "updateFrom()",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.001"
+    },
+    {
+      "name": "updateProfileImgUrl()",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.0"
+    },
+    {
+      "name": "ClubSortType - 정렬 키 변환",
+      "tests": "8",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.007"
+    },
+    {
+      "name": "ClubCustomRepositoryImpl - 쿼리 실행 커버리지",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.769"
+    },
+    {
+      "name": "getClubList(): QueryDSL 정렬 경로",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.425"
+    },
+    {
+      "name": "getPopularClubsWithFilters(): native SQL 정렬 경로",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.535"
+    },
+    {
+      "name": "searchByKeyword(): 검색 결과 정렬",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.598"
+    },
+    {
+      "name": "ClubCustomRepositoryImpl - 정렬 순서",
+      "tests": "0",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.0"
+    },
+    {
+      "name": "org.project.ttokttok.domain.club.repository.PopularClubPerformanceTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.01"
+    },
+    {
+      "name": "getClubContent()",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.002"
+    },
+    {
+      "name": "toggleRecruitment()",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.12"
+    },
+    {
+      "name": "updateContent()",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.1"
+    },
+    {
+      "name": "updateMarkdownImage()",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.01"
+    },
+    {
+      "name": "toggleRecruitment(): 모집 상태 변경",
+      "tests": "8",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.023"
+    },
+    {
+      "name": "updateContent(): 동아리 내용 수정",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.017"
+    },
+    {
+      "name": "ClubUserService - 목록/인기/검색 조회",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.096"
+    },
+    {
+      "name": "org.project.ttokttok.domain.club.service.ClubUserServiceTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.28"
+    },
+    {
+      "name": "마감 임박 판정",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.006"
+    },
+    {
+      "name": "나머지 필드 매핑",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.008"
+    },
+    {
+      "name": "org.project.ttokttok.domain.club.service.policy.ClubAccessPolicyTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.003"
+    },
+    {
+      "name": "org.project.ttokttok.domain.clubboard.controller.ClubBoardAdminControllerTest",
+      "tests": "20",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.7"
+    },
+    {
+      "name": "org.project.ttokttok.domain.clubboard.controller.ClubBoardUserControllerTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.048"
+    },
+    {
+      "name": "create()",
+      "tests": "8",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.006"
+    },
+    {
+      "name": "update()",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.003"
+    },
+    {
+      "name": "updateThumbnailUrl()",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.002"
+    },
+    {
+      "name": "org.project.ttokttok.domain.clubboard.domain.ClubBoardTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.002"
+    },
+    {
+      "name": "createBoard()",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.013"
+    },
+    {
+      "name": "deleteBoard()",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.109"
+    },
+    {
+      "name": "updateBoard()",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.01"
+    },
+    {
+      "name": "org.project.ttokttok.domain.clubboard.service.ClubBoardAdminServiceTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.006"
+    },
+    {
+      "name": "getBoardDetail()",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.005"
+    },
+    {
+      "name": "getBoardList()",
+      "tests": "8",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.011"
+    },
+    {
+      "name": "org.project.ttokttok.domain.clubMember.controller.ClubMemberApiControllerIntegrationTest",
+      "tests": "7",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.29"
+    },
+    {
+      "name": "org.project.ttokttok.domain.clubMember.controller.ClubMemberApiControllerTest",
+      "tests": "7",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.157"
+    },
+    {
+      "name": "changeRole() 메서드 테스트",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.0"
+    },
+    {
+      "name": "create() 팩토리 메서드 테스트",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.002"
+    },
+    {
+      "name": "org.project.ttokttok.domain.clubMember.domain.MemberRoleTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.015"
+    },
+    {
+      "name": "org.project.ttokttok.domain.clubMember.repository.ClubMemberCountQueryTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.039"
+    },
+    {
+      "name": "countClubMembersByClubId 메서드",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.146"
+    },
+    {
+      "name": "existsByClubIdAndEmail 메서드",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.034"
+    },
+    {
+      "name": "findByClubIdAndKeyword 메서드",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.032"
+    },
+    {
+      "name": "findByClubIdAndRole 메서드",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.031"
+    },
+    {
+      "name": "findByClubId 메서드",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.042"
+    },
+    {
+      "name": "findClubMemberPageByClubId 메서드",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.113"
+    },
+    {
+      "name": "org.project.ttokttok.domain.clubMember.repository.ClubMemberCustomRepositoryImplTest",
+      "tests": "0",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.0"
+    },
+    {
+      "name": "addMember 메서드",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.214"
+    },
+    {
+      "name": "changeRole 메서드",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.02"
+    },
+    {
+      "name": "clubMemberSearch 메서드",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.002"
+    },
+    {
+      "name": "deleteMember 메서드",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.009"
+    },
+    {
+      "name": "downloadMembersAsExcel 메서드",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.027"
+    },
+    {
+      "name": "getClubMembersCount 메서드",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.002"
+    },
+    {
+      "name": "getClubMembers 메서드",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.011"
+    },
+    {
+      "name": "org.project.ttokttok.domain.favorite.controller.FavoriteControllerTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.044"
+    },
+    {
+      "name": "org.project.ttokttok.domain.favorite.domain.FavoriteTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.125"
+    },
+    {
+      "name": "countByClubId 메서드",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.014"
+    },
+    {
+      "name": "countClubFavoritesForEach 메서드",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.036"
+    },
+    {
+      "name": "existsByUserEmailAndClubId 메서드",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.025"
+    },
+    {
+      "name": "findAllByUserEmailWithClub 메서드",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.02"
+    },
+    {
+      "name": "findByUserEmailAndClubId 메서드",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.018"
+    },
+    {
+      "name": "findFavoritesByRequest (Custom Repository) 메서드",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.62"
+    },
+    {
+      "name": "org.project.ttokttok.domain.favorite.repository.FavoriteRepositoryTest",
+      "tests": "0",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.0"
+    },
+    {
+      "name": "배치 조회 횟수",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.305"
+    },
+    {
+      "name": "getFavoriteList 메서드",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.005"
+    },
+    {
+      "name": "getPopularFavoriteList 메서드",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.009"
+    },
+    {
+      "name": "isFavorited 메서드",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.002"
+    },
+    {
+      "name": "toClubCardServiceResponse 로직 테스트",
+      "tests": "8",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.024"
+    },
+    {
+      "name": "toggleFavorite 메서드",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.011"
+    },
+    {
+      "name": "org.project.ttokttok.domain.favorite.service.PopularityCalculatorTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.008"
+    },
+    {
+      "name": "org.project.ttokttok.domain.memo.controller.MemoApiControllerIntegrationTest",
+      "tests": "7",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.332"
+    },
+    {
+      "name": "org.project.ttokttok.domain.memo.controller.MemoApiControllerTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.053"
+    },
+    {
+      "name": "create() 테스트",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.001"
+    },
+    {
+      "name": "updateContent() 테스트",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.011"
+    },
+    {
+      "name": "createMemo 테스트",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.013"
+    },
+    {
+      "name": "deleteMemo 테스트",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.013"
+    },
+    {
+      "name": "updateMemo 테스트",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.012"
+    },
+    {
+      "name": "org.project.ttokttok.domain.notice.controller.NoticeAdminControllerTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.003"
+    },
+    {
+      "name": "org.project.ttokttok.domain.notice.controller.NoticeUserControllerTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.004"
+    },
+    {
+      "name": "create()",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.002"
+    },
+    {
+      "name": "org.project.ttokttok.domain.notice.repository.NoticeRepositoryTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.054"
+    },
+    {
+      "name": "org.project.ttokttok.domain.notice.service.NoticeAdminServiceTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.1"
+    },
+    {
+      "name": "getNoticeDetail()",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.003"
+    },
+    {
+      "name": "getNotices()",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.006"
+    },
+    {
+      "name": "org.project.ttokttok.domain.notification.fcm.controller.FCMTokenApiControllerTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.049"
+    },
+    {
+      "name": "org.project.ttokttok.domain.notification.fcm.domain.FCMTokenTest",
+      "tests": "9",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.006"
+    },
+    {
+      "name": "org.project.ttokttok.domain.notification.fcm.repository.FCMTokenRepositoryTest",
+      "tests": "8",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.212"
+    },
+    {
+      "name": "org.project.ttokttok.domain.notification.fcm.service.FCMTokenServiceTest",
+      "tests": "13",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.019"
+    },
+    {
+      "name": "org.project.ttokttok.domain.superadmin.bootstrap.SuperAdminBootstrapTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.344"
+    },
+    {
+      "name": "org.project.ttokttok.domain.superadmin.controller.SuperAdminAuthControllerTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.005"
+    },
+    {
+      "name": "org.project.ttokttok.domain.superadmin.domain.SuperAdminTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.438"
+    },
+    {
+      "name": "org.project.ttokttok.domain.superadmin.service.SuperAdminAuthServiceTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.009"
+    },
+    {
+      "name": "org.project.ttokttok.domain.temp.applicant.controller.TempApplicantControllerTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.048"
+    },
+    {
+      "name": "create(): 임시 지원서 생성 테스트",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.001"
+    },
+    {
+      "name": "update(): 임시 지원서 수정 테스트",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.013"
+    },
+    {
+      "name": "org.project.ttokttok.domain.temp.applicant.repository.TempApplicantRepositoryTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.066"
+    },
+    {
+      "name": "org.project.ttokttok.domain.temp.applicant.service.TempApplicantServiceTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.012"
+    },
+    {
+      "name": "org.project.ttokttok.domain.temp.applyform.controller.TempApplyFormControllerTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.035"
+    },
+    {
+      "name": "create(): 임시 지원폼 생성 테스트",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.0"
+    },
+    {
+      "name": "update(): 임시 지원폼 수정 테스트",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.001"
+    },
+    {
+      "name": "org.project.ttokttok.domain.temp.applyform.service.TempApplyFormServiceTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.009"
+    },
+    {
+      "name": "org.project.ttokttok.domain.user.controller.UserAuthControllerIntegrationTest",
+      "tests": "14",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "1.241"
+    },
+    {
+      "name": "org.project.ttokttok.domain.user.controller.UserAuthControllerTest",
+      "tests": "9",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.118"
+    },
+    {
+      "name": "org.project.ttokttok.domain.user.controller.UserOAuthControllerTest",
+      "tests": "7",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.081"
+    },
+    {
+      "name": "isCodeMatch 메서드",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.003"
+    },
+    {
+      "name": "isExpired 메서드",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.001"
+    },
+    {
+      "name": "markAsVerified 메서드",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.001"
+    },
+    {
+      "name": "linkGoogle 메서드",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.002"
+    },
+    {
+      "name": "기존 signUp 정적 팩토리 (회귀)",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.002"
+    },
+    {
+      "name": "signUpWithGoogle 정적 팩토리",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.002"
+    },
+    {
+      "name": "비즈니스 로직 테스트",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.001"
+    },
+    {
+      "name": "회원가입(signUp) 테스트",
+      "tests": "9",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.009"
+    },
+    {
+      "name": "deleteExpiredVerifications 메서드",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.011"
+    },
+    {
+      "name": "existsByEmailAndCodeAndIsVerifiedTrue 메서드",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.02"
+    },
+    {
+      "name": "existsByEmailAndIsVerifiedTrue 메서드",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.015"
+    },
+    {
+      "name": "expireAllPendingVerifications 메서드",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.015"
+    },
+    {
+      "name": "findByEmailAndCodeAndIsVerifiedFalse 메서드",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.016"
+    },
+    {
+      "name": "findFirstByEmailAndIsVerifiedFalseAndExpiresAtAfterOrderByCreatedAtDescIdDesc 메서드",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.028"
+    },
+    {
+      "name": "org.project.ttokttok.domain.user.repository.EmailVerificationRepositoryTest",
+      "tests": "0",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.0"
+    },
+    {
+      "name": "existsByEmail 메서드",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.018"
+    },
+    {
+      "name": "findByEmail 메서드",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.016"
+    },
+    {
+      "name": "org.project.ttokttok.domain.user.repository.UserRepositoryTest",
+      "tests": "0",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.0"
+    },
+    {
+      "name": "org.project.ttokttok.domain.user.service.EmailVerificationServiceTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.147"
+    },
+    {
+      "name": "org.project.ttokttok.domain.user.service.GoogleAccountWriterTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.007"
+    },
+    {
+      "name": "org.project.ttokttok.domain.user.service.GoogleOAuthConcurrencyIT",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.151"
+    },
+    {
+      "name": "completeOnboarding 메서드",
+      "tests": "7",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.143"
+    },
+    {
+      "name": "login 메서드",
+      "tests": "8",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.026"
+    },
+    {
+      "name": "org.project.ttokttok.domain.user.service.PasswordResetServiceTest",
+      "tests": "9",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.022"
+    },
+    {
+      "name": "org.project.ttokttok.domain.user.service.UserAuthServiceOAuthGuardTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.003"
+    },
+    {
+      "name": "로그인 테스트",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.002"
+    },
+    {
+      "name": "회원가입 테스트",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.003"
+    },
+    {
+      "name": "generate 메서드",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.018"
+    },
+    {
+      "name": "parse 메서드",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.036"
+    },
+    {
+      "name": "generateToken 메서드",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.01"
+    },
+    {
+      "name": "getUsernameFromToken 메서드",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.007"
+    },
+    {
+      "name": "getUserProfile 메서드",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.009"
+    },
+    {
+      "name": "reissueToken 메서드",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.009"
+    },
+    {
+      "name": "validateToken 메서드",
+      "tests": "11",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.101"
+    },
+    {
+      "name": "org.project.ttokttok.global.auth.oauth.GoogleIdTokenVerifierTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.115"
+    },
+    {
+      "name": "AsyncConfig",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.0"
+    },
+    {
+      "name": "메일 비동기 디스패치",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.006"
+    },
+    {
+      "name": "mailExecutor 포화 동작",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.014"
+    },
+    {
+      "name": "ExcelService - 부원 목록 엑셀 생성",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "2.155"
+    },
+    {
+      "name": "org.project.ttokttok.global.exception.GlobalExceptionHandlerUploadSizeTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.001"
+    },
+    {
+      "name": "CookieUtil - 쿠키 생성/만료",
+      "tests": "8",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.012"
+    },
+    {
+      "name": "javaMailSender 메서드",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.03"
+    },
+    {
+      "name": "EmailService - 이메일 발송 동작",
+      "tests": "8",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.324"
+    },
+    {
+      "name": "generateVerificationCode 메서드",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.003"
+    },
+    {
+      "name": "isValidSangmyungEmail 메서드",
+      "tests": "12",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.02"
+    },
+    {
+      "name": "sendPasswordResetCode 메서드",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.012"
+    },
+    {
+      "name": "sendResultMail 메서드",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.225"
+    },
+    {
+      "name": "sendVerificationCode 메서드",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.015"
+    },
+    {
+      "name": "org.project.ttokttok.infrastructure.firebase.config.FirebaseConfigTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.032"
+    },
+    {
+      "name": "org.project.ttokttok.infrastructure.firebase.scheduler.FCMSchedulerIntegrationTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.039"
+    },
+    {
+      "name": "org.project.ttokttok.infrastructure.firebase.scheduler.FCMSchedulerTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.007"
+    },
+    {
+      "name": "org.project.ttokttok.infrastructure.firebase.service.FCMFailureHandlerTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.329"
+    },
+    {
+      "name": "org.project.ttokttok.infrastructure.firebase.service.FCMServiceTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.33"
+    },
+    {
+      "name": "org.project.ttokttok.infrastructure.firebase.service.FCMTokenListPartitionerTest",
+      "tests": "7",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.007"
+    },
+    {
+      "name": "org.project.ttokttok.infrastructure.health.HealthCheckControllerTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.007"
+    },
+    {
+      "name": "org.project.ttokttok.infrastructure.redis.RedisConnectionTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.046"
+    },
+    {
+      "name": "org.project.ttokttok.infrastructure.redis.service.OnboardingTokenRedisServiceTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.334"
+    },
+    {
+      "name": "org.project.ttokttok.infrastructure.redis.service.RefreshTokenRedisServiceBlacklistIT",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.034"
+    },
+    {
+      "name": "addAccessTokenToBlacklist 메서드는",
+      "tests": "8",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.021"
+    },
+    {
+      "name": "deleteRefreshToken 메서드는",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.003"
+    },
+    {
+      "name": "getRefreshTTL 메서드는",
+      "tests": "7",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.018"
+    },
+    {
+      "name": "getUsernameFromRefreshToken 메서드는",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.004"
+    },
+    {
+      "name": "isAccessTokenBlacklisted 메서드는",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.005"
+    },
+    {
+      "name": "logout 메서드는",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.006"
+    },
+    {
+      "name": "save 메서드는",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.002"
+    },
+    {
+      "name": "아카이브(ZIP) 내부 검증",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.004"
+    },
+    {
+      "name": "파일 이름 검증",
+      "tests": "9",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.121"
+    },
+    {
+      "name": "파일 존재 여부 검증",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.005"
+    },
+    {
+      "name": "파일 크기 검증",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.004"
+    },
+    {
+      "name": "파일 형식(MIME Type) 검증",
+      "tests": "12",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.017"
+    },
+    {
+      "name": "org.project.ttokttok.infrastructure.s3.service.S3KeyUrlGeneratorTest",
+      "tests": "15",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.028"
+    },
+    {
+      "name": "deleteFileAfterCommit()",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.017"
+    },
+    {
+      "name": "deleteFileOnRollback()",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.02"
+    },
+    {
+      "name": "org.project.ttokttok.infrastructure.s3.service.S3ServiceTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.574"
+    },
+    {
+      "name": "org.project.ttokttok.infrastructure.s3.service.ZipContentValidatorTest",
+      "tests": "7",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.011"
+    },
+    {
+      "name": "org.project.ttokttok.TtokttokApplicationTests",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.835"
+    }
+  ],
+  "applicant_user_service_test_cases": 20
+}

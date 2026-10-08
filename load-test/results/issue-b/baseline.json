@@ -1,0 +1,32 @@
+{
+  "environment": {
+    "postgres": "17.4-alpine",
+    "application_commit": "b8b6dc675b1875b845b92a81fd94eb4944e7cc30",
+    "schema": "Hibernate create-drop; Flyway disabled; isolated local database; not production"
+  },
+  "tests": [
+    {
+      "name": "twentyRequestsMustPersistOnlyOneApplication()",
+      "result": "FAIL",
+      "failure": "org.opentest4j.AssertionFailedError: [same user/form must have one application] \r\nexpected: 1L\r\n but was: 20L"
+    },
+    {
+      "name": "overlappingRequestsMustNotBothPersist()",
+      "result": "FAIL",
+      "failure": "org.opentest4j.AssertionFailedError: [same user/form must have one application] \r\nexpected: 1L\r\n but was: 2L"
+    },
+    {
+      "name": "sequentialDuplicateIsRejected()",
+      "result": "PASS",
+      "failure": null
+    }
+  ],
+  "observations": [
+    "DUPLICATE_APPLY_BASELINE scenario=start-together-20 statuses=[200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200] applicants=20 documents=20",
+    "APPLICANTS_CONSTRAINTS [{contype=c, definition=CHECK (((current_phase)::text = ANY ((ARRAY['DOCUMENT'::character varying, 'INTERVIEW'::character varying])::text[])))}, {contype=c, definition=CHECK (((gender)::text = ANY ((ARRAY['MALE'::character varying, 'FEMALE'::character varying])::text[])))}, {contype=c, definition=CHECK (((grade)::text = ANY ((ARRAY['FIRST_GRADE'::character varying, 'SECOND_GRADE'::character varying, 'THIRD_GRADE'::character varying, 'FOURTH_GRADE'::character varying])::text[])))}, {contype=c, definition=CHECK (((student_status)::text = ANY ((ARRAY['ENROLLED'::character varying, 'ABSENCE'::character varying])::text[])))}, {contype=f, definition=FOREIGN KEY (applyform_id) REFERENCES applyforms(id)}, {contype=p, definition=PRIMARY KEY (id)}]",
+    "DUPLICATE_APPLY_BASELINE scenario=overlap-2 statuses=[200, 200] applicants=2 documents=2",
+    "APPLICANTS_CONSTRAINTS [{contype=c, definition=CHECK (((current_phase)::text = ANY ((ARRAY['DOCUMENT'::character varying, 'INTERVIEW'::character varying])::text[])))}, {contype=c, definition=CHECK (((gender)::text = ANY ((ARRAY['MALE'::character varying, 'FEMALE'::character varying])::text[])))}, {contype=c, definition=CHECK (((grade)::text = ANY ((ARRAY['FIRST_GRADE'::character varying, 'SECOND_GRADE'::character varying, 'THIRD_GRADE'::character varying, 'FOURTH_GRADE'::character varying])::text[])))}, {contype=c, definition=CHECK (((student_status)::text = ANY ((ARRAY['ENROLLED'::character varying, 'ABSENCE'::character varying])::text[])))}, {contype=f, definition=FOREIGN KEY (applyform_id) REFERENCES applyforms(id)}, {contype=p, definition=PRIMARY KEY (id)}]",
+    "DUPLICATE_APPLY_BASELINE scenario=sequential-2 statuses=[200, 409] applicants=1 documents=1",
+    "APPLICANTS_CONSTRAINTS [{contype=c, definition=CHECK (((current_phase)::text = ANY ((ARRAY['DOCUMENT'::character varying, 'INTERVIEW'::character varying])::text[])))}, {contype=c, definition=CHECK (((gender)::text = ANY ((ARRAY['MALE'::character varying, 'FEMALE'::character varying])::text[])))}, {contype=c, definition=CHECK (((grade)::text = ANY ((ARRAY['FIRST_GRADE'::character varying, 'SECOND_GRADE'::character varying, 'THIRD_GRADE'::character varying, 'FOURTH_GRADE'::character varying])::text[])))}, {contype=c, definition=CHECK (((student_status)::text = ANY ((ARRAY['ENROLLED'::character varying, 'ABSENCE'::character varying])::text[])))}, {contype=f, definition=FOREIGN KEY (applyform_id) REFERENCES applyforms(id)}, {contype=p, definition=PRIMARY KEY (id)}]"
+  ]
+}

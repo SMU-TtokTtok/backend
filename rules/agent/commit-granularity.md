@@ -35,7 +35,7 @@ A single commit must stay within one axis:
 
 The 40-file commit in `#346` mixed axes 1, 2, and 3 — a production concurrency fix, the k6 harness that measured it, and 31 result artifacts. That is exactly what this rule prevents.
 
-> **`IMPLEMENTATION.md` is not one of these axes — it is gitignored** (`.gitignore:68`, next to `GEMINI.md`) and is never committed at all. Append to it as the local work log, but do not stage it and do not expect a commit from it.
+> **`IMPLEMENTATION.md` is not one of these axes — it is gitignored** (`.gitignore:66`) and is never committed at all. Append to it as the local work log, but do not stage it and do not expect a commit from it.
 
 ## Ordering
 

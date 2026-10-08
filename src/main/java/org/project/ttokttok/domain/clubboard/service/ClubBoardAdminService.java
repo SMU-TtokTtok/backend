@@ -109,8 +109,7 @@ public class ClubBoardAdminService {
         ClubBoard clubBoard = clubBoardRepository.findById(boardId)
                 .orElseThrow(ClubBoardNotFoundException::new);
 
-        // 해당 게시글이 요청한 동아리의 게시글인지 추가 확인
-        if (!clubBoard.getClub().getId().equals(clubId)) {
+        if (!clubBoard.belongsToClub(clubId)) {
             throw new ClubAdminNameNotMatchException();
         }
 

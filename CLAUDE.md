@@ -5,8 +5,7 @@ Claude Code entry point for **ttokttok**. This file only routes — the actual c
 ## Start here
 
 - **Maintenance work** → follow the 5-step loop in [`maintenance/HARNESS.md`](maintenance/HARNESS.md) (Intake → Orient → Change → Verify → Record).
-- **Coding rules & conventions** → [`AGENTS.md`](AGENTS.md).
-- **Project facts, stack, build/run, commit convention** → [`GEMINI.md`](GEMINI.md).
+- **Coding rules, project facts, stack, build/run, commit convention** → [`AGENTS.md`](AGENTS.md).
 - **Work log** → append to [`IMPLEMENTATION.md`](IMPLEMENTATION.md).
 
 ## Claude Code operating hints

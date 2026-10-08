@@ -42,7 +42,7 @@ public record ApplyFormRequest(
 
         /**
          * 지원폼의 질문에 대한 답변들
-         * 파일이 아닌 텍스트 답변들만 포함
+         * 파일 질문도 포함하며 파일 질문의 value는 null
          */
         @Valid
         List<AnswerRequest> answers

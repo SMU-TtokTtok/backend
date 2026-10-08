@@ -1,13 +1,18 @@
 package org.project.ttokttok.domain.applicant.service;
 
+import org.hibernate.exception.ConstraintViolationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.project.ttokttok.domain.applicant.service.answer.AnswerAssembler;
+import org.project.ttokttok.domain.applicant.service.answer.AnswerValidator;
 import org.project.ttokttok.domain.applicant.service.answer.FileAnswerUploader;
 import org.project.ttokttok.domain.applicant.controller.dto.request.AnswerRequest;
 import org.project.ttokttok.domain.applicant.controller.dto.request.ApplyFormRequest;
@@ -36,9 +41,11 @@ import org.project.ttokttok.domain.user.exception.UserNotFoundException;
 import org.project.ttokttok.domain.user.repository.UserRepository;
 import org.project.ttokttok.infrastructure.s3.service.S3Service;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -81,7 +88,7 @@ class ApplicantUserServiceTest {
      */
     @BeforeEach
     void setUp() {
-        AnswerAssembler answerAssembler = new AnswerAssembler(new FileAnswerUploader(s3Service));
+        AnswerAssembler answerAssembler = new AnswerAssembler(new FileAnswerUploader(s3Service), new AnswerValidator());
 
         applicantUserService = new ApplicantUserService(
                 userRepository,
@@ -117,6 +124,56 @@ class ApplicantUserServiceTest {
     class ApplyTest {
 
         @Test
+        @DisplayName("중복 조회를 통과해도 동일 지원 UNIQUE 충돌은 중복 지원 예외로 변환한다")
+        void apply_translatesDuplicateConstraintViolation() {
+            ApplyFormRequest request = prepareApplyForSaveFailure();
+            ConstraintViolationException violation = new ConstraintViolationException(
+                    "duplicate application", new SQLException("duplicate", "23505"),
+                    "uk_applicants_user_email_applyform");
+            given(applicantRepository.saveAndFlush(any(Applicant.class))).willThrow(
+                    new DataIntegrityViolationException("save failed", new IllegalStateException(violation)));
+
+            assertThatThrownBy(() -> applicantUserService.apply(EMAIL, request, null, null, CLUB_ID))
+                    .isInstanceOf(AlreadyApplicantExistsException.class);
+        }
+
+        @ParameterizedTest
+        @NullSource
+        @ValueSource(strings = {"fk_applicants_applyform", "applicants_pkey"})
+        @DisplayName("다른 제약 또는 제약명이 없는 무결성 오류는 원래 예외를 유지한다")
+        void apply_preservesOtherConstraintViolations(String constraintName) {
+            ApplyFormRequest request = prepareApplyForSaveFailure();
+            DataIntegrityViolationException failure = new DataIntegrityViolationException("save failed",
+                    new ConstraintViolationException("integrity failure", new SQLException(), constraintName));
+            given(applicantRepository.saveAndFlush(any(Applicant.class))).willThrow(failure);
+
+            assertThatThrownBy(() -> applicantUserService.apply(EMAIL, request, null, null, CLUB_ID))
+                    .isSameAs(failure);
+        }
+
+        @Test
+        @DisplayName("Hibernate 제약 위반 원인이 없는 무결성 오류는 그대로 전달한다")
+        void apply_preservesIntegrityViolationWithoutConstraintCause() {
+            ApplyFormRequest request = prepareApplyForSaveFailure();
+            DataIntegrityViolationException failure = new DataIntegrityViolationException("save failed");
+            given(applicantRepository.saveAndFlush(any(Applicant.class))).willThrow(failure);
+
+            assertThatThrownBy(() -> applicantUserService.apply(EMAIL, request, null, null, CLUB_ID))
+                    .isSameAs(failure);
+        }
+
+        private ApplyFormRequest prepareApplyForSaveFailure() {
+            ApplyForm form = mock(ApplyForm.class);
+            given(form.getId()).willReturn(FORM_ID);
+            given(form.getFormJson()).willReturn(List.of());
+            given(userRepository.existsByEmail(EMAIL)).willReturn(true);
+            given(applyFormRepository.findByClubIdAndStatus(CLUB_ID, ACTIVE)).willReturn(Optional.of(form));
+            given(applicantRepository.existsByUserEmailAndApplyFormId(EMAIL, FORM_ID)).willReturn(false);
+            given(tempApplicantRepository.findByUserEmailAndFormId(EMAIL, FORM_ID)).willReturn(Optional.empty());
+            return createApplyFormRequest(List.of());
+        }
+
+        @Test
         @DisplayName("파일 질문이 없는 경우 정상적으로 지원서를 제출한다")
         void apply_success_withoutFileQuestion() {
             // given
@@ -134,14 +191,14 @@ class ApplicantUserServiceTest {
 
             Applicant savedApplicant = mock(Applicant.class);
             given(savedApplicant.getId()).willReturn(APPLICANT_ID);
-            given(applicantRepository.save(any(Applicant.class))).willReturn(savedApplicant);
+            given(applicantRepository.saveAndFlush(any(Applicant.class))).willReturn(savedApplicant);
 
             // when
             String result = applicantUserService.apply(EMAIL, request, null, null, CLUB_ID);
 
             // then
             assertThat(result).isEqualTo(APPLICANT_ID);
-            verify(applicantRepository).save(any(Applicant.class));
+            verify(applicantRepository).saveAndFlush(any(Applicant.class));
             verify(s3Service, never()).uploadFile(any(), anyString());
         }
 
@@ -166,7 +223,7 @@ class ApplicantUserServiceTest {
 
             Applicant savedApplicant = mock(Applicant.class);
             given(savedApplicant.getId()).willReturn(APPLICANT_ID);
-            given(applicantRepository.save(any(Applicant.class))).willReturn(savedApplicant);
+            given(applicantRepository.saveAndFlush(any(Applicant.class))).willReturn(savedApplicant);
 
             // when
             String result = applicantUserService.apply(EMAIL, request, List.of("q2"), List.of(file), CLUB_ID);
@@ -197,7 +254,7 @@ class ApplicantUserServiceTest {
 
             Applicant savedApplicant = mock(Applicant.class);
             given(savedApplicant.getId()).willReturn(APPLICANT_ID);
-            given(applicantRepository.save(any(Applicant.class))).willReturn(savedApplicant);
+            given(applicantRepository.saveAndFlush(any(Applicant.class))).willReturn(savedApplicant);
 
             // when
             applicantUserService.apply(EMAIL, request, null, null, CLUB_ID);

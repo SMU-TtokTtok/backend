@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.project.ttokttok.domain.applicant.controller.dto.request.AnswerRequest;
+import org.project.ttokttok.domain.applicant.exception.InvalidAnswerException;
 import org.project.ttokttok.domain.applicant.domain.json.Answer;
 import org.project.ttokttok.domain.applicant.exception.AnswerRequestNotMatchException;
 import org.project.ttokttok.domain.applicant.exception.ListSizeNotMatchException;
@@ -30,10 +30,7 @@ import static org.mockito.Mockito.verify;
 /**
  * {@link AnswerAssembler} 단위 테스트.
  *
- * <p>{@code ApplicantUserService} 에 있던 답변 조립/검증 로직을 분리해 온 클래스이므로,
- * 분기 하나하나가 이전과 같은 결과를 내는지 여기서 직접 고정한다.
- * 특히 <b>파일이 없을 때 조용히 빈 값으로 처리되는 경로들</b>은 예외를 던지지 않아
- * 서비스 레벨 테스트만으로는 회귀를 잡기 어려우므로 이 테스트가 담당한다.
+ * <p>정상 답변의 값과 순서를 보존하고, 제출 전체 검증이 끝난 후 업로드하는지 확인한다.
  */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("AnswerAssembler - 지원서 답변 조립")
@@ -49,7 +46,7 @@ class AnswerAssemblerTest {
 
     @BeforeEach
     void setUp() {
-        answerAssembler = new AnswerAssembler(new FileAnswerUploader(s3Service));
+        answerAssembler = new AnswerAssembler(new FileAnswerUploader(s3Service), new AnswerValidator());
     }
 
     private Question fileQuestion(String id, boolean essential) {
@@ -64,6 +61,33 @@ class AnswerAssemblerTest {
         return new MockMultipartFile(name, name + ".pdf", "application/pdf", ("내용-" + name).getBytes());
     }
 
+    @Test
+    @DisplayName("뒤쪽 필수 답변이 잘못되어도 앞쪽 파일을 업로드하지 않는다")
+    void validatesAllAnswersBeforeUpload() {
+        List<Question> questions = List.of(fileQuestion("f1", true),
+                new Question("q1", "필수", null, QuestionType.SHORT_ANSWER, true, List.of()));
+        AnswerSubmission submission = new AnswerSubmission(
+                List.of(new AnswerInput("f1", null), new AnswerInput("q1", " ")),
+                List.of("f1"), List.of(file("f1")));
+
+        assertThatThrownBy(() -> answerAssembler.assemble(submission, questions, EMAIL))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("필수 질문에 대한 답변이 없습니다.");
+        verify(s3Service, never()).uploadFile(any(), anyString());
+    }
+
+    @Test
+    @DisplayName("필수 일반 질문의 답변이 누락되면 거부한다")
+    void rejectsMissingRequiredAnswer() {
+        List<Question> questions = List.of(
+                new Question("q1", "필수", null, QuestionType.SHORT_ANSWER, true, List.of()));
+
+        assertThatThrownBy(() -> answerAssembler.assemble(
+                new AnswerSubmission(List.of(), null, null), questions, EMAIL))
+                .isInstanceOf(InvalidAnswerException.class);
+        verify(s3Service, never()).uploadFile(any(), anyString());
+    }
+
     @Nested
     @DisplayName("파일이 아닌 질문")
     class NonFileQuestions {
@@ -73,7 +97,7 @@ class AnswerAssemblerTest {
         void passesThroughWithoutUpload() {
             List<Question> questions = List.of(textQuestion("q1"), textQuestion("q2"));
             AnswerSubmission submission = new AnswerSubmission(
-                    List.of(new AnswerRequest("q1", "답변1"), new AnswerRequest("q2", "답변2")),
+                    List.of(new AnswerInput("q1", "답변1"), new AnswerInput("q2", "답변2")),
                     null, null);
 
             List<Answer> answers = answerAssembler.assemble(submission, questions, EMAIL);
@@ -89,9 +113,9 @@ class AnswerAssemblerTest {
         void preservesAnswerOrder() {
             List<Question> questions = List.of(textQuestion("q1"), textQuestion("q2"), textQuestion("q3"));
             AnswerSubmission submission = new AnswerSubmission(
-                    List.of(new AnswerRequest("q3", "셋"),
-                            new AnswerRequest("q1", "하나"),
-                            new AnswerRequest("q2", "둘")),
+                    List.of(new AnswerInput("q3", "셋"),
+                            new AnswerInput("q1", "하나"),
+                            new AnswerInput("q2", "둘")),
                     null, null);
 
             List<Answer> answers = answerAssembler.assemble(submission, questions, EMAIL);
@@ -112,7 +136,7 @@ class AnswerAssemblerTest {
             given(s3Service.uploadFile(uploaded, UPLOAD_PATH)).willReturn("https://s3/f1.pdf");
 
             AnswerSubmission submission = new AnswerSubmission(
-                    List.of(new AnswerRequest("f1", null)),
+                    List.of(new AnswerInput("f1", null)),
                     List.of("f1"), List.of(uploaded));
 
             List<Answer> answers = answerAssembler.assemble(submission, questions, EMAIL);
@@ -132,7 +156,7 @@ class AnswerAssemblerTest {
             given(s3Service.uploadFile(second, UPLOAD_PATH)).willReturn("https://s3/second.pdf");
 
             AnswerSubmission submission = new AnswerSubmission(
-                    List.of(new AnswerRequest("f1", null), new AnswerRequest("f2", null)),
+                    List.of(new AnswerInput("f1", null), new AnswerInput("f2", null)),
                     List.of("f1", "f2"), List.of(first, second));
 
             List<Answer> answers = answerAssembler.assemble(submission, questions, EMAIL);
@@ -152,7 +176,7 @@ class AnswerAssemblerTest {
 
             // questionIds/files 는 f2 가 먼저지만, 답변은 f1 이 먼저다.
             AnswerSubmission submission = new AnswerSubmission(
-                    List.of(new AnswerRequest("f1", null), new AnswerRequest("f2", null)),
+                    List.of(new AnswerInput("f1", null), new AnswerInput("f2", null)),
                     List.of("f2", "f1"), List.of(forF2, forF1));
 
             List<Answer> answers = answerAssembler.assemble(submission, questions, EMAIL);
@@ -169,7 +193,7 @@ class AnswerAssemblerTest {
             given(s3Service.uploadFile(uploaded, UPLOAD_PATH)).willReturn("https://s3/f1.pdf");
 
             AnswerSubmission submission = new AnswerSubmission(
-                    List.of(new AnswerRequest("q1", "텍스트답변"), new AnswerRequest("f1", null)),
+                    List.of(new AnswerInput("q1", "텍스트답변"), new AnswerInput("f1", null)),
                     List.of("f1"), List.of(uploaded));
 
             List<Answer> answers = answerAssembler.assemble(submission, questions, EMAIL);
@@ -188,7 +212,7 @@ class AnswerAssemblerTest {
         void noFileInputAtAll() {
             List<Question> questions = List.of(fileQuestion("f1", false));
             AnswerSubmission submission = new AnswerSubmission(
-                    List.of(new AnswerRequest("f1", null)), null, null);
+                    List.of(new AnswerInput("f1", null)), null, null);
 
             List<Answer> answers = answerAssembler.assemble(submission, questions, EMAIL);
 
@@ -201,7 +225,7 @@ class AnswerAssemblerTest {
         void emptyListsAreTreatedAsNoInput() {
             List<Question> questions = List.of(fileQuestion("f1", false));
             AnswerSubmission submission = new AnswerSubmission(
-                    List.of(new AnswerRequest("f1", null)), List.of(), List.of());
+                    List.of(new AnswerInput("f1", null)), List.of(), List.of());
 
             List<Answer> answers = answerAssembler.assemble(submission, questions, EMAIL);
 
@@ -218,7 +242,7 @@ class AnswerAssemblerTest {
 
             // f2 에 대한 파일은 올라오지 않았다.
             AnswerSubmission submission = new AnswerSubmission(
-                    List.of(new AnswerRequest("f1", null), new AnswerRequest("f2", null)),
+                    List.of(new AnswerInput("f1", null), new AnswerInput("f2", null)),
                     List.of("f1"), List.of(onlyForF1));
 
             List<Answer> answers = answerAssembler.assemble(submission, questions, EMAIL);
@@ -234,7 +258,7 @@ class AnswerAssemblerTest {
             MultipartFile emptyFile = new MockMultipartFile("f1", "empty.pdf", "application/pdf", new byte[0]);
 
             AnswerSubmission submission = new AnswerSubmission(
-                    List.of(new AnswerRequest("f1", null)),
+                    List.of(new AnswerInput("f1", null)),
                     List.of("f1"), List.of(emptyFile));
 
             List<Answer> answers = answerAssembler.assemble(submission, questions, EMAIL);
@@ -244,22 +268,14 @@ class AnswerAssemblerTest {
         }
 
         @Test
-        @DisplayName("questionIds에 파일이 아닌 질문 ID가 섞이면 인덱스가 밀려 빈 문자열이 된다 (기존 동작)")
-        void nonFileQuestionIdShiftsIndex() {
-            // questionIds 는 "파일이 올라온 질문 ID" 목록이라는 전제로 동작한다.
-            // 여기에 파일이 아닌 질문 ID가 섞이면 files 와의 인덱스 대응이 어긋나
-            // 파일 질문이 빈 값으로 처리된다. 리팩토링 이전부터 있던 동작이므로 그대로 고정한다.
+        @DisplayName("questionIds에 일반 질문 ID가 섞이면 업로드 전에 거부한다")
+        void rejectsNonFileQuestionIdBeforeUpload() {
             List<Question> questions = List.of(textQuestion("q1"), fileQuestion("f1", false));
-            MultipartFile uploaded = file("f1");
-
             AnswerSubmission submission = new AnswerSubmission(
-                    List.of(new AnswerRequest("f1", null)),
-                    List.of("q1", "f1"), List.of(uploaded));
-
-            List<Answer> answers = answerAssembler.assemble(submission, questions, EMAIL);
-
-            // indexOf("f1") == 1 이지만 files 크기는 1이므로 대응 파일을 찾지 못한다.
-            assertThat(answers).singleElement().extracting(Answer::value).isEqualTo("");
+                    List.of(new AnswerInput("q1", "answer"), new AnswerInput("f1", null)),
+                    List.of("q1", "f1"), List.of(file("q1"), file("f1")));
+            assertThatThrownBy(() -> answerAssembler.assemble(submission, questions, EMAIL))
+                    .isInstanceOf(InvalidAnswerException.class);
             verify(s3Service, never()).uploadFile(any(), anyString());
         }
     }
@@ -273,7 +289,7 @@ class AnswerAssemblerTest {
         void requiredFileQuestionWithoutAnyFile() {
             List<Question> questions = List.of(fileQuestion("f1", true));
             AnswerSubmission submission = new AnswerSubmission(
-                    List.of(new AnswerRequest("f1", null)), null, null);
+                    List.of(new AnswerInput("f1", null)), null, null);
 
             assertThatThrownBy(() -> answerAssembler.assemble(submission, questions, EMAIL))
                     .isInstanceOf(AnswerRequestNotMatchException.class);
@@ -284,7 +300,7 @@ class AnswerAssemblerTest {
         void fileQuestionIdWithoutFiles() {
             List<Question> questions = List.of(fileQuestion("f1", false));
             AnswerSubmission submission = new AnswerSubmission(
-                    List.of(new AnswerRequest("f1", null)), List.of("f1"), null);
+                    List.of(new AnswerInput("f1", null)), List.of("f1"), null);
 
             assertThatThrownBy(() -> answerAssembler.assemble(submission, questions, EMAIL))
                     .isInstanceOf(AnswerRequestNotMatchException.class);
@@ -295,7 +311,7 @@ class AnswerAssemblerTest {
         void fileCountMismatch() {
             List<Question> questions = List.of(fileQuestion("f1", true), fileQuestion("f2", true));
             AnswerSubmission submission = new AnswerSubmission(
-                    List.of(new AnswerRequest("f1", null), new AnswerRequest("f2", null)),
+                    List.of(new AnswerInput("f1", null), new AnswerInput("f2", null)),
                     List.of("f1", "f2"), List.of(file("only-one")));
 
             assertThatThrownBy(() -> answerAssembler.assemble(submission, questions, EMAIL))
@@ -307,7 +323,7 @@ class AnswerAssemblerTest {
         void unknownQuestionId() {
             List<Question> questions = List.of(textQuestion("q1"));
             AnswerSubmission submission = new AnswerSubmission(
-                    List.of(new AnswerRequest("존재하지-않는-질문", "값")), null, null);
+                    List.of(new AnswerInput("존재하지-않는-질문", "값")), null, null);
 
             assertThatThrownBy(() -> answerAssembler.assemble(submission, questions, EMAIL))
                     .isInstanceOf(QuestionParseFailException.class);
@@ -318,19 +334,20 @@ class AnswerAssemblerTest {
         void optionalFileQuestionPassesWithoutFiles() {
             List<Question> questions = List.of(fileQuestion("f1", false), textQuestion("q1"));
             AnswerSubmission submission = new AnswerSubmission(
-                    List.of(new AnswerRequest("q1", "답변")), null, null);
+                    List.of(new AnswerInput("q1", "답변")), null, null);
 
             assertThat(answerAssembler.assemble(submission, questions, EMAIL)).hasSize(1);
         }
 
         @Test
-        @DisplayName("questionIds에 파일 질문이 하나도 없으면 파일이 없어도 통과한다")
-        void noFileQuestionIdsPassesWithoutFiles() {
+        @DisplayName("questionIds만 전달되면 파일이 없어 거부한다")
+        void rejectsQuestionIdsWithoutFiles() {
             List<Question> questions = List.of(textQuestion("q1"));
             AnswerSubmission submission = new AnswerSubmission(
-                    List.of(new AnswerRequest("q1", "답변")), List.of("q1"), null);
+                    List.of(new AnswerInput("q1", "답변")), List.of("q1"), null);
 
-            assertThat(answerAssembler.assemble(submission, questions, EMAIL)).hasSize(1);
+            assertThatThrownBy(() -> answerAssembler.assemble(submission, questions, EMAIL))
+                    .isInstanceOf(AnswerRequestNotMatchException.class);
         }
     }
 }
