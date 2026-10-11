@@ -115,7 +115,10 @@ public class ClubMemberService {
                             String clubId,
                             ClubMemberServiceRequest request,
                             String roleName) {
-        Club club = validateClubAndAdmin(clubId, username);
+        // 합격 확정과 같은 잠금으로 같은 (동아리, 이메일)의 동시 등록을 직렬화한다. (#432)
+        Club club = clubRepository.findByIdForUpdate(clubId)
+                .orElseThrow(ClubNotFoundException::new);
+        clubAccessPolicy.validateAdmin(club, username);
 
         String targetEmail = getTargetEmail(request.studentNum());
 

@@ -498,7 +498,7 @@ class ClubMemberServiceTest {
         void addMember_executive() {
             // given
             Club club = createClub(USERNAME);
-            given(clubRepository.findById(CLUB_ID)).willReturn(Optional.of(club));
+            given(clubRepository.findByIdForUpdate(CLUB_ID)).willReturn(Optional.of(club));
 
             given(clubMemberRepository.existsByClubIdAndEmail(CLUB_ID, "60201234@sangmyung.kr"))
                     .willReturn(false);
@@ -520,7 +520,7 @@ class ClubMemberServiceTest {
         void addMember_defaultsToMember() {
             // given
             Club club = createClub(USERNAME);
-            given(clubRepository.findById(CLUB_ID)).willReturn(Optional.of(club));
+            given(clubRepository.findByIdForUpdate(CLUB_ID)).willReturn(Optional.of(club));
 
             given(clubMemberRepository.existsByClubIdAndEmail(CLUB_ID, "60201234@sangmyung.kr"))
                     .willReturn(false);
@@ -541,7 +541,7 @@ class ClubMemberServiceTest {
         void addMember_alreadyClubMember() {
             // given
             Club club = createClub(USERNAME);
-            given(clubRepository.findById(CLUB_ID)).willReturn(Optional.of(club));
+            given(clubRepository.findByIdForUpdate(CLUB_ID)).willReturn(Optional.of(club));
 
             given(clubMemberRepository.existsByClubIdAndEmail(CLUB_ID, "60201234@sangmyung.kr"))
                     .willReturn(true);
@@ -558,7 +558,7 @@ class ClubMemberServiceTest {
         void addMember_notClubAdmin() {
             // given
             Club club = createClub("otheradmin1");
-            given(clubRepository.findById(CLUB_ID)).willReturn(Optional.of(club));
+            given(clubRepository.findByIdForUpdate(CLUB_ID)).willReturn(Optional.of(club));
 
             // when & then
             assertThatThrownBy(() -> clubMemberService.addMember(USERNAME, CLUB_ID, createAddRequest(), "MEMBER"))

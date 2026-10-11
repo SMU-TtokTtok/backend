@@ -166,7 +166,9 @@ public class ApplicantAdminService {
 
     @Transactional
     public ApplicantFinalizeServiceResponse finalizeApplicantsStatus(ApplicantFinalizationRequest request) {
-        Club club = clubRepository.findById(request.clubId())
+        // 같은 동아리의 확정을 직렬화한다. 부원 존재 확인과 저장 사이에 다른 요청이 끼어들어
+        // 같은 지원자가 중복 등록되는 것을 막고, 반복·동시 요청이 같은 결과를 받게 한다. (#432)
+        Club club = clubRepository.findByIdForUpdate(request.clubId())
                 .orElseThrow(ClubNotFoundException::new);
         clubAccessPolicy.validateAdmin(club, request.username());
 
