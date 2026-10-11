@@ -29,7 +29,7 @@ SELECT COUNT(*) FROM applicants WHERE user_email IS NULL OR applyform_id IS NULL
 
 두 조회가 0건임을 확인해야 한다. 중복 레코드는 지원서·서류·평가의 연결을 검토하여 처리한다. 자동 삭제하지 않는다.
 `next-release-constraint.sql`은 검토용이며 현재 Flyway 경로에 포함되지 않는다.
-운영 후속 릴리스용 후보와 사전 점검 쿼리는 [deploy/migrations/pending](../../../deploy/migrations/pending/README.md)에 준비되어 있다. 후보 V28의 버전 번호는 실제 릴리스 직전에 다시 확인한다.
+운영용 마이그레이션은 `src/main/resources/db/migration/V28__add_applicant_user_form_unique_constraint.sql`(#429)이고, 사전 점검 쿼리와 적용 순서는 [deploy/migrations/pending](../../../deploy/migrations/pending/README.md)에 있다. V28의 버전 번호는 실제 릴리스 직전에 다시 확인한다.
 ALTER TABLE은 잠금을 유발하므로 데이터 크기와 트래픽에 맞춘 적용 시간을 따로 결정한다.
 사전 조회 이후 제약 적용 전에도 새 중복이 생길 수 있다. 제약 생성 시 중복이 발견되면
 마이그레이션은 실패·롤백되므로, 반영 직전 쓰기 제어와 재검증 방법을 운영 계획에서 결정한다.

@@ -5,7 +5,8 @@ import uuid
 
 ROOT = Path(__file__).resolve().parents[2]
 PENDING = ROOT / "deploy/migrations/pending"
-MIGRATION = (PENDING / "V28__add_applicant_user_form_unique_constraint.sql").read_text(encoding="utf-8")
+MIGRATION = (ROOT / "src/main/resources/db/migration/V28__add_applicant_user_form_unique_constraint.sql").read_text(
+    encoding="utf-8")
 PREFLIGHT = (PENDING / "check_applicant_duplicates.sql").read_text(encoding="utf-8")
 
 
