@@ -90,7 +90,11 @@ $env:TTOKTTOK_EXPERIMENT_OUT = 'load-test/results/issue-432/experiment.json'
 
 ## 4. 잠금 범위
 
-동아리 행을 잠근 채 같은 동아리를 참조하는 부원 INSERT를 실행하면 대기 없이 6.7ms에 끝났다(`blocked=false`). 동아리 행 잠금이 FK 확인을 막지 않는다. 발행된 SQL(`FOR NO KEY UPDATE` 여부)은 로그로 직접 확인하지 않았고 이 결과로 추정한다.
+동아리 행을 잠근 채 같은 동아리를 참조하는 부원 INSERT를 실행하면 대기 없이 끝났다(전체 실험 6.7ms, 단독 재실행 14.8ms, `blocked=false`).
+잠금을 잡은 세션이 마지막으로 실행한 SQL을 `pg_stat_activity`에서 읽어 확인한 결과, PostgreSQL 방언의 Hibernate 6.5.3은 `... from clubs ... where id=$1 for no key update`를 보낸다([lock-scope.json](lock-scope.json)).
+H2 통합 테스트는 H2 방언이라 `for update`가 나가지만 이는 PostgreSQL 동작이 아니다.
+
+비교를 위해 PostgreSQL에서 FK가 있는 부모·자식 테이블로 직접 확인했다. 부모 행을 `FOR UPDATE`로 잡으면 자식 INSERT가 FK 확인(`FOR KEY SHARE`)에서 막혀 lock_timeout 3초에 걸렸고(3281ms), `FOR NO KEY UPDATE`로 잡으면 290ms에 끝났다. 일반 `FOR UPDATE`였다면 합격 확정 중 같은 동아리를 참조하는 다른 쓰기가 대기했을 것이다.
 
 ## 트레이드오프와 선택 이유
 
