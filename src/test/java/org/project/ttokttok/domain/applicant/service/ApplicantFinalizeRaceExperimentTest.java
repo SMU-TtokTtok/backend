@@ -167,6 +167,11 @@ class ApplicantFinalizeRaceExperimentTest {
         assertThat(out).exists();
     }
 
+    @Test
+    void lockScopeOnly() throws Exception {
+        System.out.println("FINALIZE_RACE_EXPERIMENT lock_scope_only " + lockScope());
+    }
+
     // ---- scenarios ----
 
     private Map<String, Object> scenario(String kind) throws Exception {
@@ -264,6 +269,12 @@ class ApplicantFinalizeRaceExperimentTest {
                 }
             }));
             assertThat(locked.await(15, TimeUnit.SECONDS)).isTrue();
+            // 잠금을 잡은 세션이 마지막으로 실행한 SQL을 PostgreSQL에서 직접 읽어 실제 잠금 구문을 확인한다.
+            List<String> holderQueries = jdbcTemplate.queryForList("""
+                    select query from pg_stat_activity
+                    where datname = current_database() and state like 'idle in transaction%'
+                    order by state_change desc
+                    """, String.class);
             Future<Double> insert = executor.submit(() -> {
                 long t0 = System.nanoTime();
                 new TransactionTemplate(transactionManager).executeWithoutResult(s -> {
@@ -273,6 +284,7 @@ class ApplicantFinalizeRaceExperimentTest {
                 return ms(t0);
             });
             Map<String, Object> out = new LinkedHashMap<>();
+            out.put("lockHolderQueries", holderQueries);
             try {
                 out.put("memberInsertWhileClubRowLockedMs", insert.get(8, TimeUnit.SECONDS));
                 out.put("blocked", false);
