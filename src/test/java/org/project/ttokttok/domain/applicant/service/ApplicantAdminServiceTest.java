@@ -166,7 +166,7 @@ class ApplicantAdminServiceTest {
         void finalizeApplicantsStatus_otherClub_forbidden() {
             // given
             Club otherClub = createClub(OTHER_CLUB_ID, OTHER_USERNAME);
-            given(clubRepository.findById(OTHER_CLUB_ID))
+            given(clubRepository.findByIdForUpdate(OTHER_CLUB_ID))
                     .willReturn(Optional.of(otherClub));
 
             ApplicantFinalizationRequest request = ApplicantFinalizationRequest.of(
@@ -588,7 +588,7 @@ class ApplicantAdminServiceTest {
         @DisplayName("동아리가 없으면 ClubNotFoundException이 발생하고 후속 처리를 하지 않는다")
         void finalizeApplicantsStatus_throwsClubNotFoundException() {
             // given
-            given(clubRepository.findById(CLUB_ID))
+            given(clubRepository.findByIdForUpdate(CLUB_ID))
                     .willReturn(Optional.empty());
 
             ApplicantFinalizationRequest request = ApplicantFinalizationRequest.of(USERNAME, CLUB_ID, "DOCUMENT");
@@ -611,7 +611,7 @@ class ApplicantAdminServiceTest {
             ApplicantFinalizationRequest request = ApplicantFinalizationRequest.of(USERNAME, CLUB_ID, "DOCUMENT");
 
             Club club = createClub(CLUB_ID);
-            given(clubRepository.findById(CLUB_ID)).willReturn(Optional.of(club));
+            given(clubRepository.findByIdForUpdate(CLUB_ID)).willReturn(Optional.of(club));
 
             LocalDate interviewStartDate = LocalDate.of(2026, 8, 1);
             ApplyForm applyForm = mock(ApplyForm.class);
@@ -647,7 +647,7 @@ class ApplicantAdminServiceTest {
             ApplicantFinalizationRequest request = ApplicantFinalizationRequest.of(USERNAME, CLUB_ID, "INTERVIEW");
 
             Club club = createClub(CLUB_ID);
-            given(clubRepository.findById(CLUB_ID)).willReturn(Optional.of(club));
+            given(clubRepository.findByIdForUpdate(CLUB_ID)).willReturn(Optional.of(club));
 
             ApplyForm applyForm = mock(ApplyForm.class);
             given(applyForm.getId()).willReturn(APPLY_FORM_ID);
@@ -685,7 +685,7 @@ class ApplicantAdminServiceTest {
             ApplicantFinalizationRequest request = ApplicantFinalizationRequest.of(USERNAME, CLUB_ID, "INTERVIEW");
 
             Club club = createClub(CLUB_ID);
-            given(clubRepository.findById(CLUB_ID)).willReturn(Optional.of(club));
+            given(clubRepository.findByIdForUpdate(CLUB_ID)).willReturn(Optional.of(club));
 
             ApplyForm applyForm = mock(ApplyForm.class);
             given(applyForm.getId()).willReturn(APPLY_FORM_ID);
@@ -712,7 +712,7 @@ class ApplicantAdminServiceTest {
             ApplicantFinalizationRequest request = ApplicantFinalizationRequest.of(USERNAME, CLUB_ID, "DOCUMENT");
 
             Club club = createClub(CLUB_ID);
-            given(clubRepository.findById(CLUB_ID)).willReturn(Optional.of(club));
+            given(clubRepository.findByIdForUpdate(CLUB_ID)).willReturn(Optional.of(club));
             given(applyFormRepository.findByClubIdAndStatus(CLUB_ID, ACTIVE)).willReturn(Optional.empty());
 
             // when & then
@@ -725,7 +725,7 @@ class ApplicantAdminServiceTest {
         void finalizeApplicantsStatus_throwsNotClubAdminException() {
             // given
             Club club = createClub(CLUB_ID);
-            given(clubRepository.findById(CLUB_ID)).willReturn(Optional.of(club));
+            given(clubRepository.findByIdForUpdate(CLUB_ID)).willReturn(Optional.of(club));
 
             ApplicantFinalizationRequest request = ApplicantFinalizationRequest.of("otherAdmin", CLUB_ID, "DOCUMENT");
 
