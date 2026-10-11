@@ -28,3 +28,20 @@ python deploy/test/test-applicant-unique-migration.py
 ```
 
 임시 스키마에서 실제 SQL 파일을 실행해 제약명·중복 차단·다른 조합의 정상 저장·기존 중복 시 실패·사전 조회를 확인한다. 성공/실패 테스트의 스키마와 데이터는 트랜잭션 롤백으로 제거한다. 운영 DB를 사용하지 않는다.
+
+## #432 club_members UNIQUE(club_id, email) 적용 순서
+
+합격 확정과 수동 부원 등록이 동아리 행 잠금으로 중복 등록을 막는다(코드, #432). 이 제약은 잠금을 잡지 않는 쓰기 경로가 생겨도 중복이 저장되지 않게 하는 DB 백스톱이며, 실험 근거는 `load-test/results/issue-432/MEASUREMENTS.md`.
+SQL은 `add_club_member_unique_constraint.sql`, 사전 점검은 `check_club_member_duplicates.sql`이다. 둘 다 이 폴더에 있으며 자동 실행되지 않는다.
+
+1. 동아리 행 잠금 코드(#432)를 먼저 배포하고 이전 코드의 종료를 확인한다. 이전 코드가 남아 있는 동안 제약을 추가하면 이전 코드의 경쟁 요청이 500이 된다.
+2. `check_club_member_duplicates.sql`로 중복·NULL·기존 제약/인덱스를 읽기 전용 점검한다. 중복이 있으면 부원 데이터를 자동 삭제하지 않고, 정리 방안을 별도로 승인받는다. 대소문자만 다른 이메일은 UNIQUE가 막지 못하므로 결과를 별도로 검토한다.
+3. 테이블 잠금과 작업 시간을 검토한다. 사전 조회 이후 새 중복이 생길 수 있으므로 반영 직전 재확인 방법을 정한다.
+4. 배포 직전 최신 Flyway 버전을 다시 확인하고(현재 V28), `add_club_member_unique_constraint.sql`을 다음 번호의 `src/main/resources/db/migration/V<번호>__add_club_member_club_email_unique_constraint.sql`로 옮겨 후속 릴리스에 포함한다. 1~3 전에는 옮기지 않는다.
+5. 제약 추가 후 합격 확정 반복·동시 요청이 같은 결과를 돌려주고 중복 부원이 없는지, 수동 등록의 중복 이메일이 기존처럼 409인지 확인한다.
+
+현재 작업은 SQL 작성 및 전용 테스트 DB 검증이며 운영 DB 적용은 아니다.
+
+```powershell
+python deploy/test/test-club-member-unique-migration.py
+```
