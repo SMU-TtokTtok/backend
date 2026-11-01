@@ -6,6 +6,9 @@ import jakarta.persistence.EntityManager;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,6 +37,8 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willAnswer;
+import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -47,6 +52,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 class UserAuthControllerIntegrationTest {
     private static final String CODE = "123456";
+    private static final String NEWER_CODE = "654321";
     private static final String PASSWORD = "NewPassword123!";
 
     @Autowired private MockMvc mockMvc;
@@ -82,7 +88,7 @@ class UserAuthControllerIntegrationTest {
     @Test
     void sendVerificationCode_commitsNewPendingCode() throws Exception {
         given(emailService.isValidSangmyungEmail(email)).willReturn(true);
-        given(emailService.sendVerificationCode(email)).willReturn(CODE);
+        given(emailService.generateVerificationCode()).willReturn(CODE);
         LocalDateTime before = LocalDateTime.now();
 
         perform("send-verification", Map.of("email", email))
@@ -183,7 +189,7 @@ class UserAuthControllerIntegrationTest {
     @Test
     void sendResetCode_commitsCodeForExistingPasswordAccount() throws Exception {
         saveLocalUser();
-        given(emailService.sendPasswordResetCode(email)).willReturn(CODE);
+        given(emailService.generateVerificationCode()).willReturn(CODE);
 
         perform("send-reset-code", Map.of("email", email))
                 .andExpect(status().isOk())
@@ -197,18 +203,19 @@ class UserAuthControllerIntegrationTest {
     @ValueSource(booleans = {false, true})
     void mailIsSentWithoutHoldingDbConnection(boolean passwordReset) throws Exception {
         AtomicReference<Integer> activeConnectionsWhileSending = new AtomicReference<>();
+        given(emailService.generateVerificationCode()).willReturn(CODE);
         if (passwordReset) {
             saveLocalUser();
-            given(emailService.sendPasswordResetCode(email)).willAnswer(inv -> {
+            willAnswer(inv -> {
                 activeConnectionsWhileSending.set(dataSource.getHikariPoolMXBean().getActiveConnections());
-                return CODE;
-            });
+                return null;
+            }).given(emailService).sendPasswordResetCode(email, CODE);
         } else {
             given(emailService.isValidSangmyungEmail(email)).willReturn(true);
-            given(emailService.sendVerificationCode(email)).willAnswer(inv -> {
+            willAnswer(inv -> {
                 activeConnectionsWhileSending.set(dataSource.getHikariPoolMXBean().getActiveConnections());
-                return CODE;
-            });
+                return null;
+            }).given(emailService).sendVerificationCode(email, CODE);
         }
 
         perform(passwordReset ? "send-reset-code" : "send-verification", Map.of("email", email))
@@ -220,23 +227,54 @@ class UserAuthControllerIntegrationTest {
 
     @ParameterizedTest
     @ValueSource(booleans = {false, true})
-    void mailFailure_rollsBackPendingCodeUpdate(boolean passwordReset) throws Exception {
+    // 코드는 발송 전에 커밋되므로 발송이 실패해도 새 코드가 남는다. 받지 못한 코드는 5분 뒤 만료된다.
+    void mailFailure_returnsErrorAfterNewCodeIsCommitted(boolean passwordReset) throws Exception {
         EmailVerification pending = saveVerification(false, LocalDateTime.now().plusMinutes(5));
         RuntimeException failure = new RuntimeException("SMTP unavailable");
+        given(emailService.generateVerificationCode()).willReturn(NEWER_CODE);
         if (passwordReset) {
             saveLocalUser();
-            given(emailService.sendPasswordResetCode(email)).willThrow(failure);
+            willThrow(failure).given(emailService).sendPasswordResetCode(email, NEWER_CODE);
         } else {
             given(emailService.isValidSangmyungEmail(email)).willReturn(true);
-            given(emailService.sendVerificationCode(email)).willThrow(failure);
+            willThrow(failure).given(emailService).sendVerificationCode(email, NEWER_CODE);
         }
 
         perform(passwordReset ? "send-reset-code" : "send-verification", Map.of("email", email))
                 .andExpect(status().isInternalServerError());
 
-        assertThat(verificationRepository.findById(pending.getId()).orElseThrow().isVerified()).isFalse();
-        assertThat(verificationRepository.findByEmailAndCodeAndIsVerifiedFalse(email, CODE).orElseThrow().getId())
-                .isEqualTo(pending.getId());
+        assertThat(verificationRepository.findById(pending.getId()).orElseThrow().isVerified()).isTrue();
+        assertThat(verificationRepository.findByEmailAndCodeAndIsVerifiedFalse(email, NEWER_CODE)).isPresent();
+    }
+
+    // 이전 요청의 메일이 늦게 끝나도 나중 요청의 코드는 유효해야 한다.
+    // 발송 뒤에 저장하면 늦게 끝난 이전 요청이 나중 코드를 만료시키고 자기 코드를 남긴다.
+    @Test
+    void lateMailOfEarlierRequest_keepsNewerCodeValid() throws Exception {
+        CountDownLatch earlierSending = new CountDownLatch(1);
+        CountDownLatch newerDone = new CountDownLatch(1);
+        given(emailService.isValidSangmyungEmail(email)).willReturn(true);
+        given(emailService.generateVerificationCode()).willReturn(CODE, NEWER_CODE);
+        willAnswer(inv -> {
+            earlierSending.countDown();
+            newerDone.await(10, TimeUnit.SECONDS);
+            return null;
+        }).given(emailService).sendVerificationCode(email, CODE);
+
+        CompletableFuture<Void> earlier = CompletableFuture.runAsync(() -> {
+            try {
+                perform("send-verification", Map.of("email", email)).andExpect(status().isOk());
+            } catch (Exception e) {
+                throw new IllegalStateException(e);
+            }
+        });
+        assertThat(earlierSending.await(10, TimeUnit.SECONDS)).isTrue();
+        perform("send-verification", Map.of("email", email)).andExpect(status().isOk());
+        newerDone.countDown();
+        earlier.get(10, TimeUnit.SECONDS);
+
+        perform("verify-email", Map.of("email", email, "code", NEWER_CODE))
+                .andExpect(status().isOk());
     }
 
     @ParameterizedTest

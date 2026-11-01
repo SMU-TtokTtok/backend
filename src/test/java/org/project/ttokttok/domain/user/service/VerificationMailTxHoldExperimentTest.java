@@ -57,6 +57,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willAnswer;
 
 /**
  * 인증코드 메일(SMTP)이 트랜잭션 안에서 동기 실행될 때 DB 커넥션 점유와 다른 API 영향을 재는 실험.
@@ -168,7 +169,7 @@ class VerificationMailTxHoldExperimentTest {
 
     private void warmUp() throws Exception {
         given(emailService.isValidSangmyungEmail(anyString())).willReturn(true);
-        given(emailService.sendVerificationCode(anyString())).willReturn("123456");
+        given(emailService.generateVerificationCode()).willReturn("123456");
         for (int i = 0; i < 20; i++) {
             sendVerification(uniqueEmail());
             probe();
@@ -177,10 +178,10 @@ class VerificationMailTxHoldExperimentTest {
 
     /** 인증코드 발송 SENDS개를 동시에 보내고, 그동안 다른 API(공지 목록)를 계속 호출한다. */
     private Map<String, Object> runHttpRepetition(long delayMs) throws Exception {
-        given(emailService.sendVerificationCode(anyString())).willAnswer(inv -> {
+        willAnswer(inv -> {
             Thread.sleep(delayMs);
-            return "123456";
-        });
+            return null;
+        }).given(emailService).sendVerificationCode(anyString(), anyString());
 
         ConcurrentLinkedQueue<long[]> probes = new ConcurrentLinkedQueue<>(); // {startNanos, latencyNanos, status}
         AtomicBoolean stopProbes = new AtomicBoolean();

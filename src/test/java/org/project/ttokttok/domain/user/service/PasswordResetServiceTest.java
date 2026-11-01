@@ -22,6 +22,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -95,9 +96,9 @@ class PasswordResetServiceTest {
     }
 
     @Test
-    void resetCodeChecksUserThenSendsExpiresAndSaves() {
+    void resetCodeChecksUserThenExpiresSavesAndSends() {
         given(userRepository.findByEmail(EMAIL)).willReturn(Optional.of(localUser()));
-        given(emailService.sendPasswordResetCode(EMAIL)).willReturn(CODE);
+        given(emailService.generateVerificationCode()).willReturn(CODE);
         LocalDateTime before = LocalDateTime.now();
 
         service.sendPasswordResetCode(EMAIL);
@@ -105,9 +106,9 @@ class PasswordResetServiceTest {
         ArgumentCaptor<EmailVerification> saved = ArgumentCaptor.forClass(EmailVerification.class);
         InOrder order = inOrder(userRepository, verificationRepository, emailService);
         order.verify(userRepository).findByEmail(EMAIL);
-        order.verify(emailService).sendPasswordResetCode(EMAIL);
         order.verify(verificationRepository).expireAllPendingVerifications(EMAIL);
         order.verify(verificationRepository).save(saved.capture());
+        order.verify(emailService).sendPasswordResetCode(EMAIL, CODE);
         assertThat(saved.getValue().getEmail()).isEqualTo(EMAIL);
         assertThat(saved.getValue().getCode()).isEqualTo(CODE);
         assertThat(saved.getValue().isVerified()).isFalse();
@@ -129,13 +130,14 @@ class PasswordResetServiceTest {
     }
 
     @Test
-    void failedResetCodeSendDoesNotSaveNewCode() {
+    void failedResetCodeSendPropagatesAfterCodeIsSaved() {
         given(userRepository.findByEmail(EMAIL)).willReturn(Optional.of(localUser()));
+        given(emailService.generateVerificationCode()).willReturn(CODE);
         RuntimeException failure = new RuntimeException("SMTP failed");
-        given(emailService.sendPasswordResetCode(EMAIL)).willThrow(failure);
+        willThrow(failure).given(emailService).sendPasswordResetCode(EMAIL, CODE);
 
         assertThatThrownBy(() -> service.sendPasswordResetCode(EMAIL)).isSameAs(failure);
-        verify(verificationRepository, never()).save(any());
+        verify(verificationRepository).save(any());
     }
 
     private User localUser() {
