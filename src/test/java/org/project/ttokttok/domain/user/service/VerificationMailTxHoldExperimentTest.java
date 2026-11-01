@@ -31,6 +31,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
@@ -94,9 +95,9 @@ class VerificationMailTxHoldExperimentTest {
             .map(Long::parseLong).toList();
 
     // Hikari가 빌려준 커넥션마다 반납까지 걸린 시간·획득 대기 시간·타임아웃을 모은다.
-    private static final ConcurrentLinkedQueue<Long> USAGE_MS = new ConcurrentLinkedQueue<>();
-    private static final ConcurrentLinkedQueue<Long> SEND_USAGE_MS = new ConcurrentLinkedQueue<>();
-    private static final ConcurrentLinkedQueue<Long> PROBE_USAGE_MS = new ConcurrentLinkedQueue<>();
+    // 점유 시간은 {millis, 출처} 한 큐에 담아, 한 번 복사한 값에서 전체·발송·조회를 나눈다(합계가 어긋나지 않게).
+    private static final int OTHER = 0, SEND = 1, PROBE = 2;
+    private static final ConcurrentLinkedQueue<long[]> USAGE = new ConcurrentLinkedQueue<>();
     private static final ConcurrentLinkedQueue<Long> ACQUIRE_NANOS = new ConcurrentLinkedQueue<>();
     private static final AtomicInteger TIMEOUTS = new AtomicInteger();
 
@@ -220,9 +221,7 @@ class VerificationMailTxHoldExperimentTest {
             sendResults.add(f.get(5, TimeUnit.MINUTES));
         }
         long loadEnd = System.nanoTime();
-        List<Long> usage = new ArrayList<>(USAGE_MS);
-        List<Long> sendUsage = new ArrayList<>(SEND_USAGE_MS);
-        List<Long> probeUsage = new ArrayList<>(PROBE_USAGE_MS);
+        List<long[]> usage = new ArrayList<>(USAGE);
         List<Long> acquire = new ArrayList<>(ACQUIRE_NANOS);
         int timeouts = TIMEOUTS.get();
         stopProbes.set(true);
@@ -242,9 +241,9 @@ class VerificationMailTxHoldExperimentTest {
         rep.put("probeBaselineStatus", statusCounts(baseline.stream().map(p -> p[2]).toList()));
         rep.put("probeDuringLatencyMs", stats(during.stream().map(p -> p[1]).toList(), VerificationMailTxHoldExperimentTest::ms));
         rep.put("probeDuringStatus", statusCounts(during.stream().map(p -> p[2]).toList()));
-        rep.put("connectionUsageMs", stats(usage, Long::doubleValue));
-        rep.put("sendConnectionUsageMs", stats(sendUsage, Long::doubleValue));
-        rep.put("probeConnectionUsageMs", stats(probeUsage, Long::doubleValue));
+        rep.put("connectionUsageMs", stats(usageOf(usage, -1), Long::doubleValue));
+        rep.put("sendConnectionUsageMs", stats(usageOf(usage, SEND), Long::doubleValue));
+        rep.put("probeConnectionUsageMs", stats(usageOf(usage, PROBE), Long::doubleValue));
         rep.put("connectionAcquireWaitMs", stats(acquire, VerificationMailTxHoldExperimentTest::ms));
         rep.put("connectionTimeouts", timeouts);
         rep.putAll(sampler.summary());
@@ -284,7 +283,7 @@ class VerificationMailTxHoldExperimentTest {
                 sampler.stop();
                 Map<String, Object> r = new LinkedHashMap<>();
                 r.put("taskLatencyMs", stats(latency, VerificationMailTxHoldExperimentTest::ms));
-                r.put("connectionUsageMs", stats(new ArrayList<>(USAGE_MS), Long::doubleValue));
+                r.put("connectionUsageMs", stats(usageOf(new ArrayList<>(USAGE), -1), Long::doubleValue));
                 r.putAll(sampler.summary());
                 reps.add(r);
             }
@@ -336,17 +335,20 @@ class VerificationMailTxHoldExperimentTest {
 
     /** 커넥션을 반납한 요청 스레드의 URI로 발송 요청과 공지 조회의 점유 시간을 나눈다. */
     private static void recordUsage(long millis) {
-        USAGE_MS.add(millis);
+        int source = OTHER;
         if (RequestContextHolder.getRequestAttributes() instanceof ServletRequestAttributes attrs) {
-            String uri = attrs.getRequest().getRequestURI();
-            (uri.endsWith("/send-verification") ? SEND_USAGE_MS : PROBE_USAGE_MS).add(millis);
+            source = attrs.getRequest().getRequestURI().endsWith("/send-verification") ? SEND : PROBE;
         }
+        USAGE.add(new long[]{millis, source});
+    }
+
+    /** source가 -1이면 전체. */
+    private static List<Long> usageOf(List<long[]> usage, int source) {
+        return usage.stream().filter(u -> source < 0 || u[1] == source).map(u -> u[0]).toList();
     }
 
     private static void resetPoolMetrics() {
-        USAGE_MS.clear();
-        SEND_USAGE_MS.clear();
-        PROBE_USAGE_MS.clear();
+        USAGE.clear();
         ACQUIRE_NANOS.clear();
         TIMEOUTS.set(0);
     }
@@ -398,6 +400,7 @@ class VerificationMailTxHoldExperimentTest {
         private final List<int[]> pool = new ArrayList<>();      // {active, idle, pending}
         private final List<long[]> pg = new ArrayList<>();       // {idleInTxCount, maxIdleInTxMs}
         private final Map<String, Long> idleInTxQueries = new TreeMap<>();
+        private final AtomicReference<Exception> failure = new AtomicReference<>();
         private Thread thread;
 
         void start() {
@@ -424,15 +427,19 @@ class VerificationMailTxHoldExperimentTest {
                         Thread.sleep(SAMPLE_INTERVAL_MS);
                     }
                 } catch (Exception e) {
-                    throw new IllegalStateException(e);
+                    failure.set(e);
                 }
             });
             thread.start();
         }
 
+        /** 샘플러 스레드가 실패했으면 빈 표본으로 결과를 남기지 않도록 측정을 실패시킨다. */
         void stop() throws InterruptedException {
             running.set(false);
             thread.join();
+            if (failure.get() != null) {
+                throw new IllegalStateException("pool/pg sampler failed", failure.get());
+            }
         }
 
         Map<String, Object> summary() {
