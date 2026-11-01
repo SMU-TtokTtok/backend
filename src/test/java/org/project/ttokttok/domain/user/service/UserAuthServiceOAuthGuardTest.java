@@ -15,12 +15,15 @@ import org.project.ttokttok.global.auth.jwt.service.TokenProvider;
 import org.project.ttokttok.infrastructure.email.service.EmailService;
 import org.project.ttokttok.infrastructure.redis.service.RefreshTokenRedisService;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
@@ -52,7 +55,8 @@ class UserAuthServiceOAuthGuardTest {
 
     @BeforeEach
     void setUp() {
-        EmailVerificationService verificationService = new EmailVerificationService(emailVerificationRepository, emailService);
+        EmailVerificationService verificationService = new EmailVerificationService(emailVerificationRepository, emailService,
+                new TransactionTemplate(mock(PlatformTransactionManager.class)));
         userAuthService = new UserAuthService(userRepository, verificationService,
                 tokenProvider, passwordEncoder, refreshTokenRedisService);
     }

@@ -9,16 +9,17 @@ import org.project.ttokttok.domain.user.repository.EmailVerificationRepository;
 import org.project.ttokttok.infrastructure.email.service.EmailService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class EmailVerificationService {
     private static final long CODE_VALIDITY_MINUTES = 5;
 
     private final EmailVerificationRepository emailVerificationRepository;
     private final EmailService emailService;
+    private final TransactionTemplate transactionTemplate;
 
     public void sendVerificationCode(String email) {
         if (!emailService.isValidSangmyungEmail(email)) {
@@ -28,6 +29,7 @@ public class EmailVerificationService {
         log.info("인증코드 발송 및 저장 완료 : {}", email);
     }
 
+    @Transactional
     public boolean verifyEmail(String email, String code) {
         EmailVerification verification = emailVerificationRepository
                 .findByEmailAndCodeAndIsVerifiedFalse(email, code)
@@ -61,14 +63,17 @@ public class EmailVerificationService {
         log.info("비밀번호 재설정 코드 발송 완료: {}", email);
     }
 
+    // 메일(SMTP)은 트랜잭션 밖에서 먼저 보낸다. 트랜잭션 안에서 보내면 발송이 끝날 때까지
+    // DB 커넥션을 쥐고 있어 느린 SMTP가 풀을 고갈시킨다. 발송이 실패하면 DB는 그대로다.
     private void sendCode(String email, Supplier<String> codeSender) {
-        emailVerificationRepository.expireAllPendingVerifications(email);
         String code = codeSender.get();
-        EmailVerification verification = EmailVerification.builder()
-                .email(email)
-                .code(code)
-                .expiresAt(LocalDateTime.now().plusMinutes(CODE_VALIDITY_MINUTES))
-                .build();
-        emailVerificationRepository.save(verification);
+        transactionTemplate.executeWithoutResult(status -> {
+            emailVerificationRepository.expireAllPendingVerifications(email);
+            emailVerificationRepository.save(EmailVerification.builder()
+                    .email(email)
+                    .code(code)
+                    .expiresAt(LocalDateTime.now().plusMinutes(CODE_VALIDITY_MINUTES))
+                    .build());
+        });
     }
 }

@@ -17,6 +17,8 @@ import org.project.ttokttok.domain.user.repository.UserRepository;
 import org.project.ttokttok.domain.user.service.dto.request.ResetPasswordServiceRequest;
 import org.project.ttokttok.infrastructure.email.service.EmailService;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -35,7 +37,8 @@ class PasswordResetServiceTest {
     @BeforeEach
     void setUp() {
         service = new PasswordResetService(userRepository,
-                new EmailVerificationService(verificationRepository, emailService), passwordEncoder);
+                new EmailVerificationService(verificationRepository, emailService,
+                        new TransactionTemplate(mock(PlatformTransactionManager.class))), passwordEncoder);
     }
 
     @Test
@@ -92,7 +95,7 @@ class PasswordResetServiceTest {
     }
 
     @Test
-    void resetCodeChecksUserThenExpiresSendsAndSaves() {
+    void resetCodeChecksUserThenSendsExpiresAndSaves() {
         given(userRepository.findByEmail(EMAIL)).willReturn(Optional.of(localUser()));
         given(emailService.sendPasswordResetCode(EMAIL)).willReturn(CODE);
         LocalDateTime before = LocalDateTime.now();
@@ -102,8 +105,8 @@ class PasswordResetServiceTest {
         ArgumentCaptor<EmailVerification> saved = ArgumentCaptor.forClass(EmailVerification.class);
         InOrder order = inOrder(userRepository, verificationRepository, emailService);
         order.verify(userRepository).findByEmail(EMAIL);
-        order.verify(verificationRepository).expireAllPendingVerifications(EMAIL);
         order.verify(emailService).sendPasswordResetCode(EMAIL);
+        order.verify(verificationRepository).expireAllPendingVerifications(EMAIL);
         order.verify(verificationRepository).save(saved.capture());
         assertThat(saved.getValue().getEmail()).isEqualTo(EMAIL);
         assertThat(saved.getValue().getCode()).isEqualTo(CODE);

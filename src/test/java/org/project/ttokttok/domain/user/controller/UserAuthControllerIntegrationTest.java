@@ -1,10 +1,12 @@
 package org.project.ttokttok.domain.user.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.zaxxer.hikari.HikariDataSource;
 import jakarta.persistence.EntityManager;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -54,6 +56,7 @@ class UserAuthControllerIntegrationTest {
     @Autowired private PasswordEncoder passwordEncoder;
     @Autowired private EntityManager entityManager;
     @Autowired private PlatformTransactionManager transactionManager;
+    @Autowired private HikariDataSource dataSource;
 
     @MockitoBean private EmailService emailService;
     @MockitoBean private FCMService fcmService;
@@ -186,6 +189,32 @@ class UserAuthControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("비밀번호 재설정 코드가 발송되었습니다."));
 
+        assertThat(verificationRepository.findByEmailAndCodeAndIsVerifiedFalse(email, CODE)).isPresent();
+    }
+
+    // 메일 발송 중 커넥션을 쥐고 있으면 느린 SMTP가 풀을 고갈시킨다. 바깥 트랜잭션이 보류(suspend)만 된 경우도 잡는다.
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void mailIsSentWithoutHoldingDbConnection(boolean passwordReset) throws Exception {
+        AtomicReference<Integer> activeConnectionsWhileSending = new AtomicReference<>();
+        if (passwordReset) {
+            saveLocalUser();
+            given(emailService.sendPasswordResetCode(email)).willAnswer(inv -> {
+                activeConnectionsWhileSending.set(dataSource.getHikariPoolMXBean().getActiveConnections());
+                return CODE;
+            });
+        } else {
+            given(emailService.isValidSangmyungEmail(email)).willReturn(true);
+            given(emailService.sendVerificationCode(email)).willAnswer(inv -> {
+                activeConnectionsWhileSending.set(dataSource.getHikariPoolMXBean().getActiveConnections());
+                return CODE;
+            });
+        }
+
+        perform(passwordReset ? "send-reset-code" : "send-verification", Map.of("email", email))
+                .andExpect(status().isOk());
+
+        assertThat(activeConnectionsWhileSending.get()).isZero();
         assertThat(verificationRepository.findByEmailAndCodeAndIsVerifiedFalse(email, CODE)).isPresent();
     }
 
