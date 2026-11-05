@@ -2,7 +2,6 @@ package org.project.ttokttok.domain.applicant.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.project.ttokttok.domain.applicant.controller.enums.Kind;
 import org.project.ttokttok.domain.applicant.domain.Applicant;
 import org.project.ttokttok.domain.applicant.domain.enums.ApplicantPhase;
 import org.project.ttokttok.domain.applicant.domain.enums.PhaseStatus;
@@ -160,7 +159,7 @@ public class ApplicantAdminService {
             throw new UnAuthorizedApplicantAccessException();
         }
 
-        ApplicantPhase phase = Kind.toApplicantPhase(request.kind());
+        ApplicantPhase phase = ApplicantPhase.from(request.kind());
         applicant.changeEvaluationStatus(phase, request.status());
     }
 
@@ -173,7 +172,7 @@ public class ApplicantAdminService {
         clubAccessPolicy.validateAdmin(club, request.username());
 
         ApplyForm currentApplyForm = findActiveApplyForm(request.clubId());
-        ApplicantPhase phase = Kind.toApplicantPhase(request.kind());
+        ApplicantPhase phase = ApplicantPhase.from(request.kind());
         int passedApplicantCount = processApplicants(currentApplyForm, club, phase);
         int finalizedApplicantCount =
                 calculateFinalizedApplicantCount(currentApplyForm.getId(), phase) + passedApplicantCount;
@@ -195,7 +194,7 @@ public class ApplicantAdminService {
         clubAccessPolicy.validateAdmin(club, username);
 
         ApplyForm currentApplyForm = findActiveApplyForm(clubId);
-        ApplicantPhase phase = Kind.toApplicantPhase(kind);
+        ApplicantPhase phase = ApplicantPhase.from(kind);
 
         List<String> passedEmails = filterApplicantsByStatus(currentApplyForm.getId(), phase, PASS)
                 .stream()
