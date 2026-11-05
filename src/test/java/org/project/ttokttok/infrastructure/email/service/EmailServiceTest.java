@@ -10,7 +10,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
-import org.project.ttokttok.domain.applicant.controller.dto.request.MailFormatRequest;
+import org.project.ttokttok.infrastructure.email.dto.ResultMailContent;
 
 import jakarta.mail.internet.MimeMessage;
 import org.junit.jupiter.api.BeforeEach;
@@ -230,7 +230,7 @@ class EmailServiceTest {
             MimeMessage mimeMessage = mock(MimeMessage.class);
             when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
             List<String> emails = List.of("a@sangmyung.kr", "b@gmail.com", "c@naver.com");
-            MailFormatRequest request = new MailFormatRequest("합격 안내", "축하합니다.");
+            ResultMailContent request = new ResultMailContent("합격 안내", "축하합니다.");
 
             // when
             emailService.sendResultMail(emails, request);
@@ -244,7 +244,7 @@ class EmailServiceTest {
         void skipsInvalidEmails() {
             // given
             List<String> emails = List.of("not-an-email", "  ", "@no-local.kr");
-            MailFormatRequest request = new MailFormatRequest("합격 안내", "축하합니다.");
+            ResultMailContent request = new ResultMailContent("합격 안내", "축하합니다.");
 
             // when
             emailService.sendResultMail(emails, request);

@@ -19,7 +19,7 @@ triggers:
 
 # Ship Skill
 
-Callable directly as a typed slash command via [`/ship`](../../../.claude/commands/ship.md), or picked up automatically when a prompt matches one of the `triggers` above.
+Callable directly as the `/ship` slash command, or picked up automatically when a prompt matches this skill's `description`.
 
 Automates the full `ttokttok` task pipeline described in [`maintenance/HARNESS.md`](../../../maintenance/HARNESS.md):
 

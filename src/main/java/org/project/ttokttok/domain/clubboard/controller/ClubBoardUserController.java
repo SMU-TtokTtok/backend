@@ -2,8 +2,8 @@ package org.project.ttokttok.domain.clubboard.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.project.ttokttok.domain.clubboard.controller.docs.ClubBoardUserDocs;
-import org.project.ttokttok.domain.clubboard.controller.dto.response.ClubBoardDetailResponse;
-import org.project.ttokttok.domain.clubboard.controller.dto.response.ClubBoardListResponse;
+import org.project.ttokttok.domain.clubboard.service.dto.response.ClubBoardDetailResponse;
+import org.project.ttokttok.domain.clubboard.service.dto.response.ClubBoardListResponse;
 import org.project.ttokttok.domain.clubboard.service.ClubBoardUserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

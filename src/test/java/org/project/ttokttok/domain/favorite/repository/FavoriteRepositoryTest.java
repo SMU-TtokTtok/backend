@@ -262,12 +262,12 @@ class FavoriteRepositoryTest implements RepositoryTestSupport {
     }
 
     @Nested
-    @DisplayName("findFavoritesByRequest (Custom Repository) 메서드")
-    class FindFavoritesByRequestTest {
+    @DisplayName("findFavorites (Custom Repository) 메서드")
+    class FindFavoritesTest {
 
         @Test
         @DisplayName("[최신순] 커서 기반 페이징이 정상 동작한다")
-        void findFavoritesByRequest_Latest_CursorPaging() throws InterruptedException {
+        void findFavorites_Latest_CursorPaging() throws InterruptedException {
             // given
             favoriteRepository.save(Favorite.builder().user(testUser).club(testClub1).build());
             em.flush(); 
@@ -286,7 +286,7 @@ class FavoriteRepositoryTest implements RepositoryTestSupport {
                     .build();
 
             // when
-            List<Favorite> results1 = favoriteRepository.findFavoritesByRequest(request1);
+            List<Favorite> results1 = favoriteRepository.findFavorites(request1.userEmail(), request1.cursor(), request1.size(), request1.sort());
 
             // then
             assertThat(results1).hasSize(2); 
@@ -301,7 +301,7 @@ class FavoriteRepositoryTest implements RepositoryTestSupport {
                     .sort("latest")
                     .build();
 
-            List<Favorite> results2 = favoriteRepository.findFavoritesByRequest(request2);
+            List<Favorite> results2 = favoriteRepository.findFavorites(request2.userEmail(), request2.cursor(), request2.size(), request2.sort());
 
             assertThat(results2).hasSize(1);
             assertThat(results2.get(0).getClub().getId()).isEqualTo(testClub1.getId());
@@ -309,7 +309,7 @@ class FavoriteRepositoryTest implements RepositoryTestSupport {
 
         @Test
         @DisplayName("[멤버수순] 멤버 수가 다를 때 멤버수 기준으로 정렬 및 페이징된다")
-        void findFavoritesByRequest_MemberCount_DifferentCount() throws InterruptedException {
+        void findFavorites_MemberCount_DifferentCount() throws InterruptedException {
             // given
             // testClub2에 멤버 추가 (1명), testClub1은 0명
             addClubMember(testClub2, "멤버1", "member1@test.com");
@@ -328,7 +328,7 @@ class FavoriteRepositoryTest implements RepositoryTestSupport {
                     .build();
 
             // when
-            List<Favorite> results = favoriteRepository.findFavoritesByRequest(request);
+            List<Favorite> results = favoriteRepository.findFavorites(request.userEmail(), request.cursor(), request.size(), request.sort());
 
             // then
             assertThat(results).hasSize(2);
@@ -338,7 +338,7 @@ class FavoriteRepositoryTest implements RepositoryTestSupport {
 
         @Test
         @DisplayName("[멤버수순] 멤버 수가 같을 때 최신순으로 정렬 및 페이징된다")
-        void findFavoritesByRequest_MemberCount_SameCount() throws InterruptedException {
+        void findFavorites_MemberCount_SameCount() throws InterruptedException {
             // given
             // 두 동아리 모두 멤버 0명
             favoriteRepository.save(Favorite.builder().user(testUser).club(testClub1).build());
@@ -358,7 +358,7 @@ class FavoriteRepositoryTest implements RepositoryTestSupport {
                     .build();
 
             // when
-            List<Favorite> results1 = favoriteRepository.findFavoritesByRequest(request1);
+            List<Favorite> results1 = favoriteRepository.findFavorites(request1.userEmail(), request1.cursor(), request1.size(), request1.sort());
 
             // then
             assertThat(results1).hasSize(2);
@@ -373,7 +373,7 @@ class FavoriteRepositoryTest implements RepositoryTestSupport {
                     .sort("member_count")
                     .build();
 
-            List<Favorite> results2 = favoriteRepository.findFavoritesByRequest(request2);
+            List<Favorite> results2 = favoriteRepository.findFavorites(request2.userEmail(), request2.cursor(), request2.size(), request2.sort());
 
             assertThat(results2).hasSize(1);
             assertThat(results2.get(0).getClub().getId()).isEqualTo(testClub1.getId());

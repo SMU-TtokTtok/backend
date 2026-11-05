@@ -1,6 +1,6 @@
 # Rule: Commit Granularity
 
-> Indexed from [`AGENTS.md`](../../AGENTS.md) → Git Conventions. Applied by the `/ship` pipeline ([`.omc/skills/ship/SKILL.md`](../../.omc/skills/ship/SKILL.md)) and by [`maintenance/HARNESS.md`](../../maintenance/HARNESS.md) step 5.
+> Indexed from [`AGENTS.md`](../../AGENTS.md) → Git Conventions. Applied by the `/ship` pipeline ([`.claude/skills/ship/SKILL.md`](../../.claude/skills/ship/SKILL.md)) and by [`maintenance/HARNESS.md`](../../maintenance/HARNESS.md) step 5.
 >
 > Unlike the other git rules here, this one is **not** hook-enforced — see [Why no hook](#why-no-hook).
 
@@ -29,7 +29,7 @@ A single commit must stay within one axis:
 | Axis | Typical paths |
 |---|---|
 | 1. Production code + its tests | `src/main/**`, `src/test/**` |
-| 2. Test harness, infrastructure, scripts | `load-test/` (`docker-compose*.yml`, `k6/**`, `scripts/*.ps1`, `sql/**`), `maintenance/**`, `.github/**`, `.claude/**`, `.omc/**` |
+| 2. Test harness, infrastructure, scripts | `load-test/` (`docker-compose*.yml`, `k6/**`, `scripts/*.ps1`, `sql/**`), `maintenance/**`, `.github/**`, `.claude/**` |
 | 3. Measurement artifacts and reports | `load-test/results/**` (`*.log`, `summary.json`, report `*.md`) |
 | 4. Standalone docs and reports | top-level `*.md` such as `migration_plan.md`, report `*.md` |
 

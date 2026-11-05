@@ -10,8 +10,6 @@ import org.project.ttokttok.domain.admin.domain.Admin;
 import org.project.ttokttok.domain.club.domain.enums.ClubCategory;
 import org.project.ttokttok.domain.club.domain.enums.ClubType;
 import org.project.ttokttok.domain.club.domain.enums.ClubUniv;
-import org.project.ttokttok.domain.club.service.dto.request.ClubContentUpdateServiceRequest;
-import org.project.ttokttok.domain.club.service.dto.request.ClubPatchRequest;
 import org.project.ttokttok.domain.clubMember.domain.ClubMember;
 import org.project.ttokttok.global.entity.BaseTimeEntity;
 
@@ -82,7 +80,7 @@ public class Club extends BaseTimeEntity {
     }
 
     //PATCH 용 메서드
-    public void updateFrom(ClubPatchRequest req) {
+    public void updateFrom(ClubPatch req) {
         updateField(req.name(), v -> this.name = v);
         updateField(req.clubType(), v -> this.clubType = v);
         updateField(req.clubCategory(), v -> this.clubCategory = v);

@@ -1,5 +1,6 @@
 package org.project.ttokttok.domain.temp.applyform.controller.dto.request;
 
+import org.project.ttokttok.domain.temp.applyform.service.dto.request.TempApplyFormSaveServiceRequest;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
@@ -38,4 +39,19 @@ public record TempApplyFormSaveRequest(
          */
         List<Question> formJson
 ) {
+    public TempApplyFormSaveServiceRequest toServiceRequest() {
+        return new TempApplyFormSaveServiceRequest(
+                clubId,
+                title,
+                subTitle,
+                applyStartDate,
+                applyEndDate,
+                hasInterview,
+                interviewStartDate,
+                interviewEndDate,
+                maxApplyCount,
+                grades,
+                formJson
+        );
+    }
 }

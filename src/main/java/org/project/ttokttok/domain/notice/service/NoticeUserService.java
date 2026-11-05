@@ -1,9 +1,9 @@
 package org.project.ttokttok.domain.notice.service;
 
 import lombok.RequiredArgsConstructor;
-import org.project.ttokttok.domain.notice.controller.dto.response.NoticeDetailResponse;
-import org.project.ttokttok.domain.notice.controller.dto.response.NoticeListResponse;
-import org.project.ttokttok.domain.notice.controller.dto.response.NoticeListResponse.NoticeSummary;
+import org.project.ttokttok.domain.notice.service.dto.response.NoticeDetailResponse;
+import org.project.ttokttok.domain.notice.service.dto.response.NoticeListResponse;
+import org.project.ttokttok.domain.notice.service.dto.response.NoticeListResponse.NoticeSummary;
 import org.project.ttokttok.domain.notice.domain.Notice;
 import org.project.ttokttok.domain.notice.exception.NoticeNotFoundException;
 import org.project.ttokttok.domain.notice.repository.NoticeRepository;

@@ -7,7 +7,6 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.project.ttokttok.domain.favorite.domain.Favorite;
 import org.project.ttokttok.domain.favorite.repository.FavoriteCustomRepository;
-import org.project.ttokttok.domain.favorite.service.dto.request.FavoriteListServiceRequest;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -22,21 +21,21 @@ public class FavoriteCustomRepositoryImpl implements FavoriteCustomRepository {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<Favorite> findFavoritesByRequest(FavoriteListServiceRequest request) {
+    public List<Favorite> findFavorites(String userEmail, String cursor, int size, String sort) {
         // 다음 페이지 확인을 위해 요청된 size보다 1개 더 조회
-        int fetchSize = request.size() + 1;
+        int fetchSize = size + 1;
         JPAQuery<Favorite> query = queryFactory
                 .selectFrom(favorite)
                 .join(favorite.club, club).fetchJoin()
-                .where(favorite.user.email.eq(request.userEmail()));
+                .where(favorite.user.email.eq(userEmail));
 
         // 커서 기반 조건 추가
-        BooleanExpression cursorCondition = getCursorCondition(request.cursor(), request.sort());
+        BooleanExpression cursorCondition = getCursorCondition(cursor, sort);
         if (cursorCondition != null) {
             query.where(cursorCondition);
         }
         // 정렬 조건 적용
-        applyOrderBy(query, request.sort());
+        applyOrderBy(query, sort);
         return query.limit(fetchSize).fetch();
     }
 

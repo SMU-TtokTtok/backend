@@ -1,5 +1,6 @@
 package org.project.ttokttok.domain.applicant.service.dto.response;
 
+import org.project.ttokttok.domain.applicant.domain.dto.ApplicantSimpleResponse;
 import org.project.ttokttok.domain.applicant.domain.dto.ApplicantPageDto;
 
 import java.util.List;

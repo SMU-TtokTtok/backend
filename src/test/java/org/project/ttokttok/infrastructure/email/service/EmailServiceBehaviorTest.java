@@ -8,7 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.project.ttokttok.domain.applicant.controller.dto.request.MailFormatRequest;
+import org.project.ttokttok.infrastructure.email.dto.ResultMailContent;
 import org.project.ttokttok.infrastructure.email.dto.EmailRequest;
 import org.springframework.mail.MailSendException;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -118,7 +118,7 @@ class EmailServiceBehaviorTest {
     @DisplayName("sendResultMail은 유효하지 않은 이메일은 건너뛰고 유효한 이메일에만 발송한다")
     void sendResultMail_skipsInvalidEmails() {
         given(mailSender.createMimeMessage()).willReturn(emptyMimeMessage());
-        MailFormatRequest request = new MailFormatRequest("합격", "축하합니다");
+        ResultMailContent request = new ResultMailContent("합격", "축하합니다");
 
         emailService.sendResultMail(List.of("valid@sangmyung.kr", "invalid-email", "another@gmail.com"), request);
 

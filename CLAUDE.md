@@ -15,4 +15,3 @@ Claude Code entry point for **ttokttok**. This file only routes — the actual c
 - **Verification gate:** a task is not done until `verify.sh` is green (build + tests). CI skips tests, so this is enforced locally.
 - **Secrets:** never commit `application*.yml` or Firebase `*.json`. Run `git status` before committing.
 - **Commit/PR:** `[#issue] - message` (Korean), fill `.github/PULL_REQUEST_TEMPLATE.md`.
-- This repo also runs under oh-my-claudecode (OMC); the user's global `~/.claude/CLAUDE.md` merges with this file.

@@ -35,7 +35,7 @@ public class ApplicantUserApiController implements ApplicantUserDocs {
                                                      @RequestPart(required = false) List<String> questionIds,// json으로 명시 필요
                                                      @RequestPart(required = false) List<MultipartFile> files) {
 
-        String ApplicantId = applicantUserService.apply(email, request, questionIds, files, clubId);
+        String ApplicantId = applicantUserService.apply(email, request.toServiceRequest(), questionIds, files, clubId);
 
         return ResponseEntity.ok()
                 .body(Map.of("message", "지원서 작성 완료, id: " + ApplicantId));
