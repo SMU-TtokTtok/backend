@@ -3,15 +3,14 @@ package org.project.ttokttok.domain.applicant.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.exception.ConstraintViolationException;
-import org.project.ttokttok.domain.applicant.controller.dto.request.ApplyFormRequest;
 import org.project.ttokttok.domain.applicant.domain.Applicant;
 import org.project.ttokttok.domain.applicant.domain.json.Answer;
 import org.project.ttokttok.domain.applicant.exception.AlreadyApplicantExistsException;
 import org.project.ttokttok.domain.applicant.repository.ApplicantRepository;
 import org.project.ttokttok.domain.applicant.repository.dto.UserApplicationHistoryQueryResponse;
 import org.project.ttokttok.domain.applicant.service.answer.AnswerAssembler;
-import org.project.ttokttok.domain.applicant.service.answer.AnswerInput;
 import org.project.ttokttok.domain.applicant.service.answer.AnswerSubmission;
+import org.project.ttokttok.domain.applicant.service.dto.request.ApplicantApplyServiceRequest;
 import org.project.ttokttok.domain.applyform.domain.ApplyDeadlinePolicy;
 import org.project.ttokttok.domain.applyform.domain.ApplyForm;
 import org.project.ttokttok.domain.applyform.exception.ApplyFormNotFoundException;
@@ -45,7 +44,7 @@ public class ApplicantUserService {
 
     @Transactional
     public String apply(String email,
-                        ApplyFormRequest request,
+                        ApplicantApplyServiceRequest request,
                         List<String> questionIds,
                         List<MultipartFile> files,
                         String clubId) {
@@ -61,7 +60,7 @@ public class ApplicantUserService {
 
         // 3. 답변 검증 및 조립 (파일 질문 처리 포함)
         List<Answer> answers = answerAssembler.assemble(
-                new AnswerSubmission(toAnswerInputs(request), questionIds, files),
+                new AnswerSubmission(request.answers(), questionIds, files),
                 form.getFormJson(),
                 email
         );
@@ -101,15 +100,6 @@ public class ApplicantUserService {
             }
             throw exception;
         }
-    }
-
-    private List<AnswerInput> toAnswerInputs(ApplyFormRequest request) {
-        if (request.answers() == null) {
-            return List.of();
-        }
-        return request.answers().stream()
-                .map(answer -> answer == null ? null : new AnswerInput(answer.questionId(), answer.value()))
-                .toList();
     }
 
     private void validateApplicantExists(String email, String formId) {

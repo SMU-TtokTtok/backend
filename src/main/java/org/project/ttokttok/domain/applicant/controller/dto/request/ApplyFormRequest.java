@@ -6,6 +6,8 @@ import jakarta.validation.constraints.NotNull;
 import org.project.ttokttok.domain.applicant.domain.enums.Gender;
 import org.project.ttokttok.domain.applicant.domain.enums.Grade;
 import org.project.ttokttok.domain.applicant.domain.enums.StudentStatus;
+import org.project.ttokttok.domain.applicant.service.answer.AnswerInput;
+import org.project.ttokttok.domain.applicant.service.dto.request.ApplicantApplyServiceRequest;
 
 import java.util.List;
 
@@ -47,4 +49,26 @@ public record ApplyFormRequest(
         @Valid
         List<AnswerRequest> answers
 ) {
+    public ApplicantApplyServiceRequest toServiceRequest() {
+        return new ApplicantApplyServiceRequest(
+                name,
+                age,
+                major,
+                email,
+                phone,
+                studentStatus,
+                grade,
+                gender,
+                toAnswerInputs()
+        );
+    }
+
+    private List<AnswerInput> toAnswerInputs() {
+        if (answers == null) {
+            return List.of();
+        }
+        return answers.stream()
+                .map(answer -> answer == null ? null : new AnswerInput(answer.questionId(), answer.value()))
+                .toList();
+    }
 }

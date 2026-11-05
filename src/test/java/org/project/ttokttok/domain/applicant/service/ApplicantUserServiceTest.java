@@ -133,7 +133,7 @@ class ApplicantUserServiceTest {
             given(applicantRepository.saveAndFlush(any(Applicant.class))).willThrow(
                     new DataIntegrityViolationException("save failed", new IllegalStateException(violation)));
 
-            assertThatThrownBy(() -> applicantUserService.apply(EMAIL, request, null, null, CLUB_ID))
+            assertThatThrownBy(() -> applicantUserService.apply(EMAIL, request.toServiceRequest(), null, null, CLUB_ID))
                     .isInstanceOf(AlreadyApplicantExistsException.class);
         }
 
@@ -147,7 +147,7 @@ class ApplicantUserServiceTest {
                     new ConstraintViolationException("integrity failure", new SQLException(), constraintName));
             given(applicantRepository.saveAndFlush(any(Applicant.class))).willThrow(failure);
 
-            assertThatThrownBy(() -> applicantUserService.apply(EMAIL, request, null, null, CLUB_ID))
+            assertThatThrownBy(() -> applicantUserService.apply(EMAIL, request.toServiceRequest(), null, null, CLUB_ID))
                     .isSameAs(failure);
         }
 
@@ -158,7 +158,7 @@ class ApplicantUserServiceTest {
             DataIntegrityViolationException failure = new DataIntegrityViolationException("save failed");
             given(applicantRepository.saveAndFlush(any(Applicant.class))).willThrow(failure);
 
-            assertThatThrownBy(() -> applicantUserService.apply(EMAIL, request, null, null, CLUB_ID))
+            assertThatThrownBy(() -> applicantUserService.apply(EMAIL, request.toServiceRequest(), null, null, CLUB_ID))
                     .isSameAs(failure);
         }
 
@@ -194,7 +194,7 @@ class ApplicantUserServiceTest {
             given(applicantRepository.saveAndFlush(any(Applicant.class))).willReturn(savedApplicant);
 
             // when
-            String result = applicantUserService.apply(EMAIL, request, null, null, CLUB_ID);
+            String result = applicantUserService.apply(EMAIL, request.toServiceRequest(), null, null, CLUB_ID);
 
             // then
             assertThat(result).isEqualTo(APPLICANT_ID);
@@ -226,7 +226,7 @@ class ApplicantUserServiceTest {
             given(applicantRepository.saveAndFlush(any(Applicant.class))).willReturn(savedApplicant);
 
             // when
-            String result = applicantUserService.apply(EMAIL, request, List.of("q2"), List.of(file), CLUB_ID);
+            String result = applicantUserService.apply(EMAIL, request.toServiceRequest(), List.of("q2"), List.of(file), CLUB_ID);
 
             // then
             assertThat(result).isEqualTo(APPLICANT_ID);
@@ -257,7 +257,7 @@ class ApplicantUserServiceTest {
             given(applicantRepository.saveAndFlush(any(Applicant.class))).willReturn(savedApplicant);
 
             // when
-            applicantUserService.apply(EMAIL, request, null, null, CLUB_ID);
+            applicantUserService.apply(EMAIL, request.toServiceRequest(), null, null, CLUB_ID);
 
             // then
             verify(tempApplicantRepository).delete(tempApplicant);
@@ -271,7 +271,7 @@ class ApplicantUserServiceTest {
             given(userRepository.existsByEmail(EMAIL)).willReturn(false);
 
             // when & then
-            assertThatThrownBy(() -> applicantUserService.apply(EMAIL, request, null, null, CLUB_ID))
+            assertThatThrownBy(() -> applicantUserService.apply(EMAIL, request.toServiceRequest(), null, null, CLUB_ID))
                     .isInstanceOf(UserNotFoundException.class);
         }
 
@@ -284,7 +284,7 @@ class ApplicantUserServiceTest {
             given(applyFormRepository.findByClubIdAndStatus(CLUB_ID, ACTIVE)).willReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> applicantUserService.apply(EMAIL, request, null, null, CLUB_ID))
+            assertThatThrownBy(() -> applicantUserService.apply(EMAIL, request.toServiceRequest(), null, null, CLUB_ID))
                     .isInstanceOf(ApplyFormNotFoundException.class);
         }
 
@@ -301,7 +301,7 @@ class ApplicantUserServiceTest {
             given(applicantRepository.existsByUserEmailAndApplyFormId(EMAIL, FORM_ID)).willReturn(true);
 
             // when & then
-            assertThatThrownBy(() -> applicantUserService.apply(EMAIL, request, null, null, CLUB_ID))
+            assertThatThrownBy(() -> applicantUserService.apply(EMAIL, request.toServiceRequest(), null, null, CLUB_ID))
                     .isInstanceOf(AlreadyApplicantExistsException.class);
         }
 
@@ -320,7 +320,7 @@ class ApplicantUserServiceTest {
             given(applicantRepository.existsByUserEmailAndApplyFormId(EMAIL, FORM_ID)).willReturn(false);
 
             // when & then
-            assertThatThrownBy(() -> applicantUserService.apply(EMAIL, request, null, null, CLUB_ID))
+            assertThatThrownBy(() -> applicantUserService.apply(EMAIL, request.toServiceRequest(), null, null, CLUB_ID))
                     .isInstanceOf(AnswerRequestNotMatchException.class);
         }
 
@@ -343,7 +343,7 @@ class ApplicantUserServiceTest {
 
             // when & then
             assertThatThrownBy(() -> applicantUserService.apply(
-                    EMAIL, request, List.of("q2", "q3"), List.of(file), CLUB_ID))
+                    EMAIL, request.toServiceRequest(), List.of("q2", "q3"), List.of(file), CLUB_ID))
                     .isInstanceOf(ListSizeNotMatchException.class);
         }
 
@@ -363,7 +363,7 @@ class ApplicantUserServiceTest {
             given(applicantRepository.existsByUserEmailAndApplyFormId(EMAIL, FORM_ID)).willReturn(false);
 
             // when & then
-            assertThatThrownBy(() -> applicantUserService.apply(EMAIL, request, null, null, CLUB_ID))
+            assertThatThrownBy(() -> applicantUserService.apply(EMAIL, request.toServiceRequest(), null, null, CLUB_ID))
                     .isInstanceOf(QuestionParseFailException.class);
         }
     }
