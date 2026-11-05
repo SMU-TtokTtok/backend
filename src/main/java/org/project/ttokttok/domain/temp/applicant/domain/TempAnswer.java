@@ -1,4 +1,4 @@
-package org.project.ttokttok.domain.temp.applicant.controller.dto.request;
+package org.project.ttokttok.domain.temp.applicant.domain;
 
 import jakarta.annotation.Nullable;
 

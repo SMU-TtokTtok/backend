@@ -2,6 +2,7 @@ package org.project.ttokttok.domain.temp.applyform.controller;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.project.ttokttok.domain.temp.applyform.service.dto.request.TempApplyFormSaveServiceRequest;
 import org.project.ttokttok.domain.temp.applyform.controller.dto.request.TempApplyFormSaveRequest;
 import org.project.ttokttok.domain.temp.applyform.service.TempApplyFormService;
 import org.project.ttokttok.global.annotationresolver.auth.AuthUserInfoResolver;
@@ -46,7 +47,7 @@ class TempApplyFormControllerTest {
     void saveTempApplyForm_ShouldReturnCreated() throws Exception {
         // given
         mockAuthUser("admin@sangmyung.kr");
-        given(tempApplyFormService.saveTempApplyForm(any(TempApplyFormSaveRequest.class)))
+        given(tempApplyFormService.saveTempApplyForm(any(TempApplyFormSaveServiceRequest.class)))
                 .willReturn("temp-form-1");
 
         String requestBody = """

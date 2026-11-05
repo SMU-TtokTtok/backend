@@ -8,7 +8,6 @@ import org.project.ttokttok.domain.temp.applicant.controller.dto.request.TempApp
 import org.project.ttokttok.domain.temp.applicant.controller.dto.response.TempApplicantDataResponse;
 import org.project.ttokttok.domain.temp.applicant.controller.dto.response.TempApplicantSaveResponse;
 import org.project.ttokttok.domain.temp.applicant.service.TempApplicantService;
-import org.project.ttokttok.domain.temp.applicant.service.dto.request.TempApplicantSaveServiceRequest;
 import org.project.ttokttok.global.annotation.auth.AuthUserInfo;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -42,13 +41,7 @@ public class TempApplicantController implements TempApplicantDocs {
             @RequestPart(required = false) List<MultipartFile> files) {
 
         String tempApplicantId = tempApplicantService.saveTempApplicant(
-                TempApplicantSaveServiceRequest.of(
-                        email,
-                        formId,
-                        request,
-                        questionIds,
-                        files
-                )
+                request.toServiceRequest(email, formId, questionIds, files)
         );
 
         return ResponseEntity.status(HttpStatus.CREATED)

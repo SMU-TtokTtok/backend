@@ -11,6 +11,9 @@ import org.project.ttokttok.domain.applicant.controller.dto.request.AnswerReques
 import org.project.ttokttok.domain.applicant.domain.enums.Gender;
 import org.project.ttokttok.domain.applicant.domain.enums.Grade;
 import org.project.ttokttok.domain.applicant.domain.enums.StudentStatus;
+import org.project.ttokttok.domain.temp.applicant.domain.TempAnswer;
+import org.project.ttokttok.domain.temp.applicant.service.dto.request.TempApplicantSaveServiceRequest;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 임시 지원서 저장 요청
@@ -31,4 +34,18 @@ public record TempApplicantSaveRequest(
          */
         List<TempAnswer> answers
 ) {
+    public TempApplicantSaveServiceRequest toServiceRequest(String userEmail,
+                                                            String formId,
+                                                            List<String> questionIds,
+                                                            List<MultipartFile> files) {
+        return new TempApplicantSaveServiceRequest(
+                userEmail,
+                formId,
+                new TempApplicantSaveServiceRequest.Data(
+                        name, age, major, email, phone, studentStatus, grade, gender, answers
+                ),
+                questionIds,
+                files
+        );
+    }
 }

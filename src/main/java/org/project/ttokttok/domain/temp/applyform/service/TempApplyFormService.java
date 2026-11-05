@@ -1,7 +1,7 @@
 package org.project.ttokttok.domain.temp.applyform.service;
 
 import lombok.RequiredArgsConstructor;
-import org.project.ttokttok.domain.temp.applyform.controller.dto.request.TempApplyFormSaveRequest;
+import org.project.ttokttok.domain.temp.applyform.service.dto.request.TempApplyFormSaveServiceRequest;
 import org.project.ttokttok.domain.temp.applyform.domain.TempApplyForm;
 import org.project.ttokttok.domain.temp.applyform.repository.TempApplyFormRepository;
 import org.springframework.stereotype.Service;
@@ -20,7 +20,7 @@ public class TempApplyFormService {
      * 임시 지원폼을 저장합니다. 기존 임시 지원폼이 있다면 업데이트하고, 없다면 새로 생성합니다.
      */
     @Transactional
-    public String saveTempApplyForm(TempApplyFormSaveRequest request) {
+    public String saveTempApplyForm(TempApplyFormSaveServiceRequest request) {
 
         // 기존 임시 지원폼이 있는지 확인하고 있으면 업데이트
         return tempApplyFormRepository.findByClubId(request.clubId())
@@ -35,7 +35,7 @@ public class TempApplyFormService {
     }
 
     private void updateTempApplyForm(TempApplyForm tempApplyForm,
-                                     TempApplyFormSaveRequest request) {
+                                     TempApplyFormSaveServiceRequest request) {
         tempApplyForm.update(
                 request.title(),
                 request.subTitle(),
@@ -50,7 +50,7 @@ public class TempApplyFormService {
         );
     }
 
-    private TempApplyForm createTempApplyForm(TempApplyFormSaveRequest request) {
+    private TempApplyForm createTempApplyForm(TempApplyFormSaveServiceRequest request) {
         return TempApplyForm.create(
                 request.clubId(),
                 request.title(),
