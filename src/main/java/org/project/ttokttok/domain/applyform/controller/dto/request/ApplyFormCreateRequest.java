@@ -4,7 +4,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import org.openapitools.jackson.nullable.JsonNullable;
 import org.project.ttokttok.domain.applyform.domain.json.Question;
 import org.project.ttokttok.domain.applyform.service.dto.request.ApplyFormCreateServiceRequest;
 
