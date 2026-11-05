@@ -83,3 +83,6 @@ ttokttok-push*.json
 
 # 위쪽 STS 섹션의 `bin/` 규칙이 배포 스크립트까지 잡아먹는다. 예외 처리.
 !/deploy/bin/
+
+# 구조 개선 기간의 임시 API 스냅샷 (#438). 공개 저장소에 올리지 않고 개선이 끝나면 삭제한다.
+/src/test/resources/openapi/
