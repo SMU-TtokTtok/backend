@@ -8,7 +8,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.project.ttokttok.domain.applicant.domain.enums.Grade;
 import org.project.ttokttok.domain.clubMember.domain.MemberRole;
-import org.project.ttokttok.domain.clubMember.service.dto.response.ClubMemberInExcelResponse;
+import org.project.ttokttok.global.excel.dto.ClubMemberInExcelResponse;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

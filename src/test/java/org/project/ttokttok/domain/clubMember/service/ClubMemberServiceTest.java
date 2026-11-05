@@ -32,7 +32,7 @@ import org.project.ttokttok.domain.clubMember.service.dto.request.ClubMemberSear
 import org.project.ttokttok.domain.clubMember.service.dto.request.ClubMemberServiceRequest;
 import org.project.ttokttok.domain.clubMember.service.dto.request.DeleteMemberServiceRequest;
 import org.project.ttokttok.domain.clubMember.service.dto.response.ClubMemberCountServiceResponse;
-import org.project.ttokttok.domain.clubMember.service.dto.response.ClubMemberInExcelResponse;
+import org.project.ttokttok.global.excel.dto.ClubMemberInExcelResponse;
 import org.project.ttokttok.domain.clubMember.service.dto.response.ClubMemberPageServiceResponse;
 import org.project.ttokttok.domain.clubMember.service.dto.response.ClubMemberSearchServiceResponse;
 import org.project.ttokttok.domain.clubMember.service.dto.response.ExcelServiceResponse;

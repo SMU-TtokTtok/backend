@@ -3,7 +3,7 @@ package org.project.ttokttok.domain.clubMember.repository;
 import org.project.ttokttok.domain.clubMember.domain.ClubMember;
 import org.project.ttokttok.domain.clubMember.domain.MemberRole;
 import org.project.ttokttok.domain.clubMember.repository.dto.ClubMemberCountQueryDto;
-import org.project.ttokttok.domain.clubMember.service.dto.response.ClubMemberInExcelResponse;
+import org.project.ttokttok.global.excel.dto.ClubMemberInExcelResponse;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,7 +15,7 @@ public interface ClubMemberRepository extends JpaRepository<ClubMember, String>,
     @Query("SELECT cm FROM ClubMember cm WHERE cm.club.id = :clubId AND cm.role = :role")
     Optional<ClubMember> findByClubIdAndRole(String clubId, MemberRole role);
 
-    @Query("SELECT new org.project.ttokttok.domain.clubMember.service.dto.response." +
+    @Query("SELECT new org.project.ttokttok.global.excel.dto." +
             "ClubMemberInExcelResponse(cm.grade, cm.memberName, cm.major, cm.role) " +
            "FROM ClubMember cm WHERE cm.club.id = :clubId")
     List<ClubMemberInExcelResponse> findByClubId(String clubId);

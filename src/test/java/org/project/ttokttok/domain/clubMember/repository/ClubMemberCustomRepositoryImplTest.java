@@ -17,7 +17,7 @@ import org.project.ttokttok.domain.clubMember.domain.ClubMember;
 import org.project.ttokttok.domain.clubMember.domain.MemberRole;
 import org.project.ttokttok.domain.clubMember.repository.dto.ClubMemberCountQueryResponse;
 import org.project.ttokttok.domain.clubMember.repository.dto.ClubMemberPageQueryResponse;
-import org.project.ttokttok.domain.clubMember.service.dto.response.ClubMemberInExcelResponse;
+import org.project.ttokttok.global.excel.dto.ClubMemberInExcelResponse;
 import org.project.ttokttok.support.RepositoryTestSupport;
 import org.springframework.beans.factory.annotation.Autowired;
 

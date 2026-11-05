@@ -1,5 +1,6 @@
 package org.project.ttokttok.domain.clubMember.service;
 
+import org.project.ttokttok.global.excel.dto.ClubMemberInExcelResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.project.ttokttok.domain.applicant.domain.enums.Gender;
