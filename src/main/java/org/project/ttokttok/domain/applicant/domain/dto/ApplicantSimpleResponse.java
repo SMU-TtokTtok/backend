@@ -1,4 +1,4 @@
-package org.project.ttokttok.domain.applicant.service.dto.response;
+package org.project.ttokttok.domain.applicant.domain.dto;
 
 import lombok.Builder;
 import org.project.ttokttok.domain.applicant.domain.enums.Grade;

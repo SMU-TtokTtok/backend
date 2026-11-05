@@ -3,7 +3,7 @@ package org.project.ttokttok.domain.applicant.controller.dto.response;
 import lombok.Builder;
 import org.project.ttokttok.domain.applicant.domain.dto.ApplicantSimpleInfoDto;
 import org.project.ttokttok.domain.applicant.service.dto.response.ApplicantPageServiceResponse;
-import org.project.ttokttok.domain.applicant.service.dto.response.ApplicantSimpleResponse;
+import org.project.ttokttok.domain.applicant.domain.dto.ApplicantSimpleResponse;
 
 import java.util.List;
 

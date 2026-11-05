@@ -2,7 +2,6 @@ package org.project.ttokttok.domain.applicant.domain.dto;
 
 import org.project.ttokttok.domain.applicant.domain.enums.Grade;
 import org.project.ttokttok.domain.applicant.domain.enums.PhaseStatus;
-import org.project.ttokttok.domain.applicant.service.dto.response.ApplicantSimpleResponse;
 
 import java.time.LocalDate;
 
