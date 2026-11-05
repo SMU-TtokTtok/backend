@@ -89,30 +89,28 @@ class EmailServiceBehaviorTest {
     @Test
     @DisplayName("sendVerificationCode는 상명대 이메일이 아니면 예외를 던진다")
     void sendVerificationCode_invalidEmail() {
-        assertThatThrownBy(() -> emailService.sendVerificationCode("a@gmail.com"))
+        assertThatThrownBy(() -> emailService.sendVerificationCode("a@gmail.com", "123456"))
                 .isInstanceOf(IllegalArgumentException.class);
         verify(mailSender, never()).send(org.mockito.ArgumentMatchers.any(MimeMessage.class));
     }
 
     @Test
-    @DisplayName("sendVerificationCode는 유효한 이메일에 인증코드를 발송하고 코드를 반환한다")
+    @DisplayName("sendVerificationCode는 유효한 이메일에 인증코드를 발송한다")
     void sendVerificationCode_success() {
         given(mailSender.createMimeMessage()).willReturn(emptyMimeMessage());
 
-        String code = emailService.sendVerificationCode("user@sangmyung.kr");
+        emailService.sendVerificationCode("user@sangmyung.kr", "123456");
 
-        assertThat(code).hasSize(6);
         verify(mailSender).send(org.mockito.ArgumentMatchers.any(MimeMessage.class));
     }
 
     @Test
-    @DisplayName("sendPasswordResetCode는 재설정 코드를 발송하고 코드를 반환한다")
+    @DisplayName("sendPasswordResetCode는 재설정 코드를 발송한다")
     void sendPasswordResetCode_success() {
         given(mailSender.createMimeMessage()).willReturn(emptyMimeMessage());
 
-        String code = emailService.sendPasswordResetCode("user@sangmyung.kr");
+        emailService.sendPasswordResetCode("user@sangmyung.kr", "123456");
 
-        assertThat(code).hasSize(6);
         verify(mailSender).send(org.mockito.ArgumentMatchers.any(MimeMessage.class));
     }
 

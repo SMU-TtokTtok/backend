@@ -1,0 +1,696 @@
+{
+  "conditions" : {
+    "sampleIntervalMs" : 50,
+    "probeThreads" : 4,
+    "repetitions" : 3,
+    "hikariMaximumPoolSize" : 10,
+    "hikariConnectionTimeoutMs" : 30000,
+    "sends" : 30,
+    "baselineMs" : 2000
+  },
+  "httpSendVerification" : {
+    "mailDelayMs=2000" : [ {
+      "mailDelayMs" : 2000,
+      "loadWallMs" : 6121.4,
+      "sendLatencyMs" : {
+        "count" : 30,
+        "p50" : 4061.6,
+        "p95" : 6089.2,
+        "max" : 6106.7,
+        "over1000ms" : 30
+      },
+      "sendStatus" : {
+        "200" : 30
+      },
+      "probeBaselineLatencyMs" : {
+        "count" : 663,
+        "p50" : 11.9,
+        "p95" : 15.4,
+        "max" : 19.9,
+        "over1000ms" : 0
+      },
+      "probeBaselineStatus" : {
+        "200" : 663
+      },
+      "probeDuringLatencyMs" : {
+        "count" : 32,
+        "p50" : 8.1,
+        "p95" : 4039.4,
+        "max" : 4067.4,
+        "over1000ms" : 8
+      },
+      "probeDuringStatus" : {
+        "200" : 32
+      },
+      "connectionUsageMs" : {
+        "count" : 62,
+        "p50" : 15.0,
+        "p95" : 2026.0,
+        "max" : 2035.0,
+        "over1000ms" : 30
+      },
+      "sendConnectionUsageMs" : {
+        "count" : 30,
+        "p50" : 2021.0,
+        "p95" : 2032.0,
+        "max" : 2035.0,
+        "over1000ms" : 30
+      },
+      "probeConnectionUsageMs" : {
+        "count" : 32,
+        "p50" : 5.0,
+        "p95" : 15.0,
+        "max" : 15.0,
+        "over1000ms" : 0
+      },
+      "connectionAcquireWaitMs" : {
+        "count" : 58,
+        "p50" : 8.1,
+        "p95" : 4033.8,
+        "max" : 4049.8,
+        "over1000ms" : 28
+      },
+      "connectionTimeouts" : 0,
+      "samples" : 136,
+      "hikariMaxActive" : 10,
+      "hikariMaxPending" : 24,
+      "samplesWithPending" : 102,
+      "samplesPoolExhausted" : 102,
+      "pgMaxIdleInTransaction" : 10,
+      "pgSamplesWithIdleInTransaction" : 115,
+      "pgMaxIdleInTransactionAgeMs" : 2000,
+      "pgIdleInTransactionLastQuery" : {
+        "insert into verification_tx_hold_experiment.email_verificati" : 1,
+        "select count(n1_0.id) from verification_tx_hold_experiment.n" : 35,
+        "select n1_0.id,n1_0.content,n1_0.created_at,n1_0.created_by," : 13,
+        "update verification_tx_hold_experiment.email_verification ev" : 1018
+      }
+    }, {
+      "mailDelayMs" : 2000,
+      "loadWallMs" : 6078.8,
+      "sendLatencyMs" : {
+        "count" : 30,
+        "p50" : 4035.6,
+        "p95" : 6068.2,
+        "max" : 6068.2,
+        "over1000ms" : 30
+      },
+      "sendStatus" : {
+        "200" : 30
+      },
+      "probeBaselineLatencyMs" : {
+        "count" : 984,
+        "p50" : 8.1,
+        "p95" : 9.6,
+        "max" : 11.0,
+        "over1000ms" : 0
+      },
+      "probeBaselineStatus" : {
+        "200" : 984
+      },
+      "probeDuringLatencyMs" : {
+        "count" : 20,
+        "p50" : 7.4,
+        "p95" : 6041.2,
+        "max" : 6042.2,
+        "over1000ms" : 4
+      },
+      "probeDuringStatus" : {
+        "200" : 20
+      },
+      "connectionUsageMs" : {
+        "count" : 50,
+        "p50" : 2011.0,
+        "p95" : 2021.0,
+        "max" : 2023.0,
+        "over1000ms" : 30
+      },
+      "sendConnectionUsageMs" : {
+        "count" : 30,
+        "p50" : 2014.0,
+        "p95" : 2021.0,
+        "max" : 2023.0,
+        "over1000ms" : 30
+      },
+      "probeConnectionUsageMs" : {
+        "count" : 20,
+        "p50" : 5.0,
+        "p95" : 12.0,
+        "max" : 13.0,
+        "over1000ms" : 0
+      },
+      "connectionAcquireWaitMs" : {
+        "count" : 50,
+        "p50" : 5.1,
+        "p95" : 6035.2,
+        "max" : 6036.2,
+        "over1000ms" : 24
+      },
+      "connectionTimeouts" : 0,
+      "samples" : 135,
+      "hikariMaxActive" : 10,
+      "hikariMaxPending" : 24,
+      "samplesWithPending" : 101,
+      "samplesPoolExhausted" : 101,
+      "pgMaxIdleInTransaction" : 10,
+      "pgSamplesWithIdleInTransaction" : 120,
+      "pgMaxIdleInTransactionAgeMs" : 1995,
+      "pgIdleInTransactionLastQuery" : {
+        "select count(n1_0.id) from verification_tx_hold_experiment.n" : 27,
+        "select n1_0.id,n1_0.content,n1_0.created_at,n1_0.created_by," : 43,
+        "update verification_tx_hold_experiment.email_verification ev" : 1010
+      }
+    }, {
+      "mailDelayMs" : 2000,
+      "loadWallMs" : 6080.8,
+      "sendLatencyMs" : {
+        "count" : 30,
+        "p50" : 4037.8,
+        "p95" : 6069.0,
+        "max" : 6070.2,
+        "over1000ms" : 30
+      },
+      "sendStatus" : {
+        "200" : 30
+      },
+      "probeBaselineLatencyMs" : {
+        "count" : 1116,
+        "p50" : 7.1,
+        "p95" : 8.6,
+        "max" : 12.0,
+        "over1000ms" : 0
+      },
+      "probeBaselineStatus" : {
+        "200" : 1116
+      },
+      "probeDuringLatencyMs" : {
+        "count" : 25,
+        "p50" : 8.3,
+        "p95" : 4027.9,
+        "max" : 4039.0,
+        "over1000ms" : 8
+      },
+      "probeDuringStatus" : {
+        "200" : 25
+      },
+      "connectionUsageMs" : {
+        "count" : 55,
+        "p50" : 2010.0,
+        "p95" : 2023.0,
+        "max" : 2024.0,
+        "over1000ms" : 30
+      },
+      "sendConnectionUsageMs" : {
+        "count" : 30,
+        "p50" : 2017.0,
+        "p95" : 2024.0,
+        "max" : 2024.0,
+        "over1000ms" : 30
+      },
+      "probeConnectionUsageMs" : {
+        "count" : 25,
+        "p50" : 4.0,
+        "p95" : 7.0,
+        "max" : 7.0,
+        "over1000ms" : 0
+      },
+      "connectionAcquireWaitMs" : {
+        "count" : 55,
+        "p50" : 2011.9,
+        "p95" : 4030.4,
+        "max" : 4041.5,
+        "over1000ms" : 28
+      },
+      "connectionTimeouts" : 0,
+      "samples" : 136,
+      "hikariMaxActive" : 10,
+      "hikariMaxPending" : 24,
+      "samplesWithPending" : 101,
+      "samplesPoolExhausted" : 101,
+      "pgMaxIdleInTransaction" : 10,
+      "pgSamplesWithIdleInTransaction" : 120,
+      "pgMaxIdleInTransactionAgeMs" : 2005,
+      "pgIdleInTransactionLastQuery" : {
+        "select count(n1_0.id) from verification_tx_hold_experiment.n" : 11,
+        "select n1_0.id,n1_0.content,n1_0.created_at,n1_0.created_by," : 61,
+        "update verification_tx_hold_experiment.email_verification ev" : 1007
+      }
+    } ],
+    "mailDelayMs=10000" : [ {
+      "mailDelayMs" : 10000,
+      "loadWallMs" : 30071.4,
+      "sendLatencyMs" : {
+        "count" : 30,
+        "p50" : 20044.3,
+        "p95" : 30063.8,
+        "max" : 30063.8,
+        "over1000ms" : 30
+      },
+      "sendStatus" : {
+        "200" : 30
+      },
+      "probeBaselineLatencyMs" : {
+        "count" : 1264,
+        "p50" : 6.3,
+        "p95" : 7.6,
+        "max" : 10.0,
+        "over1000ms" : 0
+      },
+      "probeBaselineStatus" : {
+        "200" : 1264
+      },
+      "probeDuringLatencyMs" : {
+        "count" : 16,
+        "p50" : 9.6,
+        "p95" : 20036.5,
+        "max" : 20036.5,
+        "over1000ms" : 8
+      },
+      "probeDuringStatus" : {
+        "200" : 16
+      },
+      "connectionUsageMs" : {
+        "count" : 46,
+        "p50" : 10012.0,
+        "p95" : 10024.0,
+        "max" : 10026.0,
+        "over1000ms" : 30
+      },
+      "sendConnectionUsageMs" : {
+        "count" : 30,
+        "p50" : 10016.0,
+        "p95" : 10024.0,
+        "max" : 10026.0,
+        "over1000ms" : 30
+      },
+      "probeConnectionUsageMs" : {
+        "count" : 16,
+        "p50" : 4.0,
+        "p95" : 7.0,
+        "max" : 7.0,
+        "over1000ms" : 0
+      },
+      "connectionAcquireWaitMs" : {
+        "count" : 46,
+        "p50" : 10012.4,
+        "p95" : 20033.0,
+        "max" : 20033.6,
+        "over1000ms" : 28
+      },
+      "connectionTimeouts" : 0,
+      "samples" : 536,
+      "hikariMaxActive" : 10,
+      "hikariMaxPending" : 24,
+      "samplesWithPending" : 502,
+      "samplesPoolExhausted" : 502,
+      "pgMaxIdleInTransaction" : 10,
+      "pgSamplesWithIdleInTransaction" : 517,
+      "pgMaxIdleInTransactionAgeMs" : 9986,
+      "pgIdleInTransactionLastQuery" : {
+        "select count(n1_0.id) from verification_tx_hold_experiment.n" : 24,
+        "select n1_0.id,n1_0.content,n1_0.created_at,n1_0.created_by," : 31,
+        "update verification_tx_hold_experiment.email_verification ev" : 5018
+      }
+    }, {
+      "mailDelayMs" : 10000,
+      "loadWallMs" : 30110.0,
+      "sendLatencyMs" : {
+        "count" : 30,
+        "p50" : 20075.8,
+        "p95" : 30096.9,
+        "max" : 30098.3,
+        "over1000ms" : 30
+      },
+      "sendStatus" : {
+        "200" : 30
+      },
+      "probeBaselineLatencyMs" : {
+        "count" : 1435,
+        "p50" : 5.5,
+        "p95" : 7.0,
+        "max" : 9.8,
+        "over1000ms" : 0
+      },
+      "probeBaselineStatus" : {
+        "200" : 1435
+      },
+      "probeDuringLatencyMs" : {
+        "count" : 20,
+        "p50" : 14.6,
+        "p95" : 20071.1,
+        "max" : 20071.1,
+        "over1000ms" : 8
+      },
+      "probeDuringStatus" : {
+        "200" : 20
+      },
+      "connectionUsageMs" : {
+        "count" : 50,
+        "p50" : 10012.0,
+        "p95" : 10052.0,
+        "max" : 10052.0,
+        "over1000ms" : 30
+      },
+      "sendConnectionUsageMs" : {
+        "count" : 30,
+        "p50" : 10016.0,
+        "p95" : 10052.0,
+        "max" : 10052.0,
+        "over1000ms" : 30
+      },
+      "probeConnectionUsageMs" : {
+        "count" : 20,
+        "p50" : 3.0,
+        "p95" : 10.0,
+        "max" : 10.0,
+        "over1000ms" : 0
+      },
+      "connectionAcquireWaitMs" : {
+        "count" : 50,
+        "p50" : 10007.5,
+        "p95" : 20066.4,
+        "max" : 20066.4,
+        "over1000ms" : 28
+      },
+      "connectionTimeouts" : 0,
+      "samples" : 536,
+      "hikariMaxActive" : 10,
+      "hikariMaxPending" : 24,
+      "samplesWithPending" : 502,
+      "samplesPoolExhausted" : 502,
+      "pgMaxIdleInTransaction" : 10,
+      "pgSamplesWithIdleInTransaction" : 523,
+      "pgMaxIdleInTransactionAgeMs" : 10004,
+      "pgIdleInTransactionLastQuery" : {
+        "insert into verification_tx_hold_experiment.email_verificati" : 4,
+        "select count(n1_0.id) from verification_tx_hold_experiment.n" : 41,
+        "select n1_0.id,n1_0.content,n1_0.created_at,n1_0.created_by," : 46,
+        "update verification_tx_hold_experiment.email_verification ev" : 5006
+      }
+    }, {
+      "mailDelayMs" : 10000,
+      "loadWallMs" : 30083.8,
+      "sendLatencyMs" : {
+        "count" : 30,
+        "p50" : 20030.5,
+        "p95" : 30073.0,
+        "max" : 30073.6,
+        "over1000ms" : 30
+      },
+      "sendStatus" : {
+        "200" : 30
+      },
+      "probeBaselineLatencyMs" : {
+        "count" : 1451,
+        "p50" : 5.3,
+        "p95" : 7.5,
+        "max" : 10.4,
+        "over1000ms" : 0
+      },
+      "probeBaselineStatus" : {
+        "200" : 1451
+      },
+      "probeDuringLatencyMs" : {
+        "count" : 24,
+        "p50" : 7.0,
+        "p95" : 30046.9,
+        "max" : 30046.9,
+        "over1000ms" : 4
+      },
+      "probeDuringStatus" : {
+        "200" : 20,
+        "500" : 4
+      },
+      "connectionUsageMs" : {
+        "count" : 50,
+        "p50" : 10010.0,
+        "p95" : 10025.0,
+        "max" : 10027.0,
+        "over1000ms" : 30
+      },
+      "sendConnectionUsageMs" : {
+        "count" : 30,
+        "p50" : 10016.0,
+        "p95" : 10026.0,
+        "max" : 10027.0,
+        "over1000ms" : 30
+      },
+      "probeConnectionUsageMs" : {
+        "count" : 20,
+        "p50" : 5.0,
+        "p95" : 9.0,
+        "max" : 9.0,
+        "over1000ms" : 0
+      },
+      "connectionAcquireWaitMs" : {
+        "count" : 54,
+        "p50" : 4.8,
+        "p95" : 30008.9,
+        "max" : 30009.0,
+        "over1000ms" : 24
+      },
+      "connectionTimeouts" : 4,
+      "samples" : 534,
+      "hikariMaxActive" : 10,
+      "hikariMaxPending" : 24,
+      "samplesWithPending" : 499,
+      "samplesPoolExhausted" : 499,
+      "pgMaxIdleInTransaction" : 10,
+      "pgSamplesWithIdleInTransaction" : 519,
+      "pgMaxIdleInTransactionAgeMs" : 10002,
+      "pgIdleInTransactionLastQuery" : {
+        "insert into verification_tx_hold_experiment.email_verificati" : 1,
+        "select count(n1_0.id) from verification_tx_hold_experiment.n" : 27,
+        "select n1_0.id,n1_0.content,n1_0.created_at,n1_0.created_by," : 53,
+        "update verification_tx_hold_experiment.email_verification ev" : 4987
+      }
+    } ]
+  },
+  "mechanism" : {
+    "IN_TX" : [ {
+      "taskLatencyMs" : {
+        "count" : 10,
+        "p50" : 2031.4,
+        "p95" : 2031.6,
+        "max" : 2031.6,
+        "over1000ms" : 10
+      },
+      "connectionUsageMs" : {
+        "count" : 10,
+        "p50" : 2026.0,
+        "p95" : 2026.0,
+        "max" : 2026.0,
+        "over1000ms" : 10
+      },
+      "samples" : 34,
+      "hikariMaxActive" : 10,
+      "hikariMaxPending" : 0,
+      "samplesWithPending" : 0,
+      "samplesPoolExhausted" : 34,
+      "pgMaxIdleInTransaction" : 10,
+      "pgSamplesWithIdleInTransaction" : 34,
+      "pgMaxIdleInTransactionAgeMs" : 1978,
+      "pgIdleInTransactionLastQuery" : {
+        "insert into verification_tx_hold_experiment.email_verificati" : 340
+      }
+    }, {
+      "taskLatencyMs" : {
+        "count" : 10,
+        "p50" : 2014.7,
+        "p95" : 2014.8,
+        "max" : 2014.8,
+        "over1000ms" : 10
+      },
+      "connectionUsageMs" : {
+        "count" : 10,
+        "p50" : 2014.0,
+        "p95" : 2014.0,
+        "max" : 2014.0,
+        "over1000ms" : 10
+      },
+      "samples" : 34,
+      "hikariMaxActive" : 10,
+      "hikariMaxPending" : 0,
+      "samplesWithPending" : 0,
+      "samplesPoolExhausted" : 34,
+      "pgMaxIdleInTransaction" : 10,
+      "pgSamplesWithIdleInTransaction" : 34,
+      "pgMaxIdleInTransactionAgeMs" : 1989,
+      "pgIdleInTransactionLastQuery" : {
+        "insert into verification_tx_hold_experiment.email_verificati" : 340
+      }
+    }, {
+      "taskLatencyMs" : {
+        "count" : 10,
+        "p50" : 2015.4,
+        "p95" : 2015.5,
+        "max" : 2015.5,
+        "over1000ms" : 10
+      },
+      "connectionUsageMs" : {
+        "count" : 10,
+        "p50" : 2015.0,
+        "p95" : 2015.0,
+        "max" : 2015.0,
+        "over1000ms" : 10
+      },
+      "samples" : 34,
+      "hikariMaxActive" : 10,
+      "hikariMaxPending" : 0,
+      "samplesWithPending" : 0,
+      "samplesPoolExhausted" : 34,
+      "pgMaxIdleInTransaction" : 10,
+      "pgSamplesWithIdleInTransaction" : 33,
+      "pgMaxIdleInTransactionAgeMs" : 1944,
+      "pgIdleInTransactionLastQuery" : {
+        "insert into verification_tx_hold_experiment.email_verificati" : 330
+      }
+    } ],
+    "AFTER_COMMIT" : [ {
+      "taskLatencyMs" : {
+        "count" : 10,
+        "p50" : 2023.0,
+        "p95" : 2023.1,
+        "max" : 2023.1,
+        "over1000ms" : 10
+      },
+      "connectionUsageMs" : {
+        "count" : 10,
+        "p50" : 2022.0,
+        "p95" : 2022.0,
+        "max" : 2022.0,
+        "over1000ms" : 10
+      },
+      "samples" : 34,
+      "hikariMaxActive" : 10,
+      "hikariMaxPending" : 0,
+      "samplesWithPending" : 0,
+      "samplesPoolExhausted" : 34,
+      "pgMaxIdleInTransaction" : 0,
+      "pgSamplesWithIdleInTransaction" : 0,
+      "pgMaxIdleInTransactionAgeMs" : 0,
+      "pgIdleInTransactionLastQuery" : { }
+    }, {
+      "taskLatencyMs" : {
+        "count" : 10,
+        "p50" : 2013.9,
+        "p95" : 2014.1,
+        "max" : 2014.1,
+        "over1000ms" : 10
+      },
+      "connectionUsageMs" : {
+        "count" : 10,
+        "p50" : 2013.0,
+        "p95" : 2013.0,
+        "max" : 2013.0,
+        "over1000ms" : 10
+      },
+      "samples" : 34,
+      "hikariMaxActive" : 10,
+      "hikariMaxPending" : 0,
+      "samplesWithPending" : 0,
+      "samplesPoolExhausted" : 34,
+      "pgMaxIdleInTransaction" : 0,
+      "pgSamplesWithIdleInTransaction" : 0,
+      "pgMaxIdleInTransactionAgeMs" : 0,
+      "pgIdleInTransactionLastQuery" : { }
+    }, {
+      "taskLatencyMs" : {
+        "count" : 10,
+        "p50" : 2024.4,
+        "p95" : 2024.5,
+        "max" : 2024.5,
+        "over1000ms" : 10
+      },
+      "connectionUsageMs" : {
+        "count" : 10,
+        "p50" : 2024.0,
+        "p95" : 2024.0,
+        "max" : 2024.0,
+        "over1000ms" : 10
+      },
+      "samples" : 34,
+      "hikariMaxActive" : 10,
+      "hikariMaxPending" : 0,
+      "samplesWithPending" : 0,
+      "samplesPoolExhausted" : 34,
+      "pgMaxIdleInTransaction" : 0,
+      "pgSamplesWithIdleInTransaction" : 0,
+      "pgMaxIdleInTransactionAgeMs" : 0,
+      "pgIdleInTransactionLastQuery" : { }
+    } ],
+    "BEFORE_TX" : [ {
+      "taskLatencyMs" : {
+        "count" : 10,
+        "p50" : 2019.1,
+        "p95" : 2019.2,
+        "max" : 2019.2,
+        "over1000ms" : 10
+      },
+      "connectionUsageMs" : {
+        "count" : 10,
+        "p50" : 9.0,
+        "p95" : 9.0,
+        "max" : 9.0,
+        "over1000ms" : 0
+      },
+      "samples" : 34,
+      "hikariMaxActive" : 0,
+      "hikariMaxPending" : 0,
+      "samplesWithPending" : 0,
+      "samplesPoolExhausted" : 0,
+      "pgMaxIdleInTransaction" : 0,
+      "pgSamplesWithIdleInTransaction" : 0,
+      "pgMaxIdleInTransactionAgeMs" : 0,
+      "pgIdleInTransactionLastQuery" : { }
+    }, {
+      "taskLatencyMs" : {
+        "count" : 10,
+        "p50" : 2024.4,
+        "p95" : 2024.6,
+        "max" : 2024.6,
+        "over1000ms" : 10
+      },
+      "connectionUsageMs" : {
+        "count" : 10,
+        "p50" : 10.0,
+        "p95" : 10.0,
+        "max" : 10.0,
+        "over1000ms" : 0
+      },
+      "samples" : 34,
+      "hikariMaxActive" : 0,
+      "hikariMaxPending" : 0,
+      "samplesWithPending" : 0,
+      "samplesPoolExhausted" : 0,
+      "pgMaxIdleInTransaction" : 0,
+      "pgSamplesWithIdleInTransaction" : 0,
+      "pgMaxIdleInTransactionAgeMs" : 0,
+      "pgIdleInTransactionLastQuery" : { }
+    }, {
+      "taskLatencyMs" : {
+        "count" : 10,
+        "p50" : 2024.5,
+        "p95" : 2024.6,
+        "max" : 2024.6,
+        "over1000ms" : 10
+      },
+      "connectionUsageMs" : {
+        "count" : 10,
+        "p50" : 10.0,
+        "p95" : 10.0,
+        "max" : 10.0,
+        "over1000ms" : 0
+      },
+      "samples" : 34,
+      "hikariMaxActive" : 0,
+      "hikariMaxPending" : 0,
+      "samplesWithPending" : 0,
+      "samplesPoolExhausted" : 0,
+      "pgMaxIdleInTransaction" : 0,
+      "pgSamplesWithIdleInTransaction" : 0,
+      "pgMaxIdleInTransactionAgeMs" : 0,
+      "pgIdleInTransactionLastQuery" : { }
+    } ]
+  }
+}

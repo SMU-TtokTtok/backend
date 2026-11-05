@@ -12,9 +12,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.project.ttokttok.domain.user.domain.EmailVerification;
 import org.project.ttokttok.domain.user.repository.EmailVerificationRepository;
 import org.project.ttokttok.infrastructure.email.service.EmailService;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -27,13 +30,14 @@ class EmailVerificationServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new EmailVerificationService(verificationRepository, emailService);
+        service = new EmailVerificationService(verificationRepository, emailService,
+                new TransactionTemplate(mock(PlatformTransactionManager.class)));
     }
 
     @Test
-    void sendCodeExpiresPendingThenSendsAndSavesFiveMinuteCode() {
+    void sendCodeExpiresPendingAndSavesFiveMinuteCodeThenSends() {
         given(emailService.isValidSangmyungEmail(EMAIL)).willReturn(true);
-        given(emailService.sendVerificationCode(EMAIL)).willReturn(CODE);
+        given(emailService.generateVerificationCode()).willReturn(CODE);
         LocalDateTime before = LocalDateTime.now();
 
         service.sendVerificationCode(EMAIL);
@@ -42,8 +46,8 @@ class EmailVerificationServiceTest {
         InOrder order = inOrder(emailService, verificationRepository);
         order.verify(emailService).isValidSangmyungEmail(EMAIL);
         order.verify(verificationRepository).expireAllPendingVerifications(EMAIL);
-        order.verify(emailService).sendVerificationCode(EMAIL);
         order.verify(verificationRepository).save(saved.capture());
+        order.verify(emailService).sendVerificationCode(EMAIL, CODE);
         assertThat(saved.getValue().getEmail()).isEqualTo(EMAIL);
         assertThat(saved.getValue().getCode()).isEqualTo(CODE);
         assertThat(saved.getValue().isVerified()).isFalse();
@@ -55,19 +59,19 @@ class EmailVerificationServiceTest {
         assertThatThrownBy(() -> service.sendVerificationCode(EMAIL))
                 .isInstanceOf(IllegalArgumentException.class).hasMessage("상명대학교 이메일만 사용 가능합니다.");
         verifyNoInteractions(verificationRepository);
-        verify(emailService, never()).sendVerificationCode(any());
+        verify(emailService, never()).sendVerificationCode(any(), any());
     }
 
     @Test
-    void sendFailureDoesNotSaveNewCode() {
+    void sendFailurePropagatesAfterCodeIsSaved() {
         given(emailService.isValidSangmyungEmail(EMAIL)).willReturn(true);
+        given(emailService.generateVerificationCode()).willReturn(CODE);
         RuntimeException failure = new RuntimeException("SMTP failed");
-        given(emailService.sendVerificationCode(EMAIL)).willThrow(failure);
+        willThrow(failure).given(emailService).sendVerificationCode(EMAIL, CODE);
 
         assertThatThrownBy(() -> service.sendVerificationCode(EMAIL)).isSameAs(failure);
 
-        verify(verificationRepository).expireAllPendingVerifications(EMAIL);
-        verify(verificationRepository, never()).save(any());
+        verify(verificationRepository).save(any());
     }
 
     @Test
