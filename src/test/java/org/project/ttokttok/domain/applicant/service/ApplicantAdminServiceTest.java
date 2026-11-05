@@ -31,7 +31,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.project.ttokttok.domain.admin.domain.Admin;
-import org.project.ttokttok.domain.applicant.controller.dto.request.MailFormatRequest;
+import org.project.ttokttok.infrastructure.email.dto.ResultMailContent;
 import org.project.ttokttok.domain.applicant.domain.Applicant;
 import org.project.ttokttok.domain.applicant.domain.DocumentPhase;
 import org.project.ttokttok.domain.applicant.domain.enums.ApplicantPhase;
@@ -112,8 +112,8 @@ class ApplicantAdminServiceTest {
 
     private SendResultMailServiceRequest createResultMailRequest() {
         return SendResultMailServiceRequest.builder()
-                .pass(new MailFormatRequest("합격 안내", "축하합니다."))
-                .fail(new MailFormatRequest("불합격 안내", "아쉽습니다."))
+                .pass(new ResultMailContent("합격 안내", "축하합니다."))
+                .fail(new ResultMailContent("불합격 안내", "아쉽습니다."))
                 .build();
     }
 

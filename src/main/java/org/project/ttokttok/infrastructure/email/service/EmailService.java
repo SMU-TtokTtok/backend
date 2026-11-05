@@ -2,8 +2,8 @@ package org.project.ttokttok.infrastructure.email.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.project.ttokttok.domain.applicant.controller.dto.request.MailFormatRequest;
 import org.project.ttokttok.infrastructure.email.dto.EmailRequest;
+import org.project.ttokttok.infrastructure.email.dto.ResultMailContent;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -109,7 +109,7 @@ public class EmailService {
      * 지연 로딩(영속성 컨텍스트) 이슈가 없다.
      */
     @Async("mailExecutor")
-    public void sendResultMail(List<String> emails, MailFormatRequest request) {
+    public void sendResultMail(List<String> emails, ResultMailContent request) {
         int successCount = 0;
         int failureCount = 0;
 

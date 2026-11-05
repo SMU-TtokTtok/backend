@@ -18,7 +18,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.project.ttokttok.domain.admin.domain.Admin;
-import org.project.ttokttok.domain.applicant.controller.dto.request.MailFormatRequest;
+import org.project.ttokttok.infrastructure.email.dto.ResultMailContent;
 import org.project.ttokttok.domain.applicant.domain.Applicant;
 import org.project.ttokttok.domain.applicant.domain.enums.ApplicantPhase;
 import org.project.ttokttok.domain.applicant.domain.enums.Gender;
@@ -264,8 +264,8 @@ class ApplicantAdminApiControllerIntegrationTest {
 
         // when & then
         perform(json(post(url).param("kind", "DOCUMENT"), body), clubB).andExpect(status().isOk());
-        verify(emailService).sendResultMail(List.of("B@example.com"), new MailFormatRequest("합격", "축하합니다"));
-        verify(emailService).sendResultMail(List.of("failed@example.com"), new MailFormatRequest("불합격", "다음에 만나요"));
+        verify(emailService).sendResultMail(List.of("B@example.com"), new ResultMailContent("합격", "축하합니다"));
+        verify(emailService).sendResultMail(List.of("failed@example.com"), new ResultMailContent("불합격", "다음에 만나요"));
         verifyNoInteractions(fcmService, s3Service);
     }
 
