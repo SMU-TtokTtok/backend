@@ -1,11 +1,11 @@
-package org.project.ttokttok.domain.club.service.dto.request;
+package org.project.ttokttok.domain.club.domain;
 
 import org.openapitools.jackson.nullable.JsonNullable;
 import org.project.ttokttok.domain.club.domain.enums.ClubCategory;
 import org.project.ttokttok.domain.club.domain.enums.ClubType;
 import org.project.ttokttok.domain.club.domain.enums.ClubUniv;
 
-public record ClubPatchRequest(
+public record ClubPatch(
         JsonNullable<String> name,
         JsonNullable<ClubType> clubType,
         JsonNullable<ClubCategory> clubCategory,

@@ -1,5 +1,6 @@
 package org.project.ttokttok.domain.club.service.dto.request;
 
+import org.project.ttokttok.domain.club.domain.ClubPatch;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 import org.openapitools.jackson.nullable.JsonNullable;
@@ -28,8 +29,8 @@ public record ClubContentUpdateServiceRequest(
         JsonNullable<Set<ApplicableGrade>> grades,
         JsonNullable<Integer> maxApplyCount
 ) {
-    public ClubPatchRequest toClubPatchRequest() {
-        return new ClubPatchRequest(
+    public ClubPatch toClubPatch() {
+        return new ClubPatch(
                 name,
                 clubType,
                 clubCategory,

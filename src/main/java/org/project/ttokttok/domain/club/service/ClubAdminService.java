@@ -60,7 +60,7 @@ public class ClubAdminService {
 
         if (isRequestNotNull(request)) {
             updateFormSafety(request, club);
-            club.updateFrom(request.toClubPatchRequest());
+            club.updateFrom(request.toClubPatch());
         }
     }
 
