@@ -15,9 +15,9 @@ import org.project.ttokttok.domain.club.domain.enums.ClubUniv;
 import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.domain.clubMember.domain.ClubMember;
 import org.project.ttokttok.domain.clubMember.domain.MemberRole;
+import org.project.ttokttok.domain.clubMember.domain.dto.ClubMemberInExcelResponse;
 import org.project.ttokttok.domain.clubMember.repository.dto.ClubMemberCountQueryResponse;
 import org.project.ttokttok.domain.clubMember.repository.dto.ClubMemberPageQueryResponse;
-import org.project.ttokttok.global.excel.dto.ClubMemberInExcelResponse;
 import org.project.ttokttok.support.RepositoryTestSupport;
 import org.springframework.beans.factory.annotation.Autowired;
 

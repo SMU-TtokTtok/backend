@@ -1,4 +1,4 @@
-package org.project.ttokttok.global.excel.dto;
+package org.project.ttokttok.domain.clubMember.domain.dto;
 
 import org.project.ttokttok.domain.applicant.domain.enums.Grade;
 import org.project.ttokttok.domain.clubMember.domain.MemberRole;

@@ -1,6 +1,5 @@
 package org.project.ttokttok.domain.clubMember.service;
 
-import org.project.ttokttok.global.excel.dto.ClubMemberInExcelResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.project.ttokttok.domain.applicant.domain.enums.Gender;
@@ -10,6 +9,7 @@ import org.project.ttokttok.domain.club.exception.ClubNotFoundException;
 import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.domain.clubMember.domain.ClubMember;
 import org.project.ttokttok.domain.clubMember.domain.MemberRole;
+import org.project.ttokttok.domain.clubMember.domain.dto.ClubMemberInExcelResponse;
 import org.project.ttokttok.domain.clubMember.exception.AlreadyClubMemberException;
 import org.project.ttokttok.domain.clubMember.exception.ClubMemberAccessDeniedException;
 import org.project.ttokttok.domain.clubMember.exception.ClubMemberNotFoundException;
@@ -20,7 +20,6 @@ import org.project.ttokttok.domain.clubMember.repository.dto.ClubMemberPageQuery
 import org.project.ttokttok.domain.clubMember.service.dto.request.*;
 import org.project.ttokttok.domain.clubMember.service.dto.response.*;
 import org.project.ttokttok.domain.club.service.policy.ClubAccessPolicy;
-import org.project.ttokttok.global.excel.ExcelService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
