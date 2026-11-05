@@ -7,8 +7,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.project.ttokttok.domain.clubboard.controller.dto.response.ClubBoardDetailResponse;
-import org.project.ttokttok.domain.clubboard.controller.dto.response.ClubBoardListResponse;
+import org.project.ttokttok.domain.clubboard.service.dto.response.ClubBoardDetailResponse;
+import org.project.ttokttok.domain.clubboard.service.dto.response.ClubBoardListResponse;
 import org.project.ttokttok.global.exception.dto.ErrorResponse;
 import org.springframework.http.ResponseEntity;
 

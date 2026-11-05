@@ -1,4 +1,4 @@
-package org.project.ttokttok.domain.notice.controller.dto.response;
+package org.project.ttokttok.domain.notice.service.dto.response;
 
 import org.project.ttokttok.domain.notice.domain.Notice;
 
