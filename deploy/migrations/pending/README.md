@@ -45,3 +45,21 @@ SQL은 `add_club_member_unique_constraint.sql`, 사전 점검은 `check_club_mem
 ```powershell
 python deploy/test/test-club-member-unique-migration.py
 ```
+
+## #438 구조 개선 전 운영 상태 점검
+
+이메일 참조의 `user_id` 전환과 UNIQUE 추가 전에 운영 상태를 확인한다. `check_structure_integrity.sql`은 읽기 전용이며 자동 실행되지 않는다. 사용자 정보는 건수로만 조회한다.
+
+운영 호스트의 `deploy/` 디렉터리에서 실행한다. 접속 정보는 컨테이너 환경 변수를 쓰고 명령에 직접 적지 않는다.
+
+```bash
+docker compose exec -T postgres sh -c 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+  < migrations/pending/check_structure_integrity.sql > structure-check.txt
+
+docker compose exec -T postgres sh -c 'pg_dump --schema-only --no-owner --no-privileges -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+  > schema-baseline.sql
+```
+
+- `structure-check.txt`의 1~4번이 모두 0이어야 스키마 변경을 진행한다. 0이 아닌 항목은 데이터를 자동으로 고치지 않고 처리 방법을 먼저 정한다.
+- `fcm_token.email`에 사용자가 아닌 값이 있으면 `fcm_token`을 `user_id` 전환 대상에서 제외한다.
+- `schema-baseline.sql`은 데이터 없이 스키마만 담는다. 기준 스키마 테스트의 입력으로 쓴다.
