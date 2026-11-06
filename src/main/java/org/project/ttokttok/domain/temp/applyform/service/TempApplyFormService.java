@@ -1,6 +1,10 @@
 package org.project.ttokttok.domain.temp.applyform.service;
 
 import lombok.RequiredArgsConstructor;
+import org.project.ttokttok.domain.club.domain.Club;
+import org.project.ttokttok.domain.club.exception.ClubNotFoundException;
+import org.project.ttokttok.domain.club.repository.ClubRepository;
+import org.project.ttokttok.domain.club.service.policy.ClubAccessPolicy;
 import org.project.ttokttok.domain.temp.applyform.service.dto.request.TempApplyFormSaveServiceRequest;
 import org.project.ttokttok.domain.temp.applyform.domain.TempApplyForm;
 import org.project.ttokttok.domain.temp.applyform.repository.TempApplyFormRepository;
@@ -15,12 +19,16 @@ import java.util.Optional;
 public class TempApplyFormService {
 
     private final TempApplyFormRepository tempApplyFormRepository;
+    private final ClubRepository clubRepository;
+    private final ClubAccessPolicy clubAccessPolicy;
 
     /**
      * 임시 지원폼을 저장합니다. 기존 임시 지원폼이 있다면 업데이트하고, 없다면 새로 생성합니다.
      */
     @Transactional
-    public String saveTempApplyForm(TempApplyFormSaveServiceRequest request) {
+    public String saveTempApplyForm(String username, TempApplyFormSaveServiceRequest request) {
+        Club club = clubRepository.findById(request.clubId()).orElseThrow(ClubNotFoundException::new);
+        clubAccessPolicy.validateAdmin(club, username);
 
         // 기존 임시 지원폼이 있는지 확인하고 있으면 업데이트
         return tempApplyFormRepository.findByClubId(request.clubId())

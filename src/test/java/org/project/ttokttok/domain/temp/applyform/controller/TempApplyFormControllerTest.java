@@ -15,6 +15,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -47,7 +49,7 @@ class TempApplyFormControllerTest {
     void saveTempApplyForm_ShouldReturnCreated() throws Exception {
         // given
         mockAuthUser("admin@sangmyung.kr");
-        given(tempApplyFormService.saveTempApplyForm(any(TempApplyFormSaveServiceRequest.class)))
+        given(tempApplyFormService.saveTempApplyForm(eq("admin@sangmyung.kr"), any(TempApplyFormSaveServiceRequest.class)))
                 .willReturn("temp-form-1");
 
         String requestBody = """
@@ -71,6 +73,7 @@ class TempApplyFormControllerTest {
                         .content(requestBody))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.tempApplyFormId").value("temp-form-1"));
+        verify(tempApplyFormService).saveTempApplyForm(eq("admin@sangmyung.kr"), any(TempApplyFormSaveServiceRequest.class));
     }
 
     @Test
