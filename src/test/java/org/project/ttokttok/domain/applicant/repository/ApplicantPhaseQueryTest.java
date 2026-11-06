@@ -1,5 +1,6 @@
 package org.project.ttokttok.domain.applicant.repository;
 
+import org.project.ttokttok.domain.applicant.domain.enums.ApplicantPhase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -21,30 +22,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DisplayName("ApplicantPhaseQuery - 전형 단계 조회 전략")
 class ApplicantPhaseQueryTest {
 
-    @Nested
-    @DisplayName("from(): kind 문자열 매핑")
-    class From {
-
-        @ParameterizedTest(name = "\"{0}\" -> INTERVIEW")
-        @ValueSource(strings = {"INTERVIEW", "interview", "Interview"})
-        @DisplayName("INTERVIEW는 대소문자 무관하게 면접 전형으로 매핑된다")
-        void mapsInterviewIgnoringCase(String kind) {
-            assertThat(ApplicantPhaseQuery.from(kind)).isEqualTo(ApplicantPhaseQuery.INTERVIEW);
-        }
-
-        @ParameterizedTest(name = "\"{0}\" -> DOCUMENT")
-        @ValueSource(strings = {"DOCUMENT", "document", "", "그 외 아무 값"})
-        @DisplayName("INTERVIEW가 아닌 값은 모두 서류 전형으로 매핑된다")
-        void mapsEverythingElseToDocument(String kind) {
-            assertThat(ApplicantPhaseQuery.from(kind)).isEqualTo(ApplicantPhaseQuery.DOCUMENT);
-        }
-
-        @ParameterizedTest
-        @NullSource
-        @DisplayName("kind가 null이어도 예외 없이 서류 전형으로 매핑된다")
-        void mapsNullToDocumentWithoutThrowing(String kind) {
-            assertThat(ApplicantPhaseQuery.from(kind)).isEqualTo(ApplicantPhaseQuery.DOCUMENT);
-        }
+    @Test
+    void mapsTypedPhaseToQueryStrategy() {
+        assertThat(ApplicantPhaseQuery.from(ApplicantPhase.DOCUMENT)).isEqualTo(ApplicantPhaseQuery.DOCUMENT);
+        assertThat(ApplicantPhaseQuery.from(ApplicantPhase.INTERVIEW)).isEqualTo(ApplicantPhaseQuery.INTERVIEW);
+        assertThat(ApplicantPhaseQuery.from(null)).isEqualTo(ApplicantPhaseQuery.DOCUMENT);
     }
 
     @Nested

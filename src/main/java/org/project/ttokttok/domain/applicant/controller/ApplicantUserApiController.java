@@ -1,5 +1,6 @@
 package org.project.ttokttok.domain.applicant.controller;
 
+import org.project.ttokttok.domain.applicant.domain.enums.ApplicationHistorySort;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.project.ttokttok.domain.applicant.controller.docs.ApplicantUserDocs;
@@ -59,7 +60,7 @@ public class ApplicantUserApiController implements ApplicantUserDocs {
             @RequestParam(defaultValue = "latest") String sort) {
 
         ClubListServiceResponse serviceResponse =
-                applicantUserService.getUserApplicationHistory(email, size, cursor, sort);
+                applicantUserService.getUserApplicationHistory(email, size, cursor, ApplicationHistorySort.from(sort));
 
         ClubListResponse response = ClubListResponse.from(serviceResponse);
 

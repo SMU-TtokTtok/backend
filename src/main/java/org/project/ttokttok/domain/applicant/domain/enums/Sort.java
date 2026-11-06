@@ -1,4 +1,4 @@
-package org.project.ttokttok.domain.applicant.controller.enums;
+package org.project.ttokttok.domain.applicant.domain.enums;
 
 public enum Sort {
     GRADE, // 학년순 정렬

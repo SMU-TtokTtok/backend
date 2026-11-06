@@ -235,7 +235,7 @@ class ApplicantFinalizeRaceExperimentTest {
                 try {
                     var response = applicantAdminService.finalizeApplicantsStatus(
                             org.project.ttokttok.domain.applicant.service.dto.request.ApplicantFinalizationRequest
-                                    .of(username, f.clubId, "DOCUMENT"));
+                                    .of(username, f.clubId, ApplicantPhase.DOCUMENT));
                     synchronized (responseShapes) {
                         responseShapes.merge(response.toString(), 1, Integer::sum);
                     }

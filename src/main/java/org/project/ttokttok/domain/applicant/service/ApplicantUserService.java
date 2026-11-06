@@ -1,5 +1,6 @@
 package org.project.ttokttok.domain.applicant.service;
 
+import org.project.ttokttok.domain.applicant.domain.enums.ApplicationHistorySort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.exception.ConstraintViolationException;
@@ -127,7 +128,7 @@ public class ApplicantUserService {
     public ClubListServiceResponse getUserApplicationHistory(String userEmail,
                                                            int size,
                                                            String cursor,
-                                                           String sort) {
+                                                           ApplicationHistorySort sort) {
         // 1. 사용자 존재 여부 검증
         validateUserExists(userEmail);
 

@@ -159,7 +159,7 @@ public class ApplicantAdminService {
             throw new UnAuthorizedApplicantAccessException();
         }
 
-        ApplicantPhase phase = ApplicantPhase.from(request.kind());
+        ApplicantPhase phase = request.kind();
         applicant.changeEvaluationStatus(phase, request.status());
     }
 
@@ -172,7 +172,7 @@ public class ApplicantAdminService {
         clubAccessPolicy.validateAdmin(club, request.username());
 
         ApplyForm currentApplyForm = findActiveApplyForm(request.clubId());
-        ApplicantPhase phase = ApplicantPhase.from(request.kind());
+        ApplicantPhase phase = request.kind();
         int passedApplicantCount = processApplicants(currentApplyForm, club, phase);
         int finalizedApplicantCount =
                 calculateFinalizedApplicantCount(currentApplyForm.getId(), phase) + passedApplicantCount;
@@ -186,7 +186,7 @@ public class ApplicantAdminService {
     public void sendResultMailToApplicants(SendResultMailServiceRequest request,
                                            String username,
                                            String clubId,
-                                           String kind) {
+                                           ApplicantPhase kind) {
 
         Club club = clubRepository.findById(clubId)
                 .orElseThrow(ClubNotFoundException::new);
@@ -194,7 +194,7 @@ public class ApplicantAdminService {
         clubAccessPolicy.validateAdmin(club, username);
 
         ApplyForm currentApplyForm = findActiveApplyForm(clubId);
-        ApplicantPhase phase = ApplicantPhase.from(kind);
+        ApplicantPhase phase = kind;
 
         List<String> passedEmails = filterApplicantsByStatus(currentApplyForm.getId(), phase, PASS)
                 .stream()

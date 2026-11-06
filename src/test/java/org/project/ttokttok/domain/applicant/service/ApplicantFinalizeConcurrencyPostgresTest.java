@@ -1,5 +1,6 @@
 package org.project.ttokttok.domain.applicant.service;
 
+import org.project.ttokttok.domain.applicant.domain.enums.ApplicantPhase;
 import jakarta.persistence.EntityManager;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -150,7 +151,7 @@ class ApplicantFinalizeConcurrencyPostgresTest {
 
     private ApplicantFinalizeServiceResponse finalizeOnce(Fixture f) {
         return applicantAdminService.finalizeApplicantsStatus(
-                ApplicantFinalizationRequest.of(f.username, f.clubId, "DOCUMENT"));
+                ApplicantFinalizationRequest.of(f.username, f.clubId, ApplicantPhase.DOCUMENT));
     }
 
     /** 성공하면 부원 ID, 이미 등록돼 있으면 기존 규약의 AlreadyClubMemberException을 반환값으로 돌려준다. */

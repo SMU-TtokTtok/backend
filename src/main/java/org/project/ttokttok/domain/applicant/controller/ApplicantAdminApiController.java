@@ -1,5 +1,6 @@
 package org.project.ttokttok.domain.applicant.controller;
 
+import org.project.ttokttok.domain.applicant.domain.enums.ApplicantPhase;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.project.ttokttok.domain.applicant.controller.docs.ApplicantAdminDocs;
@@ -9,7 +10,7 @@ import org.project.ttokttok.domain.applicant.controller.dto.response.ApplicantDe
 import org.project.ttokttok.domain.applicant.controller.dto.response.ApplicantFinalizeResponse;
 import org.project.ttokttok.domain.applicant.controller.dto.response.ApplicantPageResponse;
 import org.project.ttokttok.domain.applicant.controller.enums.Kind;
-import org.project.ttokttok.domain.applicant.controller.enums.Sort;
+import org.project.ttokttok.domain.applicant.domain.enums.Sort;
 import org.project.ttokttok.domain.applicant.service.ApplicantAdminService;
 import org.project.ttokttok.domain.applicant.service.dto.request.*;
 import org.project.ttokttok.domain.applicant.service.dto.response.ApplicantDetailServiceResponse;
@@ -36,11 +37,11 @@ public class ApplicantAdminApiController implements ApplicantAdminDocs {
 
         ApplicantPageServiceRequest request = ApplicantPageServiceRequest.of(
                 username,
-                sort.name(),
+                sort,
                 isEvaluating,
                 cursor,
                 size,
-                kind.name()
+                ApplicantPhase.valueOf(kind.name())
         );
 
         ApplicantPageResponse response = ApplicantPageResponse.from(
@@ -75,11 +76,11 @@ public class ApplicantAdminApiController implements ApplicantAdminDocs {
         ApplicantSearchServiceRequest request = ApplicantSearchServiceRequest.of(
                 username,
                 keyword,
-                sort.name(),
+                sort,
                 isEvaluating,
                 cursor,
                 size,
-                kind.name()
+                ApplicantPhase.valueOf(kind.name())
         );
 
         ApplicantPageResponse response = ApplicantPageResponse.from(
@@ -101,7 +102,7 @@ public class ApplicantAdminApiController implements ApplicantAdminDocs {
                 true,
                 page,
                 size,
-                kind.name()
+                ApplicantPhase.valueOf(kind.name())
         );
 
         ApplicantPageResponse response = ApplicantPageResponse.from(
@@ -123,7 +124,7 @@ public class ApplicantAdminApiController implements ApplicantAdminDocs {
                 false,
                 page,
                 size,
-                kind.name()
+                ApplicantPhase.valueOf(kind.name())
         );
 
         ApplicantPageResponse response = ApplicantPageResponse.from(
@@ -144,7 +145,7 @@ public class ApplicantAdminApiController implements ApplicantAdminDocs {
                 username,
                 applicantId,
                 request.status(),
-                kind.name()
+                ApplicantPhase.valueOf(kind.name())
         );
 
         applicantAdminService.updateApplicantStatus(serviceRequest);
@@ -160,7 +161,7 @@ public class ApplicantAdminApiController implements ApplicantAdminDocs {
         ApplicantFinalizationRequest request = ApplicantFinalizationRequest.of(
                 username,
                 clubId,
-                kind.name()
+                ApplicantPhase.valueOf(kind.name())
         );
 
         ApplicantFinalizeResponse response = ApplicantFinalizeResponse.from(
@@ -181,7 +182,7 @@ public class ApplicantAdminApiController implements ApplicantAdminDocs {
                 request.toServiceRequest(),
                 username,
                 clubId,
-                kind.name()
+                ApplicantPhase.valueOf(kind.name())
         );
 
         return ResponseEntity.ok()

@@ -13,7 +13,7 @@ import org.project.ttokttok.domain.applicant.controller.dto.response.ApplicantDe
 import org.project.ttokttok.domain.applicant.controller.dto.response.ApplicantFinalizeResponse;
 import org.project.ttokttok.domain.applicant.controller.dto.response.ApplicantPageResponse;
 import org.project.ttokttok.domain.applicant.controller.enums.Kind;
-import org.project.ttokttok.domain.applicant.controller.enums.Sort;
+import org.project.ttokttok.domain.applicant.domain.enums.Sort;
 import org.project.ttokttok.domain.applicant.domain.enums.PhaseStatus;
 import org.project.ttokttok.global.exception.dto.ErrorResponse;
 import org.springframework.http.ResponseEntity;
