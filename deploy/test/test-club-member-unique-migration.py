@@ -5,7 +5,8 @@ import uuid
 
 ROOT = Path(__file__).resolve().parents[2]
 PENDING = ROOT / "deploy/migrations/pending"
-MIGRATION = (PENDING / "add_club_member_unique_constraint.sql").read_text(encoding="utf-8")
+MIGRATION = (ROOT / "src/main/resources/db/migration/V29__add_club_member_club_email_unique_constraint.sql").read_text(
+    encoding="utf-8")
 PREFLIGHT = (PENDING / "check_club_member_duplicates.sql").read_text(encoding="utf-8")
 
 
