@@ -10,6 +10,7 @@ import org.project.ttokttok.domain.user.domain.User;
 import org.project.ttokttok.domain.user.exception.OAuthOnlyAccountException;
 import org.project.ttokttok.domain.user.repository.UserRepository;
 import org.project.ttokttok.domain.user.service.dto.request.ResetPasswordServiceRequest;
+import org.project.ttokttok.global.util.LogMasker;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,7 +36,7 @@ public class PasswordResetService {
         user.updatePassword(passwordEncoder.encode(request.newPassword()));
         userRepository.save(user);
 
-        log.info("비밀번호 재설정 완료 : {}", user.getEmail());
+        log.info("비밀번호 재설정 완료 : {}", LogMasker.email(user.getEmail()));
     }
 
     // 트랜잭션 없이 실행한다. 트랜잭션(NOT_SUPPORTED 포함) 범위 안에서 사용자를 조회하면

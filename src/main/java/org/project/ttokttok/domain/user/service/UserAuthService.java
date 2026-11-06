@@ -21,6 +21,7 @@ import org.project.ttokttok.global.auth.jwt.dto.response.TokenResponse;
 import org.project.ttokttok.global.auth.jwt.exception.InvalidRefreshTokenException;
 import org.project.ttokttok.global.auth.jwt.service.TokenProvider;
 import org.project.ttokttok.infrastructure.redis.service.RefreshTokenRedisService;
+import org.project.ttokttok.global.util.LogMasker;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -73,7 +74,7 @@ public class UserAuthService {
         );
 
         User savedUser = userRepository.save(user);
-        log.info("회원가입 완료: {}", savedUser.getEmail());
+        log.info("회원가입 완료: {}", LogMasker.email(savedUser.getEmail()));
 
         return UserServiceResponse.from(savedUser);
     }
@@ -115,7 +116,7 @@ public class UserAuthService {
         // 4-5. 리프레시 토큰 Redis 저장 (항상 저장)
         refreshTokenRedisService.save(user.getEmail(), tokens.refreshToken());
 
-        log.info("로그인 성공: {}", user.getEmail());
+        log.info("로그인 성공: {}", LogMasker.email(user.getEmail()));
 
         return LoginServiceResponse.from(tokens, UserServiceResponse.from(user));
     }
@@ -140,7 +141,7 @@ public class UserAuthService {
                     accessTokenExpiryTime = 0; // 이미 만료된 토큰
                 }
             } catch (Exception e) {
-                log.warn("액세스 토큰 만료 시간 추출 실패: {}", e.getMessage());
+                log.debug("액세스 토큰 만료 시간 추출 실패: {}", e.getClass().getSimpleName());
                 accessTokenExpiryTime = 0;
             }
         }

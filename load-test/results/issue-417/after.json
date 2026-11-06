@@ -1,0 +1,217 @@
+{
+  "public_expired_token" : {
+    "requests" : 200,
+    "statuses" : {
+      "200" : 200
+    },
+    "events" : 0,
+    "levels" : { },
+    "lines" : 0,
+    "bytes" : 0,
+    "linesPerRequest" : 0.0,
+    "bytesPerRequest" : 0.0,
+    "stackTraces" : 0,
+    "eventsWithToken" : 0,
+    "eventsWithRawEmail" : 0,
+    "requestsPerSecondAtMonitorLimit" : null
+  },
+  "public_malformed_token" : {
+    "requests" : 200,
+    "statuses" : {
+      "200" : 200
+    },
+    "events" : 200,
+    "levels" : {
+      "WARN" : 200
+    },
+    "lines" : 200,
+    "bytes" : 45820,
+    "linesPerRequest" : 1.0,
+    "bytesPerRequest" : 229.1,
+    "stackTraces" : 0,
+    "eventsWithToken" : 0,
+    "eventsWithRawEmail" : 0,
+    "requestsPerSecondAtMonitorLimit" : 200.0
+  },
+  "public_wrong_signature" : {
+    "requests" : 200,
+    "statuses" : {
+      "200" : 200
+    },
+    "events" : 200,
+    "levels" : {
+      "WARN" : 200
+    },
+    "lines" : 200,
+    "bytes" : 45220,
+    "linesPerRequest" : 1.0,
+    "bytesPerRequest" : 226.1,
+    "stackTraces" : 0,
+    "eventsWithToken" : 0,
+    "eventsWithRawEmail" : 0,
+    "requestsPerSecondAtMonitorLimit" : 200.0
+  },
+  "public_lowercase_bearer" : {
+    "requests" : 200,
+    "statuses" : {
+      "200" : 200
+    },
+    "events" : 0,
+    "levels" : { },
+    "lines" : 0,
+    "bytes" : 0,
+    "linesPerRequest" : 0.0,
+    "bytesPerRequest" : 0.0,
+    "stackTraces" : 0,
+    "eventsWithToken" : 0,
+    "eventsWithRawEmail" : 0,
+    "requestsPerSecondAtMonitorLimit" : null
+  },
+  "public_anonymous" : {
+    "requests" : 200,
+    "statuses" : {
+      "200" : 200
+    },
+    "events" : 0,
+    "levels" : { },
+    "lines" : 0,
+    "bytes" : 0,
+    "linesPerRequest" : 0.0,
+    "bytesPerRequest" : 0.0,
+    "stackTraces" : 0,
+    "eventsWithToken" : 0,
+    "eventsWithRawEmail" : 0,
+    "requestsPerSecondAtMonitorLimit" : null
+  },
+  "public_valid_token" : {
+    "requests" : 200,
+    "statuses" : {
+      "200" : 200
+    },
+    "events" : 0,
+    "levels" : { },
+    "lines" : 0,
+    "bytes" : 0,
+    "linesPerRequest" : 0.0,
+    "bytesPerRequest" : 0.0,
+    "stackTraces" : 0,
+    "eventsWithToken" : 0,
+    "eventsWithRawEmail" : 0,
+    "requestsPerSecondAtMonitorLimit" : null
+  },
+  "protected_expired_token" : {
+    "requests" : 200,
+    "statuses" : {
+      "401" : 200
+    },
+    "events" : 0,
+    "levels" : { },
+    "lines" : 0,
+    "bytes" : 0,
+    "linesPerRequest" : 0.0,
+    "bytesPerRequest" : 0.0,
+    "stackTraces" : 0,
+    "eventsWithToken" : 0,
+    "eventsWithRawEmail" : 0,
+    "requestsPerSecondAtMonitorLimit" : null
+  },
+  "protected_malformed_token" : {
+    "requests" : 200,
+    "statuses" : {
+      "401" : 200
+    },
+    "events" : 200,
+    "levels" : {
+      "WARN" : 200
+    },
+    "lines" : 200,
+    "bytes" : 28220,
+    "linesPerRequest" : 1.0,
+    "bytesPerRequest" : 141.1,
+    "stackTraces" : 0,
+    "eventsWithToken" : 0,
+    "eventsWithRawEmail" : 0,
+    "requestsPerSecondAtMonitorLimit" : 200.0
+  },
+  "protected_wrong_signature" : {
+    "requests" : 200,
+    "statuses" : {
+      "401" : 200
+    },
+    "events" : 200,
+    "levels" : {
+      "WARN" : 200
+    },
+    "lines" : 200,
+    "bytes" : 30620,
+    "linesPerRequest" : 1.0,
+    "bytesPerRequest" : 153.1,
+    "stackTraces" : 0,
+    "eventsWithToken" : 0,
+    "eventsWithRawEmail" : 0,
+    "requestsPerSecondAtMonitorLimit" : 200.0
+  },
+  "protected_valid_token" : {
+    "requests" : 200,
+    "statuses" : {
+      "200" : 200
+    },
+    "events" : 0,
+    "levels" : { },
+    "lines" : 0,
+    "bytes" : 0,
+    "linesPerRequest" : 0.0,
+    "bytesPerRequest" : 0.0,
+    "stackTraces" : 0,
+    "eventsWithToken" : 0,
+    "eventsWithRawEmail" : 0,
+    "requestsPerSecondAtMonitorLimit" : null
+  },
+  "logout_blacklist" : {
+    "requests" : 200,
+    "statuses" : { },
+    "events" : 0,
+    "levels" : { },
+    "lines" : 0,
+    "bytes" : 0,
+    "linesPerRequest" : 0.0,
+    "bytesPerRequest" : 0.0,
+    "stackTraces" : 0,
+    "eventsWithToken" : 0,
+    "eventsWithRawEmail" : 0,
+    "requestsPerSecondAtMonitorLimit" : null
+  },
+  "result_mail_success" : {
+    "requests" : 100,
+    "statuses" : { },
+    "events" : 1,
+    "levels" : {
+      "INFO" : 1
+    },
+    "lines" : 1,
+    "bytes" : 165,
+    "linesPerRequest" : 0.01,
+    "bytesPerRequest" : 1.65,
+    "stackTraces" : 0,
+    "eventsWithToken" : 0,
+    "eventsWithRawEmail" : 0,
+    "requestsPerSecondAtMonitorLimit" : 20000.0
+  },
+  "result_mail_smtp_outage" : {
+    "requests" : 100,
+    "statuses" : { },
+    "events" : 101,
+    "levels" : {
+      "ERROR" : 1,
+      "WARN" : 100
+    },
+    "lines" : 120,
+    "bytes" : 17048,
+    "linesPerRequest" : 1.2,
+    "bytesPerRequest" : 170.48,
+    "stackTraces" : 1,
+    "eventsWithToken" : 0,
+    "eventsWithRawEmail" : 0,
+    "requestsPerSecondAtMonitorLimit" : 166.67
+  }
+}

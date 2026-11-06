@@ -3,6 +3,7 @@ package org.project.ttokttok.global.annotationresolver.auth;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import io.jsonwebtoken.ExpiredJwtException;
 import org.project.ttokttok.global.annotation.auth.AuthUserInfo;
 import org.project.ttokttok.global.auth.jwt.service.TokenProvider;
 import org.springframework.context.annotation.Configuration;
@@ -47,20 +48,23 @@ public class AuthUserInfoResolver implements HandlerMethodArgumentResolver {
             token = authorization.substring(7); // "Bearer " 제거
             log.debug("[AuthUserInfoResolver] Bearer 토큰 추출 완료 - URI: {}, 토큰 길이: {}", requestURI, token.length());
         } else {
-            log.warn("[AuthUserInfoResolver] Authorization 헤더가 없거나 Bearer로 시작하지 않음 - URI: {}, Authorization: {}", 
-                    requestURI, authorization);
+            log.debug("[AuthUserInfoResolver] Bearer 토큰 없음 - URI: {}", requestURI);
         }
 
         if (token != null) {
             try {
                 String username = tokenProvider.getUsernameFromToken(token);
-                log.debug("[AuthUserInfoResolver] 사용자 정보 추출 완료 - URI: {}, username: {}", requestURI, username);
+                log.debug("[AuthUserInfoResolver] 사용자 정보 추출 완료 - URI: {}", requestURI);
                 return username;
+            } catch (ExpiredJwtException e) {
+                // 만료는 정상 흐름이다. (컨트롤러에서 null 체크하여 401 처리)
+                log.debug("[AuthUserInfoResolver] 만료된 토큰 - URI: {}", requestURI);
+                return null;
             } catch (Exception e) {
-                // 토큰이 만료되었거나 잘못된 경우 null 반환
-                // (컨트롤러에서 null 체크하여 401 처리)
-                log.error("[AuthUserInfoResolver] 토큰에서 사용자 정보 추출 실패 - URI: {}, error: {}", 
-                        requestURI, e.getMessage(), e);
+                // 공개 경로는 JWT 필터를 거치지 않으므로 여기가 유일한 기록이다.
+                // 토큰 내용은 요청자가 제어하는 값이라 메시지 대신 예외 타입만 남긴다.
+                log.warn("[AuthUserInfoResolver] 토큰에서 사용자 정보 추출 실패 - URI: {}, error: {}",
+                        requestURI, e.getClass().getSimpleName());
                 return null;
             }
         }

@@ -25,6 +25,7 @@ import org.project.ttokttok.global.auth.oauth.dto.GoogleUserInfo;
 import org.project.ttokttok.global.auth.oauth.exception.GoogleEmailNotVerifiedException;
 import org.project.ttokttok.infrastructure.redis.service.OnboardingTokenRedisService;
 import org.project.ttokttok.infrastructure.redis.service.RefreshTokenRedisService;
+import org.project.ttokttok.global.util.LogMasker;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
@@ -116,7 +117,7 @@ public class GoogleOAuthService {
             user = recoverBySub(claims.sub(), GoogleAccountConflictException::new);
         }
 
-        log.info("구글 온보딩 가입 완료: {}", user.getEmail());
+        log.info("구글 온보딩 가입 완료: {}", LogMasker.email(user.getEmail()));
         return issueTokens(user);
     }
 
@@ -130,14 +131,14 @@ public class GoogleOAuthService {
             user = recoverBySub(sub, GoogleAccountConflictException::new);
         }
 
-        log.info("구글 계정 자동 연동 완료: {}", user.getEmail());
+        log.info("구글 계정 자동 연동 완료: {}", LogMasker.email(user.getEmail()));
         return GoogleLoginServiceResponse.ofLogin(issueTokenResponse(user), userServiceResponse(user));
     }
 
     // 신규 사용자 온보딩 시작 (계정 미생성)
     private GoogleLoginServiceResponse startOnboarding(GoogleUserInfo userInfo) {
         String onboardingToken = onboardingTokenProvider.generate(userInfo);
-        log.info("구글 신규 사용자 온보딩 시작: {}", userInfo.email());
+        log.info("구글 신규 사용자 온보딩 시작: {}", LogMasker.email(userInfo.email()));
         return GoogleLoginServiceResponse.ofOnboarding(onboardingToken, userInfo.email(), userInfo.name());
     }
 

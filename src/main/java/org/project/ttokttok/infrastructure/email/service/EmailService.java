@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.project.ttokttok.infrastructure.email.dto.EmailRequest;
 import org.project.ttokttok.infrastructure.email.dto.ResultMailContent;
+import org.project.ttokttok.global.util.LogMasker;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -53,16 +54,16 @@ public class EmailService {
             helper.setText(emailRequest.getContent(), emailRequest.isHtml());
 
             mailSender.send(message);
-            log.info("이메일 발송 성공: {}", emailRequest.getTo());
+            log.debug("이메일 발송 성공");
 
         } catch (MessagingException e) {
-            log.error("이메일 메시지 생성 실패: {} - {}", emailRequest.getTo(), e.getMessage());
+            log.warn("이메일 메시지 생성 실패: {} - {}", LogMasker.email(emailRequest.getTo()), e.getClass().getSimpleName());
             throw new RuntimeException("이메일 메시지 생성에 실패했습니다.", e);
         } catch (UnsupportedEncodingException e) {
-            log.error("이메일 인코딩 실패: {} - {}", emailRequest.getTo(), e.getMessage());
+            log.warn("이메일 인코딩 실패: {} - {}", LogMasker.email(emailRequest.getTo()), e.getClass().getSimpleName());
             throw new RuntimeException("이메일 인코딩에 실패했습니다.", e);
         } catch (MailException e) {
-            log.error("이메일 발송 실패: {} - {}", emailRequest.getTo(), e.getMessage());
+            log.warn("이메일 발송 실패: {} - {}", LogMasker.email(emailRequest.getTo()), e.getClass().getSimpleName());
             throw new RuntimeException("이메일 발송에 실패했습니다.", e);
         }
     }
@@ -91,13 +92,13 @@ public class EmailService {
         }
 
         sendEmail(EmailRequest.createVerificationEmail(email, code));
-        log.info("인증코드 발송 완료: {}", email);
+        log.debug("인증코드 발송 완료");
     }
 
     // 비밀번호 재설정 인증코드 발송
     public void sendPasswordResetCode(String email, String code) {
         sendEmail(EmailRequest.createPasswordResetEmail(email, code));
-        log.info("비밀번호 재설정 코드 발송 완료: {}", email);
+        log.debug("비밀번호 재설정 코드 발송 완료");
     }
 
     /**
@@ -116,10 +117,11 @@ public class EmailService {
     public void sendResultMail(List<String> emails, ResultMailContent request) {
         int successCount = 0;
         int failureCount = 0;
+        Exception lastFailure = null;
 
         for (String email : emails) {
             if (!isValidEmail(email)) {
-                log.warn("유효하지 않은 이메일 주소: {}", email);
+                log.warn("유효하지 않은 이메일 주소: {}", LogMasker.email(email));
                 failureCount++;
                 continue;
             }
@@ -128,14 +130,22 @@ public class EmailService {
                 EmailRequest emailRequest = EmailRequest.createResultEmail(email, request.title(), request.body());
                 sendEmail(emailRequest);
                 successCount++;
-                log.info("지원 결과 안내 이메일 발송 완료: {}", email);
             } catch (Exception e) {
                 failureCount++;
-                log.error("이메일 발송 실패: {} - {}", email, e.getMessage());
+                lastFailure = e;
             }
         }
 
-        log.info("지원 결과 안내 이메일 발송 완료 - 성공: {}건, 실패: {}건", successCount, failureCount);
+        logResultMailSummary(successCount, failureCount, lastFailure);
+    }
+
+    // 수신자별 실패는 sendEmail이 한 줄씩 남기므로 스택트레이스는 배치당 한 번만 남긴다.
+    private void logResultMailSummary(int successCount, int failureCount, Exception lastFailure) {
+        if (failureCount == 0) {
+            log.info("지원 결과 안내 이메일 발송 완료 - 성공: {}건, 실패: {}건", successCount, failureCount);
+            return;
+        }
+        log.error("지원 결과 안내 이메일 발송 완료 - 성공: {}건, 실패: {}건", successCount, failureCount, lastFailure);
     }
 
     // 순수 이메일 주소 검증 메서드
