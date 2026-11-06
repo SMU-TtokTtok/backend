@@ -1,5 +1,7 @@
 package org.project.ttokttok.domain.user.service;
 
+import org.project.ttokttok.domain.user.exception.UserValidationException;
+
 import java.time.LocalDateTime;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -62,14 +64,14 @@ class PasswordResetServiceTest {
     @Test
     void passwordMismatchStopsBeforeVerification() {
         assertThatThrownBy(() -> service.resetPassword(request("different")))
-                .isInstanceOf(IllegalArgumentException.class).hasMessage("새 비밀번호가 일치하지 않습니다.");
+                .isInstanceOf(UserValidationException.class).hasMessage("새 비밀번호가 일치하지 않습니다.");
         verifyNoInteractions(verificationRepository, userRepository, passwordEncoder, emailService);
     }
 
     @Test
     void missingVerificationStopsBeforeUserLookup() {
         assertThatThrownBy(() -> service.resetPassword(request("NewPassword123!")))
-                .isInstanceOf(IllegalArgumentException.class).hasMessage("인증 코드 성공 여부가 존재하지 않습니다.");
+                .isInstanceOf(UserValidationException.class).hasMessage("인증 코드 성공 여부가 존재하지 않습니다.");
         verifyNoInteractions(userRepository, passwordEncoder, emailService);
     }
 
@@ -77,7 +79,7 @@ class PasswordResetServiceTest {
     void missingUserDoesNotEncodeOrSave() {
         given(verificationRepository.existsByEmailAndCodeAndIsVerifiedTrue(EMAIL, CODE)).willReturn(true);
         assertThatThrownBy(() -> service.resetPassword(request("NewPassword123!")))
-                .isInstanceOf(IllegalArgumentException.class).hasMessage("존재하지 않는 사용자입니다.");
+                .isInstanceOf(UserValidationException.class).hasMessage("존재하지 않는 사용자입니다.");
         verifyNoInteractions(passwordEncoder, emailService);
         verify(userRepository, never()).save(any());
     }
@@ -118,7 +120,7 @@ class PasswordResetServiceTest {
     @Test
     void missingUserCannotRequestResetCode() {
         assertThatThrownBy(() -> service.sendPasswordResetCode(EMAIL))
-                .isInstanceOf(IllegalArgumentException.class).hasMessage("존재하지 않는 사용자입니다.");
+                .isInstanceOf(UserValidationException.class).hasMessage("존재하지 않는 사용자입니다.");
         verifyNoInteractions(verificationRepository, emailService);
     }
 

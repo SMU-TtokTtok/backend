@@ -1,5 +1,7 @@
 package org.project.ttokttok.domain.user.domain;
 
+import org.project.ttokttok.domain.user.exception.UserValidationException;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -47,7 +49,7 @@ class UserTest {
 
             // when & then
             assertThatThrownBy(() -> User.signUp(email, password, name, false))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(UserValidationException.class)
                     .hasMessage("약관 동의가 필요합니다.");
         }
 
@@ -56,7 +58,7 @@ class UserTest {
         @DisplayName("이메일이 비어있으면 회원가입이 불가능하다")
         void signUp_Fail_EmailEmpty(String email) {
             assertThatThrownBy(() -> User.signUp(email, "password", "name", true))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(UserValidationException.class)
                     .hasMessage("이메일은 필수입니다.");
         }
 
@@ -65,7 +67,7 @@ class UserTest {
         @DisplayName("이메일 형식이 올바르지 않으면 회원가입이 불가능하다")
         void signUp_Fail_EmailInvalid(String email) {
             assertThatThrownBy(() -> User.signUp(email, "password", "name", true))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(UserValidationException.class)
                     .hasMessage("올바른 이메일 형식이 아닙니다.");
         }
 
@@ -73,7 +75,7 @@ class UserTest {
         @DisplayName("이름이 2자 미만이면 회원가입이 불가능하다")
         void signUp_Fail_NameTooShort() {
             assertThatThrownBy(() -> User.signUp("test@sangmyung.kr", "pass", "김", true))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(UserValidationException.class)
                     .hasMessage("이름은 최소 2자 이상이어야 합니다.");
         }
     }

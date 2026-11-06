@@ -2,7 +2,7 @@ package org.project.ttokttok.infrastructure.s3.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.project.ttokttok.global.exception.ErrorMessage;
-import org.project.ttokttok.global.exception.exception.CustomException;
+import org.project.ttokttok.global.exception.CustomException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 

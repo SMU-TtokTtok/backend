@@ -1,6 +1,7 @@
 package org.project.ttokttok.infrastructure.s3.service;
 
-import static org.project.ttokttok.global.exception.ErrorMessage.S3_DELETE_NOT_FOUND;
+import org.project.ttokttok.global.exception.ErrorMessage;
+import org.project.ttokttok.infrastructure.s3.exception.S3ContentValidationException;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -38,7 +39,7 @@ public class S3KeyUrlGenerator {
         if (url.startsWith(fileCloudUrl + SLASH)) {
             return url.substring(fileCloudUrl.length() + 1);
         }
-        throw new IllegalArgumentException(S3_DELETE_NOT_FOUND.getMessage());
+        throw new S3ContentValidationException(ErrorMessage.S3_CONTENT_URL_INVALID);
     }
 
     /**

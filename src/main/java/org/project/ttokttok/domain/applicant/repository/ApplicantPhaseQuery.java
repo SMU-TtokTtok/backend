@@ -1,5 +1,6 @@
 package org.project.ttokttok.domain.applicant.repository;
 
+import org.project.ttokttok.domain.applicant.domain.enums.ApplicantPhase;
 import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -117,14 +118,8 @@ public enum ApplicantPhaseQuery {
         }
     };
 
-    private static final String INTERVIEW_KIND = "INTERVIEW";
-
-    /**
-     * 요청의 {@code kind} 문자열을 전략으로 변환한다.
-     * {@code "INTERVIEW"}(대소문자 무관)만 면접 전형이고, 그 외 값은 모두 서류 전형으로 본다.
-     */
-    public static ApplicantPhaseQuery from(String kind) {
-        return INTERVIEW_KIND.equalsIgnoreCase(kind) ? INTERVIEW : DOCUMENT;
+    public static ApplicantPhaseQuery from(ApplicantPhase phase) {
+        return phase == ApplicantPhase.INTERVIEW ? INTERVIEW : DOCUMENT;
     }
 
     /** 단계별 지원자 목록 조회의 기본 쿼리 (select + from + join) */

@@ -1,5 +1,6 @@
 package org.project.ttokttok.domain.applicant.service;
 
+import org.project.ttokttok.domain.applicant.domain.enums.Sort;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -60,9 +61,9 @@ import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.exception.ClubNotFoundException;
 import org.project.ttokttok.domain.club.exception.NotClubAdminException;
 import org.project.ttokttok.domain.club.repository.ClubRepository;
-import org.project.ttokttok.domain.clubMember.domain.ClubMember;
-import org.project.ttokttok.domain.clubMember.domain.MemberRole;
-import org.project.ttokttok.domain.clubMember.repository.ClubMemberRepository;
+import org.project.ttokttok.domain.clubmember.domain.ClubMember;
+import org.project.ttokttok.domain.clubmember.domain.MemberRole;
+import org.project.ttokttok.domain.clubmember.repository.ClubMemberRepository;
 import org.project.ttokttok.infrastructure.email.service.EmailService;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -139,7 +140,7 @@ class ApplicantAdminServiceTest {
             // given
             given(clubRepository.findByAdminUsername(USERNAME)).willReturn(Optional.empty());
             StatusUpdateServiceRequest request = StatusUpdateServiceRequest.of(
-                    USERNAME, APPLICANT_ID, PhaseStatus.PASS, "DOCUMENT");
+                    USERNAME, APPLICANT_ID, PhaseStatus.PASS, ApplicantPhase.DOCUMENT);
 
             // when & then
             assertThatThrownBy(() -> applicantAdminService.updateApplicantStatus(request))
@@ -153,7 +154,7 @@ class ApplicantAdminServiceTest {
             // given
             given(clubRepository.findByAdminUsername(USERNAME)).willReturn(Optional.empty());
             ApplicantStatusServiceRequest request = ApplicantStatusServiceRequest.of(
-                    USERNAME, true, 1, 4, "DOCUMENT");
+                    USERNAME, true, 1, 4, ApplicantPhase.DOCUMENT);
 
             // when & then
             assertThatThrownBy(() -> applicantAdminService.getApplicantsByStatus(request))
@@ -170,7 +171,7 @@ class ApplicantAdminServiceTest {
                     .willReturn(Optional.of(otherClub));
 
             ApplicantFinalizationRequest request = ApplicantFinalizationRequest.of(
-                    USERNAME, OTHER_CLUB_ID, "DOCUMENT");
+                    USERNAME, OTHER_CLUB_ID, ApplicantPhase.DOCUMENT);
 
             // when & then
             assertThatThrownBy(() -> applicantAdminService.finalizeApplicantsStatus(request))
@@ -190,7 +191,7 @@ class ApplicantAdminServiceTest {
 
             // when & then
             assertThatThrownBy(() -> applicantAdminService.sendResultMailToApplicants(
-                    request, USERNAME, OTHER_CLUB_ID, "DOCUMENT"))
+                    request, USERNAME, OTHER_CLUB_ID, ApplicantPhase.DOCUMENT))
                     .isExactlyInstanceOf(NotClubAdminException.class);
             verifyNoInteractions(applyFormRepository, applicantRepository, emailService);
         }
@@ -205,7 +206,7 @@ class ApplicantAdminServiceTest {
         void getApplicantPage_success() {
             // given
             ApplicantPageServiceRequest request = ApplicantPageServiceRequest.of(
-                    USERNAME, "GRADE", false, 1, 7, "DOCUMENT");
+                    USERNAME, Sort.GRADE, false, 1, 7, ApplicantPhase.DOCUMENT);
 
             Club club = createClub(CLUB_ID);
             given(clubRepository.findByAdminUsername(USERNAME)).willReturn(Optional.of(club));
@@ -223,7 +224,7 @@ class ApplicantAdminServiceTest {
                     .applicants(List.of())
                     .build();
             given(applicantRepository.findApplicantsPageWithSortCriteria(
-                    "GRADE", false, 1, 7, APPLY_FORM_ID, "DOCUMENT"))
+                    Sort.GRADE, false, 1, 7, APPLY_FORM_ID, ApplicantPhase.DOCUMENT))
                     .willReturn(queryResponse);
 
             // when
@@ -241,7 +242,7 @@ class ApplicantAdminServiceTest {
         void getApplicantPage_returnsEmpty_whenNoActiveApplyForm() {
             // given
             ApplicantPageServiceRequest request = ApplicantPageServiceRequest.of(
-                    USERNAME, "GRADE", false, 1, 7, "DOCUMENT");
+                    USERNAME, Sort.GRADE, false, 1, 7, ApplicantPhase.DOCUMENT);
 
             Club club = createClub(CLUB_ID);
             given(clubRepository.findByAdminUsername(USERNAME)).willReturn(Optional.of(club));
@@ -255,7 +256,7 @@ class ApplicantAdminServiceTest {
             assertThat(response.hasInterview()).isNull();
             assertThat(response.applicants()).isEmpty();
             verify(applicantRepository, never()).findApplicantsPageWithSortCriteria(
-                    anyString(), eq(false), eq(1), eq(7), anyString(), anyString());
+                    any(Sort.class), eq(false), eq(1), eq(7), anyString(), any(ApplicantPhase.class));
         }
 
         @Test
@@ -263,7 +264,7 @@ class ApplicantAdminServiceTest {
         void getApplicantPage_throwsNotClubAdminException_whenNotClubAdmin() {
             // given
             ApplicantPageServiceRequest request = ApplicantPageServiceRequest.of(
-                    USERNAME, "GRADE", false, 1, 7, "DOCUMENT");
+                    USERNAME, Sort.GRADE, false, 1, 7, ApplicantPhase.DOCUMENT);
             given(clubRepository.findByAdminUsername(USERNAME)).willReturn(Optional.empty());
 
             // when & then
@@ -387,7 +388,7 @@ class ApplicantAdminServiceTest {
         void searchApplicantByKeyword_success() {
             // given
             ApplicantSearchServiceRequest request = ApplicantSearchServiceRequest.of(
-                    USERNAME, "홍길동", "GRADE", false, 1, 7, "DOCUMENT");
+                    USERNAME, "홍길동", Sort.GRADE, false, 1, 7, ApplicantPhase.DOCUMENT);
 
             Club club = createClub(CLUB_ID);
             given(clubRepository.findByAdminUsername(USERNAME)).willReturn(Optional.of(club));
@@ -405,7 +406,7 @@ class ApplicantAdminServiceTest {
                     .applicants(List.of())
                     .build();
             given(applicantRepository.searchApplicantsByKeyword(
-                    "홍길동", "GRADE", false, 1, 7, APPLY_FORM_ID, "DOCUMENT"))
+                    "홍길동", Sort.GRADE, false, 1, 7, APPLY_FORM_ID, ApplicantPhase.DOCUMENT))
                     .willReturn(queryResponse);
 
             // when
@@ -421,7 +422,7 @@ class ApplicantAdminServiceTest {
         void searchApplicantByKeyword_returnsEmpty_whenNoActiveApplyForm() {
             // given
             ApplicantSearchServiceRequest request = ApplicantSearchServiceRequest.of(
-                    USERNAME, "홍길동", "GRADE", false, 1, 7, "DOCUMENT");
+                    USERNAME, "홍길동", Sort.GRADE, false, 1, 7, ApplicantPhase.DOCUMENT);
 
             Club club = createClub(CLUB_ID);
             given(clubRepository.findByAdminUsername(USERNAME)).willReturn(Optional.of(club));
@@ -440,7 +441,7 @@ class ApplicantAdminServiceTest {
         void searchApplicantByKeyword_throwsNotClubAdminException() {
             // given
             ApplicantSearchServiceRequest request = ApplicantSearchServiceRequest.of(
-                    USERNAME, "홍길동", "GRADE", false, 1, 7, "DOCUMENT");
+                    USERNAME, "홍길동", Sort.GRADE, false, 1, 7, ApplicantPhase.DOCUMENT);
             given(clubRepository.findByAdminUsername(USERNAME)).willReturn(Optional.empty());
 
             // when & then
@@ -458,7 +459,7 @@ class ApplicantAdminServiceTest {
         void getApplicantsByStatus_success() {
             // given
             ApplicantStatusServiceRequest request = ApplicantStatusServiceRequest.of(
-                    USERNAME, true, 1, 4, "DOCUMENT");
+                    USERNAME, true, 1, 4, ApplicantPhase.DOCUMENT);
 
             Club club = createClub(CLUB_ID);
             given(clubRepository.findByAdminUsername(USERNAME)).willReturn(Optional.of(club));
@@ -475,7 +476,7 @@ class ApplicantAdminServiceTest {
                     .totalCount(2)
                     .applicants(List.of())
                     .build();
-            given(applicantRepository.findApplicantsByStatus(true, 1, 4, APPLY_FORM_ID, "DOCUMENT"))
+            given(applicantRepository.findApplicantsByStatus(true, 1, 4, APPLY_FORM_ID, ApplicantPhase.DOCUMENT))
                     .willReturn(queryResponse);
 
             // when
@@ -491,7 +492,7 @@ class ApplicantAdminServiceTest {
         void getApplicantsByStatus_returnsEmpty_whenNoActiveApplyForm() {
             // given
             ApplicantStatusServiceRequest request = ApplicantStatusServiceRequest.of(
-                    USERNAME, false, 1, 4, "INTERVIEW");
+                    USERNAME, false, 1, 4, ApplicantPhase.INTERVIEW);
 
             Club club = createClub(CLUB_ID);
             given(clubRepository.findByAdminUsername(USERNAME)).willReturn(Optional.of(club));
@@ -504,7 +505,7 @@ class ApplicantAdminServiceTest {
             // then
             assertThat(response.applicants()).isEmpty();
             verify(applicantRepository, never()).findApplicantsByStatus(
-                    anyBoolean(), eq(1), eq(4), anyString(), anyString());
+                    anyBoolean(), eq(1), eq(4), anyString(), any(ApplicantPhase.class));
         }
     }
 
@@ -530,7 +531,7 @@ class ApplicantAdminServiceTest {
             given(clubRepository.findByAdminUsername(USERNAME)).willReturn(Optional.of(club));
             given(applicantRepository.findById(APPLICANT_ID)).willReturn(Optional.of(applicant));
             StatusUpdateServiceRequest request = StatusUpdateServiceRequest.of(
-                    USERNAME, APPLICANT_ID, status, phase.name());
+                    USERNAME, APPLICANT_ID, status, phase);
 
             // when
             applicantAdminService.updateApplicantStatus(request);
@@ -548,7 +549,7 @@ class ApplicantAdminServiceTest {
             given(applicantRepository.findById(APPLICANT_ID)).willReturn(Optional.empty());
 
             StatusUpdateServiceRequest request = StatusUpdateServiceRequest.of(
-                    USERNAME, APPLICANT_ID, PhaseStatus.PASS, "DOCUMENT");
+                    USERNAME, APPLICANT_ID, PhaseStatus.PASS, ApplicantPhase.DOCUMENT);
 
             // when & then
             assertThatThrownBy(() -> applicantAdminService.updateApplicantStatus(request))
@@ -567,7 +568,7 @@ class ApplicantAdminServiceTest {
             given(applicantRepository.findById(APPLICANT_ID)).willReturn(Optional.of(applicant));
 
             StatusUpdateServiceRequest request = StatusUpdateServiceRequest.of(
-                    USERNAME, APPLICANT_ID, PhaseStatus.PASS, "DOCUMENT");
+                    USERNAME, APPLICANT_ID, PhaseStatus.PASS, ApplicantPhase.DOCUMENT);
 
             // when & then
             assertThatThrownBy(() -> applicantAdminService.updateApplicantStatus(request))
@@ -591,7 +592,7 @@ class ApplicantAdminServiceTest {
             given(clubRepository.findByIdForUpdate(CLUB_ID))
                     .willReturn(Optional.empty());
 
-            ApplicantFinalizationRequest request = ApplicantFinalizationRequest.of(USERNAME, CLUB_ID, "DOCUMENT");
+            ApplicantFinalizationRequest request = ApplicantFinalizationRequest.of(USERNAME, CLUB_ID, ApplicantPhase.DOCUMENT);
 
             // when & then
             assertThatThrownBy(() -> applicantAdminService.finalizeApplicantsStatus(request))
@@ -608,7 +609,7 @@ class ApplicantAdminServiceTest {
         @DisplayName("서류 전형 마감 시, 면접이 있는 지원폼이면 합격자를 면접 단계로 이동시킨다")
         void finalizeApplicantsStatus_document_movesToInterviewPhase() {
             // given
-            ApplicantFinalizationRequest request = ApplicantFinalizationRequest.of(USERNAME, CLUB_ID, "DOCUMENT");
+            ApplicantFinalizationRequest request = ApplicantFinalizationRequest.of(USERNAME, CLUB_ID, ApplicantPhase.DOCUMENT);
 
             Club club = createClub(CLUB_ID);
             given(clubRepository.findByIdForUpdate(CLUB_ID)).willReturn(Optional.of(club));
@@ -644,7 +645,7 @@ class ApplicantAdminServiceTest {
         @DisplayName("면접 전형 마감 시, 합격자를 동아리 부원으로 등록한다")
         void finalizeApplicantsStatus_interview_savesClubMembers() {
             // given
-            ApplicantFinalizationRequest request = ApplicantFinalizationRequest.of(USERNAME, CLUB_ID, "INTERVIEW");
+            ApplicantFinalizationRequest request = ApplicantFinalizationRequest.of(USERNAME, CLUB_ID, ApplicantPhase.INTERVIEW);
 
             Club club = createClub(CLUB_ID);
             given(clubRepository.findByIdForUpdate(CLUB_ID)).willReturn(Optional.of(club));
@@ -682,7 +683,7 @@ class ApplicantAdminServiceTest {
         @DisplayName("이미 부원으로 등록된 지원자는 다시 등록하지 않는다")
         void finalizeApplicantsStatus_skipsAlreadyRegisteredMember() {
             // given
-            ApplicantFinalizationRequest request = ApplicantFinalizationRequest.of(USERNAME, CLUB_ID, "INTERVIEW");
+            ApplicantFinalizationRequest request = ApplicantFinalizationRequest.of(USERNAME, CLUB_ID, ApplicantPhase.INTERVIEW);
 
             Club club = createClub(CLUB_ID);
             given(clubRepository.findByIdForUpdate(CLUB_ID)).willReturn(Optional.of(club));
@@ -709,7 +710,7 @@ class ApplicantAdminServiceTest {
         @DisplayName("활성 지원폼이 없으면 ActiveApplyFormNotFoundException이 발생한다")
         void finalizeApplicantsStatus_throwsActiveApplyFormNotFoundException() {
             // given
-            ApplicantFinalizationRequest request = ApplicantFinalizationRequest.of(USERNAME, CLUB_ID, "DOCUMENT");
+            ApplicantFinalizationRequest request = ApplicantFinalizationRequest.of(USERNAME, CLUB_ID, ApplicantPhase.DOCUMENT);
 
             Club club = createClub(CLUB_ID);
             given(clubRepository.findByIdForUpdate(CLUB_ID)).willReturn(Optional.of(club));
@@ -727,7 +728,7 @@ class ApplicantAdminServiceTest {
             Club club = createClub(CLUB_ID);
             given(clubRepository.findByIdForUpdate(CLUB_ID)).willReturn(Optional.of(club));
 
-            ApplicantFinalizationRequest request = ApplicantFinalizationRequest.of("otherAdmin", CLUB_ID, "DOCUMENT");
+            ApplicantFinalizationRequest request = ApplicantFinalizationRequest.of("otherAdmin", CLUB_ID, ApplicantPhase.DOCUMENT);
 
             // when & then
             assertThatThrownBy(() -> applicantAdminService.finalizeApplicantsStatus(request))
@@ -764,7 +765,7 @@ class ApplicantAdminServiceTest {
                     .willReturn(List.of(passedApplicant, failedApplicant));
 
             // when
-            applicantAdminService.sendResultMailToApplicants(request, USERNAME, CLUB_ID, "DOCUMENT");
+            applicantAdminService.sendResultMailToApplicants(request, USERNAME, CLUB_ID, ApplicantPhase.DOCUMENT);
 
             // then
             verify(emailService).sendResultMail(List.of("passed@test.com"), request.pass());
@@ -783,7 +784,7 @@ class ApplicantAdminServiceTest {
 
             // when & then
             assertThatThrownBy(() ->
-                    applicantAdminService.sendResultMailToApplicants(request, USERNAME, CLUB_ID, "DOCUMENT"))
+                    applicantAdminService.sendResultMailToApplicants(request, USERNAME, CLUB_ID, ApplicantPhase.DOCUMENT))
                     .isInstanceOf(ActiveApplyFormNotFoundException.class);
             verify(emailService, never()).sendResultMail(anyList(), any());
         }
@@ -799,7 +800,7 @@ class ApplicantAdminServiceTest {
 
             // when & then
             assertThatThrownBy(() ->
-                    applicantAdminService.sendResultMailToApplicants(request, USERNAME, CLUB_ID, "DOCUMENT"))
+                    applicantAdminService.sendResultMailToApplicants(request, USERNAME, CLUB_ID, ApplicantPhase.DOCUMENT))
                     .isInstanceOf(NotClubAdminException.class);
             verifyNoInteractions(applyFormRepository, applicantRepository, emailService);
         }
@@ -813,7 +814,7 @@ class ApplicantAdminServiceTest {
 
             // when & then
             assertThatThrownBy(() -> applicantAdminService.sendResultMailToApplicants(
-                    request, USERNAME, CLUB_ID, "DOCUMENT"))
+                    request, USERNAME, CLUB_ID, ApplicantPhase.DOCUMENT))
                     .isExactlyInstanceOf(ClubNotFoundException.class);
             verifyNoInteractions(applyFormRepository, applicantRepository, emailService);
         }

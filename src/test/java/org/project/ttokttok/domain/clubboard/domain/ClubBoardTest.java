@@ -1,5 +1,7 @@
 package org.project.ttokttok.domain.clubboard.domain;
 
+import org.project.ttokttok.domain.clubboard.exception.ClubBoardValidationException;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -56,7 +58,7 @@ class ClubBoardTest {
             Club club = mock(Club.class);
 
             assertThatThrownBy(() -> ClubBoard.create(" ", "내용", THUMBNAIL_URL, club))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(ClubBoardValidationException.class)
                     .hasMessage("제목은 비어 있을 수 없습니다.");
         }
 
@@ -66,7 +68,7 @@ class ClubBoardTest {
             Club club = mock(Club.class);
 
             assertThatThrownBy(() -> ClubBoard.create(null, "내용", THUMBNAIL_URL, club))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(ClubBoardValidationException.class)
                     .hasMessage("제목은 비어 있을 수 없습니다.");
         }
 
@@ -96,7 +98,7 @@ class ClubBoardTest {
             Club club = mock(Club.class);
 
             assertThatThrownBy(() -> ClubBoard.create("제목", "내용", null, club))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(ClubBoardValidationException.class)
                     .hasMessage("대표 이미지가 없습니다.");
         }
 
@@ -106,7 +108,7 @@ class ClubBoardTest {
             Club club = mock(Club.class);
 
             assertThatThrownBy(() -> ClubBoard.create("제목", "내용", " ", club))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(ClubBoardValidationException.class)
                     .hasMessage("대표 이미지가 없습니다.");
         }
 
@@ -114,7 +116,7 @@ class ClubBoardTest {
         @DisplayName("동아리가 null이면 예외가 발생한다.")
         void createFailNullClub() {
             assertThatThrownBy(() -> ClubBoard.create("제목", "내용", THUMBNAIL_URL, null))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(ClubBoardValidationException.class)
                     .hasMessage("동아리 정보가 없습니다.");
         }
     }
@@ -177,7 +179,7 @@ class ClubBoardTest {
             ClubBoard board = newBoard();
 
             assertThatThrownBy(() -> board.update(" ", null))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(ClubBoardValidationException.class)
                     .hasMessage("제목은 비어 있을 수 없습니다.");
         }
 
@@ -214,10 +216,10 @@ class ClubBoardTest {
             ClubBoard board = ClubBoard.create("제목", "내용", THUMBNAIL_URL, mock(Club.class));
 
             assertThatThrownBy(() -> board.updateThumbnailUrl(null))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(ClubBoardValidationException.class)
                     .hasMessage("대표 이미지가 없습니다.");
             assertThatThrownBy(() -> board.updateThumbnailUrl(" "))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(ClubBoardValidationException.class)
                     .hasMessage("대표 이미지가 없습니다.");
         }
     }

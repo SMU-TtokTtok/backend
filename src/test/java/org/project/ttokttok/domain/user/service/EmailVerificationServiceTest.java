@@ -1,5 +1,7 @@
 package org.project.ttokttok.domain.user.service;
 
+import org.project.ttokttok.domain.user.exception.UserValidationException;
+
 import java.time.LocalDateTime;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -57,7 +59,7 @@ class EmailVerificationServiceTest {
     @Test
     void invalidEmailIsRejectedBeforeExpiryOrSend() {
         assertThatThrownBy(() -> service.sendVerificationCode(EMAIL))
-                .isInstanceOf(IllegalArgumentException.class).hasMessage("상명대학교 이메일만 사용 가능합니다.");
+                .isInstanceOf(UserValidationException.class).hasMessage("상명대학교 이메일만 사용 가능합니다.");
         verifyNoInteractions(verificationRepository);
         verify(emailService, never()).sendVerificationCode(any(), any());
     }
@@ -89,7 +91,7 @@ class EmailVerificationServiceTest {
     @Test
     void unknownCodePreservesMessage() {
         assertThatThrownBy(() -> service.verifyEmail(EMAIL, CODE))
-                .isInstanceOf(IllegalArgumentException.class).hasMessage("올바르지 않은 인증코드입니다.");
+                .isInstanceOf(UserValidationException.class).hasMessage("올바르지 않은 인증코드입니다.");
     }
 
     @Test
@@ -99,7 +101,7 @@ class EmailVerificationServiceTest {
                 .willReturn(Optional.of(verification));
 
         assertThatThrownBy(() -> service.verifyEmail(EMAIL, CODE))
-                .isInstanceOf(IllegalArgumentException.class).hasMessage("인증코드가 만료되었습니다.");
+                .isInstanceOf(UserValidationException.class).hasMessage("인증코드가 만료되었습니다.");
         assertThat(verification.isVerified()).isFalse();
     }
 

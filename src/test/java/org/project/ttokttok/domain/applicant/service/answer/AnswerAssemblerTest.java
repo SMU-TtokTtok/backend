@@ -1,5 +1,7 @@
 package org.project.ttokttok.domain.applicant.service.answer;
 
+import org.project.ttokttok.domain.applicant.exception.ApplicantValidationException;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -71,7 +73,7 @@ class AnswerAssemblerTest {
                 List.of("f1"), List.of(file("f1")));
 
         assertThatThrownBy(() -> answerAssembler.assemble(submission, questions, EMAIL))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(ApplicantValidationException.class)
                 .hasMessage("필수 질문에 대한 답변이 없습니다.");
         verify(s3Service, never()).uploadFile(any(), anyString());
     }

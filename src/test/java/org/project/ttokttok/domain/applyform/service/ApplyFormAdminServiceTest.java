@@ -1,5 +1,7 @@
 package org.project.ttokttok.domain.applyform.service;
 
+import org.project.ttokttok.domain.applyform.exception.ApplyFormValidationException;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -282,7 +284,7 @@ class ApplyFormAdminServiceTest {
             // when & then
             assertThatThrownBy(() -> applyFormAdminService.createApplyForm(
                     validRequest().applicableGrades(Set.of(1, invalidGrade)).build()))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(ApplyFormValidationException.class)
                     .hasMessageContaining("잘못된 학년입니다");
 
             verify(applyFormRepository, never()).save(any());

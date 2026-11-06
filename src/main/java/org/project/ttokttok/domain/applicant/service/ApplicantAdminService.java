@@ -20,8 +20,8 @@ import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.exception.ClubNotFoundException;
 import org.project.ttokttok.domain.club.exception.NotClubAdminException;
 import org.project.ttokttok.domain.club.repository.ClubRepository;
-import org.project.ttokttok.domain.clubMember.domain.ClubMember;
-import org.project.ttokttok.domain.clubMember.repository.ClubMemberRepository;
+import org.project.ttokttok.domain.clubmember.domain.ClubMember;
+import org.project.ttokttok.domain.clubmember.repository.ClubMemberRepository;
 import org.project.ttokttok.infrastructure.email.service.EmailService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,7 +33,7 @@ import java.util.List;
 import static org.project.ttokttok.domain.applicant.domain.enums.PhaseStatus.FAIL;
 import static org.project.ttokttok.domain.applicant.domain.enums.PhaseStatus.PASS;
 import static org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus.ACTIVE;
-import static org.project.ttokttok.domain.clubMember.domain.MemberRole.MEMBER;
+import static org.project.ttokttok.domain.clubmember.domain.MemberRole.MEMBER;
 
 @Slf4j
 @Service
@@ -159,7 +159,7 @@ public class ApplicantAdminService {
             throw new UnAuthorizedApplicantAccessException();
         }
 
-        ApplicantPhase phase = ApplicantPhase.from(request.kind());
+        ApplicantPhase phase = request.kind();
         applicant.changeEvaluationStatus(phase, request.status());
     }
 
@@ -172,7 +172,7 @@ public class ApplicantAdminService {
         clubAccessPolicy.validateAdmin(club, request.username());
 
         ApplyForm currentApplyForm = findActiveApplyForm(request.clubId());
-        ApplicantPhase phase = ApplicantPhase.from(request.kind());
+        ApplicantPhase phase = request.kind();
         int passedApplicantCount = processApplicants(currentApplyForm, club, phase);
         int finalizedApplicantCount =
                 calculateFinalizedApplicantCount(currentApplyForm.getId(), phase) + passedApplicantCount;
@@ -186,7 +186,7 @@ public class ApplicantAdminService {
     public void sendResultMailToApplicants(SendResultMailServiceRequest request,
                                            String username,
                                            String clubId,
-                                           String kind) {
+                                           ApplicantPhase kind) {
 
         Club club = clubRepository.findById(clubId)
                 .orElseThrow(ClubNotFoundException::new);
@@ -194,7 +194,7 @@ public class ApplicantAdminService {
         clubAccessPolicy.validateAdmin(club, username);
 
         ApplyForm currentApplyForm = findActiveApplyForm(clubId);
-        ApplicantPhase phase = ApplicantPhase.from(kind);
+        ApplicantPhase phase = kind;
 
         List<String> passedEmails = filterApplicantsByStatus(currentApplyForm.getId(), phase, PASS)
                 .stream()

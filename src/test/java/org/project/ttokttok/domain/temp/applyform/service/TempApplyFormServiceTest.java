@@ -1,5 +1,11 @@
 package org.project.ttokttok.domain.temp.applyform.service;
 
+import org.project.ttokttok.domain.club.domain.Club;
+import org.project.ttokttok.domain.club.repository.ClubRepository;
+import org.project.ttokttok.domain.club.service.policy.ClubAccessPolicy;
+import org.project.ttokttok.domain.club.exception.ClubNotFoundException;
+import org.project.ttokttok.domain.club.exception.NotClubAdminException;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,6 +36,20 @@ class TempApplyFormServiceTest {
     @Mock
     private TempApplyFormRepository tempApplyFormRepository;
 
+    @Mock
+    private ClubRepository clubRepository;
+
+    @org.mockito.Spy
+    private ClubAccessPolicy clubAccessPolicy = new ClubAccessPolicy();
+
+    @Mock
+    private Club club;
+
+    private void allowOwner() {
+        given(clubRepository.findById("club-1")).willReturn(Optional.of(club));
+        given(club.isManagedBy("admin")).willReturn(true);
+    }
+
     @InjectMocks
     private TempApplyFormService tempApplyFormService;
 
@@ -53,6 +73,7 @@ class TempApplyFormServiceTest {
     @DisplayName("saveTempApplyForm(): 기존 임시 지원폼이 없으면 새로 생성한다")
     void saveTempApplyForm_CreatesNew_WhenNoExisting() {
         // given
+        allowOwner();
         String clubId = "club-1";
         TempApplyFormSaveServiceRequest request = buildRequest(clubId);
 
@@ -63,7 +84,7 @@ class TempApplyFormServiceTest {
         given(tempApplyFormRepository.save(any(TempApplyForm.class))).willReturn(saved);
 
         // when
-        String result = tempApplyFormService.saveTempApplyForm(request);
+        String result = tempApplyFormService.saveTempApplyForm("admin", request);
 
         // then
         assertThat(result).isEqualTo("temp-form-1");
@@ -78,6 +99,7 @@ class TempApplyFormServiceTest {
     @DisplayName("saveTempApplyForm(): 기존 임시 지원폼이 있으면 업데이트한다")
     void saveTempApplyForm_UpdatesExisting_WhenPresent() {
         // given
+        allowOwner();
         String clubId = "club-1";
         TempApplyFormSaveServiceRequest request = buildRequest(clubId);
 
@@ -86,7 +108,7 @@ class TempApplyFormServiceTest {
         given(tempApplyFormRepository.findByClubId(clubId)).willReturn(Optional.of(existing));
 
         // when
-        String result = tempApplyFormService.saveTempApplyForm(request);
+        String result = tempApplyFormService.saveTempApplyForm("admin", request);
 
         // then
         assertThat(result).isEqualTo("temp-form-existing");
@@ -102,6 +124,7 @@ class TempApplyFormServiceTest {
     @DisplayName("saveTempApplyForm(): hasInterview이 null이면 false로 저장된다")
     void saveTempApplyForm_NullHasInterview_DefaultsToFalse() {
         // given
+        allowOwner();
         String clubId = "club-1";
         TempApplyFormSaveServiceRequest request = new TempApplyFormSaveServiceRequest(
                 clubId, null, null, null, null,
@@ -114,11 +137,27 @@ class TempApplyFormServiceTest {
         given(tempApplyFormRepository.save(any(TempApplyForm.class))).willReturn(saved);
 
         // when
-        tempApplyFormService.saveTempApplyForm(request);
+        tempApplyFormService.saveTempApplyForm("admin", request);
 
         // then
         ArgumentCaptor<TempApplyForm> captor = ArgumentCaptor.forClass(TempApplyForm.class);
         verify(tempApplyFormRepository).save(captor.capture());
         assertThat(captor.getValue().isHasInterview()).isFalse();
     }
+    @Test
+    void otherAdmin_rejectedBeforeTempRepositoryAccess() {
+        given(clubRepository.findById("club-1")).willReturn(Optional.of(club));
+        assertThatThrownBy(() -> tempApplyFormService.saveTempApplyForm("other", buildRequest("club-1")))
+                .isInstanceOf(NotClubAdminException.class);
+        verifyNoInteractions(tempApplyFormRepository);
+    }
+
+    @Test
+    void missingClub_rejectedBeforeTempRepositoryAccess() {
+        given(clubRepository.findById("club-1")).willReturn(Optional.empty());
+        assertThatThrownBy(() -> tempApplyFormService.saveTempApplyForm("admin", buildRequest("club-1")))
+                .isInstanceOf(ClubNotFoundException.class);
+        verifyNoInteractions(tempApplyFormRepository);
+    }
+
 }

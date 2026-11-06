@@ -1,5 +1,9 @@
 package org.project.ttokttok.domain.admin.domain;
 
+import org.project.ttokttok.global.exception.ErrorMessage;
+
+import org.project.ttokttok.domain.admin.exception.AdminValidationException;
+
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -60,19 +64,19 @@ public class Admin extends BaseTimeEntity {
     // ------- 내부 검증 메서드 -------
     private void validateUsernameFormat(String username) {
         if (username == null || username.trim().isEmpty()) {
-            throw new IllegalArgumentException("관리자 명은 null이거나 비어있을 수 없습니다.");
+            throw new AdminValidationException(ErrorMessage.ADMIN_USERNAME_REQUIRED);
         }
         if (username.length() < 8 || username.length() > 20) {
-            throw new IllegalArgumentException("관리자 명은 8자 이상 20자 이하여야 합니다.");
+            throw new AdminValidationException(ErrorMessage.ADMIN_USERNAME_LENGTH_INVALID);
         }
         if (!username.matches("^[a-zA-Z0-9_]+$")) {
-            throw new IllegalArgumentException("관리자 명은 영문, 숫자, 밑줄(_)만 사용할 수 있습니다.");
+            throw new AdminValidationException(ErrorMessage.ADMIN_USERNAME_CHARACTERS_INVALID);
         }
     }
 
     private void validatePasswordFormat(String password) {
         if (password == null || password.trim().isEmpty()) {
-            throw new IllegalArgumentException("비밀번호는 null이거나 비어 있을 수 없습니다.");
+            throw new AdminValidationException(ErrorMessage.ADMIN_PASSWORD_REQUIRED);
         }
     }
 }

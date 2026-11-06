@@ -1,5 +1,6 @@
 package org.project.ttokttok.domain.applicant.service;
 
+import org.project.ttokttok.domain.applicant.domain.enums.ApplicantPhase;
 import jakarta.persistence.EntityManager;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -26,9 +27,9 @@ import org.project.ttokttok.domain.applyform.domain.enums.QuestionType;
 import org.project.ttokttok.domain.applyform.domain.json.Question;
 import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.domain.enums.ClubUniv;
-import org.project.ttokttok.domain.clubMember.exception.AlreadyClubMemberException;
-import org.project.ttokttok.domain.clubMember.service.ClubMemberService;
-import org.project.ttokttok.domain.clubMember.service.dto.request.ClubMemberServiceRequest;
+import org.project.ttokttok.domain.clubmember.exception.AlreadyClubMemberException;
+import org.project.ttokttok.domain.clubmember.service.ClubMemberService;
+import org.project.ttokttok.domain.clubmember.service.dto.request.ClubMemberServiceRequest;
 import org.project.ttokttok.infrastructure.email.service.EmailService;
 import org.project.ttokttok.infrastructure.firebase.service.FCMService;
 import org.project.ttokttok.infrastructure.s3.service.S3Service;
@@ -150,7 +151,7 @@ class ApplicantFinalizeConcurrencyPostgresTest {
 
     private ApplicantFinalizeServiceResponse finalizeOnce(Fixture f) {
         return applicantAdminService.finalizeApplicantsStatus(
-                ApplicantFinalizationRequest.of(f.username, f.clubId, "DOCUMENT"));
+                ApplicantFinalizationRequest.of(f.username, f.clubId, ApplicantPhase.DOCUMENT));
     }
 
     /** 성공하면 부원 ID, 이미 등록돼 있으면 기존 규약의 AlreadyClubMemberException을 반환값으로 돌려준다. */

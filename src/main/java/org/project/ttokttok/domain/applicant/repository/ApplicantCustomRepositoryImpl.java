@@ -1,5 +1,8 @@
 package org.project.ttokttok.domain.applicant.repository;
 
+import org.project.ttokttok.domain.applicant.domain.enums.ApplicationHistorySort;
+import org.project.ttokttok.domain.applicant.domain.enums.Sort;
+import org.project.ttokttok.domain.applicant.domain.enums.ApplicantPhase;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -22,7 +25,7 @@ import static org.project.ttokttok.domain.applicant.domain.QApplicant.applicant;
 import static org.project.ttokttok.domain.applyform.domain.QApplyForm.applyForm;
 import static org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus.ACTIVE;
 import static org.project.ttokttok.domain.club.domain.QClub.club;
-import static org.project.ttokttok.domain.clubMember.domain.QClubMember.clubMember;
+import static org.project.ttokttok.domain.clubmember.domain.QClubMember.clubMember;
 import static org.project.ttokttok.domain.favorite.domain.QFavorite.favorite;
 
 @Repository
@@ -31,15 +34,14 @@ public class ApplicantCustomRepositoryImpl implements ApplicantCustomRepository 
 
     private final JPAQueryFactory queryFactory;
 
-    private static final String SUBMIT = "SUBMIT";
 
     @Override
-    public ApplicantPageQueryResponse findApplicantsPageWithSortCriteria(String sortCriteria,
+    public ApplicantPageQueryResponse findApplicantsPageWithSortCriteria(Sort sortCriteria,
                                                                          boolean evaluating,
                                                                          int cursor,
                                                                          int size,
                                                                          String applyFormId,
-                                                                         String kind) {
+                                                                         ApplicantPhase kind) {
         return getApplicantPageQueryResponse(
                 sortCriteria,
                 evaluating,
@@ -52,12 +54,12 @@ public class ApplicantCustomRepositoryImpl implements ApplicantCustomRepository 
 
     @Override
     public ApplicantPageQueryResponse searchApplicantsByKeyword(String searchKeyword,
-                                                                String sortCriteria,
+                                                                Sort sortCriteria,
                                                                 boolean evaluating,
                                                                 int cursor,
                                                                 int size,
                                                                 String applyFormId,
-                                                                String kind) {
+                                                                ApplicantPhase kind) {
         // 검색 키워드와 조건에 맞는 지원자 조회
         return getApplicantPageQueryResponse(
                 sortCriteria,
@@ -74,7 +76,7 @@ public class ApplicantCustomRepositoryImpl implements ApplicantCustomRepository 
                                                              int cursor,
                                                              int size,
                                                              String applyFormId,
-                                                             String kind) {
+                                                             ApplicantPhase kind) {
 
         PhaseStatus status = isPassed ? PhaseStatus.PASS : PhaseStatus.FAIL;
 
@@ -91,26 +93,26 @@ public class ApplicantCustomRepositoryImpl implements ApplicantCustomRepository 
     }
 
     // 오버로딩된 메서드, status가 없는 경우
-    private ApplicantPageQueryResponse getApplicantPageQueryResponse(String sortCriteria,
+    private ApplicantPageQueryResponse getApplicantPageQueryResponse(Sort sortCriteria,
                                                                      boolean evaluating,
                                                                      int cursor,
                                                                      int size,
                                                                      String applyFormId,
                                                                      String searchKeyword,
-                                                                     String kind) {
+                                                                     ApplicantPhase kind) {
 
         return getApplicantPageQueryResponse(sortCriteria, evaluating, cursor, size,
                 applyFormId, searchKeyword, kind, null);
     }
 
     // 지원자 페이지 조회를 위한 공통 메서드
-    private ApplicantPageQueryResponse getApplicantPageQueryResponse(String sortCriteria,
+    private ApplicantPageQueryResponse getApplicantPageQueryResponse(Sort sortCriteria,
                                                                      boolean evaluating,
                                                                      int cursor,
                                                                      int size,
                                                                      String applyFormId,
                                                                      String searchKeyword,
-                                                                     String kind,
+                                                                     ApplicantPhase kind,
                                                                      PhaseStatus status) {
 
         ApplicantPhaseQuery phaseQuery = ApplicantPhaseQuery.from(kind);
@@ -173,19 +175,9 @@ public class ApplicantCustomRepositoryImpl implements ApplicantCustomRepository 
         };
     }
 
-    //FIXME: 학년순으로 제대로 정렬 안되는 이슈 해결 필요
     // 들어온 sortCriteria에 따라 정렬 조건을 반환하는 메서드
-    private OrderSpecifier<?> getSortCriteria(@Nullable String sortCriteria) {
-        if (sortCriteria == null || sortCriteria.isEmpty()) {
-            return applicant.grade.asc();
-        }
-
-        switch (sortCriteria.toUpperCase()) {
-            case SUBMIT:
-                return applicant.createdAt.asc();
-            default:
-                return applicant.grade.asc();
-        }
+    private OrderSpecifier<?> getSortCriteria(@Nullable Sort sortCriteria) {
+        return sortCriteria == Sort.SUBMIT ? applicant.createdAt.asc() : applicant.grade.asc();
     }
 
     // ---- BOOLEAN EXPRESSION METHODS ---- //
@@ -197,7 +189,7 @@ public class ApplicantCustomRepositoryImpl implements ApplicantCustomRepository 
     public List<UserApplicationHistoryQueryResponse> getUserApplicationHistory(String userEmail,
                                                                               int size,
                                                                               String cursor,
-                                                                              String sort) {
+                                                                              ApplicationHistorySort sort) {
         JPAQuery<UserApplicationHistoryQueryResponse> query = queryFactory
                 .select(Projections.constructor(
                         UserApplicationHistoryQueryResponse.class,
@@ -238,7 +230,7 @@ public class ApplicantCustomRepositoryImpl implements ApplicantCustomRepository 
      * 동일하게 최신순으로 동작한다. {@code sort} 는 공개 API 시그니처이므로 유지하되,
      * 실제 분기는 해당 정렬이 구현될 때 추가한다.
      */
-    private OrderSpecifier<?>[] getApplicationSortCriteria(String sort) {
+    private OrderSpecifier<?>[] getApplicationSortCriteria(ApplicationHistorySort sort) {
         return new OrderSpecifier[]{
                 applicant.createdAt.desc(),
                 applicant.id.desc() // 일관성을 위한 보조 정렬
@@ -251,7 +243,7 @@ public class ApplicantCustomRepositoryImpl implements ApplicantCustomRepository 
      * <p>정렬 기준과 무관하게 ID 기반 단일 커서를 사용한다.
      * 복합 커서는 위 정렬이 실제로 구현될 때 함께 도입한다.
      */
-    private BooleanExpression cursorCondition(String cursor, String sort) {
+    private BooleanExpression cursorCondition(String cursor, ApplicationHistorySort sort) {
         if (cursor == null || cursor.isEmpty()) {
             return null;
         }

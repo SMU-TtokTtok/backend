@@ -1,5 +1,9 @@
 package org.project.ttokttok.domain.user.service;
 
+import org.project.ttokttok.global.exception.ErrorMessage;
+
+import org.project.ttokttok.domain.user.exception.UserValidationException;
+
 import java.time.LocalDateTime;
 import java.util.function.BiConsumer;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +27,7 @@ public class EmailVerificationService {
 
     public void sendVerificationCode(String email) {
         if (!emailService.isValidSangmyungEmail(email)) {
-            throw new IllegalArgumentException("상명대학교 이메일만 사용 가능합니다.");
+            throw new UserValidationException(ErrorMessage.VERIFICATION_EMAIL_INVALID);
         }
         sendCode(email, emailService::sendVerificationCode);
         log.info("인증코드 발송 및 저장 완료 : {}", email);
@@ -33,10 +37,10 @@ public class EmailVerificationService {
     public boolean verifyEmail(String email, String code) {
         EmailVerification verification = emailVerificationRepository
                 .findByEmailAndCodeAndIsVerifiedFalse(email, code)
-                .orElseThrow(() -> new IllegalArgumentException("올바르지 않은 인증코드입니다."));
+                .orElseThrow(() -> new UserValidationException(ErrorMessage.VERIFICATION_CODE_INVALID));
 
         if (verification.isExpired()) {
-            throw new IllegalArgumentException("인증코드가 만료되었습니다.");
+            throw new UserValidationException(ErrorMessage.VERIFICATION_CODE_EXPIRED);
         }
 
         verification.markAsVerified();
@@ -47,14 +51,14 @@ public class EmailVerificationService {
     @Transactional(readOnly = true)
     public void requireVerifiedEmail(String email) {
         if (!emailVerificationRepository.existsByEmailAndIsVerifiedTrue(email)) {
-            throw new IllegalArgumentException("이메일 인증이 완료되지 않았습니다.");
+            throw new UserValidationException(ErrorMessage.VERIFICATION_EMAIL_NOT_VERIFIED);
         }
     }
 
     @Transactional(readOnly = true)
     public void requireVerifiedCode(String email, String code) {
         if (!emailVerificationRepository.existsByEmailAndCodeAndIsVerifiedTrue(email, code)) {
-            throw new IllegalArgumentException("인증 코드 성공 여부가 존재하지 않습니다.");
+            throw new UserValidationException(ErrorMessage.VERIFICATION_RECORD_NOT_FOUND);
         }
     }
 

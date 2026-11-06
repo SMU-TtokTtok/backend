@@ -1,5 +1,9 @@
 package org.project.ttokttok.domain.memo.domain;
 
+import org.project.ttokttok.global.exception.ErrorMessage;
+
+import org.project.ttokttok.domain.memo.exception.MemoValidationException;
+
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -15,7 +19,7 @@ import java.util.UUID;
 public class Memo {
 
     @Id
-//    @GeneratedValue(strategy = GenerationType.UUID)
+
     @Column(length = 36, updatable = false, unique = true)
     private String id = UUID.randomUUID().toString();
 
@@ -41,7 +45,7 @@ public class Memo {
 
     public void updateContent(final String content) {
         if (content == null || content.isBlank()) {
-            throw new IllegalArgumentException("메모 내용은 비워둘 수 없습니다.");
+            throw new MemoValidationException(ErrorMessage.MEMO_CONTENT_BLANK);
         }
 
         this.content = content;

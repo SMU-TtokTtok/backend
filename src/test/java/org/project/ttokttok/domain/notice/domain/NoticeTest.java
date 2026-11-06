@@ -1,5 +1,7 @@
 package org.project.ttokttok.domain.notice.domain;
 
+import org.project.ttokttok.domain.notice.exception.NoticeValidationException;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -30,14 +32,14 @@ class NoticeTest {
         @DisplayName("제목이 공백이면 예외가 발생한다.")
         void createBlankTitle() {
             assertThatThrownBy(() -> Notice.create("   ", "내용", "ttok_operator"))
-                    .isInstanceOf(IllegalArgumentException.class);
+                    .isInstanceOf(NoticeValidationException.class);
         }
 
         @Test
         @DisplayName("내용이 null이면 예외가 발생한다.")
         void createNullContent() {
             assertThatThrownBy(() -> Notice.create("제목", null, "ttok_operator"))
-                    .isInstanceOf(IllegalArgumentException.class);
+                    .isInstanceOf(NoticeValidationException.class);
         }
     }
 }

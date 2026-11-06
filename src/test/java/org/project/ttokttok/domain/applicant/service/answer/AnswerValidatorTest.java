@@ -1,5 +1,7 @@
 package org.project.ttokttok.domain.applicant.service.answer;
 
+import org.project.ttokttok.domain.applicant.exception.ApplicantValidationException;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
@@ -61,7 +63,7 @@ class AnswerValidatorTest {
     @ParameterizedTest
     @MethodSource("missingValues")
     void preservesRequiredAnswerError(QuestionType type, Object value) {
-        assertThatThrownBy(() -> validate(type, true, value)).isInstanceOf(IllegalArgumentException.class)
+        assertThatThrownBy(() -> validate(type, true, value)).isInstanceOf(ApplicantValidationException.class)
                 .hasMessage("필수 질문에 대한 답변이 없습니다.");
     }
 

@@ -1,5 +1,9 @@
 package org.project.ttokttok.domain.user.service;
 
+import org.project.ttokttok.global.exception.ErrorMessage;
+
+import org.project.ttokttok.domain.user.exception.UserValidationException;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.project.ttokttok.domain.user.domain.User;
@@ -86,13 +90,13 @@ public class GoogleOAuthService {
      *
      * @param request 온보딩 완료 요청 (온보딩 토큰, 약관 동의, 이름)
      * @return 로그인 결과 (기존 login 과 동일한 토큰 + 사용자 정보)
-     * @throws IllegalArgumentException 약관 미동의 시
+     * @throws UserValidationException 약관 미동의 시
      * @throws OnboardingAlreadyCompletedException 이미 사용된 토큰인데 계정이 없는 이상 상태
      */
     public LoginServiceResponse completeOnboarding(GoogleOnboardingCompleteServiceRequest request) {
         // 2-1. 약관 동의 필수
         if (!request.termsAgreed()) {
-            throw new IllegalArgumentException("약관 동의가 필요합니다.");
+            throw new UserValidationException(ErrorMessage.USER_TERMS_REQUIRED);
         }
 
         // 2-2. 온보딩 토큰 검증 (서명/만료/token_type)

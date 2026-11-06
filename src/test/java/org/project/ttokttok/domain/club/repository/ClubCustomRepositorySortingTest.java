@@ -12,9 +12,9 @@ import org.project.ttokttok.domain.applicant.domain.enums.Grade;
 import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.domain.enums.ClubUniv;
 import org.project.ttokttok.domain.club.repository.dto.ClubCardQueryResponse;
-import org.project.ttokttok.domain.clubMember.domain.ClubMember;
-import org.project.ttokttok.domain.clubMember.domain.MemberRole;
-import org.project.ttokttok.domain.clubMember.repository.ClubMemberRepository;
+import org.project.ttokttok.domain.clubmember.domain.ClubMember;
+import org.project.ttokttok.domain.clubmember.domain.MemberRole;
+import org.project.ttokttok.domain.clubmember.repository.ClubMemberRepository;
 import org.project.ttokttok.support.RepositoryTestSupport;
 import org.springframework.beans.factory.annotation.Autowired;
 

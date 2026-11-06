@@ -1,5 +1,7 @@
 package org.project.ttokttok.domain.admin.domain;
 
+import org.project.ttokttok.domain.admin.exception.AdminValidationException;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -84,14 +86,14 @@ class AdminTest {
     @ParameterizedTest
     @NullAndEmptySource
     @ValueSource(strings = {"   ", "\t", "\n"})
-    @DisplayName("null이거나 빈 username으로 생성하면 IllegalArgumentException이 발생한다")
+    @DisplayName("null이거나 빈 username으로 생성하면 AdminValidationException이 발생한다")
     void createAdminWithInvalidEmptyUsername(String invalidUsername) {
         // when & then
         assertThatThrownBy(() -> Admin.builder()
                 .username(invalidUsername)
                 .password(VALID_PASSWORD)
                 .build())
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(AdminValidationException.class)
                 .hasMessage("관리자 명은 null이거나 비어있을 수 없습니다.");
     }
 
@@ -106,27 +108,27 @@ class AdminTest {
             "verylongusernamethatexceedstwentycharacters",
             "username_that_is_definitely_over_twenty_chars"
     })
-    @DisplayName("유효하지 않은 길이의 username으로 생성하면 IllegalArgumentException이 발생한다")
+    @DisplayName("유효하지 않은 길이의 username으로 생성하면 AdminValidationException이 발생한다")
     void createAdminWithInvalidUsernameLength(String invalidUsername) {
         // when & then
         assertThatThrownBy(() -> Admin.builder()
                 .username(invalidUsername)
                 .password(VALID_PASSWORD)
                 .build())
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(AdminValidationException.class)
                 .hasMessage("관리자 명은 8자 이상 20자 이하여야 합니다.");
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"user@name123", "user name123", "user-name123", "user.name123", "user#123456", "한글유저네임123"})
-    @DisplayName("유효하지 않은 문자가 포함된 username으로 생성하면 IllegalArgumentException이 발생한다")
+    @DisplayName("유효하지 않은 문자가 포함된 username으로 생성하면 AdminValidationException이 발생한다")
     void createAdminWithInvalidCharactersInUsername(String invalidUsername) {
         // when & then
         assertThatThrownBy(() -> Admin.builder()
                 .username(invalidUsername)
                 .password(VALID_PASSWORD)
                 .build())
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(AdminValidationException.class)
                 .hasMessage("관리자 명은 영문, 숫자, 밑줄(_)만 사용할 수 있습니다.");
     }
 
@@ -135,14 +137,14 @@ class AdminTest {
     @ParameterizedTest
     @NullAndEmptySource
     @ValueSource(strings = {"   ", "\t", "\n"})
-    @DisplayName("null이거나 빈 password로 생성하면 IllegalArgumentException이 발생한다")
+    @DisplayName("null이거나 빈 password로 생성하면 AdminValidationException이 발생한다")
     void createAdminWithInvalidEmptyPassword(String invalidPassword) {
         // when & then
         assertThatThrownBy(() -> Admin.builder()
                 .username(VALID_USERNAME)
                 .password(invalidPassword)
                 .build())
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(AdminValidationException.class)
                 .hasMessage("비밀번호는 null이거나 비어 있을 수 없습니다.");
     }
 
@@ -153,7 +155,7 @@ class AdminTest {
     void adminJoinPerformsSameValidation() {
         // when & then
         assertThatThrownBy(() -> Admin.adminJoin(null, VALID_PASSWORD))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(AdminValidationException.class)
                 .hasMessage("관리자 명은 null이거나 비어있을 수 없습니다.");
     }
 
@@ -186,7 +188,7 @@ class AdminTest {
                 .username(usernameBelowMinLength)
                 .password(VALID_PASSWORD)
                 .build())
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(AdminValidationException.class)
                 .hasMessage("관리자 명은 8자 이상 20자 이하여야 합니다.");
     }
 
@@ -201,7 +203,7 @@ class AdminTest {
                 .username(usernameAboveMaxLength)
                 .password(VALID_PASSWORD)
                 .build())
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(AdminValidationException.class)
                 .hasMessage("관리자 명은 8자 이상 20자 이하여야 합니다.");
     }
 

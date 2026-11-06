@@ -1,31 +1,34 @@
 package org.project.ttokttok.domain.applicant.repository;
 
+import org.project.ttokttok.domain.applicant.domain.enums.ApplicationHistorySort;
+import org.project.ttokttok.domain.applicant.domain.enums.Sort;
+import org.project.ttokttok.domain.applicant.domain.enums.ApplicantPhase;
 import org.project.ttokttok.domain.applicant.repository.dto.UserApplicationHistoryQueryResponse;
 import org.project.ttokttok.domain.applicant.repository.dto.response.ApplicantPageQueryResponse;
 
 import java.util.List;
 
 public interface ApplicantCustomRepository {
-    ApplicantPageQueryResponse findApplicantsPageWithSortCriteria(String sortCriteria,
+    ApplicantPageQueryResponse findApplicantsPageWithSortCriteria(Sort sortCriteria,
                                                                   boolean evaluating,
                                                                   int cursor,
                                                                   int size,
                                                                   String applyFormId,
-                                                                  String kind);
+                                                                  ApplicantPhase kind);
 
     ApplicantPageQueryResponse searchApplicantsByKeyword(String searchKeyword,
-                                                         String sortCriteria,
+                                                         Sort sortCriteria,
                                                          boolean evaluating,
                                                          int cursor,
                                                          int size,
                                                          String applyFormId,
-                                                         String kind);
+                                                         ApplicantPhase kind);
 
     ApplicantPageQueryResponse findApplicantsByStatus(boolean isPassed,
                                                       int page,
                                                       int size,
                                                       String applyFormId,
-                                                      String kind);
+                                                      ApplicantPhase kind);
 
     /**
      * 사용자의 동아리 지원내역 조회 (무한스크롤 지원)
@@ -39,5 +42,5 @@ public interface ApplicantCustomRepository {
     List<UserApplicationHistoryQueryResponse> getUserApplicationHistory(String userEmail,
                                                                        int size,
                                                                        String cursor,
-                                                                       String sort);
+                                                                       ApplicationHistorySort sort);
 }

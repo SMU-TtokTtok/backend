@@ -1,5 +1,9 @@
 package org.project.ttokttok.domain.clubboard.domain;
 
+import org.project.ttokttok.global.exception.ErrorMessage;
+
+import org.project.ttokttok.domain.clubboard.exception.ClubBoardValidationException;
+
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -85,7 +89,7 @@ public class ClubBoard extends BaseTimeEntity {
     // ------- 유효성 검사 메서드 -------
     private static void validateClub(Club club) {
         if (club == null) {
-            throw new IllegalArgumentException("동아리 정보가 없습니다.");
+            throw new ClubBoardValidationException(ErrorMessage.CLUB_BOARD_CLUB_REQUIRED);
         }
     }
 
@@ -96,13 +100,13 @@ public class ClubBoard extends BaseTimeEntity {
 
     private static void validateTitle(String title) {
         if (title == null || title.isBlank()) {
-            throw new IllegalArgumentException("제목은 비어 있을 수 없습니다.");
+            throw new ClubBoardValidationException(ErrorMessage.CLUB_BOARD_TITLE_BLANK);
         }
     }
 
     private static void validateThumbnailUrl(String thumbnailUrl) {
         if (thumbnailUrl == null || thumbnailUrl.isBlank()) {
-            throw new IllegalArgumentException("대표 이미지가 없습니다.");
+            throw new ClubBoardValidationException(ErrorMessage.CLUB_BOARD_IMAGE_REQUIRED);
         }
     }
 }

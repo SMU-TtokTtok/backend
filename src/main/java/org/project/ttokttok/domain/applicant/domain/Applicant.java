@@ -1,5 +1,9 @@
 package org.project.ttokttok.domain.applicant.domain;
 
+import org.project.ttokttok.global.exception.ErrorMessage;
+
+import org.project.ttokttok.domain.applicant.exception.ApplicantValidationException;
+
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -137,7 +141,7 @@ public class Applicant extends BaseTimeEntity {
     // 서류 상태 불합격 설정
     public void failDocumentEvaluation() {
         if (this.applyForm.isHasInterview() && this.interviewPhase != null) {
-            throw new IllegalArgumentException("이미 면접 단계에 존재하는 지원자입니다.");
+            throw new ApplicantValidationException(ErrorMessage.APPLICANT_ALREADY_INTERVIEW);
         }
 
         this.documentPhase.updateStatus(PhaseStatus.FAIL);
@@ -204,7 +208,7 @@ public class Applicant extends BaseTimeEntity {
 
     public void setDocumentEvaluating() {
         if (this.applyForm.isHasInterview() && this.interviewPhase != null) {
-            throw new IllegalArgumentException("이미 면접 단계에 존재하는 지원자입니다.");
+            throw new ApplicantValidationException(ErrorMessage.APPLICANT_ALREADY_INTERVIEW);
         }
 
         this.documentPhase.updateStatus(PhaseStatus.EVALUATING);

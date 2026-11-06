@@ -11,7 +11,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 
-//todo: 검증 강화
 public record ApplyFormCreateRequest(
         @NotNull(message = "면접 전형 여부는 Null일 수 없습니다.")
         boolean hasInterview,
