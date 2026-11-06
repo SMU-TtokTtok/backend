@@ -1,5 +1,7 @@
 package org.project.ttokttok.infrastructure.s3.service;
 
+import org.project.ttokttok.infrastructure.s3.exception.S3ContentValidationException;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -86,7 +88,7 @@ class S3KeyUrlGeneratorTest {
 
         // When & Then
         assertThatThrownBy(() -> generator.extractKeyFromUrl(invalidUrl))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(S3ContentValidationException.class);
     }
 
     @Test

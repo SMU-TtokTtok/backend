@@ -28,6 +28,13 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.ArgumentMatchers.argThat;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.project.ttokttok.domain.applicant.domain.enums.ApplicantPhase;
+import org.project.ttokttok.domain.applicant.domain.enums.Sort;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -66,6 +73,27 @@ class ApplicantAdminApiControllerTest {
 
         mockMvc.perform(get("/api/admin/applies").param("kind", "DOCUMENT"))
                 .andExpect(status().isOk());
+        verify(applicantAdminService).getApplicantPage(argThat(request ->
+                request.kind() == ApplicantPhase.DOCUMENT && request.sortCriteria() == Sort.GRADE));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"interview", "unknown"})
+    @WithMockUser
+    void invalidKind_keepsOriginalHttpError(String kind) throws Exception {
+        mockMvc.perform(get("/api/admin/applies").param("kind", kind))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details").value("'kind'에 유효하지 않은 값이 입력되었습니다. 허용된 값: DOCUMENT, INTERVIEW"));
+        verifyNoInteractions(applicantAdminService);
+    }
+
+    @Test
+    @WithMockUser
+    void invalidSort_keepsOriginalHttpError() throws Exception {
+        mockMvc.perform(get("/api/admin/applies").param("kind", "DOCUMENT").param("sort", "unknown"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details").value("'sort'에 유효하지 않은 값이 입력되었습니다. 허용된 값: GRADE, SUBMIT"));
+        verifyNoInteractions(applicantAdminService);
     }
 
     @Test

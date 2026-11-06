@@ -1,5 +1,7 @@
 package org.project.ttokttok.domain.notification.fcm.service;
 
+import org.project.ttokttok.domain.notification.fcm.exception.FCMTokenValidationException;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -148,7 +150,7 @@ class FCMTokenServiceTest {
 
         // when & then
         assertThatThrownBy(() -> fcmTokenService.saveOrUpdate(request))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(FCMTokenValidationException.class);
 
 
         // verify
@@ -163,7 +165,7 @@ class FCMTokenServiceTest {
 
         // when & then
         assertThatThrownBy(() -> fcmTokenService.saveOrUpdate(request))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(FCMTokenValidationException.class);
 
 
         // verify

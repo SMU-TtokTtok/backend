@@ -1,22 +1,24 @@
 package org.project.ttokttok.domain.applicant.service.dto.request;
 
+import org.project.ttokttok.domain.applicant.domain.enums.Sort;
+import org.project.ttokttok.domain.applicant.domain.enums.ApplicantPhase;
 import lombok.Builder;
 
 @Builder
 public record ApplicantPageServiceRequest(
         String username,
-        String sortCriteria,
+        Sort sortCriteria,
         boolean isEvaluating,
         int cursor,
         int size,
-        String kind
+        ApplicantPhase kind
 ) {
     public static ApplicantPageServiceRequest of(String username,
-                                                 String sortCriteria,
+                                                 Sort sortCriteria,
                                                  boolean isEvaluating,
                                                  int cursor,
                                                  int size,
-                                                 String kind) {
+                                                 ApplicantPhase kind) {
         return ApplicantPageServiceRequest.builder()
                 .username(username)
                 .sortCriteria(sortCriteria)

@@ -1,5 +1,6 @@
 package org.project.ttokttok.domain.applicant.service.dto.request;
 
+import org.project.ttokttok.domain.applicant.domain.enums.ApplicantPhase;
 import lombok.Builder;
 import org.project.ttokttok.domain.applicant.domain.enums.PhaseStatus;
 
@@ -8,12 +9,12 @@ public record StatusUpdateServiceRequest(
         String username,
         String applicantId,
         PhaseStatus status,
-        String kind
+        ApplicantPhase kind
 ) {
     public static StatusUpdateServiceRequest of(String username,
                                                 String applicantId,
                                                 PhaseStatus status,
-                                                String kind) {
+                                                ApplicantPhase kind) {
         return StatusUpdateServiceRequest.builder()
                 .username(username)
                 .applicantId(applicantId)

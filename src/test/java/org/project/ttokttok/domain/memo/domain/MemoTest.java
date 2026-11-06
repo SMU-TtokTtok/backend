@@ -1,5 +1,7 @@
 package org.project.ttokttok.domain.memo.domain;
 
+import org.project.ttokttok.domain.memo.exception.MemoValidationException;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -70,14 +72,14 @@ class MemoTest {
         @ParameterizedTest
         @NullAndEmptySource
         @ValueSource(strings = {" ", "\t", "\n"})
-        @DisplayName("내용이 비어있으면 IllegalArgumentException이 발생한다")
+        @DisplayName("내용이 비어있으면 MemoValidationException이 발생한다")
         void updateContent_Fail_BlankContent(String blankContent) {
             // given
             Memo memo = Memo.create(mock(DocumentPhase.class), "원래 내용");
 
             // when & then
             assertThatThrownBy(() -> memo.updateContent(blankContent))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(MemoValidationException.class)
                     .hasMessage("메모 내용은 비워둘 수 없습니다.");
         }
     }

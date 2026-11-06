@@ -1,5 +1,7 @@
 package org.project.ttokttok.domain.memo.service;
 
+import org.project.ttokttok.domain.memo.exception.MemoValidationException;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -125,7 +127,7 @@ class MemoServiceTest {
         }
 
         @Test
-        @DisplayName("서류 단계가 없는 지원자면 IllegalArgumentException이 발생한다")
+        @DisplayName("서류 단계가 없는 지원자면 MemoValidationException이 발생한다")
         void createMemo_Fail_NoDocumentPhase() {
             // given
             Club club = mock(Club.class);
@@ -137,7 +139,7 @@ class MemoServiceTest {
 
             // when & then
             assertThatThrownBy(() -> memoService.createMemo(USERNAME, request))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(MemoValidationException.class)
                     .hasMessage("메모는 서류 지원자에만 작성할 수 있습니다.");
         }
     }
@@ -198,7 +200,7 @@ class MemoServiceTest {
         }
 
         @Test
-        @DisplayName("서류 단계가 없는 지원자면 IllegalArgumentException이 발생한다")
+        @DisplayName("서류 단계가 없는 지원자면 MemoValidationException이 발생한다")
         void updateMemo_Fail_NoDocumentPhase() {
             // given
             Club club = mock(Club.class);
@@ -210,7 +212,7 @@ class MemoServiceTest {
 
             // when & then
             assertThatThrownBy(() -> memoService.updateMemo(USERNAME, request))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(MemoValidationException.class)
                     .hasMessage("메모는 서류 지원자에만 수정할 수 있습니다.");
         }
     }
@@ -272,7 +274,7 @@ class MemoServiceTest {
         }
 
         @Test
-        @DisplayName("서류 단계가 없는 지원자면 IllegalArgumentException이 발생한다")
+        @DisplayName("서류 단계가 없는 지원자면 MemoValidationException이 발생한다")
         void deleteMemo_Fail_NoDocumentPhase() {
             // given
             Club club = mock(Club.class);
@@ -284,7 +286,7 @@ class MemoServiceTest {
 
             // when & then
             assertThatThrownBy(() -> memoService.deleteMemo(USERNAME, request))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(MemoValidationException.class)
                     .hasMessage("메모는 서류 지원자에만 삭제할 수 있습니다.");
         }
     }

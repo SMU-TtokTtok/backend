@@ -1,5 +1,7 @@
 package org.project.ttokttok.domain.applicant.domain;
 
+import org.project.ttokttok.domain.applicant.exception.ApplicantValidationException;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -159,7 +161,7 @@ class ApplicantTest {
         }
 
         @Test
-        @DisplayName("이미 면접 단계에 존재하는 지원자는 failDocumentEvaluation() 호출 시 IllegalArgumentException이 발생한다")
+        @DisplayName("이미 면접 단계에 존재하는 지원자는 failDocumentEvaluation() 호출 시 ApplicantValidationException이 발생한다")
         void failDocumentEvaluation_Fail_WhenAlreadyInInterviewPhase() {
             // given
             ApplyForm applyForm = mock(ApplyForm.class);
@@ -170,7 +172,7 @@ class ApplicantTest {
 
             // when & then
             assertThatThrownBy(applicant::failDocumentEvaluation)
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(ApplicantValidationException.class)
                     .hasMessage("이미 면접 단계에 존재하는 지원자입니다.");
         }
 
@@ -190,7 +192,7 @@ class ApplicantTest {
         }
 
         @Test
-        @DisplayName("이미 면접 단계에 존재하는 지원자는 setDocumentEvaluating() 호출 시 IllegalArgumentException이 발생한다")
+        @DisplayName("이미 면접 단계에 존재하는 지원자는 setDocumentEvaluating() 호출 시 ApplicantValidationException이 발생한다")
         void setDocumentEvaluating_Fail_WhenAlreadyInInterviewPhase() {
             // given
             ApplyForm applyForm = mock(ApplyForm.class);
@@ -201,7 +203,7 @@ class ApplicantTest {
 
             // when & then
             assertThatThrownBy(applicant::setDocumentEvaluating)
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(ApplicantValidationException.class)
                     .hasMessage("이미 면접 단계에 존재하는 지원자입니다.");
         }
     }

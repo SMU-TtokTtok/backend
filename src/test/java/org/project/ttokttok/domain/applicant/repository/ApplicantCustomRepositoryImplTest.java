@@ -1,5 +1,8 @@
 package org.project.ttokttok.domain.applicant.repository;
 
+import org.project.ttokttok.domain.applicant.domain.enums.ApplicationHistorySort;
+import org.project.ttokttok.domain.applicant.domain.enums.Sort;
+import org.project.ttokttok.domain.applicant.domain.enums.ApplicantPhase;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -35,9 +38,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 class ApplicantCustomRepositoryImplTest implements RepositoryTestSupport {
 
-    private static final String DOCUMENT_KIND = "DOCUMENT";
-    private static final String INTERVIEW_KIND = "INTERVIEW";
-    private static final String SUBMIT_SORT = "SUBMIT";
+    private static final ApplicantPhase DOCUMENT_KIND = ApplicantPhase.DOCUMENT;
+    private static final ApplicantPhase INTERVIEW_KIND = ApplicantPhase.INTERVIEW;
+    private static final Sort SUBMIT_SORT = Sort.SUBMIT;
 
     @Autowired
     private ApplicantRepository applicantRepository;
@@ -315,7 +318,7 @@ class ApplicantCustomRepositoryImplTest implements RepositoryTestSupport {
             flushAndClear();
 
             var history = applicantRepository.getUserApplicationHistory(
-                    "내지원@sangmyung.kr", 10, null, "latest");
+                    "내지원@sangmyung.kr", 10, null, ApplicationHistorySort.LATEST);
 
             assertThat(history).hasSize(1);
             assertThat(history.get(0).clubName()).isEqualTo("지원자 조회 테스트 동아리");
@@ -329,7 +332,7 @@ class ApplicantCustomRepositoryImplTest implements RepositoryTestSupport {
             flushAndClear();
 
             var history = applicantRepository.getUserApplicationHistory(
-                    "관계없는사람@sangmyung.kr", 10, null, "latest");
+                    "관계없는사람@sangmyung.kr", 10, null, ApplicationHistorySort.LATEST);
 
             assertThat(history).isEmpty();
         }
@@ -341,7 +344,7 @@ class ApplicantCustomRepositoryImplTest implements RepositoryTestSupport {
             flushAndClear();
 
             var history = applicantRepository.getUserApplicationHistory(
-                    "지원자@sangmyung.kr", 1, null, "latest");
+                    "지원자@sangmyung.kr", 1, null, ApplicationHistorySort.LATEST);
 
             assertThat(history).hasSize(1);
         }
@@ -355,10 +358,10 @@ class ApplicantCustomRepositoryImplTest implements RepositoryTestSupport {
             flushAndClear();
 
             String email = "지원자@sangmyung.kr";
-            var latest = applicantRepository.getUserApplicationHistory(email, 10, null, "latest");
-            var popular = applicantRepository.getUserApplicationHistory(email, 10, null, "popular");
-            var memberCount = applicantRepository.getUserApplicationHistory(email, 10, null, "member_count");
-            var unknown = applicantRepository.getUserApplicationHistory(email, 10, null, "무슨값이든");
+            var latest = applicantRepository.getUserApplicationHistory(email, 10, null, ApplicationHistorySort.LATEST);
+            var popular = applicantRepository.getUserApplicationHistory(email, 10, null, ApplicationHistorySort.POPULAR);
+            var memberCount = applicantRepository.getUserApplicationHistory(email, 10, null, ApplicationHistorySort.MEMBER_COUNT);
+            var unknown = applicantRepository.getUserApplicationHistory(email, 10, null, ApplicationHistorySort.LATEST);
 
             assertThat(popular).isEqualTo(latest);
             assertThat(memberCount).isEqualTo(latest);
@@ -374,9 +377,9 @@ class ApplicantCustomRepositoryImplTest implements RepositoryTestSupport {
             String email = "커서지원자@sangmyung.kr";
             // 자기 자신의 ID를 커서로 주면 (id < cursor 조건이므로) 결과에서 빠진다.
             var afterSelf = applicantRepository.getUserApplicationHistory(
-                    email, 10, applicant.getId(), "latest");
+                    email, 10, applicant.getId(), ApplicationHistorySort.LATEST);
             // 빈 문자열 커서는 커서 없음과 같게 취급된다.
-            var emptyCursor = applicantRepository.getUserApplicationHistory(email, 10, "", "latest");
+            var emptyCursor = applicantRepository.getUserApplicationHistory(email, 10, "", ApplicationHistorySort.LATEST);
 
             assertThat(afterSelf).isEmpty();
             assertThat(emptyCursor).hasSize(1);
@@ -492,32 +495,28 @@ class ApplicantCustomRepositoryImplTest implements RepositoryTestSupport {
     }
 
     @Nested
-    @DisplayName("kind 문자열 해석")
+    @DisplayName("전형 enum에 따른 조회")
     class KindInterpretation {
 
         @Test
-        @DisplayName("kind 대소문자를 구분하지 않는다")
-        void kindIsCaseInsensitive() {
+        @DisplayName("면접 전형 enum으로 면접 지원자를 조회한다")
+        void interviewPhaseSelectsInterviewApplicants() {
             givenInterviewApplicant("면접지원자", Grade.FIRST_GRADE);
             flushAndClear();
 
-            ApplicantPageQueryResponse upper = applicantRepository.findApplicantsPageWithSortCriteria(
-                    null, false, 1, 10, form.getId(), "INTERVIEW");
-            ApplicantPageQueryResponse lower = applicantRepository.findApplicantsPageWithSortCriteria(
-                    null, false, 1, 10, form.getId(), "interview");
-
-            assertThat(namesOf(upper)).containsExactly("면접지원자");
-            assertThat(namesOf(lower)).containsExactly("면접지원자");
+            ApplicantPageQueryResponse response = applicantRepository.findApplicantsPageWithSortCriteria(
+                    null, false, 1, 10, form.getId(), ApplicantPhase.INTERVIEW);
+            assertThat(namesOf(response)).containsExactly("면접지원자");
         }
 
         @Test
-        @DisplayName("INTERVIEW가 아닌 kind는 모두 서류 단계로 조회한다")
-        void unknownKindFallsBackToDocument() {
+        @DisplayName("서류 전형 enum으로 서류 지원자를 조회한다")
+        void documentPhaseSelectsDocumentApplicants() {
             givenDocumentApplicant("서류지원자", Grade.FIRST_GRADE);
             flushAndClear();
 
             ApplicantPageQueryResponse response = applicantRepository.findApplicantsPageWithSortCriteria(
-                    null, false, 1, 10, form.getId(), "알 수 없는 kind");
+                    null, false, 1, 10, form.getId(), ApplicantPhase.DOCUMENT);
 
             assertThat(namesOf(response)).containsExactly("서류지원자");
             assertThat(response.applicants().get(0).interviewDate()).isNull();

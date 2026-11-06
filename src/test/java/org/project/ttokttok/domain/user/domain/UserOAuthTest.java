@@ -1,5 +1,7 @@
 package org.project.ttokttok.domain.user.domain;
 
+import org.project.ttokttok.domain.user.exception.UserValidationException;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -40,16 +42,16 @@ class UserOAuthTest {
         @DisplayName("구글 sub가 없으면 예외를 던진다")
         void signUpWithGoogle_withoutSub_throws() {
             assertThatThrownBy(() -> User.signUpWithGoogle("user@gmail.com", "홍길동", null))
-                    .isInstanceOf(IllegalArgumentException.class);
+                    .isInstanceOf(UserValidationException.class);
             assertThatThrownBy(() -> User.signUpWithGoogle("user@gmail.com", "홍길동", " "))
-                    .isInstanceOf(IllegalArgumentException.class);
+                    .isInstanceOf(UserValidationException.class);
         }
 
         @Test
         @DisplayName("이메일이 없으면 예외를 던진다")
         void signUpWithGoogle_withoutEmail_throws() {
             assertThatThrownBy(() -> User.signUpWithGoogle(null, "홍길동", SUB))
-                    .isInstanceOf(IllegalArgumentException.class);
+                    .isInstanceOf(UserValidationException.class);
         }
     }
 
@@ -61,7 +63,7 @@ class UserOAuthTest {
         @DisplayName("여전히 상명대 이메일이 아니면 가입할 수 없다 (도메인 제한 유지)")
         void signUp_withNonSangmyungEmail_stillRejected() {
             assertThatThrownBy(() -> User.signUp("user@gmail.com", "encoded", "홍길동", true))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(UserValidationException.class)
                     .hasMessage("올바른 이메일 형식이 아닙니다.");
         }
 
@@ -69,7 +71,7 @@ class UserOAuthTest {
         @DisplayName("여전히 비밀번호 없이 가입할 수 없다")
         void signUp_withoutPassword_stillRejected() {
             assertThatThrownBy(() -> User.signUp("a@sangmyung.kr", null, "홍길동", true))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(UserValidationException.class)
                     .hasMessage("비밀번호는 필수입니다.");
         }
 

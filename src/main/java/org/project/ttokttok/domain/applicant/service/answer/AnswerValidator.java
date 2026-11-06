@@ -1,5 +1,9 @@
 package org.project.ttokttok.domain.applicant.service.answer;
 
+import org.project.ttokttok.global.exception.ErrorMessage;
+
+import org.project.ttokttok.domain.applicant.exception.ApplicantValidationException;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -84,7 +88,7 @@ public class AnswerValidator {
             return;
         }
         if (question.isEssential() && (value == null || value instanceof String text && text.isBlank())) {
-            throw new IllegalArgumentException("필수 질문에 대한 답변이 없습니다.");
+            throw new ApplicantValidationException(ErrorMessage.REQUIRED_ANSWER_MISSING);
         }
         if (value != null) {
             validateTypeAndChoices(question, value);

@@ -1,5 +1,6 @@
 package org.project.ttokttok.domain.applicant.service;
 
+import org.project.ttokttok.domain.applicant.domain.enums.ApplicationHistorySort;
 import org.hibernate.exception.ConstraintViolationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -397,7 +398,7 @@ class ApplicantUserServiceTest {
             // given
             int size = 2;
             given(userRepository.existsByEmail(EMAIL)).willReturn(true);
-            given(applicantRepository.getUserApplicationHistory(EMAIL, size, null, "latest"))
+            given(applicantRepository.getUserApplicationHistory(EMAIL, size, null, ApplicationHistorySort.LATEST))
                     .willReturn(List.of(
                             createResponse("a1", null),
                             createResponse("a2", null),
@@ -406,7 +407,7 @@ class ApplicantUserServiceTest {
 
             // when
             ClubListServiceResponse response = applicantUserService.getUserApplicationHistory(
-                    EMAIL, size, null, "latest");
+                    EMAIL, size, null, ApplicationHistorySort.LATEST);
 
             // then
             assertThat(response.clubs()).hasSize(2);
@@ -420,12 +421,12 @@ class ApplicantUserServiceTest {
             // given
             int size = 2;
             given(userRepository.existsByEmail(EMAIL)).willReturn(true);
-            given(applicantRepository.getUserApplicationHistory(EMAIL, size, null, "latest"))
+            given(applicantRepository.getUserApplicationHistory(EMAIL, size, null, ApplicationHistorySort.LATEST))
                     .willReturn(List.of(createResponse("a1", null)));
 
             // when
             ClubListServiceResponse response = applicantUserService.getUserApplicationHistory(
-                    EMAIL, size, null, "latest");
+                    EMAIL, size, null, ApplicationHistorySort.LATEST);
 
             // then
             assertThat(response.clubs()).hasSize(1);
@@ -440,7 +441,7 @@ class ApplicantUserServiceTest {
             given(userRepository.existsByEmail(EMAIL)).willReturn(false);
 
             // when & then
-            assertThatThrownBy(() -> applicantUserService.getUserApplicationHistory(EMAIL, 10, null, "latest"))
+            assertThatThrownBy(() -> applicantUserService.getUserApplicationHistory(EMAIL, 10, null, ApplicationHistorySort.LATEST))
                     .isInstanceOf(UserNotFoundException.class);
         }
 
@@ -449,12 +450,12 @@ class ApplicantUserServiceTest {
         void getUserApplicationHistory_marksDeadlineImminent_withinAWeek() {
             // given
             given(userRepository.existsByEmail(EMAIL)).willReturn(true);
-            given(applicantRepository.getUserApplicationHistory(eq(EMAIL), eq(10), eq((String) null), eq("latest")))
+            given(applicantRepository.getUserApplicationHistory(eq(EMAIL), eq(10), eq((String) null), eq(ApplicationHistorySort.LATEST)))
                     .willReturn(List.of(createResponse("a1", LocalDate.now().plusDays(3))));
 
             // when
             ClubListServiceResponse response = applicantUserService.getUserApplicationHistory(
-                    EMAIL, 10, null, "latest");
+                    EMAIL, 10, null, ApplicationHistorySort.LATEST);
 
             // then
             assertThat(response.clubs().get(0).isDeadlineImminent()).isTrue();
@@ -465,12 +466,12 @@ class ApplicantUserServiceTest {
         void getUserApplicationHistory_doesNotMarkDeadlineImminent_whenFarAway() {
             // given
             given(userRepository.existsByEmail(EMAIL)).willReturn(true);
-            given(applicantRepository.getUserApplicationHistory(eq(EMAIL), eq(10), eq((String) null), eq("latest")))
+            given(applicantRepository.getUserApplicationHistory(eq(EMAIL), eq(10), eq((String) null), eq(ApplicationHistorySort.LATEST)))
                     .willReturn(List.of(createResponse("a1", LocalDate.now().plusDays(10))));
 
             // when
             ClubListServiceResponse response = applicantUserService.getUserApplicationHistory(
-                    EMAIL, 10, null, "latest");
+                    EMAIL, 10, null, ApplicationHistorySort.LATEST);
 
             // then
             assertThat(response.clubs().get(0).isDeadlineImminent()).isFalse();
@@ -481,12 +482,12 @@ class ApplicantUserServiceTest {
         void getUserApplicationHistory_doesNotMarkDeadlineImminent_whenApplyEndDateNull() {
             // given
             given(userRepository.existsByEmail(EMAIL)).willReturn(true);
-            given(applicantRepository.getUserApplicationHistory(eq(EMAIL), eq(10), eq((String) null), eq("latest")))
+            given(applicantRepository.getUserApplicationHistory(eq(EMAIL), eq(10), eq((String) null), eq(ApplicationHistorySort.LATEST)))
                     .willReturn(List.of(createResponse("a1", null)));
 
             // when
             ClubListServiceResponse response = applicantUserService.getUserApplicationHistory(
-                    EMAIL, 10, null, "latest");
+                    EMAIL, 10, null, ApplicationHistorySort.LATEST);
 
             // then
             assertThat(response.clubs().get(0).isDeadlineImminent()).isFalse();

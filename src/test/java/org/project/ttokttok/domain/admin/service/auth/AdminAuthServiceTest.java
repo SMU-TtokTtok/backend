@@ -42,7 +42,7 @@ import org.project.ttokttok.global.auth.jwt.dto.response.TokenResponse;
 import org.project.ttokttok.global.auth.jwt.exception.InvalidRefreshTokenException;
 import org.project.ttokttok.global.auth.jwt.service.TokenProvider;
 import org.project.ttokttok.global.entity.Role;
-import org.project.ttokttok.global.exception.exception.CustomException;
+import org.project.ttokttok.global.exception.CustomException;
 import org.springframework.http.HttpStatus;
 import org.project.ttokttok.infrastructure.redis.service.RefreshTokenRedisService;
 import org.springframework.security.crypto.password.PasswordEncoder;

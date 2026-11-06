@@ -1,7 +1,7 @@
 package org.project.ttokttok.domain.admin.exception;
 
 import org.project.ttokttok.global.exception.ErrorMessage;
-import org.project.ttokttok.global.exception.exception.CustomException;
+import org.project.ttokttok.global.exception.CustomException;
 
 /**
  * 로그인 시 관리자(또는 소속 동아리)를 찾을 수 없는 경우.

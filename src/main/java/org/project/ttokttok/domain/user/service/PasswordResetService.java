@@ -1,5 +1,9 @@
 package org.project.ttokttok.domain.user.service;
 
+import org.project.ttokttok.global.exception.ErrorMessage;
+
+import org.project.ttokttok.domain.user.exception.UserValidationException;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.project.ttokttok.domain.user.domain.User;
@@ -21,7 +25,7 @@ public class PasswordResetService {
     @Transactional
     public void resetPassword(ResetPasswordServiceRequest request) {
         if (!request.newPassword().equals(request.newPasswordConfirm())) {
-            throw new IllegalArgumentException("새 비밀번호가 일치하지 않습니다.");
+            throw new UserValidationException(ErrorMessage.USER_NEW_PASSWORD_MISMATCH);
         }
 
         emailVerificationService.requireVerifiedCode(request.email(), request.verificationCode());
@@ -43,7 +47,7 @@ public class PasswordResetService {
 
     private User findPasswordAccount(String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+                .orElseThrow(() -> new UserValidationException(ErrorMessage.USER_AUTH_NOT_FOUND));
         if (user.isOAuthOnly()) {
             throw new OAuthOnlyAccountException();
         }

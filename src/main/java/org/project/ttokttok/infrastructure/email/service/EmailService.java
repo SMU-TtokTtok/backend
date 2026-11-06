@@ -1,5 +1,9 @@
 package org.project.ttokttok.infrastructure.email.service;
 
+import org.project.ttokttok.global.exception.ErrorMessage;
+
+import org.project.ttokttok.infrastructure.email.exception.EmailValidationException;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.project.ttokttok.infrastructure.email.dto.EmailRequest;
@@ -83,7 +87,7 @@ public class EmailService {
     // 이메일 인증코드 발송. 코드는 호출부가 먼저 만들어 저장한 것을 받는다
     public void sendVerificationCode(String email, String code) {
         if (!isValidSangmyungEmail(email)) {
-            throw new IllegalArgumentException("상명대학교 이메일만 가입 가능합니다.");
+            throw new EmailValidationException(ErrorMessage.EMAIL_SIGNUP_DOMAIN_INVALID);
         }
 
         sendEmail(EmailRequest.createVerificationEmail(email, code));

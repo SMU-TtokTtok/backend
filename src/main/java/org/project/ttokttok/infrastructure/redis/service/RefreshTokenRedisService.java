@@ -54,12 +54,12 @@ public class RefreshTokenRedisService {
         // 추후 필요하다면, 액세스토큰 블랙리스트 로직 추가 고려하기
         if (isExistKey(refreshToken)) {
             redisTemplate.delete(REFRESH_REDIS_KEY + refreshToken);
-            //log.info("로그아웃 완료: {}, logout at: {}", username, LocalDateTime.now());
+
             return;
         }
 
         // 이미 로그아웃 되어있으면 그냥 ok 리턴
-        //throw new AlreadyLogoutException();
+
     }
 
     // 액세스 토큰 블랙리스트 추가 - 로그아웃 시
@@ -98,7 +98,6 @@ public class RefreshTokenRedisService {
             addAccessTokenToBlacklist(accessToken, accessTokenExpiryTime);
         }
 
-        //log.info("로그아웃 완료: {}, logout at: {}", username, LocalDateTime.now());
     }
 
     // 액세스 토큰 리이슈 시 사용

@@ -1,5 +1,9 @@
 package org.project.ttokttok.domain.memo.service;
 
+import org.project.ttokttok.global.exception.ErrorMessage;
+
+import org.project.ttokttok.domain.memo.exception.MemoValidationException;
+
 import lombok.RequiredArgsConstructor;
 import org.project.ttokttok.domain.applicant.domain.Applicant;
 import org.project.ttokttok.domain.applicant.exception.ApplicantNotFoundException;
@@ -30,7 +34,7 @@ public class MemoService {
         validateApplicantClub(applicant, club.getId());
 
         if (applicant.getDocumentPhase() == null)
-            throw new IllegalArgumentException("메모는 서류 지원자에만 작성할 수 있습니다.");
+            throw new MemoValidationException(ErrorMessage.MEMO_CREATE_DOCUMENT_REQUIRED);
 
         return applicant.getDocumentPhase().addMemo(request.content());
     }
@@ -44,7 +48,7 @@ public class MemoService {
         validateApplicantClub(applicant, club.getId());
 
         if (applicant.getDocumentPhase() == null)
-            throw new IllegalArgumentException("메모는 서류 지원자에만 수정할 수 있습니다.");
+            throw new MemoValidationException(ErrorMessage.MEMO_UPDATE_DOCUMENT_REQUIRED);
 
         applicant.getDocumentPhase().updateMemo(request.memoId(), request.content());
     }
@@ -58,7 +62,7 @@ public class MemoService {
         validateApplicantClub(applicant, club.getId());
 
         if (applicant.getDocumentPhase() == null)
-            throw new IllegalArgumentException("메모는 서류 지원자에만 삭제할 수 있습니다.");
+            throw new MemoValidationException(ErrorMessage.MEMO_DELETE_DOCUMENT_REQUIRED);
 
         applicant.getDocumentPhase().deleteMemo(request.memoId());
     }

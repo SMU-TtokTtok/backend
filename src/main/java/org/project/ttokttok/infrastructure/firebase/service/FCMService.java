@@ -51,7 +51,6 @@ public class FCMService {
                 }
 
             } catch (Exception e) {
-                // TODO: 추후 재시도 로직 추가
                 log.error("Failed to send FCM notification to token chunk.", e);
             }
         }

@@ -1,7 +1,7 @@
 package org.project.ttokttok.domain.user.exception;
 
 import org.project.ttokttok.global.exception.ErrorMessage;
-import org.project.ttokttok.global.exception.exception.CustomException;
+import org.project.ttokttok.global.exception.CustomException;
 
 /**
  * 구글 계정 자동 연동 대상 사용자를 찾지 못했을 때 발생한다.
