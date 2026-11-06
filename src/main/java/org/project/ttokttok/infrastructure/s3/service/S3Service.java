@@ -94,7 +94,7 @@ public class S3Service {
         try {
             deleteFile(cloudFrontUrl);
         } catch (RuntimeException e) {
-            log.warn("S3 파일 삭제 실패 (best-effort): {}", cloudFrontUrl, e);
+            log.warn("S3 파일 삭제 실패 (best-effort): {} - {}", cloudFrontUrl, e.getMessage());
         }
     }
 

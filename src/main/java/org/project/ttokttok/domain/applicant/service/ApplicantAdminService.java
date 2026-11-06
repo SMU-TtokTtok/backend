@@ -262,7 +262,7 @@ public class ApplicantAdminService {
                     boolean alreadyMember = clubMemberRepository
                             .existsByClubIdAndEmail(club.getId(), applicant.getEmail());
                     if (alreadyMember) {
-                        log.warn("지원자 {}는 이미 동아리 부원으로 등록되어 있습니다.", applicant.getEmail());
+                        log.debug("지원자 {}는 이미 동아리 부원으로 등록되어 있습니다.", applicant.getId());
                         return false;
                     }
                     return true;

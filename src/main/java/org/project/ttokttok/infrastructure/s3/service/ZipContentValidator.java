@@ -60,7 +60,7 @@ public class ZipContentValidator {
                 zis.closeEntry();
             }
         } catch (IOException e) {
-            log.error("ZIP 파일 검증 중 오류 발생: {}", e.getMessage());
+            log.warn("ZIP 파일 검증 중 오류 발생: {}", e.getMessage());
             throw new CustomException(ErrorMessage.S3_FILE_UPLOAD_ERROR) {};
         }
     }
