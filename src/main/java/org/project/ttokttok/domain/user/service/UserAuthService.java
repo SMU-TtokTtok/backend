@@ -147,7 +147,7 @@ public class UserAuthService {
 
         // Redis에서 리프레시 토큰 삭제 및 액세스 토큰 블랙리스트 추가
         refreshTokenRedisService.logout(refreshToken, accessToken, accessTokenExpiryTime);
-        //log.info("로그아웃 완료: {}", email);
+
     }
 
     /**

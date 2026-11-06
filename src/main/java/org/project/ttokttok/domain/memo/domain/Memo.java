@@ -19,7 +19,7 @@ import java.util.UUID;
 public class Memo {
 
     @Id
-//    @GeneratedValue(strategy = GenerationType.UUID)
+
     @Column(length = 36, updatable = false, unique = true)
     private String id = UUID.randomUUID().toString();
 

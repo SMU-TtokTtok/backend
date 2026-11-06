@@ -98,15 +98,5 @@ public class ClubMember extends BaseTimeEntity {
     public boolean belongsToClub(String clubId) {
         return club.getId().equals(clubId);
     }
-//    public boolean isPresident() {
-//        return this.role == MemberRole.PRESIDENT;
-//    }
-//
-//    public boolean isVicePresident() {
-//        return this.role == MemberRole.VICE_PRESIDENT;
-//    }
-//
-//    public boolean isExecutive() {
-//        return this.role == MemberRole.EXECUTIVE;
-//    }
+
 }

@@ -15,7 +15,6 @@ import java.util.List;
 public class ExcelService {
 
     // 부원 목록 엑셀 파일 생성
-    // TODO: 메모리 이슈 시 SXSSFWorkbook 사용 고려
     public byte[] createMemberExcel(String clubName, List<ClubMemberInExcelResponse> members)
             throws IOException {
         try (Workbook workbook = new XSSFWorkbook();

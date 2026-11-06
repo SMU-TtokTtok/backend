@@ -175,7 +175,6 @@ public class ApplicantCustomRepositoryImpl implements ApplicantCustomRepository 
         };
     }
 
-    //FIXME: 학년순으로 제대로 정렬 안되는 이슈 해결 필요
     // 들어온 sortCriteria에 따라 정렬 조건을 반환하는 메서드
     private OrderSpecifier<?> getSortCriteria(@Nullable Sort sortCriteria) {
         return sortCriteria == Sort.SUBMIT ? applicant.createdAt.asc() : applicant.grade.asc();

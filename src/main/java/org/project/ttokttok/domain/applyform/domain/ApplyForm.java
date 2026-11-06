@@ -125,7 +125,6 @@ public class ApplyForm extends BaseTimeEntity {
                 .build();
     }
 
-    //TODO: Mapper를 통해서 수정하도록 변경
     public void updateApplyInfo(LocalDate applyStartDate,
                                 LocalDate applyDeadline,
                                 Integer maxApplyCount,

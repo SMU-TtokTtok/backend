@@ -31,7 +31,6 @@ public class ClubMemberCustomRepositoryImpl implements ClubMemberCustomRepositor
                                                                   int pageNum,
                                                                   int pageSize) {
 
-        // TODO: NO OFFSET으로 개선하기.
         List<ClubMember> members = queryFactory
                 .selectFrom(clubMember)
                 .where(clubMember.club.id.eq(clubId))
