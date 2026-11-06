@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.project.ttokttok.domain.user.domain.EmailVerification;
 import org.project.ttokttok.domain.user.repository.EmailVerificationRepository;
 import org.project.ttokttok.infrastructure.email.service.EmailService;
+import org.project.ttokttok.global.util.LogMasker;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -30,7 +31,7 @@ public class EmailVerificationService {
             throw new UserValidationException(ErrorMessage.VERIFICATION_EMAIL_INVALID);
         }
         sendCode(email, emailService::sendVerificationCode);
-        log.info("인증코드 발송 및 저장 완료 : {}", email);
+        log.info("인증코드 발송 및 저장 완료 : {}", LogMasker.email(email));
     }
 
     @Transactional
@@ -44,7 +45,7 @@ public class EmailVerificationService {
         }
 
         verification.markAsVerified();
-        log.info("이메일 인증 완료 : {}", email);
+        log.info("이메일 인증 완료 : {}", LogMasker.email(email));
         return true;
     }
 
@@ -64,7 +65,7 @@ public class EmailVerificationService {
 
     public void sendPasswordResetCode(String email) {
         sendCode(email, emailService::sendPasswordResetCode);
-        log.info("비밀번호 재설정 코드 발송 완료: {}", email);
+        log.info("비밀번호 재설정 코드 발송 완료: {}", LogMasker.email(email));
     }
 
     // 새 코드를 짧은 트랜잭션으로 먼저 커밋하고, 메일(SMTP)은 커넥션을 반납한 뒤 보낸다.
