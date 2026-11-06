@@ -77,7 +77,7 @@ public class RefreshTokenRedisService {
                 "blacklisted",
                 Duration.ofMillis(expiryTime)
         );
-        log.info("액세스 토큰 블랙리스트 추가: {}", accessToken);
+        log.debug("액세스 토큰 블랙리스트 추가");
     }
 
     // 액세스 토큰이 블랙리스트에 있는지 확인

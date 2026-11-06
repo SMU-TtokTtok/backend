@@ -71,19 +71,19 @@ public class TokenProvider {
 
             return true;
         } catch (SecurityException | MalformedJwtException e) {
-            log.warn("잘못된 JWT 토큰 입니다.", e);
+            log.warn("잘못된 JWT 토큰 입니다.");
         } catch (SignatureException e) {
-            log.warn("JWT 서명 검증에 실패하였습니다.", e);
+            log.warn("JWT 서명 검증에 실패하였습니다.");
         } catch (InvalidIssuerException e) {
-            log.warn("유효하지 않은 이슈어(발급자) 입니다.", e);
+            log.warn("유효하지 않은 이슈어(발급자) 입니다.");
         } catch (ExpiredJwtException e) {
-            log.warn("JWT 토큰이 만료되었습니다.", e);
+            log.debug("JWT 토큰이 만료되었습니다.");
         } catch (UnsupportedJwtException e) {
-            log.warn("지원되지 않는 JWT 토큰", e);
+            log.warn("지원되지 않는 JWT 토큰");
         } catch (IllegalArgumentException e) {
-            log.warn("JWT 토큰이 비어있습니다.", e);
+            log.debug("JWT 토큰이 비어있습니다.");
         } catch (NullPointerException e) {
-            log.warn("헤더 값이 잘못되었습니다.", e);
+            log.warn("헤더 값이 잘못되었습니다.");
         }
 
         return false;

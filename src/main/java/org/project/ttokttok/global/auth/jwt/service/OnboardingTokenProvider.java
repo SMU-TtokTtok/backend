@@ -101,7 +101,7 @@ public class OnboardingTokenProvider {
         } catch (ExpiredJwtException e) {
             throw new OnboardingTokenExpiredException();
         } catch (JwtException | IllegalArgumentException e) {
-            log.warn("온보딩 토큰 검증 실패: {}", e.getMessage());
+            log.warn("온보딩 토큰 검증 실패: {}", e.getClass().getSimpleName());
             throw new InvalidOnboardingTokenException();
         }
     }
