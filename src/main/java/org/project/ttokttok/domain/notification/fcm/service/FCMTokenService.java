@@ -1,5 +1,7 @@
 package org.project.ttokttok.domain.notification.fcm.service;
 
+import org.project.ttokttok.domain.notification.fcm.exception.FCMTokenValidationException;
+
 import static org.project.ttokttok.global.exception.ErrorMessage.FCM_FIELD_BLANK;
 
 import java.util.List;
@@ -58,7 +60,7 @@ public class FCMTokenService {
 
     private void validateBlank(String field) {
         if (field == null || field.isBlank()) {
-            throw new IllegalArgumentException(FCM_FIELD_BLANK.getMessage());
+            throw new FCMTokenValidationException(FCM_FIELD_BLANK);
         }
     }
 }

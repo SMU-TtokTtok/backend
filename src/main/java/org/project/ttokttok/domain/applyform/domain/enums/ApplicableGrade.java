@@ -1,5 +1,7 @@
 package org.project.ttokttok.domain.applyform.domain.enums;
 
+import org.project.ttokttok.domain.applyform.exception.ApplyFormValidationException;
+
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -19,6 +21,6 @@ public enum ApplicableGrade {
                 return applicableGrade;
             }
         }
-        throw new IllegalArgumentException("잘못된 학년입니다." + grade);
+        throw new ApplyFormValidationException(grade);
     }
 }

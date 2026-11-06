@@ -1,5 +1,9 @@
 package org.project.ttokttok.domain.user.service;
 
+import org.project.ttokttok.global.exception.ErrorMessage;
+
+import org.project.ttokttok.domain.user.exception.UserValidationException;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import lombok.RequiredArgsConstructor;
@@ -44,17 +48,17 @@ public class UserAuthService {
      *
      * @param request 회원가입 요청 정보
      * @return 생성된 사용자 정보
-     * @throws IllegalArgumentException 비밀번호 불일치, 이메일 중복, 이메일 미인증 등의 경우
+     * @throws UserValidationException 비밀번호 불일치, 이메일 중복, 이메일 미인증 등의 경우
      * */
     public UserServiceResponse signup(SignupServiceRequest request) {
         // 3-1. 비밀번호 확인 일치 검증
         if (!request.password().equals(request.passwordConfirm())) {
-            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+            throw new UserValidationException(ErrorMessage.USER_PASSWORD_CONFIRM_MISMATCH);
         }
 
         // 3-2. 이메일 중복 검증
         if (userRepository.existsByEmail(request.email())) {
-            throw new IllegalArgumentException("이미 가입된 이메일입니다.");
+            throw new UserValidationException(ErrorMessage.USER_EMAIL_ALREADY_REGISTERED);
         }
 
         // 3-3. 이메일 인증 확인
@@ -81,13 +85,13 @@ public class UserAuthService {
      *
      * @param request 로그인 요청 정보 (이메일, 비밀번호, 로그인 유지 정보)
      * @return 로그인 결과 (토큰 정보와 사용자 정보)
-     * @throws IllegalArgumentException 존재하지 않는 사용자, 비밀번호 불일치, 이메일 미인증 등의 경우
+     * @throws UserValidationException 존재하지 않는 사용자, 비밀번호 불일치, 이메일 미인증 등의 경우
      * */
     @Transactional(readOnly = true)
     public LoginServiceResponse login(LoginServiceRequest request) {
         // 4-1. 이메일로 사용자 조회
         User user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+                .orElseThrow(() -> new UserValidationException(ErrorMessage.USER_AUTH_NOT_FOUND));
 
         // 4-2. OAuth 전용 계정(비밀번호 없음)은 비밀번호 로그인 불가
         if (user.isOAuthOnly()) {
@@ -96,12 +100,12 @@ public class UserAuthService {
 
         // 4-3. 비밀번호 검증
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
-            throw new IllegalArgumentException("비밀번호가 올바르지 않습니다.");
+            throw new UserValidationException(ErrorMessage.USER_PASSWORD_MISMATCH);
         }
 
         // 4-3. 이메일 인증 확인
         if (!user.isEmailVerified()) {
-            throw new IllegalArgumentException("이메일 인증이 완료되지 않은 계정입니다.");
+            throw new UserValidationException(ErrorMessage.USER_ACCOUNT_NOT_VERIFIED);
         }
 
         // 4-4. JWT 토큰 발급
@@ -123,7 +127,7 @@ public class UserAuthService {
      *
      * @param refreshToken 로그아웃할 리프레시 토큰
      * @param accessToken 로그아웃할 액세스 토큰
-     * @throws IllegalArgumentException 이미 로그아웃된 상태인 경우
+     * @throws UserValidationException 이미 로그아웃된 상태인 경우
      * */
     public void logout(String refreshToken, String accessToken) {
         // 액세스 토큰의 만료 시간 계산

@@ -12,7 +12,11 @@ public abstract class CustomException extends RuntimeException {
     private final HttpStatus status;
 
     public CustomException(ErrorMessage errorMessage) {
-        super(errorMessage.getMessage());
+        this(errorMessage, errorMessage.getMessage());
+    }
+    protected CustomException(ErrorMessage errorMessage, String message) {
+        super(message);
         status = errorMessage.getStatus();
     }
+
 }

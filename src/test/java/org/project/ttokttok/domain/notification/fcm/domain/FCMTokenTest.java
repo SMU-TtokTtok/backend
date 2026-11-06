@@ -1,5 +1,7 @@
 package org.project.ttokttok.domain.notification.fcm.domain;
 
+import org.project.ttokttok.domain.notification.fcm.exception.FCMTokenValidationException;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -106,7 +108,7 @@ class FCMTokenTest {
 
         // when & then
        assertThatThrownBy(() ->  FCMToken.create(deviceType, email, token))
-               .isInstanceOf(IllegalArgumentException.class);
+               .isInstanceOf(FCMTokenValidationException.class);
     }
 
     @Test
@@ -119,7 +121,7 @@ class FCMTokenTest {
 
         // then
         assertThatThrownBy(() ->  FCMToken.create(deviceType, email, token))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(FCMTokenValidationException.class);
     }
 
     @Test
@@ -131,7 +133,7 @@ class FCMTokenTest {
 
         // when & then
         assertThatThrownBy(() ->  FCMToken.create(deviceType, null, token))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(FCMTokenValidationException.class);
     }
 
     @Test
@@ -143,6 +145,6 @@ class FCMTokenTest {
 
         // when & then
         assertThatThrownBy(() ->  FCMToken.create(deviceType, email, null))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(FCMTokenValidationException.class);
     }
 }

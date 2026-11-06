@@ -1,5 +1,7 @@
 package org.project.ttokttok.infrastructure.email.service;
 
+import org.project.ttokttok.infrastructure.email.exception.EmailValidationException;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -153,14 +155,14 @@ class EmailServiceTest {
         }
 
         @Test
-        @DisplayName("상명대 이메일이 아니면 IllegalArgumentException이 발생한다")
+        @DisplayName("상명대 이메일이 아니면 EmailValidationException이 발생한다")
         void throwsExceptionForNonSangmyungEmail() {
             // given
             String invalidEmail = "user@gmail.com";
 
             // when & then
             assertThatThrownBy(() -> emailService.sendVerificationCode(invalidEmail, "123456"))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(EmailValidationException.class)
                     .hasMessage("상명대학교 이메일만 가입 가능합니다.");
         }
 

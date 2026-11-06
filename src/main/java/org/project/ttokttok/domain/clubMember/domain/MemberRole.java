@@ -1,5 +1,7 @@
 package org.project.ttokttok.domain.clubMember.domain;
 
+import org.project.ttokttok.domain.clubMember.exception.ClubMemberValidationException;
+
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -28,6 +30,6 @@ public enum MemberRole {
             return MEMBER;
         }
 
-        throw new IllegalArgumentException("잘못된 역할명입니다: " + roleName);
+        throw new ClubMemberValidationException(roleName);
     }
 }

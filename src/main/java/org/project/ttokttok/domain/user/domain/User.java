@@ -1,5 +1,9 @@
 package org.project.ttokttok.domain.user.domain;
 
+import org.project.ttokttok.global.exception.ErrorMessage;
+
+import org.project.ttokttok.domain.user.exception.UserValidationException;
+
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -78,7 +82,7 @@ public class User extends BaseTimeEntity {
      */
     public static User signUp(String email, String encodedPassword, String name, boolean termsAgreed) {
         if (!termsAgreed) {
-            throw new IllegalArgumentException("약관 동의가 필요합니다.");
+            throw new UserValidationException(ErrorMessage.USER_TERMS_REQUIRED);
         }
         validateSangmyungEmail(email);
         validatePassword(encodedPassword);
@@ -104,7 +108,7 @@ public class User extends BaseTimeEntity {
      */
     public static User signUpWithGoogle(String email, String name, String providerId) {
         if (providerId == null || providerId.isBlank()) {
-            throw new IllegalArgumentException("구글 식별자(sub)는 필수입니다.");
+            throw new UserValidationException(ErrorMessage.GOOGLE_SUB_REQUIRED);
         }
 
         return User.builder()
@@ -169,7 +173,7 @@ public class User extends BaseTimeEntity {
 
     private static void validateEmailFormat(String email) {
         if (email == null || email.isBlank()) {
-            throw new IllegalArgumentException("이메일은 필수입니다.");
+            throw new UserValidationException(ErrorMessage.USER_EMAIL_REQUIRED);
         }
     }
 
@@ -179,22 +183,22 @@ public class User extends BaseTimeEntity {
 
         // 나중에 수정 - 상명대 이메일 정규식
         if (!email.toLowerCase().endsWith("@sangmyung.kr")) {
-            throw new IllegalArgumentException("올바른 이메일 형식이 아닙니다.");
+            throw new UserValidationException(ErrorMessage.USER_EMAIL_INVALID);
         }
     }
 
     private static void validatePassword(String password) {
         if (password == null || password.isBlank()) {
-            throw new IllegalArgumentException("비밀번호는 필수입니다.");
+            throw new UserValidationException(ErrorMessage.USER_PASSWORD_REQUIRED);
         }
     }
 
     private void validateName(String name) {
         if (name == null || name.isBlank()) {
-            throw new IllegalArgumentException("이름은 필수입니다.");
+            throw new UserValidationException(ErrorMessage.USER_NAME_REQUIRED);
         }
         if (name.length() < 2) {
-            throw new IllegalArgumentException("이름은 최소 2자 이상이어야 합니다.");
+            throw new UserValidationException(ErrorMessage.USER_NAME_TOO_SHORT);
         }
     }
 }

@@ -1,5 +1,7 @@
 package org.project.ttokttok.infrastructure.email.service;
 
+import org.project.ttokttok.infrastructure.email.exception.EmailValidationException;
+
 import jakarta.mail.internet.MimeMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -90,7 +92,7 @@ class EmailServiceBehaviorTest {
     @DisplayName("sendVerificationCode는 상명대 이메일이 아니면 예외를 던진다")
     void sendVerificationCode_invalidEmail() {
         assertThatThrownBy(() -> emailService.sendVerificationCode("a@gmail.com", "123456"))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(EmailValidationException.class);
         verify(mailSender, never()).send(org.mockito.ArgumentMatchers.any(MimeMessage.class));
     }
 

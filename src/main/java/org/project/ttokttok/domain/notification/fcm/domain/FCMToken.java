@@ -1,5 +1,7 @@
 package org.project.ttokttok.domain.notification.fcm.domain;
 
+import org.project.ttokttok.domain.notification.fcm.exception.FCMTokenValidationException;
+
 import static org.project.ttokttok.global.exception.ErrorMessage.FCM_EMAIL_BLANK;
 import static org.project.ttokttok.global.exception.ErrorMessage.FCM_TOKEN_BLANK;
 
@@ -72,13 +74,13 @@ public class FCMToken extends BaseTimeEntity {
 
     private static void validateEmail(String email) {
         if (email == null || email.isBlank()) {
-            throw new IllegalArgumentException(FCM_EMAIL_BLANK.getMessage());
+            throw new FCMTokenValidationException(FCM_EMAIL_BLANK);
         }
     }
 
     private static void validateToken(String token) {
         if (token == null || token.isBlank()) {
-            throw new IllegalArgumentException(FCM_TOKEN_BLANK.getMessage());
+            throw new FCMTokenValidationException(FCM_TOKEN_BLANK);
         }
     }
 }

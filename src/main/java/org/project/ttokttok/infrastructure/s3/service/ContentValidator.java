@@ -1,5 +1,9 @@
 package org.project.ttokttok.infrastructure.s3.service;
 
+import org.project.ttokttok.global.exception.ErrorMessage;
+
+import org.project.ttokttok.infrastructure.s3.exception.S3ContentValidationException;
+
 import org.project.ttokttok.infrastructure.s3.exception.S3FileMaxSizeOverException;
 import org.project.ttokttok.infrastructure.s3.exception.UnsupportedFileTypeException;
 import org.project.ttokttok.infrastructure.s3.support.AllowedFileTypes;
@@ -32,7 +36,7 @@ public class ContentValidator implements ContentValidatable {
     @Override
     public void validateNotEmpty(MultipartFile content) {
         if (content == null || content.isEmpty()) {
-            throw new IllegalArgumentException("파일이 비어있거나 존재하지 않습니다.");
+            throw new S3ContentValidationException(ErrorMessage.S3_CONTENT_EMPTY);
         }
     }
 
@@ -75,21 +79,21 @@ public class ContentValidator implements ContentValidatable {
     // 파일 이름이 비어있지 않은지 확인
     private void validateFileNameEmpty(String fileName) {
         if (fileName == null || fileName.isBlank()) {
-            throw new IllegalArgumentException("파일 이름이 비어있습니다.");
+            throw new S3ContentValidationException(ErrorMessage.S3_FILE_NAME_EMPTY);
         }
     }
 
     // 유효하지 않은 특수 문자 확인
     private void validateChars(String fileName) {
         if (fileName.matches(FILE_NAME_REGEX)) {
-            throw new IllegalArgumentException("파일 이름에 허용되지 않는 특수 문자가 포함되어 있습니다.");
+            throw new S3ContentValidationException(ErrorMessage.S3_FILE_NAME_CHARACTERS_INVALID);
         }
     }
 
     // 파일 이름이 너무 길지 않은지 확인
     private void validateFileNameTooLong(String fileName) {
         if (fileName.length() > MAX_FILE_NAME_LENGTH) {
-            throw new IllegalArgumentException("파일 이름이 너무 깁니다. (최대 255자)");
+            throw new S3ContentValidationException(ErrorMessage.S3_FILE_NAME_TOO_LONG);
         }
     }
 }

@@ -1,5 +1,7 @@
 package org.project.ttokttok.domain.user.service;
 
+import org.project.ttokttok.domain.user.exception.UserValidationException;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -289,7 +291,7 @@ class GoogleOAuthServiceTest {
         }
 
         @Test
-        @DisplayName("약관에 동의하지 않으면 IllegalArgumentException을 던진다")
+        @DisplayName("약관에 동의하지 않으면 UserValidationException을 던진다")
         void complete_withoutTermsAgreed_throwsIllegalArgument() {
             // given
             GoogleOnboardingCompleteServiceRequest noTerms =
@@ -297,7 +299,7 @@ class GoogleOAuthServiceTest {
 
             // when & then
             assertThatThrownBy(() -> googleOAuthService.completeOnboarding(noTerms))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(UserValidationException.class)
                     .hasMessage("약관 동의가 필요합니다.");
         }
 

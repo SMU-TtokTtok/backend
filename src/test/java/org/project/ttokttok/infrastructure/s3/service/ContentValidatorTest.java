@@ -1,5 +1,7 @@
 package org.project.ttokttok.infrastructure.s3.service;
 
+import org.project.ttokttok.infrastructure.s3.exception.S3ContentValidationException;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -51,7 +53,7 @@ class ContentValidatorTest {
         @DisplayName("파일이 null이면 예외가 발생한다.")
         void failWhenNull() {
             assertThatThrownBy(() -> contentValidator.validateNotEmpty(null))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(S3ContentValidationException.class)
                     .hasMessage("파일이 비어있거나 존재하지 않습니다.");
         }
 
@@ -60,7 +62,7 @@ class ContentValidatorTest {
         void failWhenEmpty() {
             MockMultipartFile file = new MockMultipartFile("file", "test.png", "image/png", new byte[0]);
             assertThatThrownBy(() -> contentValidator.validateNotEmpty(file))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(S3ContentValidationException.class)
                     .hasMessage("파일이 비어있거나 존재하지 않습니다.");
         }
     }
@@ -151,7 +153,7 @@ class ContentValidatorTest {
         @DisplayName("파일 이름이 비어있으면 예외가 발생한다.")
         void failWhenEmpty(String fileName) {
             assertThatThrownBy(() -> contentValidator.validateFileName(fileName))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(S3ContentValidationException.class)
                     .hasMessage("파일 이름이 비어있습니다.");
         }
 
@@ -160,7 +162,7 @@ class ContentValidatorTest {
         void failWhenTooLong() {
             String longFileName = "a".repeat(256);
             assertThatThrownBy(() -> contentValidator.validateFileName(longFileName))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(S3ContentValidationException.class)
                     .hasMessage("파일 이름이 너무 깁니다. (최대 255자)");
         }
 
@@ -169,7 +171,7 @@ class ContentValidatorTest {
         @DisplayName("파일 이름에 특수 문자가 포함되어 있으면 예외가 발생한다.")
         void failWhenInvalidChars(String fileName) {
             assertThatThrownBy(() -> contentValidator.validateFileName(fileName))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(S3ContentValidationException.class)
                     .hasMessage("파일 이름에 허용되지 않는 특수 문자가 포함되어 있습니다.");
         }
     }

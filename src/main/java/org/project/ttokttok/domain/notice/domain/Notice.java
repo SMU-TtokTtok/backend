@@ -1,5 +1,9 @@
 package org.project.ttokttok.domain.notice.domain;
 
+import org.project.ttokttok.global.exception.ErrorMessage;
+
+import org.project.ttokttok.domain.notice.exception.NoticeValidationException;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -66,13 +70,13 @@ public class Notice extends BaseTimeEntity {
     // ------- 유효성 검사 메서드 -------
     private static void validateTitle(String title) {
         if (title == null || title.isBlank()) {
-            throw new IllegalArgumentException("Title cannot be null or blank.");
+            throw new NoticeValidationException(ErrorMessage.NOTICE_TITLE_BLANK);
         }
     }
 
     private static void validateContent(String content) {
         if (content == null || content.isBlank()) {
-            throw new IllegalArgumentException("Content cannot be null or blank.");
+            throw new NoticeValidationException(ErrorMessage.NOTICE_CONTENT_BLANK);
         }
     }
 }
