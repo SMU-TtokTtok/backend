@@ -58,10 +58,8 @@ out/
 ### Claude Code / OMC ###
 # 워크트리 체크아웃 자체는 로컬 전용 (다른 클론에서는 존재하지 않음)
 .claude/worktrees/
-# OMC 런타임 상태(세션 로그, HUD, 체크포인트 등) — 프로젝트 스킬(.omc/skills/)만 예외로 커밋
-.omc/*
-!.omc/skills/
-!.omc/skills/**
+# OMC 런타임 상태(세션 로그, HUD, 체크포인트 등)
+.omc/
 
 IMPLEMENTATION.md
 
@@ -83,3 +81,6 @@ ttokttok-push*.json
 
 # 위쪽 STS 섹션의 `bin/` 규칙이 배포 스크립트까지 잡아먹는다. 예외 처리.
 !/deploy/bin/
+
+# 구조 개선 기간의 임시 API 스냅샷 (#438). 공개 저장소에 올리지 않고 개선이 끝나면 삭제한다.
+/src/test/resources/openapi/

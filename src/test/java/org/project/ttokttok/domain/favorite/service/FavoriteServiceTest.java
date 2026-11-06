@@ -173,7 +173,7 @@ class FavoriteServiceTest {
             givenNoRecruitingForm();
             givenNoClubMembers();
 
-            given(favoriteRepository.findFavoritesByRequest(request)).willReturn(List.of(favorite));
+            given(favoriteRepository.findFavorites(request.userEmail(), request.cursor(), request.size(), request.sort())).willReturn(List.of(favorite));
 
             // when
             FavoriteListServiceResponse response = favoriteService.getFavoriteList(request);
@@ -332,7 +332,7 @@ class FavoriteServiceTest {
 
             given(applyFormRepository.findRecruitingFormsByClubIds(any()))
                     .willReturn(List.of(new ClubRecruitmentQueryDto("club-1", applyEndDate)));
-            given(favoriteRepository.findFavoritesByRequest(request)).willReturn(List.of(favorite));
+            given(favoriteRepository.findFavorites(request.userEmail(), request.cursor(), request.size(), request.sort())).willReturn(List.of(favorite));
 
             return favoriteService.getFavoriteList(request);
         }
@@ -392,7 +392,7 @@ class FavoriteServiceTest {
             givenNoClubMembers();
 
             givenNoRecruitingForm();
-            given(favoriteRepository.findFavoritesByRequest(request)).willReturn(List.of(favorite));
+            given(favoriteRepository.findFavorites(request.userEmail(), request.cursor(), request.size(), request.sort())).willReturn(List.of(favorite));
 
             FavoriteListServiceResponse response = favoriteService.getFavoriteList(request);
 
@@ -413,7 +413,7 @@ class FavoriteServiceTest {
             given(clubMemberRepository.countClubMembersForEach(any()))
                     .willReturn(List.of(new ClubMemberCountQueryDto("club-1", 7L)));
             givenNoRecruitingForm();
-            given(favoriteRepository.findFavoritesByRequest(request)).willReturn(List.of(favorite));
+            given(favoriteRepository.findFavorites(request.userEmail(), request.cursor(), request.size(), request.sort())).willReturn(List.of(favorite));
 
             FavoriteListServiceResponse response = favoriteService.getFavoriteList(request);
 
@@ -433,7 +433,7 @@ class FavoriteServiceTest {
 
             givenNoClubMembers();
             givenNoRecruitingForm();
-            given(favoriteRepository.findFavoritesByRequest(request)).willReturn(List.of(favorite));
+            given(favoriteRepository.findFavorites(request.userEmail(), request.cursor(), request.size(), request.sort())).willReturn(List.of(favorite));
 
             FavoriteListServiceResponse response = favoriteService.getFavoriteList(request);
 
@@ -476,7 +476,7 @@ class FavoriteServiceTest {
 
             givenNoRecruitingForm();
             givenNoClubMembers();
-            given(favoriteRepository.findFavoritesByRequest(request)).willReturn(favorites);
+            given(favoriteRepository.findFavorites(request.userEmail(), request.cursor(), request.size(), request.sort())).willReturn(favorites);
 
             favoriteService.getFavoriteList(request);
 
@@ -489,7 +489,7 @@ class FavoriteServiceTest {
         void noBatchQueriesWhenEmpty() {
             FavoriteListServiceRequest request = givenRequest();
 
-            given(favoriteRepository.findFavoritesByRequest(request)).willReturn(Collections.emptyList());
+            given(favoriteRepository.findFavorites(request.userEmail(), request.cursor(), request.size(), request.sort())).willReturn(Collections.emptyList());
 
             FavoriteListServiceResponse response = favoriteService.getFavoriteList(request);
 

@@ -1,0 +1,11 @@
+{
+  "check": "ApplicantFinalizeRaceExperimentTest.lockScopeOnly (PostgreSQL 17.4, Hibernate 6.5.3)",
+  "lockHolderLastQuery": "select c1_0.id,c1_0.admin_id,... from finalize_race_experiment.clubs c1_0 where c1_0.id=$1 for no key update",
+  "memberInsertWhileClubRowLockedMs": 14.7766,
+  "blocked": false,
+  "plain_pg_fk_check": {
+    "parent_FOR_UPDATE_child_insert_ms": 3281,
+    "result": "lock_timeout(3s)",
+    "parent_FOR_NO_KEY_UPDATE_child_insert_ms": 290
+  }
+}

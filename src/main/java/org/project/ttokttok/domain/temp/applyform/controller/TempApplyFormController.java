@@ -27,7 +27,7 @@ public class TempApplyFormController implements TempApplyFormDocs {
             @AuthUserInfo String userEmail,
             @Valid @RequestBody TempApplyFormSaveRequest request) {
 
-        String tempApplyFormId = tempApplyFormService.saveTempApplyForm(request);
+        String tempApplyFormId = tempApplyFormService.saveTempApplyForm(request.toServiceRequest());
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new TempApplyFormSaveResponse(tempApplyFormId));

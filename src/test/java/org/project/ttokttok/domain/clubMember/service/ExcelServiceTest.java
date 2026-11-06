@@ -1,4 +1,4 @@
-package org.project.ttokttok.global.excel;
+package org.project.ttokttok.domain.clubMember.service;
 
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -8,7 +8,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.project.ttokttok.domain.applicant.domain.enums.Grade;
 import org.project.ttokttok.domain.clubMember.domain.MemberRole;
-import org.project.ttokttok.domain.clubMember.service.dto.response.ClubMemberInExcelResponse;
+import org.project.ttokttok.domain.clubMember.domain.dto.ClubMemberInExcelResponse;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

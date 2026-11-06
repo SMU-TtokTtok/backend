@@ -1,0 +1,656 @@
+{
+  "conditions" : {
+    "reps" : 20,
+    "passersPerClub" : 30,
+    "isolation" : "READ_COMMITTED(default)",
+    "threads" : 20,
+    "postgres" : "PostgreSQL 17.4 on x86_64-pc-linux-musl, compiled by gcc (Alpine 14.2.0) 14.2.0, 64-bit"
+  },
+  "hot_same_club" : {
+    "V0_CHECK_SAVE" : {
+      "reps" : 20,
+      "requests" : 400,
+      "outcomes" : {
+        "OK" : 400
+      },
+      "repsWithDuplicateMembers" : 20,
+      "duplicateGroups" : 600,
+      "repsWithWrongMemberCount" : 20,
+      "okLatencyMs" : {
+        "p50" : 511.9,
+        "p95" : 657.5,
+        "max" : 1126.0
+      },
+      "allLatencyMs" : {
+        "p50" : 511.9,
+        "p95" : 657.5,
+        "max" : 1126.0
+      },
+      "repWallMs" : {
+        "p50" : 520.8,
+        "p95" : 657.6,
+        "max" : 1126.4
+      }
+    },
+    "V1_UNIQUE_SHUFFLED" : {
+      "reps" : 20,
+      "requests" : 400,
+      "outcomes" : {
+        "DEADLOCK" : 376,
+        "OK" : 20,
+        "UNIQUE_CONFLICT" : 4
+      },
+      "repsWithDuplicateMembers" : 0,
+      "duplicateGroups" : 0,
+      "repsWithWrongMemberCount" : 0,
+      "okLatencyMs" : {
+        "p50" : 16263.6,
+        "p95" : 18358.4,
+        "max" : 19304.9
+      },
+      "allLatencyMs" : {
+        "p50" : 8281.8,
+        "p95" : 17238.3,
+        "max" : 19304.9
+      },
+      "repWallMs" : {
+        "p50" : 16264.3,
+        "p95" : 18358.6,
+        "max" : 19305.0
+      }
+    },
+    "V1S_UNIQUE_SORTED" : {
+      "reps" : 20,
+      "requests" : 400,
+      "outcomes" : {
+        "OK" : 20,
+        "UNIQUE_CONFLICT" : 380
+      },
+      "repsWithDuplicateMembers" : 0,
+      "duplicateGroups" : 0,
+      "repsWithWrongMemberCount" : 0,
+      "okLatencyMs" : {
+        "p50" : 217.4,
+        "p95" : 225.9,
+        "max" : 237.0
+      },
+      "allLatencyMs" : {
+        "p50" : 219.6,
+        "p95" : 228.3,
+        "max" : 238.9
+      },
+      "repWallMs" : {
+        "p50" : 219.8,
+        "p95" : 228.3,
+        "max" : 239.1
+      }
+    },
+    "V2_UPSERT_SHUFFLED" : {
+      "reps" : 20,
+      "requests" : 400,
+      "outcomes" : {
+        "DEADLOCK" : 374,
+        "OK" : 26
+      },
+      "repsWithDuplicateMembers" : 0,
+      "duplicateGroups" : 0,
+      "repsWithWrongMemberCount" : 0,
+      "okLatencyMs" : {
+        "p50" : 16208.3,
+        "p95" : 18333.6,
+        "max" : 19236.3
+      },
+      "allLatencyMs" : {
+        "p50" : 9143.8,
+        "p95" : 17164.7,
+        "max" : 19236.3
+      },
+      "repWallMs" : {
+        "p50" : 16244.8,
+        "p95" : 19167.2,
+        "max" : 19236.9
+      }
+    },
+    "V2S_UPSERT_SORTED" : {
+      "reps" : 20,
+      "requests" : 400,
+      "outcomes" : {
+        "OK" : 400
+      },
+      "repsWithDuplicateMembers" : 0,
+      "duplicateGroups" : 0,
+      "repsWithWrongMemberCount" : 0,
+      "okLatencyMs" : {
+        "p50" : 224.4,
+        "p95" : 282.7,
+        "max" : 303.9
+      },
+      "allLatencyMs" : {
+        "p50" : 224.4,
+        "p95" : 282.7,
+        "max" : 303.9
+      },
+      "repWallMs" : {
+        "p50" : 227.1,
+        "p95" : 282.9,
+        "max" : 304.1
+      }
+    },
+    "V3_ROW_LOCK" : {
+      "reps" : 20,
+      "requests" : 400,
+      "outcomes" : {
+        "OK" : 400
+      },
+      "repsWithDuplicateMembers" : 0,
+      "duplicateGroups" : 0,
+      "repsWithWrongMemberCount" : 0,
+      "okLatencyMs" : {
+        "p50" : 1066.8,
+        "p95" : 1965.6,
+        "max" : 2325.7
+      },
+      "allLatencyMs" : {
+        "p50" : 1066.8,
+        "p95" : 1965.6,
+        "max" : 2325.7
+      },
+      "repWallMs" : {
+        "p50" : 1937.1,
+        "p95" : 2240.1,
+        "max" : 2326.0
+      }
+    },
+    "V4_ROW_LOCK_UNIQUE" : {
+      "reps" : 20,
+      "requests" : 400,
+      "outcomes" : {
+        "OK" : 400
+      },
+      "repsWithDuplicateMembers" : 0,
+      "duplicateGroups" : 0,
+      "repsWithWrongMemberCount" : 0,
+      "okLatencyMs" : {
+        "p50" : 970.2,
+        "p95" : 1820.6,
+        "max" : 2288.6
+      },
+      "allLatencyMs" : {
+        "p50" : 970.2,
+        "p95" : 1820.6,
+        "max" : 2288.6
+      },
+      "repWallMs" : {
+        "p50" : 1833.1,
+        "p95" : 2079.2,
+        "max" : 2288.9
+      }
+    },
+    "V5_ADVISORY_LOCK" : {
+      "reps" : 20,
+      "requests" : 400,
+      "outcomes" : {
+        "OK" : 400
+      },
+      "repsWithDuplicateMembers" : 0,
+      "duplicateGroups" : 0,
+      "repsWithWrongMemberCount" : 0,
+      "okLatencyMs" : {
+        "p50" : 965.4,
+        "p95" : 1786.9,
+        "max" : 2580.1
+      },
+      "allLatencyMs" : {
+        "p50" : 965.4,
+        "p95" : 1786.9,
+        "max" : 2580.1
+      },
+      "repWallMs" : {
+        "p50" : 1787.0,
+        "p95" : 2006.4,
+        "max" : 2580.4
+      }
+    }
+  },
+  "distinct_clubs" : {
+    "V0_CHECK_SAVE" : {
+      "reps" : 20,
+      "requests" : 400,
+      "outcomes" : {
+        "OK" : 400
+      },
+      "repsWithDuplicateMembers" : 0,
+      "duplicateGroups" : 0,
+      "repsWithWrongMemberCount" : 0,
+      "okLatencyMs" : {
+        "p50" : 423.7,
+        "p95" : 637.6,
+        "max" : 671.4
+      },
+      "allLatencyMs" : {
+        "p50" : 423.7,
+        "p95" : 637.6,
+        "max" : 671.4
+      },
+      "repWallMs" : {
+        "p50" : 424.1,
+        "p95" : 638.1,
+        "max" : 671.9
+      }
+    },
+    "V1_UNIQUE_SHUFFLED" : {
+      "reps" : 20,
+      "requests" : 400,
+      "outcomes" : {
+        "OK" : 400
+      },
+      "repsWithDuplicateMembers" : 0,
+      "duplicateGroups" : 0,
+      "repsWithWrongMemberCount" : 0,
+      "okLatencyMs" : {
+        "p50" : 294.3,
+        "p95" : 341.6,
+        "max" : 358.1
+      },
+      "allLatencyMs" : {
+        "p50" : 294.3,
+        "p95" : 341.6,
+        "max" : 358.1
+      },
+      "repWallMs" : {
+        "p50" : 298.4,
+        "p95" : 343.0,
+        "max" : 358.3
+      }
+    },
+    "V1S_UNIQUE_SORTED" : {
+      "reps" : 20,
+      "requests" : 400,
+      "outcomes" : {
+        "OK" : 400
+      },
+      "repsWithDuplicateMembers" : 0,
+      "duplicateGroups" : 0,
+      "repsWithWrongMemberCount" : 0,
+      "okLatencyMs" : {
+        "p50" : 309.3,
+        "p95" : 340.7,
+        "max" : 378.9
+      },
+      "allLatencyMs" : {
+        "p50" : 309.3,
+        "p95" : 340.7,
+        "max" : 378.9
+      },
+      "repWallMs" : {
+        "p50" : 316.4,
+        "p95" : 341.0,
+        "max" : 379.1
+      }
+    },
+    "V2_UPSERT_SHUFFLED" : {
+      "reps" : 20,
+      "requests" : 400,
+      "outcomes" : {
+        "OK" : 400
+      },
+      "repsWithDuplicateMembers" : 0,
+      "duplicateGroups" : 0,
+      "repsWithWrongMemberCount" : 0,
+      "okLatencyMs" : {
+        "p50" : 217.6,
+        "p95" : 244.9,
+        "max" : 267.4
+      },
+      "allLatencyMs" : {
+        "p50" : 217.6,
+        "p95" : 244.9,
+        "max" : 267.4
+      },
+      "repWallMs" : {
+        "p50" : 222.6,
+        "p95" : 245.1,
+        "max" : 267.6
+      }
+    },
+    "V2S_UPSERT_SORTED" : {
+      "reps" : 20,
+      "requests" : 400,
+      "outcomes" : {
+        "OK" : 400
+      },
+      "repsWithDuplicateMembers" : 0,
+      "duplicateGroups" : 0,
+      "repsWithWrongMemberCount" : 0,
+      "okLatencyMs" : {
+        "p50" : 220.0,
+        "p95" : 290.4,
+        "max" : 308.2
+      },
+      "allLatencyMs" : {
+        "p50" : 220.0,
+        "p95" : 290.4,
+        "max" : 308.2
+      },
+      "repWallMs" : {
+        "p50" : 228.4,
+        "p95" : 290.9,
+        "max" : 308.5
+      }
+    },
+    "V3_ROW_LOCK" : {
+      "reps" : 20,
+      "requests" : 400,
+      "outcomes" : {
+        "OK" : 400
+      },
+      "repsWithDuplicateMembers" : 0,
+      "duplicateGroups" : 0,
+      "repsWithWrongMemberCount" : 0,
+      "okLatencyMs" : {
+        "p50" : 527.4,
+        "p95" : 713.5,
+        "max" : 818.4
+      },
+      "allLatencyMs" : {
+        "p50" : 527.4,
+        "p95" : 713.5,
+        "max" : 818.4
+      },
+      "repWallMs" : {
+        "p50" : 527.8,
+        "p95" : 713.6,
+        "max" : 818.5
+      }
+    },
+    "V4_ROW_LOCK_UNIQUE" : {
+      "reps" : 20,
+      "requests" : 400,
+      "outcomes" : {
+        "OK" : 400
+      },
+      "repsWithDuplicateMembers" : 0,
+      "duplicateGroups" : 0,
+      "repsWithWrongMemberCount" : 0,
+      "okLatencyMs" : {
+        "p50" : 348.9,
+        "p95" : 399.6,
+        "max" : 409.4
+      },
+      "allLatencyMs" : {
+        "p50" : 348.9,
+        "p95" : 399.6,
+        "max" : 409.4
+      },
+      "repWallMs" : {
+        "p50" : 365.0,
+        "p95" : 404.4,
+        "max" : 409.5
+      }
+    },
+    "V5_ADVISORY_LOCK" : {
+      "reps" : 20,
+      "requests" : 400,
+      "outcomes" : {
+        "OK" : 400
+      },
+      "repsWithDuplicateMembers" : 0,
+      "duplicateGroups" : 0,
+      "repsWithWrongMemberCount" : 0,
+      "okLatencyMs" : {
+        "p50" : 620.7,
+        "p95" : 730.2,
+        "max" : 772.0
+      },
+      "allLatencyMs" : {
+        "p50" : 620.7,
+        "p95" : 730.2,
+        "max" : 772.0
+      },
+      "repWallMs" : {
+        "p50" : 622.2,
+        "p95" : 730.3,
+        "max" : 772.3
+      }
+    }
+  },
+  "mixed_finalize_and_manual_add" : {
+    "V0_CHECK_SAVE" : {
+      "reps" : 40,
+      "requests" : 800,
+      "outcomes" : {
+        "OK" : 800
+      },
+      "repsWithDuplicateMembers" : 40,
+      "duplicateGroups" : 40,
+      "repsWithWrongMemberCount" : 40,
+      "okLatencyMs" : {
+        "p50" : 16.6,
+        "p95" : 80.1,
+        "max" : 92.5
+      },
+      "allLatencyMs" : {
+        "p50" : 16.6,
+        "p95" : 80.1,
+        "max" : 92.5
+      },
+      "repWallMs" : {
+        "p50" : 57.6,
+        "p95" : 87.4,
+        "max" : 92.6
+      }
+    },
+    "V2S_UPSERT_SORTED" : {
+      "reps" : 40,
+      "requests" : 800,
+      "outcomes" : {
+        "OK" : 440,
+        "UNIQUE_CONFLICT" : 360
+      },
+      "repsWithDuplicateMembers" : 0,
+      "duplicateGroups" : 0,
+      "repsWithWrongMemberCount" : 0,
+      "okLatencyMs" : {
+        "p50" : 17.9,
+        "p95" : 65.5,
+        "max" : 87.0
+      },
+      "allLatencyMs" : {
+        "p50" : 16.3,
+        "p95" : 64.5,
+        "max" : 87.0
+      },
+      "repWallMs" : {
+        "p50" : 55.5,
+        "p95" : 86.1,
+        "max" : 87.2
+      }
+    },
+    "V3_ROW_LOCK+manual_takes_lock" : {
+      "reps" : 40,
+      "requests" : 800,
+      "outcomes" : {
+        "ALREADY_MEMBER_409" : 382,
+        "OK" : 418
+      },
+      "repsWithDuplicateMembers" : 0,
+      "duplicateGroups" : 0,
+      "repsWithWrongMemberCount" : 0,
+      "okLatencyMs" : {
+        "p50" : 82.5,
+        "p95" : 157.3,
+        "max" : 180.6
+      },
+      "allLatencyMs" : {
+        "p50" : 90.0,
+        "p95" : 156.4,
+        "max" : 182.8
+      },
+      "repWallMs" : {
+        "p50" : 157.6,
+        "p95" : 177.0,
+        "max" : 183.1
+      }
+    },
+    "V3_ROW_LOCK+manual_no_lock" : {
+      "reps" : 40,
+      "requests" : 800,
+      "outcomes" : {
+        "OK" : 800
+      },
+      "repsWithDuplicateMembers" : 40,
+      "duplicateGroups" : 40,
+      "repsWithWrongMemberCount" : 40,
+      "okLatencyMs" : {
+        "p50" : 10.3,
+        "p95" : 136.2,
+        "max" : 164.6
+      },
+      "allLatencyMs" : {
+        "p50" : 10.3,
+        "p95" : 136.2,
+        "max" : 164.6
+      },
+      "repWallMs" : {
+        "p50" : 140.8,
+        "p95" : 155.6,
+        "max" : 164.7
+      }
+    },
+    "V4_ROW_LOCK_UNIQUE+manual_takes_lock" : {
+      "reps" : 40,
+      "requests" : 800,
+      "outcomes" : {
+        "ALREADY_MEMBER_409" : 380,
+        "OK" : 420
+      },
+      "repsWithDuplicateMembers" : 0,
+      "duplicateGroups" : 0,
+      "repsWithWrongMemberCount" : 0,
+      "okLatencyMs" : {
+        "p50" : 85.8,
+        "p95" : 162.8,
+        "max" : 179.9
+      },
+      "allLatencyMs" : {
+        "p50" : 87.9,
+        "p95" : 162.4,
+        "max" : 183.4
+      },
+      "repWallMs" : {
+        "p50" : 163.5,
+        "p95" : 177.3,
+        "max" : 183.6
+      }
+    },
+    "V4_ROW_LOCK_UNIQUE+manual_no_lock" : {
+      "reps" : 40,
+      "requests" : 800,
+      "outcomes" : {
+        "OK" : 440,
+        "UNIQUE_CONFLICT" : 360
+      },
+      "repsWithDuplicateMembers" : 0,
+      "duplicateGroups" : 0,
+      "repsWithWrongMemberCount" : 0,
+      "okLatencyMs" : {
+        "p50" : 73.3,
+        "p95" : 145.5,
+        "max" : 166.3
+      },
+      "allLatencyMs" : {
+        "p50" : 9.4,
+        "p95" : 140.6,
+        "max" : 166.3
+      },
+      "repWallMs" : {
+        "p50" : 146.3,
+        "p95" : 159.4,
+        "max" : 166.6
+      }
+    },
+    "V5_ADVISORY_LOCK+manual_takes_lock" : {
+      "reps" : 40,
+      "requests" : 800,
+      "outcomes" : {
+        "ALREADY_MEMBER_409" : 382,
+        "OK" : 418
+      },
+      "repsWithDuplicateMembers" : 0,
+      "duplicateGroups" : 0,
+      "repsWithWrongMemberCount" : 0,
+      "okLatencyMs" : {
+        "p50" : 92.1,
+        "p95" : 167.2,
+        "max" : 199.6
+      },
+      "allLatencyMs" : {
+        "p50" : 89.4,
+        "p95" : 167.2,
+        "max" : 199.6
+      },
+      "repWallMs" : {
+        "p50" : 169.7,
+        "p95" : 183.9,
+        "max" : 200.2
+      }
+    },
+    "V5_ADVISORY_LOCK+manual_no_lock" : {
+      "reps" : 40,
+      "requests" : 800,
+      "outcomes" : {
+        "OK" : 800
+      },
+      "repsWithDuplicateMembers" : 40,
+      "duplicateGroups" : 40,
+      "repsWithWrongMemberCount" : 40,
+      "okLatencyMs" : {
+        "p50" : 14.4,
+        "p95" : 132.6,
+        "max" : 161.3
+      },
+      "allLatencyMs" : {
+        "p50" : 14.4,
+        "p95" : 132.6,
+        "max" : 161.3
+      },
+      "repWallMs" : {
+        "p50" : 138.5,
+        "p95" : 152.7,
+        "max" : 161.5
+      }
+    }
+  },
+  "v0_real_service" : {
+    "reps" : 20,
+    "requests" : 400,
+    "outcomes" : {
+      "OK" : 400
+    },
+    "repsWithDuplicateMembers" : 20,
+    "duplicateGroups" : 600,
+    "repsWithWrongMemberCount" : 20,
+    "okLatencyMs" : {
+      "p50" : 717.8,
+      "p95" : 817.2,
+      "max" : 842.8
+    },
+    "allLatencyMs" : {
+      "p50" : 717.8,
+      "p95" : 817.2,
+      "max" : 842.8
+    },
+    "repWallMs" : {
+      "p50" : 719.3,
+      "p95" : 824.3,
+      "max" : 842.9
+    },
+    "responseShapes" : {
+      "ApplicantFinalizeServiceResponse[passedCount=30, totalFinalizedCount=30]" : 400
+    }
+  },
+  "lock_scope" : {
+    "memberInsertWhileClubRowLockedMs" : 6.6764,
+    "blocked" : false
+  }
+}

@@ -86,8 +86,15 @@ public class AdminAuthApiController implements AdminAuthDocs {
     // 프론트 테스트용
     @GetMapping("/info")
     public ResponseEntity<AdminLoginResponse> getAdminInfo(@AuthUserInfo String adminName) {
+        AdminLoginServiceResponse response = adminAuthService.getAdminInfo(adminName);
+
         return ResponseEntity.ok()
-                .body(adminAuthService.getAdminInfo(adminName));
+                .body(AdminLoginResponse.of(
+                        response.clubId(),
+                        response.clubName(),
+                        response.accessToken(),
+                        response.refreshToken()
+                ));
     }
 
     @PostMapping("/reset-password")

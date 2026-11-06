@@ -1,4 +1,4 @@
-package org.project.ttokttok.domain.clubboard.controller.dto.response;
+package org.project.ttokttok.domain.clubboard.service.dto.response;
 
 import org.project.ttokttok.domain.clubboard.domain.ClubBoard;
 

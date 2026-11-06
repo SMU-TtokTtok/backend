@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
-import org.project.ttokttok.domain.temp.applicant.controller.dto.request.TempAnswer;
+import org.project.ttokttok.domain.temp.applicant.domain.TempAnswer;
 import org.project.ttokttok.domain.temp.applicant.domain.TempApplicant;
 import org.project.ttokttok.domain.temp.applicant.repository.TempApplicantRepository;
 import org.project.ttokttok.domain.temp.applicant.service.dto.request.TempApplicantSaveServiceRequest;

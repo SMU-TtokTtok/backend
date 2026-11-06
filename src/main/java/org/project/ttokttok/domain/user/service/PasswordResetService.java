@@ -13,12 +13,12 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class PasswordResetService {
     private final UserRepository userRepository;
     private final EmailVerificationService emailVerificationService;
     private final PasswordEncoder passwordEncoder;
 
+    @Transactional
     public void resetPassword(ResetPasswordServiceRequest request) {
         if (!request.newPassword().equals(request.newPasswordConfirm())) {
             throw new IllegalArgumentException("새 비밀번호가 일치하지 않습니다.");
@@ -34,6 +34,8 @@ public class PasswordResetService {
         log.info("비밀번호 재설정 완료 : {}", user.getEmail());
     }
 
+    // 트랜잭션 없이 실행한다. 트랜잭션(NOT_SUPPORTED 포함) 범위 안에서 사용자를 조회하면
+    // 그 커넥션을 메서드가 끝날 때까지 쥐고 있어 메일 발송 동안 반납되지 않는다.
     public void sendPasswordResetCode(String email) {
         findPasswordAccount(email);
         emailVerificationService.sendPasswordResetCode(email);

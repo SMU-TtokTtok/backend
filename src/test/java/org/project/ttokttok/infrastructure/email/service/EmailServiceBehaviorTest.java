@@ -8,7 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.project.ttokttok.domain.applicant.controller.dto.request.MailFormatRequest;
+import org.project.ttokttok.infrastructure.email.dto.ResultMailContent;
 import org.project.ttokttok.infrastructure.email.dto.EmailRequest;
 import org.springframework.mail.MailSendException;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -89,30 +89,28 @@ class EmailServiceBehaviorTest {
     @Test
     @DisplayName("sendVerificationCode는 상명대 이메일이 아니면 예외를 던진다")
     void sendVerificationCode_invalidEmail() {
-        assertThatThrownBy(() -> emailService.sendVerificationCode("a@gmail.com"))
+        assertThatThrownBy(() -> emailService.sendVerificationCode("a@gmail.com", "123456"))
                 .isInstanceOf(IllegalArgumentException.class);
         verify(mailSender, never()).send(org.mockito.ArgumentMatchers.any(MimeMessage.class));
     }
 
     @Test
-    @DisplayName("sendVerificationCode는 유효한 이메일에 인증코드를 발송하고 코드를 반환한다")
+    @DisplayName("sendVerificationCode는 유효한 이메일에 인증코드를 발송한다")
     void sendVerificationCode_success() {
         given(mailSender.createMimeMessage()).willReturn(emptyMimeMessage());
 
-        String code = emailService.sendVerificationCode("user@sangmyung.kr");
+        emailService.sendVerificationCode("user@sangmyung.kr", "123456");
 
-        assertThat(code).hasSize(6);
         verify(mailSender).send(org.mockito.ArgumentMatchers.any(MimeMessage.class));
     }
 
     @Test
-    @DisplayName("sendPasswordResetCode는 재설정 코드를 발송하고 코드를 반환한다")
+    @DisplayName("sendPasswordResetCode는 재설정 코드를 발송한다")
     void sendPasswordResetCode_success() {
         given(mailSender.createMimeMessage()).willReturn(emptyMimeMessage());
 
-        String code = emailService.sendPasswordResetCode("user@sangmyung.kr");
+        emailService.sendPasswordResetCode("user@sangmyung.kr", "123456");
 
-        assertThat(code).hasSize(6);
         verify(mailSender).send(org.mockito.ArgumentMatchers.any(MimeMessage.class));
     }
 
@@ -120,7 +118,7 @@ class EmailServiceBehaviorTest {
     @DisplayName("sendResultMail은 유효하지 않은 이메일은 건너뛰고 유효한 이메일에만 발송한다")
     void sendResultMail_skipsInvalidEmails() {
         given(mailSender.createMimeMessage()).willReturn(emptyMimeMessage());
-        MailFormatRequest request = new MailFormatRequest("합격", "축하합니다");
+        ResultMailContent request = new ResultMailContent("합격", "축하합니다");
 
         emailService.sendResultMail(List.of("valid@sangmyung.kr", "invalid-email", "another@gmail.com"), request);
 

@@ -77,7 +77,7 @@ public class FavoriteService {
             return getPopularFavoriteList(request);
         }
 
-        List<Favorite> favorites = favoriteRepository.findFavoritesByRequest(request);
+        List<Favorite> favorites = favoriteRepository.findFavorites(request.userEmail(), request.cursor(), request.size(), request.sort());
 
         boolean hasNext = favorites.size() > request.size();
         List<Favorite> actualFavorites = hasNext ? favorites.subList(0, request.size()) : favorites;

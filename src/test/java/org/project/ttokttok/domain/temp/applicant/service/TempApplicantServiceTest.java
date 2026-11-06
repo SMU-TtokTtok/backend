@@ -10,7 +10,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.project.ttokttok.domain.applicant.domain.enums.Gender;
 import org.project.ttokttok.domain.applicant.domain.enums.Grade;
 import org.project.ttokttok.domain.applicant.domain.enums.StudentStatus;
-import org.project.ttokttok.domain.temp.applicant.controller.dto.request.TempAnswer;
+import org.project.ttokttok.domain.temp.applicant.domain.TempAnswer;
 import org.project.ttokttok.domain.temp.applicant.controller.dto.request.TempApplicantSaveRequest;
 import org.project.ttokttok.domain.temp.applicant.domain.TempApplicant;
 import org.project.ttokttok.domain.temp.applicant.repository.TempApplicantRepository;
@@ -52,7 +52,7 @@ class TempApplicantServiceTest {
                 StudentStatus.ENROLLED, Grade.FIRST_GRADE, Gender.MALE, answers
         );
 
-        return TempApplicantSaveServiceRequest.of(email, formId, request, questionIds, files);
+        return request.toServiceRequest(email, formId, questionIds, files);
     }
 
     @Test

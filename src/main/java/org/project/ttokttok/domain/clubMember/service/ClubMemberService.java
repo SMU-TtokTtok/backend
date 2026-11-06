@@ -9,6 +9,7 @@ import org.project.ttokttok.domain.club.exception.ClubNotFoundException;
 import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.domain.clubMember.domain.ClubMember;
 import org.project.ttokttok.domain.clubMember.domain.MemberRole;
+import org.project.ttokttok.domain.clubMember.domain.dto.ClubMemberInExcelResponse;
 import org.project.ttokttok.domain.clubMember.exception.AlreadyClubMemberException;
 import org.project.ttokttok.domain.clubMember.exception.ClubMemberAccessDeniedException;
 import org.project.ttokttok.domain.clubMember.exception.ClubMemberNotFoundException;
@@ -19,7 +20,6 @@ import org.project.ttokttok.domain.clubMember.repository.dto.ClubMemberPageQuery
 import org.project.ttokttok.domain.clubMember.service.dto.request.*;
 import org.project.ttokttok.domain.clubMember.service.dto.response.*;
 import org.project.ttokttok.domain.club.service.policy.ClubAccessPolicy;
-import org.project.ttokttok.global.excel.ExcelService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -115,7 +115,10 @@ public class ClubMemberService {
                             String clubId,
                             ClubMemberServiceRequest request,
                             String roleName) {
-        Club club = validateClubAndAdmin(clubId, username);
+        // 합격 확정과 같은 잠금으로 같은 (동아리, 이메일)의 동시 등록을 직렬화한다. (#432)
+        Club club = clubRepository.findByIdForUpdate(clubId)
+                .orElseThrow(ClubNotFoundException::new);
+        clubAccessPolicy.validateAdmin(club, username);
 
         String targetEmail = getTargetEmail(request.studentNum());
 

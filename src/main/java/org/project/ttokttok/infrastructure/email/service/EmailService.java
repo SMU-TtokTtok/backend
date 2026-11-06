@@ -2,8 +2,8 @@ package org.project.ttokttok.infrastructure.email.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.project.ttokttok.domain.applicant.controller.dto.request.MailFormatRequest;
 import org.project.ttokttok.infrastructure.email.dto.EmailRequest;
+import org.project.ttokttok.infrastructure.email.dto.ResultMailContent;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -80,28 +80,20 @@ public class EmailService {
         return email.toLowerCase().endsWith("@sangmyung.kr");
     }
 
-    // 이메일 인증코드 발성
-    public String sendVerificationCode(String email) {
+    // 이메일 인증코드 발송. 코드는 호출부가 먼저 만들어 저장한 것을 받는다
+    public void sendVerificationCode(String email, String code) {
         if (!isValidSangmyungEmail(email)) {
             throw new IllegalArgumentException("상명대학교 이메일만 가입 가능합니다.");
         }
 
-        String code = generateVerificationCode();
-        EmailRequest emailRequest = EmailRequest.createVerificationEmail(email, code);
-        sendEmail(emailRequest);
-
+        sendEmail(EmailRequest.createVerificationEmail(email, code));
         log.info("인증코드 발송 완료: {}", email);
-        return code;
     }
 
     // 비밀번호 재설정 인증코드 발송
-    public String sendPasswordResetCode(String email) {
-        String code = generateVerificationCode();
-        EmailRequest emailRequest = EmailRequest.createPasswordResetEmail(email, code);
-        sendEmail(emailRequest);
-
+    public void sendPasswordResetCode(String email, String code) {
+        sendEmail(EmailRequest.createPasswordResetEmail(email, code));
         log.info("비밀번호 재설정 코드 발송 완료: {}", email);
-        return code;
     }
 
     /**
@@ -117,7 +109,7 @@ public class EmailService {
      * 지연 로딩(영속성 컨텍스트) 이슈가 없다.
      */
     @Async("mailExecutor")
-    public void sendResultMail(List<String> emails, MailFormatRequest request) {
+    public void sendResultMail(List<String> emails, ResultMailContent request) {
         int successCount = 0;
         int failureCount = 0;
 

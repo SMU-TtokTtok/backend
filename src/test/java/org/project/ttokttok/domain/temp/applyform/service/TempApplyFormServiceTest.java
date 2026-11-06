@@ -10,7 +10,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
 import org.project.ttokttok.domain.applyform.domain.enums.QuestionType;
 import org.project.ttokttok.domain.applyform.domain.json.Question;
-import org.project.ttokttok.domain.temp.applyform.controller.dto.request.TempApplyFormSaveRequest;
+import org.project.ttokttok.domain.temp.applyform.service.dto.request.TempApplyFormSaveServiceRequest;
 import org.project.ttokttok.domain.temp.applyform.domain.TempApplyForm;
 import org.project.ttokttok.domain.temp.applyform.repository.TempApplyFormRepository;
 
@@ -33,8 +33,8 @@ class TempApplyFormServiceTest {
     @InjectMocks
     private TempApplyFormService tempApplyFormService;
 
-    private TempApplyFormSaveRequest buildRequest(String clubId) {
-        return new TempApplyFormSaveRequest(
+    private TempApplyFormSaveServiceRequest buildRequest(String clubId) {
+        return new TempApplyFormSaveServiceRequest(
                 clubId,
                 "임시 지원폼 제목",
                 "부제목",
@@ -54,7 +54,7 @@ class TempApplyFormServiceTest {
     void saveTempApplyForm_CreatesNew_WhenNoExisting() {
         // given
         String clubId = "club-1";
-        TempApplyFormSaveRequest request = buildRequest(clubId);
+        TempApplyFormSaveServiceRequest request = buildRequest(clubId);
 
         given(tempApplyFormRepository.findByClubId(clubId)).willReturn(Optional.empty());
 
@@ -79,7 +79,7 @@ class TempApplyFormServiceTest {
     void saveTempApplyForm_UpdatesExisting_WhenPresent() {
         // given
         String clubId = "club-1";
-        TempApplyFormSaveRequest request = buildRequest(clubId);
+        TempApplyFormSaveServiceRequest request = buildRequest(clubId);
 
         TempApplyForm existing = mock(TempApplyForm.class);
         given(existing.getId()).willReturn("temp-form-existing");
@@ -103,7 +103,7 @@ class TempApplyFormServiceTest {
     void saveTempApplyForm_NullHasInterview_DefaultsToFalse() {
         // given
         String clubId = "club-1";
-        TempApplyFormSaveRequest request = new TempApplyFormSaveRequest(
+        TempApplyFormSaveServiceRequest request = new TempApplyFormSaveServiceRequest(
                 clubId, null, null, null, null,
                 null, null, null, null, null, null
         );

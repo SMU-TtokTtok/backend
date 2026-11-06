@@ -18,6 +18,7 @@ import org.project.ttokttok.domain.club.exception.NotClubAdminException;
 import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.domain.clubMember.domain.ClubMember;
 import org.project.ttokttok.domain.clubMember.domain.MemberRole;
+import org.project.ttokttok.domain.clubMember.domain.dto.ClubMemberInExcelResponse;
 import org.project.ttokttok.domain.clubMember.exception.AlreadyClubMemberException;
 import org.project.ttokttok.domain.clubMember.exception.ClubMemberAccessDeniedException;
 import org.project.ttokttok.domain.clubMember.exception.ClubMemberNotFoundException;
@@ -32,12 +33,10 @@ import org.project.ttokttok.domain.clubMember.service.dto.request.ClubMemberSear
 import org.project.ttokttok.domain.clubMember.service.dto.request.ClubMemberServiceRequest;
 import org.project.ttokttok.domain.clubMember.service.dto.request.DeleteMemberServiceRequest;
 import org.project.ttokttok.domain.clubMember.service.dto.response.ClubMemberCountServiceResponse;
-import org.project.ttokttok.domain.clubMember.service.dto.response.ClubMemberInExcelResponse;
 import org.project.ttokttok.domain.clubMember.service.dto.response.ClubMemberPageServiceResponse;
 import org.project.ttokttok.domain.clubMember.service.dto.response.ClubMemberSearchServiceResponse;
 import org.project.ttokttok.domain.clubMember.service.dto.response.ExcelServiceResponse;
 import org.project.ttokttok.domain.club.service.policy.ClubAccessPolicy;
-import org.project.ttokttok.global.excel.ExcelService;
 import org.springframework.http.HttpStatus;
 
 import java.io.IOException;
@@ -498,7 +497,7 @@ class ClubMemberServiceTest {
         void addMember_executive() {
             // given
             Club club = createClub(USERNAME);
-            given(clubRepository.findById(CLUB_ID)).willReturn(Optional.of(club));
+            given(clubRepository.findByIdForUpdate(CLUB_ID)).willReturn(Optional.of(club));
 
             given(clubMemberRepository.existsByClubIdAndEmail(CLUB_ID, "60201234@sangmyung.kr"))
                     .willReturn(false);
@@ -520,7 +519,7 @@ class ClubMemberServiceTest {
         void addMember_defaultsToMember() {
             // given
             Club club = createClub(USERNAME);
-            given(clubRepository.findById(CLUB_ID)).willReturn(Optional.of(club));
+            given(clubRepository.findByIdForUpdate(CLUB_ID)).willReturn(Optional.of(club));
 
             given(clubMemberRepository.existsByClubIdAndEmail(CLUB_ID, "60201234@sangmyung.kr"))
                     .willReturn(false);
@@ -541,7 +540,7 @@ class ClubMemberServiceTest {
         void addMember_alreadyClubMember() {
             // given
             Club club = createClub(USERNAME);
-            given(clubRepository.findById(CLUB_ID)).willReturn(Optional.of(club));
+            given(clubRepository.findByIdForUpdate(CLUB_ID)).willReturn(Optional.of(club));
 
             given(clubMemberRepository.existsByClubIdAndEmail(CLUB_ID, "60201234@sangmyung.kr"))
                     .willReturn(true);
@@ -558,7 +557,7 @@ class ClubMemberServiceTest {
         void addMember_notClubAdmin() {
             // given
             Club club = createClub("otheradmin1");
-            given(clubRepository.findById(CLUB_ID)).willReturn(Optional.of(club));
+            given(clubRepository.findByIdForUpdate(CLUB_ID)).willReturn(Optional.of(club));
 
             // when & then
             assertThatThrownBy(() -> clubMemberService.addMember(USERNAME, CLUB_ID, createAddRequest(), "MEMBER"))

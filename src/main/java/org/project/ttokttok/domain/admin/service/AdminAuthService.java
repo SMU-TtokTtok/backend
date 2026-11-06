@@ -3,7 +3,6 @@ package org.project.ttokttok.domain.admin.service;
 import static org.project.ttokttok.global.entity.Role.ROLE_ADMIN;
 
 import lombok.RequiredArgsConstructor;
-import org.project.ttokttok.domain.admin.controller.dto.response.AdminLoginResponse;
 import org.project.ttokttok.domain.admin.domain.Admin;
 import org.project.ttokttok.domain.admin.exception.AdminLoginNotFoundException;
 import org.project.ttokttok.domain.admin.exception.AdminNotFoundException;
@@ -110,15 +109,13 @@ public class AdminAuthService {
         return tokenResponse;
     }
 
-    public AdminLoginResponse getAdminInfo(String adminName) {
+    public AdminLoginServiceResponse getAdminInfo(String adminName) {
         Club club = validateClubAdmin(adminName);
 
-        return AdminLoginResponse.of(
-                club.getId(),
-                club.getName(),
-                null,
-                null
-        );
+        return AdminLoginServiceResponse.builder()
+                .clubId(club.getId())
+                .clubName(club.getName())
+                .build();
     }
 
     @Transactional

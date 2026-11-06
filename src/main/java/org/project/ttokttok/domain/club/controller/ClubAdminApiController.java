@@ -2,7 +2,6 @@ package org.project.ttokttok.domain.club.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.openapitools.jackson.nullable.JsonNullable;
 import org.project.ttokttok.domain.club.controller.docs.ClubAdminApiDocs;
 import org.project.ttokttok.domain.club.controller.dto.request.UpdateClubContentRequest;
 import org.project.ttokttok.domain.club.controller.dto.response.ClubAdminDetailResponse;

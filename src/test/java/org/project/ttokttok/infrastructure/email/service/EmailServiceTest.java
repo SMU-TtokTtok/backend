@@ -10,7 +10,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
-import org.project.ttokttok.domain.applicant.controller.dto.request.MailFormatRequest;
+import org.project.ttokttok.infrastructure.email.dto.ResultMailContent;
 
 import jakarta.mail.internet.MimeMessage;
 import org.junit.jupiter.api.BeforeEach;
@@ -159,25 +159,23 @@ class EmailServiceTest {
             String invalidEmail = "user@gmail.com";
 
             // when & then
-            assertThatThrownBy(() -> emailService.sendVerificationCode(invalidEmail))
+            assertThatThrownBy(() -> emailService.sendVerificationCode(invalidEmail, "123456"))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessage("상명대학교 이메일만 가입 가능합니다.");
         }
 
         @Test
-        @DisplayName("상명대 이메일로 인증코드를 발송하면 6자리 코드를 반환한다")
-        void returnsSixDigitCodeForValidEmail() {
+        @DisplayName("상명대 이메일로 인증코드를 발송한다")
+        void sendsCodeForValidEmail() {
             // given
             String validEmail = "student@sangmyung.kr";
             MimeMessage mimeMessage = mock(MimeMessage.class);
             when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
 
             // when
-            String code = emailService.sendVerificationCode(validEmail);
+            emailService.sendVerificationCode(validEmail, "123456");
 
             // then
-            assertThat(code).hasSize(6);
-            assertThat(code).matches("\\d{6}");
             verify(mailSender).send(any(MimeMessage.class));
         }
     }
@@ -197,19 +195,17 @@ class EmailServiceTest {
         }
 
         @Test
-        @DisplayName("비밀번호 재설정 코드를 발송하면 6자리 코드를 반환한다")
-        void returnsSixDigitCode() {
+        @DisplayName("비밀번호 재설정 코드를 발송한다")
+        void sendsResetCode() {
             // given
             String email = "user@sangmyung.kr";
             MimeMessage mimeMessage = mock(MimeMessage.class);
             when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
 
             // when
-            String code = emailService.sendPasswordResetCode(email);
+            emailService.sendPasswordResetCode(email, "123456");
 
             // then
-            assertThat(code).hasSize(6);
-            assertThat(code).matches("\\d{6}");
             verify(mailSender).send(any(MimeMessage.class));
         }
     }
@@ -234,7 +230,7 @@ class EmailServiceTest {
             MimeMessage mimeMessage = mock(MimeMessage.class);
             when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
             List<String> emails = List.of("a@sangmyung.kr", "b@gmail.com", "c@naver.com");
-            MailFormatRequest request = new MailFormatRequest("합격 안내", "축하합니다.");
+            ResultMailContent request = new ResultMailContent("합격 안내", "축하합니다.");
 
             // when
             emailService.sendResultMail(emails, request);
@@ -248,7 +244,7 @@ class EmailServiceTest {
         void skipsInvalidEmails() {
             // given
             List<String> emails = List.of("not-an-email", "  ", "@no-local.kr");
-            MailFormatRequest request = new MailFormatRequest("합격 안내", "축하합니다.");
+            ResultMailContent request = new ResultMailContent("합격 안내", "축하합니다.");
 
             // when
             emailService.sendResultMail(emails, request);

@@ -2,9 +2,9 @@ package org.project.ttokttok.domain.clubboard.controller;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.project.ttokttok.domain.clubboard.controller.dto.response.ClubBoardDetailResponse;
-import org.project.ttokttok.domain.clubboard.controller.dto.response.ClubBoardListResponse;
-import org.project.ttokttok.domain.clubboard.controller.dto.response.ClubBoardListResponse.ClubBoardSummary;
+import org.project.ttokttok.domain.clubboard.service.dto.response.ClubBoardDetailResponse;
+import org.project.ttokttok.domain.clubboard.service.dto.response.ClubBoardListResponse;
+import org.project.ttokttok.domain.clubboard.service.dto.response.ClubBoardListResponse.ClubBoardSummary;
 import org.project.ttokttok.domain.clubboard.exception.ClubBoardNotFoundException;
 import org.project.ttokttok.domain.clubboard.service.ClubBoardUserService;
 import org.project.ttokttok.global.annotationresolver.auth.AuthUserInfoResolver;

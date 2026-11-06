@@ -1,11 +1,11 @@
 package org.project.ttokttok.domain.applicant.service.dto.request;
 
 import lombok.Builder;
-import org.project.ttokttok.domain.applicant.controller.dto.request.MailFormatRequest;
+import org.project.ttokttok.infrastructure.email.dto.ResultMailContent;
 
 @Builder
 public record SendResultMailServiceRequest(
-        MailFormatRequest pass,
-        MailFormatRequest fail
+        ResultMailContent pass,
+        ResultMailContent fail
 ) {
 }

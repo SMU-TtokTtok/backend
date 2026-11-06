@@ -1,10 +1,10 @@
-package org.project.ttokttok.global.excel;
+package org.project.ttokttok.domain.clubMember.service;
 
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.project.ttokttok.domain.clubMember.service.dto.response.ClubMemberInExcelResponse;
+import org.project.ttokttok.domain.clubMember.domain.dto.ClubMemberInExcelResponse;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;

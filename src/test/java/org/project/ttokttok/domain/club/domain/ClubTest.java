@@ -14,7 +14,7 @@ import org.project.ttokttok.domain.admin.domain.Admin;
 import org.project.ttokttok.domain.club.domain.enums.ClubCategory;
 import org.project.ttokttok.domain.club.domain.enums.ClubType;
 import org.project.ttokttok.domain.club.domain.enums.ClubUniv;
-import org.project.ttokttok.domain.club.service.dto.request.ClubPatchRequest;
+import org.project.ttokttok.domain.club.domain.ClubPatch;
 
 class ClubTest {
 
@@ -72,7 +72,7 @@ class ClubTest {
         void partialUpdate() {
             Club club = createClub();
 
-            ClubPatchRequest request = new ClubPatchRequest(
+            ClubPatch request = new ClubPatch(
                     JsonNullable.of("새 이름"),
                     JsonNullable.undefined(),
                     JsonNullable.of(ClubCategory.SPORTS),
@@ -96,7 +96,7 @@ class ClubTest {
         void updatesAllFields() {
             Club club = createClub();
 
-            ClubPatchRequest request = new ClubPatchRequest(
+            ClubPatch request = new ClubPatch(
                     JsonNullable.of("전체수정동아리"),
                     JsonNullable.of(ClubType.UNION),
                     JsonNullable.of(ClubCategory.CULTURE),
