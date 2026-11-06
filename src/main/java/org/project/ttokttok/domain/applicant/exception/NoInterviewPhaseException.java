@@ -1,7 +1,7 @@
 package org.project.ttokttok.domain.applicant.exception;
 
 import org.project.ttokttok.global.exception.ErrorMessage;
-import org.project.ttokttok.global.exception.exception.CustomException;
+import org.project.ttokttok.global.exception.CustomException;
 
 public class NoInterviewPhaseException extends CustomException {
     public NoInterviewPhaseException() {

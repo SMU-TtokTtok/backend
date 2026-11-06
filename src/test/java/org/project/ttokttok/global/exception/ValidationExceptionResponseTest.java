@@ -7,7 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
-import org.project.ttokttok.domain.clubMember.domain.MemberRole;
+import org.project.ttokttok.domain.clubmember.domain.MemberRole;
 import org.project.ttokttok.domain.notification.fcm.exception.FCMTokenValidationException;
 import org.project.ttokttok.domain.user.exception.UserValidationException;
 import org.project.ttokttok.infrastructure.s3.exception.S3ContentValidationException;

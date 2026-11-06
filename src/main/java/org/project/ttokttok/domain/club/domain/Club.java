@@ -10,7 +10,7 @@ import org.project.ttokttok.domain.admin.domain.Admin;
 import org.project.ttokttok.domain.club.domain.enums.ClubCategory;
 import org.project.ttokttok.domain.club.domain.enums.ClubType;
 import org.project.ttokttok.domain.club.domain.enums.ClubUniv;
-import org.project.ttokttok.domain.clubMember.domain.ClubMember;
+import org.project.ttokttok.domain.clubmember.domain.ClubMember;
 import org.project.ttokttok.global.entity.BaseTimeEntity;
 
 import java.util.ArrayList;

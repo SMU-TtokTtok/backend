@@ -3,7 +3,7 @@ package org.project.ttokttok.global.exception;
 import lombok.extern.slf4j.Slf4j;
 import org.project.ttokttok.global.exception.dto.ErrorResponse;
 import org.project.ttokttok.global.exception.dto.ValidErrorDetails;
-import org.project.ttokttok.global.exception.exception.CustomException;
+import org.project.ttokttok.global.exception.CustomException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.HttpRequestMethodNotSupportedException;

@@ -20,8 +20,8 @@ import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.exception.ClubNotFoundException;
 import org.project.ttokttok.domain.club.exception.NotClubAdminException;
 import org.project.ttokttok.domain.club.repository.ClubRepository;
-import org.project.ttokttok.domain.clubMember.domain.ClubMember;
-import org.project.ttokttok.domain.clubMember.repository.ClubMemberRepository;
+import org.project.ttokttok.domain.clubmember.domain.ClubMember;
+import org.project.ttokttok.domain.clubmember.repository.ClubMemberRepository;
 import org.project.ttokttok.infrastructure.email.service.EmailService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,7 +33,7 @@ import java.util.List;
 import static org.project.ttokttok.domain.applicant.domain.enums.PhaseStatus.FAIL;
 import static org.project.ttokttok.domain.applicant.domain.enums.PhaseStatus.PASS;
 import static org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus.ACTIVE;
-import static org.project.ttokttok.domain.clubMember.domain.MemberRole.MEMBER;
+import static org.project.ttokttok.domain.clubmember.domain.MemberRole.MEMBER;
 
 @Slf4j
 @Service

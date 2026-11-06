@@ -61,9 +61,9 @@ import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.exception.ClubNotFoundException;
 import org.project.ttokttok.domain.club.exception.NotClubAdminException;
 import org.project.ttokttok.domain.club.repository.ClubRepository;
-import org.project.ttokttok.domain.clubMember.domain.ClubMember;
-import org.project.ttokttok.domain.clubMember.domain.MemberRole;
-import org.project.ttokttok.domain.clubMember.repository.ClubMemberRepository;
+import org.project.ttokttok.domain.clubmember.domain.ClubMember;
+import org.project.ttokttok.domain.clubmember.domain.MemberRole;
+import org.project.ttokttok.domain.clubmember.repository.ClubMemberRepository;
 import org.project.ttokttok.infrastructure.email.service.EmailService;
 import org.springframework.test.util.ReflectionTestUtils;
 

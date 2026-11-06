@@ -25,7 +25,7 @@ import static org.project.ttokttok.domain.applicant.domain.QApplicant.applicant;
 import static org.project.ttokttok.domain.applyform.domain.QApplyForm.applyForm;
 import static org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus.ACTIVE;
 import static org.project.ttokttok.domain.club.domain.QClub.club;
-import static org.project.ttokttok.domain.clubMember.domain.QClubMember.clubMember;
+import static org.project.ttokttok.domain.clubmember.domain.QClubMember.clubMember;
 import static org.project.ttokttok.domain.favorite.domain.QFavorite.favorite;
 
 @Repository

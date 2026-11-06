@@ -13,7 +13,7 @@ import java.util.List;
 
 import static org.project.ttokttok.domain.club.domain.QClub.club;
 import static org.project.ttokttok.domain.favorite.domain.QFavorite.favorite;
-import static org.project.ttokttok.domain.clubMember.domain.QClubMember.clubMember;
+import static org.project.ttokttok.domain.clubmember.domain.QClubMember.clubMember;
 
 @RequiredArgsConstructor
 public class FavoriteCustomRepositoryImpl implements FavoriteCustomRepository {
