@@ -37,11 +37,11 @@ public class GoogleIdTokenVerifier {
         try {
             Jwt jwt = googleJwtDecoder.decode(idToken);
             GoogleUserInfo userInfo = GoogleUserInfo.from(jwt);
-            log.debug("구글 ID 토큰 검증 성공: sub={}, email={}", userInfo.sub(), userInfo.email());
+            log.debug("구글 ID 토큰 검증 성공");
             return userInfo;
         } catch (JwtException e) {
             // aud 불일치도 동일 메시지로 처리하여 공격자에게 실패 원인을 노출하지 않는다
-            log.warn("구글 ID 토큰 검증 실패: {}", e.getMessage());
+            log.warn("구글 ID 토큰 검증 실패: {}", e.getClass().getSimpleName());
             throw new InvalidGoogleTokenException();
         }
     }

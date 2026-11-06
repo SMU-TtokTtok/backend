@@ -39,5 +39,21 @@ public class ClubService {
 }
 ```
 
+Choose the level by who must act and how often the line appears. Production runs at INFO.
+
+| Level | Use for | Stack trace |
+|---|---|---|
+| `ERROR` | A server fault someone must act on | Yes, once per failure or batch |
+| `WARN` | The service continues, but someone should look: suspected abuse, a failed external call | No |
+| `INFO` | State changes and batch results worth keeping as operating history | No |
+| `DEBUG` | Diagnostics, and expected outcomes such as an expired token | No |
+
+- **No per-request INFO.** Normal request flow stays at DEBUG; a busy endpoint must not scale log volume.
+- **Expected client failures are not errors.** An expired token or a 4xx is normal flow.
+- **Log a failure once.** Do not log and rethrow, or log the same failure in two layers.
+- **Never log secrets, at any level:** tokens, `Authorization` values, passwords, verification codes.
+- **Mask personal data:** use `LogMasker.email(...)`, or log an ID.
+- **Do not log client-controlled exception messages.** JWT parsing messages can carry request content; log `e.getClass().getSimpleName()`.
+
 ### 6. Work-log management
 - Record work done by date in `IMPLEMENTATION.md`, updating it each time.

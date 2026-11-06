@@ -47,7 +47,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
             UserProfileResponse profile = tokenProvider.getUserProfile(token);
             Authentication authentication = jwtAuthManager.getAuthentication(profile.username(), profile.role());
 
-            log.info("[JWT 인증 완료] username(email)={}, role={}", profile.username(), profile.role());
+            log.debug("[JWT 인증 완료] role={}", profile.role());
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
@@ -60,11 +60,8 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     private String getAccessTokenFromHeader(HttpServletRequest request) {
         String authorization = request.getHeader("Authorization");
         
-        log.debug("[JWT 필터] Authorization 헤더: {}", authorization);
-        
         if (authorization != null && authorization.startsWith("Bearer ")) {
             String token = authorization.substring(7); // "Bearer " 제거
-            log.debug("[JWT 필터] 추출된 토큰 (앞 20자): {}...", token.length() > 20 ? token.substring(0, 20) : token);
             return token;
         }
         
