@@ -61,3 +61,38 @@ docker compose exec -T postgres sh -c 'pg_dump --schema-only --no-owner --no-pri
 - `structure-check.txt`의 1~4번이 모두 0이어야 스키마 변경을 진행한다. 0이 아닌 항목은 데이터를 자동으로 고치지 않고 처리 방법을 먼저 정한다.
 - `fcm_token.email`에 사용자가 아닌 값이 있으면 `fcm_token`을 `user_id` 전환 대상에서 제외한다.
 - `schema-baseline.sql`은 데이터 없이 스키마만 담는다. 기준 스키마 테스트의 입력으로 쓴다.
+
+### #438 운영 담당자 전달 자료 (2026-11-06)
+
+위 명령은 이미 운영 읽기 작업이 승인된 담당자가 실행한다. DB 변경·마이그레이션 적용·데이터 정리는 하지 않는다.
+
+#### 지금 스키마 검증에 필요한 최소 자료
+
+Day 2 정리 후 #438을 재개할 때는 **스키마 덤프와 Flyway 이력** 두 파일이면 된다. 담당자는 운영 `deploy/`에서 아래 명령을 실행한다.
+
+```bash
+docker compose exec -T postgres sh -c 'pg_dump --schema-only --no-owner --no-privileges -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+  > schema-baseline.sql
+
+docker compose exec -T postgres sh -c 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT installed_rank, version, description, type, success FROM flyway_schema_history ORDER BY installed_rank"' \
+  > flyway-history.txt
+```
+
+실행 성공 여부를 확인한 뒤 두 파일을 비공개 로컬 폴더에 보관하고 그 경로를 전달한다. 실행 시각과 PostgreSQL 버전도 있으면 함께 기록한다. 운영 고아·중복 점검은 지금 테스트를 만드는 데 필수가 아니며, 해당 FK·UNIQUE·컬럼 전환을 운영에 적용하기 전에 실행한다.
+
+#### 이후 운영 DB 변경 전 추가 점검
+
+1. 앞의 `#438 구조 개선 전 운영 상태 점검` 절에 있는 명령으로 `structure-check.txt`를 만든다. 구조 점검의 5번 결과에 적용된 Flyway 버전 목록이 포함된다. 기존 스키마 덤프가 있다면 이 단계에서 다시 만들 필요는 없다.
+2. 아래 명령으로 부원 중복 점검 결과도 저장한다.
+
+```bash
+docker compose exec -T postgres sh -c 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+  < migrations/pending/check_club_member_duplicates.sql > club-member-check.txt
+```
+
+3. 실행 시각과 PostgreSQL 서버 버전을 함께 알려준다. 실패한 명령이 있으면 성공으로 간주하지 않고 해당 단계와 오류를 확인한다. 접속 정보·환경 변수·컨테이너 전체 로그는 전달하지 않는다.
+4. 결과 파일은 비공개 로컬 경로에 보관하고 그 경로를 알려준다. 스키마만 있는 덤프에도 객체명·함수·주석이 포함될 수 있으므로 공개 이슈·PR·저장소에 원본을 올리지 않는다. 부원 점검 결과에 이메일이 포함되면 공유 전에 가리고 중복 그룹 수를 남긴다.
+
+자료를 받은 뒤 테스트용 기준 스키마와 기준 Flyway 버전을 확정한다. 스키마 덤프의 이력 테이블은 데이터가 없으므로 현재 소스의 최신 버전을 임의로 기준점으로 쓰지 않는다. 전용 PostgreSQL에서 복원 → 확인된 버전으로 Flyway 기준점 설정 → 이후 마이그레이션 → Hibernate validate 순으로 검증한다.
+
+현재 운영 자료는 미확보다. Day 2 완료 후 재확인에서 로컬 Docker 엔진 실행(27.0.3)은 확인했다. Testcontainers 의존성·기준 스키마 테스트는 아직 추가하지 않았고, #438은 완료가 아니다. 2026-11-06 사용자 지시로 Day 2 잔여 정리를 먼저 마쳤으며, 이제 위 최소 자료를 확보해 #438을 재개한다.
