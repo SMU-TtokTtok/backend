@@ -95,4 +95,21 @@ docker compose exec -T postgres sh -c 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USE
 
 자료를 받은 뒤 테스트용 기준 스키마와 기준 Flyway 버전을 확정한다. 스키마 덤프의 이력 테이블은 데이터가 없으므로 현재 소스의 최신 버전을 임의로 기준점으로 쓰지 않는다. 전용 PostgreSQL에서 복원 → 확인된 버전으로 Flyway 기준점 설정 → 이후 마이그레이션 → Hibernate validate 순으로 검증한다.
 
-현재 운영 자료는 미확보다. Day 2 완료 후 재확인에서 로컬 Docker 엔진 실행(27.0.3)은 확인했다. Testcontainers 의존성·기준 스키마 테스트는 아직 추가하지 않았고, #438은 완료가 아니다. 2026-11-06 사용자 지시로 Day 2 잔여 정리를 먼저 마쳤으며, 이제 위 최소 자료를 확보해 #438을 재개한다.
+## #438 기준 스키마 검증
+
+운영 스키마 덤프를 전용 PostgreSQL에 복원하고, 아직 적용되지 않은 Flyway 마이그레이션을 실행한 뒤 `ddl-auto=validate`로 앱을 기동한다. 마이그레이션 실패와 엔티티·스키마 불일치를 운영 배포 전에 잡는다.
+
+```powershell
+docker start ttokttok-426-repro-pg
+$port = (docker port ttokttok-426-repro-pg 5432).Split(':')[-1]
+$env:TTOKTTOK_CONCURRENCY_JDBC_URL = "jdbc:postgresql://127.0.0.1:$port/ttokttok426"
+$env:TTOKTTOK_SCHEMA_BASELINE_FILE = '<비공개 경로>\schema-baseline.sql'
+$env:TTOKTTOK_SCHEMA_BASELINE_VERSION = '29'
+.\gradlew.bat cleanTest test --tests '*SchemaBaselineValidationTest' -x jacocoTestCoverageVerification
+```
+
+- 덤프는 저장소에 넣지 않는다. `TTOKTTOK_SCHEMA_BASELINE_VERSION`은 덤프를 뜬 시점의 운영 Flyway 버전이다.
+- 환경 변수가 없으면 건너뛰므로 `maintenance/verify.sh`만으로는 실행되지 않는다. **마이그레이션이나 엔티티를 바꾼 작업은 이 명령을 직접 실행한다.**
+- 운영에 새 마이그레이션을 적용한 뒤에는 덤프와 버전을 함께 갱신한다. 덤프 시점 이후의 마이그레이션만 실행되기 때문이다.
+- 음성 대조: 스키마에 없는 컬럼, 없는 테이블을 고치는 마이그레이션, 엔티티가 쓰는 컬럼을 지우는 마이그레이션이 모두 실패했고, 문제없는 마이그레이션은 적용됐다.
+- 데이터는 없는 스키마 검증이다. 백필, 잠금 시간, 기존 데이터의 제약 위반은 잡지 못한다.
