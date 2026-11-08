@@ -20,7 +20,9 @@ import org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus;
 import org.project.ttokttok.domain.applyform.domain.enums.QuestionType;
 import org.project.ttokttok.domain.applyform.domain.json.Question;
 import org.project.ttokttok.domain.applyform.exception.AlreadyActiveApplyFormExistsException;
+import org.project.ttokttok.domain.applyform.exception.ApplyFormRuleException;
 import org.project.ttokttok.domain.applyform.exception.InvalidDateRangeException;
+import org.project.ttokttok.global.exception.ErrorMessage;
 import org.project.ttokttok.domain.applyform.repository.ApplyFormRepository;
 import org.project.ttokttok.domain.applyform.service.dto.request.ApplyFormCreateServiceRequest;
 import org.project.ttokttok.domain.club.domain.Club;
@@ -373,101 +375,85 @@ class ApplyFormAdminServiceTest {
     }
 
     @Nested
-    @DisplayName("비정형 데이터 - 검증 없이 통과하는 입력 (현재 동작 기록)")
-    class InvalidInputAccepted {
+    @DisplayName("입력값 규칙 위반 - 400으로 거절 (#456)")
+    class InputRuleRejected {
 
-        @Test
-        @DisplayName("지원 가능 학년이 비어 있어도 생성된다 - 아무도 지원할 수 없는 폼이 만들어진다")
-        void acceptsEmptyGrades() {
-            // given
-            givenCreatableClub();
-
-            // when
-            applyFormAdminService.createApplyForm(validRequest().applicableGrades(Set.of()).build());
-
-            // then
-            assertThat(savedApplyForm().getGrades()).isEmpty();
+        private void assertRejected(ApplyFormCreateServiceRequest request, ErrorMessage expected) {
+            assertThatThrownBy(() -> applyFormAdminService.createApplyForm(request))
+                    .isInstanceOf(ApplyFormRuleException.class)
+                    .hasMessage(expected.getMessage());
+            verify(applyFormRepository, never()).save(any());
         }
 
         @Test
-        @DisplayName("질문 목록이 비어 있어도 생성된다")
-        void acceptsEmptyQuestions() {
-            // given
-            givenCreatableClub();
-
-            // when
-            applyFormAdminService.createApplyForm(validRequest().questions(List.of()).build());
-
-            // then
-            assertThat(savedApplyForm().getFormJson()).isEmpty();
+        @DisplayName("지원 가능 학년이 비어 있으면 거절한다")
+        void rejectsEmptyGrades() {
+            givenExistingClub();
+            assertRejected(validRequest().applicableGrades(Set.of()).build(),
+                    ErrorMessage.APPLY_FORM_GRADES_REQUIRED);
         }
 
         @Test
-        @DisplayName("질문 목록이 null이면 null인 채로 저장 요청된다 - DB의 not null 제약에서만 걸린다")
-        void acceptsNullQuestions() {
-            // given
-            givenCreatableClub();
-
-            // when
-            applyFormAdminService.createApplyForm(validRequest().questions(null).build());
-
-            // then
-            // formJson 은 nullable = false 라 실제 저장 시점에야 실패한다.
-            assertThat(savedApplyForm().getFormJson()).isNull();
+        @DisplayName("질문 목록이 비었거나 null이면 거절한다")
+        void rejectsEmptyOrNullQuestions() {
+            givenExistingClub();
+            assertRejected(validRequest().questions(List.of()).build(), ErrorMessage.APPLY_FORM_QUESTIONS_REQUIRED);
+            assertRejected(validRequest().questions(null).build(), ErrorMessage.APPLY_FORM_QUESTIONS_REQUIRED);
         }
 
         @ParameterizedTest(name = "모집 인원 {0}")
         @ValueSource(ints = {0, -1})
-        @DisplayName("모집 인원이 0 이하여도 생성된다")
-        void acceptsNonPositiveMaxApplyCount(int maxApplyCount) {
-            // given
-            givenCreatableClub();
-
-            // when
-            applyFormAdminService.createApplyForm(
-                    validRequest().maxApplyCount(maxApplyCount).build());
-
-            // then
-            assertThat(savedApplyForm().getMaxApplyCount()).isEqualTo(maxApplyCount);
+        @DisplayName("모집 인원이 1명 미만이면 거절한다")
+        void rejectsNonPositiveMaxApplyCount(int maxApplyCount) {
+            givenExistingClub();
+            assertRejected(validRequest().maxApplyCount(maxApplyCount).build(),
+                    ErrorMessage.APPLY_FORM_MAX_COUNT_INVALID);
         }
 
         @Test
-        @DisplayName("면접 전형이 있다고 했는데 면접 일정이 없어도 생성된다")
-        void acceptsMissingInterviewDatesWhenInterviewEnabled() {
-            // given
-            givenCreatableClub();
-
-            // when
-            applyFormAdminService.createApplyForm(validRequest()
-                    .hasInterview(true)
-                    .interviewStartDate(null)
-                    .interviewEndDate(null)
-                    .build());
-
-            // then
-            ApplyForm saved = savedApplyForm();
-            assertThat(saved.isHasInterview()).isTrue();
-            assertThat(saved.getInterviewStartDate()).isNull();
-            assertThat(saved.getInterviewEndDate()).isNull();
+        @DisplayName("면접 전형이 있는데 면접 일정이 없으면 거절한다")
+        void rejectsMissingInterviewDates() {
+            givenExistingClub();
+            assertRejected(validRequest().interviewStartDate(null).build(), ErrorMessage.INTERVIEW_DATE_REQUIRED);
         }
 
         @Test
-        @DisplayName("면접 시작일이 종료일보다 늦어도 검증하지 않는다 - 모집 일정에만 검증이 걸려 있다")
-        void acceptsReversedInterviewDates() {
-            // given
-            givenCreatableClub();
-
-            // when
-            applyFormAdminService.createApplyForm(validRequest()
-                    .interviewStartDate(INTERVIEW_END)
-                    .interviewEndDate(INTERVIEW_START)
-                    .build());
-
-            // then
-            ApplyForm saved = savedApplyForm();
-            assertThat(saved.getInterviewStartDate()).isEqualTo(INTERVIEW_END);
-            assertThat(saved.getInterviewEndDate()).isEqualTo(INTERVIEW_START);
+        @DisplayName("면접 시작일이 종료일보다 늦으면 거절한다")
+        void rejectsReversedInterviewDates() {
+            givenExistingClub();
+            assertRejected(validRequest().interviewStartDate(INTERVIEW_END).interviewEndDate(INTERVIEW_START).build(),
+                    ErrorMessage.INTERVIEW_INVALID_DATE_RANGE);
         }
+
+        @Test
+        @DisplayName("면접 전형이 없으면 면접 일정이 없어도 생성된다")
+        void allowsNoInterviewDatesWithoutInterview() {
+            givenCreatableClub();
+            applyFormAdminService.createApplyForm(validRequest()
+                    .hasInterview(false).interviewStartDate(null).interviewEndDate(null).build());
+            assertThat(savedApplyForm().isHasInterview()).isFalse();
+        }
+
+        @Test
+        @DisplayName("모집 기간이 시작일의 3개월 뒤 같은 날을 넘으면 거절한다")
+        void rejectsRecruitPeriodOverThreeMonths() {
+            givenExistingClub();
+            assertRejected(validRequest().recruitEndDate(RECRUIT_START.plusMonths(3).plusDays(1)).build(),
+                    ErrorMessage.RECRUIT_PERIOD_TOO_LONG);
+        }
+
+        @Test
+        @DisplayName("모집 기간이 정확히 3개월이면 생성된다 - 경계값")
+        void allowsRecruitPeriodOfExactlyThreeMonths() {
+            givenCreatableClub();
+            applyFormAdminService.createApplyForm(validRequest().recruitEndDate(RECRUIT_START.plusMonths(3)).build());
+            assertThat(savedApplyForm().getApplyEndDate()).isEqualTo(RECRUIT_START.plusMonths(3));
+        }
+    }
+
+    @Nested
+    @DisplayName("비정형 데이터 - 검증 없이 통과하는 입력 (현재 동작 기록)")
+    class InvalidInputAccepted {
 
         @Test
         @DisplayName("면접 일정이 모집 기간보다 앞서도 검증하지 않는다")

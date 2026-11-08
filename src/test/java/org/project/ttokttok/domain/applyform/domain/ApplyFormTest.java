@@ -7,7 +7,10 @@ import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
 import org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus;
 import org.project.ttokttok.domain.applyform.domain.enums.QuestionType;
 import org.project.ttokttok.domain.applyform.domain.json.Question;
+import org.project.ttokttok.domain.applyform.exception.ApplyFormRuleException;
+import org.project.ttokttok.domain.applyform.exception.InvalidDateRangeException;
 import org.project.ttokttok.domain.club.domain.Club;
+import org.project.ttokttok.global.exception.ErrorMessage;
 
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -15,6 +18,7 @@ import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 
 class ApplyFormTest {
@@ -112,6 +116,56 @@ class ApplyFormTest {
             assertThat(applyForm.getApplyEndDate()).isEqualTo(LocalDate.of(2026, 9, 30));
             assertThat(applyForm.getMaxApplyCount()).isEqualTo(5);
             assertThat(applyForm.getGrades()).containsExactly(ApplicableGrade.THIRD_GRADE);
+        }
+
+        @Test
+        @DisplayName("마감일만 바꿔도 기존 시작일과 합친 기간으로 검사한다")
+        void updateApplyInfo_RejectsMergedReversedPeriod() {
+            // given
+            ApplyForm applyForm = createDefaultApplyForm();
+
+            // when & then
+            assertThatThrownBy(() -> applyForm.updateApplyInfo(null, LocalDate.of(2026, 6, 30), null, null))
+                    .isInstanceOf(InvalidDateRangeException.class);
+            assertThat(applyForm.getApplyEndDate()).isEqualTo(LocalDate.of(2026, 7, 31));
+        }
+
+        @Test
+        @DisplayName("모집 기간은 시작일의 3개월 뒤 같은 날까지 허용한다")
+        void updateApplyInfo_AllowsUpToThreeMonths() {
+            // given
+            ApplyForm applyForm = createDefaultApplyForm();
+
+            // when
+            applyForm.updateApplyInfo(null, LocalDate.of(2026, 10, 1), null, null);
+
+            // then
+            assertThat(applyForm.getApplyEndDate()).isEqualTo(LocalDate.of(2026, 10, 1));
+        }
+
+        @Test
+        @DisplayName("모집 기간이 3개월을 넘으면 거절한다")
+        void updateApplyInfo_RejectsOverThreeMonths() {
+            // given
+            ApplyForm applyForm = createDefaultApplyForm();
+
+            // when & then
+            assertThatThrownBy(() -> applyForm.updateApplyInfo(null, LocalDate.of(2026, 10, 2), null, null))
+                    .isInstanceOf(ApplyFormRuleException.class)
+                    .hasMessage(ErrorMessage.RECRUIT_PERIOD_TOO_LONG.getMessage());
+        }
+
+        @Test
+        @DisplayName("모집 인원이 1명 미만이거나 학년이 비면 거절한다")
+        void updateApplyInfo_RejectsInvalidCountAndGrades() {
+            // given
+            ApplyForm applyForm = createDefaultApplyForm();
+
+            // when & then
+            assertThatThrownBy(() -> applyForm.updateApplyInfo(null, null, 0, null))
+                    .isInstanceOf(ApplyFormRuleException.class);
+            assertThatThrownBy(() -> applyForm.updateApplyInfo(null, null, null, Set.of()))
+                    .isInstanceOf(ApplyFormRuleException.class);
         }
 
         @Test

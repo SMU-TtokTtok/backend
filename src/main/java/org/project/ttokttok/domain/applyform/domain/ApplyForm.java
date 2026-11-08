@@ -130,9 +130,18 @@ public class ApplyForm extends BaseTimeEntity {
                                 LocalDate applyDeadline,
                                 Integer maxApplyCount,
                                 Set<ApplicableGrade> grades) {
+        LocalDate nextStart = applyStartDate != null ? applyStartDate : this.applyStartDate;
+        LocalDate nextEnd = applyDeadline != null ? applyDeadline : this.applyEndDate;
+        ApplyFormInputPolicy.validateRecruitPeriod(nextStart, nextEnd);
+        if (maxApplyCount != null) {
+            ApplyFormInputPolicy.validateMaxApplyCount(maxApplyCount);
+        }
+        if (grades != null) {
+            ApplyFormInputPolicy.validateGrades(grades);
+        }
 
-        this.applyStartDate = applyStartDate != null ? applyStartDate : this.applyStartDate;
-        this.applyEndDate = applyDeadline != null ? applyDeadline : this.applyEndDate;
+        this.applyStartDate = nextStart;
+        this.applyEndDate = nextEnd;
         this.maxApplyCount = maxApplyCount != null ? maxApplyCount : this.maxApplyCount;
         if (grades != null) {
             this.grades.clear();

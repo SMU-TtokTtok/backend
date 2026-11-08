@@ -6,7 +6,7 @@ import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
 import org.project.ttokttok.domain.applyform.domain.json.Question;
 import org.project.ttokttok.domain.applyform.exception.AlreadyActiveApplyFormExistsException;
 import org.project.ttokttok.domain.applyform.exception.ApplyFormNotFoundException;
-import org.project.ttokttok.domain.applyform.exception.InvalidDateRangeException;
+import org.project.ttokttok.domain.applyform.domain.ApplyFormInputPolicy;
 import org.project.ttokttok.domain.applyform.repository.ApplyFormRepository;
 import org.project.ttokttok.domain.applyform.service.dto.request.ApplyFormCreateServiceRequest;
 import org.project.ttokttok.domain.applyform.service.dto.request.ApplyFormUpdateServiceRequest;
@@ -43,7 +43,7 @@ public class ApplyFormAdminService {
 
         validateAdmin(club.getAdmin().getUsername(), request.username());
 
-        validateDateRange(request.recruitStartDate(), request.recruitEndDate());
+        ApplyFormInputPolicy.validateRecruitPeriod(request.recruitStartDate(), request.recruitEndDate());
 
         validateActiveFormExists(request.clubId());
 
@@ -51,6 +51,7 @@ public class ApplyFormAdminService {
                 .stream()
                 .map(ApplicableGrade::from)
                 .collect(Collectors.toSet());
+        validateFormContent(request, applicableGrades);
 
         tempApplyFormRepository.findByClubId(club.getId())
                 .ifPresent(tempApplyFormRepository::delete);
@@ -176,9 +177,11 @@ public class ApplyFormAdminService {
         }
     }
 
-    private void validateDateRange(LocalDate startDate, LocalDate endDate) {
-        if (startDate.isAfter(endDate)) {
-            throw new InvalidDateRangeException();
-        }
+    private void validateFormContent(ApplyFormCreateServiceRequest request, Set<ApplicableGrade> grades) {
+        ApplyFormInputPolicy.validateGrades(grades);
+        ApplyFormInputPolicy.validateQuestions(request.questions());
+        ApplyFormInputPolicy.validateMaxApplyCount(request.maxApplyCount());
+        ApplyFormInputPolicy.validateInterview(request.hasInterview(),
+                request.interviewStartDate(), request.interviewEndDate());
     }
 }
