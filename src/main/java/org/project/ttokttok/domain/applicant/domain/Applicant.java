@@ -13,6 +13,7 @@ import org.project.ttokttok.domain.applicant.domain.enums.*;
 import org.project.ttokttok.domain.applicant.domain.json.Answer;
 import org.project.ttokttok.domain.applicant.exception.InvalidPhaseTransitionException;
 import org.project.ttokttok.domain.applyform.domain.ApplyForm;
+import org.project.ttokttok.domain.applyform.domain.enums.QuestionType;
 import org.project.ttokttok.global.entity.BaseTimeEntity;
 
 import java.time.LocalDate;
@@ -191,6 +192,25 @@ public class Applicant extends BaseTimeEntity {
                     ? Optional.of(interviewPhase.getStatus())
                     : Optional.empty();
         };
+    }
+
+    /** 마지막 전형(면접이 있으면 면접, 없으면 서류)에서 합격했는지. */
+    public boolean isFinalPass() {
+        ApplicantPhase finalPhase = hasInterviewPhase() ? ApplicantPhase.INTERVIEW : ApplicantPhase.DOCUMENT;
+        return statusOf(finalPhase).filter(status -> status == PhaseStatus.PASS).isPresent();
+    }
+
+    /** 서류 답변 중 업로드된 파일 URL. */
+    public List<String> fileAnswerUrls() {
+        if (documentPhase == null || documentPhase.getAnswers() == null) {
+            return List.of();
+        }
+        return documentPhase.getAnswers().stream()
+                .filter(answer -> answer.questionType() == QuestionType.FILE)
+                .map(Answer::value)
+                .filter(value -> value instanceof String url && !url.isBlank())
+                .map(String.class::cast)
+                .toList();
     }
 
     // 편의 메서드들

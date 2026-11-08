@@ -2,6 +2,10 @@ package org.project.ttokttok.domain.applyform.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.ArgumentMatchers.any;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import jakarta.persistence.EntityManager;
@@ -11,6 +15,13 @@ import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.project.ttokttok.domain.admin.domain.Admin;
+import org.project.ttokttok.domain.applicant.domain.Applicant;
+import org.project.ttokttok.domain.applicant.domain.enums.ApplicantPhase;
+import org.project.ttokttok.domain.applicant.domain.enums.Gender;
+import org.project.ttokttok.domain.applicant.domain.enums.Grade;
+import org.project.ttokttok.domain.applicant.domain.enums.PhaseStatus;
+import org.project.ttokttok.domain.applicant.domain.enums.StudentStatus;
+import org.project.ttokttok.domain.applicant.domain.json.Answer;
 import org.project.ttokttok.domain.applyform.domain.ApplyForm;
 import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
 import org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus;
@@ -18,6 +29,8 @@ import org.project.ttokttok.domain.applyform.domain.enums.QuestionType;
 import org.project.ttokttok.domain.applyform.domain.json.Question;
 import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.domain.enums.ClubUniv;
+import org.project.ttokttok.domain.clubmember.domain.ClubMember;
+import org.project.ttokttok.global.exception.ErrorMessage;
 import org.project.ttokttok.global.entity.Role;
 import org.project.ttokttok.infrastructure.email.service.EmailService;
 import org.project.ttokttok.infrastructure.firebase.service.FCMService;
@@ -89,6 +102,28 @@ class FinishEvaluationIntegrationTest {
         return entityManager.find(ApplyForm.class, formId).getStatus();
     }
 
+    private Applicant persistApplicant(ApplyForm form, String suffix, PhaseStatus documentStatus) {
+        Applicant applicant = Applicant.createApplicant(suffix + "@sangmyung.kr", "지원자 " + suffix, 20, "컴퓨터공학",
+                suffix + "@example.com", "01012345678", StudentStatus.ENROLLED, Grade.FIRST_GRADE, Gender.MALE,
+                entityManager.find(ApplyForm.class, form.getId()));
+        applicant.submitDocument(List.of(new Answer("포트폴리오", null, QuestionType.FILE, false, List.of(),
+                "https://files/applicant/" + suffix + ".pdf")));
+        applicant.changeEvaluationStatus(ApplicantPhase.DOCUMENT, documentStatus);
+        entityManager.persist(applicant);
+        flushAndClear();
+        return applicant;
+    }
+
+    private void linkAsMember(String suffix) {
+        entityManager.persist(ClubMember.create(entityManager.find(Club.class, club.getId()), "지원자 " + suffix,
+                null, Grade.FIRST_GRADE, "컴퓨터공학", suffix + "@example.com", "01012345678", Gender.MALE));
+        flushAndClear();
+    }
+
+    private long applicantCount() {
+        return entityManager.createQuery("select count(a) from Applicant a", Long.class).getSingleResult();
+    }
+
     @Test
     void 평가_종료를_두_번_요청해도_종료_상태로_남는다() throws Exception {
         // given
@@ -100,5 +135,48 @@ class FinishEvaluationIntegrationTest {
 
         // then
         assertThat(statusOf(formId)).isEqualTo(ApplyFormStatus.INACTIVE);
+    }
+
+    @Test
+    void 모집_중인_폼은_초기화를_거절한다() throws Exception {
+        // given
+        String formId = persistForm(true).getId();
+
+        // when & then
+        finish(formId).andExpect(status().isConflict())
+                .andExpect(jsonPath("$.details").value(ErrorMessage.FINISH_WHILE_RECRUITING.getMessage()));
+        assertThat(statusOf(formId)).isEqualTo(ApplyFormStatus.ACTIVE);
+    }
+
+    @Test
+    void 부원으로_연동되지_않은_최종_합격자가_있으면_거절한다() throws Exception {
+        // given
+        ApplyForm form = persistForm(false);
+        persistApplicant(form, "passer", PhaseStatus.PASS);
+
+        // when & then
+        finish(form.getId()).andExpect(status().isConflict())
+                .andExpect(jsonPath("$.details").value(
+                        "부원으로 연동되지 않은 최종 합격자가 1명 있습니다. '최종 부원연동'을 먼저 눌러 주세요."));
+        assertThat(applicantCount()).isEqualTo(1);
+        verify(s3Service, never()).deleteFileAfterCommit(any());
+    }
+
+    @Test
+    void 합격자가_연동됐으면_평가_중인_지원자가_있어도_초기화하고_첨부를_지운다() throws Exception {
+        // given
+        ApplyForm form = persistForm(false);
+        persistApplicant(form, "passer", PhaseStatus.PASS);
+        persistApplicant(form, "pending", PhaseStatus.EVALUATING);
+        linkAsMember("passer");
+
+        // when
+        finish(form.getId()).andExpect(status().isOk());
+
+        // then
+        assertThat(statusOf(form.getId())).isEqualTo(ApplyFormStatus.INACTIVE);
+        assertThat(applicantCount()).isZero();
+        verify(s3Service).deleteFileAfterCommit("https://files/applicant/passer.pdf");
+        verify(s3Service).deleteFileAfterCommit("https://files/applicant/pending.pdf");
     }
 }

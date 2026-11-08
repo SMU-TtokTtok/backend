@@ -1,7 +1,14 @@
 package org.project.ttokttok.domain.applyform.service;
 
 import lombok.RequiredArgsConstructor;
+import org.project.ttokttok.domain.applicant.domain.Applicant;
+import org.project.ttokttok.domain.applicant.repository.ApplicantRepository;
 import org.project.ttokttok.domain.applyform.domain.ApplyForm;
+import org.project.ttokttok.domain.applyform.domain.enums.RecruitState;
+import org.project.ttokttok.domain.applyform.exception.ApplyFormRuleException;
+import org.project.ttokttok.domain.clubmember.repository.ClubMemberRepository;
+import org.project.ttokttok.global.exception.ErrorMessage;
+import org.project.ttokttok.infrastructure.s3.service.S3Service;
 import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
 import org.project.ttokttok.domain.applyform.domain.json.Question;
 import org.project.ttokttok.domain.applyform.exception.AlreadyActiveApplyFormExistsException;
@@ -35,6 +42,9 @@ public class ApplyFormAdminService {
     private final ApplyFormRepository applyFormRepository;
     private final ClubRepository clubRepository;
     private final TempApplyFormRepository tempApplyFormRepository;
+    private final ApplicantRepository applicantRepository;
+    private final ClubMemberRepository clubMemberRepository;
+    private final S3Service s3Service;
 
     @Transactional
     public String createApplyForm(ApplyFormCreateServiceRequest request) {
@@ -155,12 +165,31 @@ public class ApplyFormAdminService {
         if (applyForm.isFinished()) {
             return;
         }
+        if (applyForm.recruitState() == RecruitState.OPEN) {
+            throw new ApplyFormRuleException(ErrorMessage.FINISH_WHILE_RECRUITING);
+        }
+        List<Applicant> applicants = applicantRepository.findByApplyFormId(formId);
+        validateFinalPassersLinked(club, applicants);
+        List<String> fileUrls = applicants.stream().flatMap(a -> a.fileAnswerUrls().stream()).toList();
 
         applyForm.finish();
         applyFormRepository.saveAndFlush(applyForm);
 
         applyFormRepository.deleteAllTempApplicantByFormId(formId);
         applyFormRepository.deleteAllApplicantByFormId(formId);
+        fileUrls.forEach(s3Service::deleteFileAfterCommit);
+    }
+
+    /** 평가 중인 지원자는 막지 않는다. 부원으로 연동되지 않은 최종 합격자만 막는다. */
+    private void validateFinalPassersLinked(Club club, List<Applicant> applicants) {
+        long unlinked = applicants.stream()
+                .filter(Applicant::isFinalPass)
+                .filter(a -> !clubMemberRepository.existsByClubIdAndEmail(club.getId(), a.getEmail()))
+                .count();
+        if (unlinked > 0) {
+            throw new ApplyFormRuleException(ErrorMessage.FINISH_UNLINKED_PASSERS,
+                    "부원으로 연동되지 않은 최종 합격자가 " + unlinked + "명 있습니다. '최종 부원연동'을 먼저 눌러 주세요.");
+        }
     }
 
     private Club validateClubAdmin(String username) {
