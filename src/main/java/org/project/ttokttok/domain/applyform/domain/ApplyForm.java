@@ -190,6 +190,28 @@ public class ApplyForm extends BaseTimeEntity {
         this.isRecruiting = !this.isRecruiting;
     }
 
+    /** 모집 시작. 오늘(한국 시간)이 모집 기간 안일 때만 열 수 있다. */
+    public void startRecruiting() {
+        LocalDate today = RecruitStatePolicy.today();
+        if (today.isBefore(applyStartDate) || today.isAfter(applyEndDate)) {
+            throw new ApplyFormRuleException(ErrorMessage.RECRUIT_PERIOD_NOT_OPEN);
+        }
+        this.isRecruiting = true;
+    }
+
+    /** 종료된 폼을 되살린다. 지난 기간으로 바로 열리지 않도록 모집 마감 상태로 시작한다. */
+    public void reactivate() {
+        this.status = ACTIVE;
+        this.isRecruiting = false;
+    }
+
+    /** 지원서가 제출된 폼은 시작일을 바꿀 수 없다. */
+    public void validateStartDateChange(LocalDate newStartDate, boolean hasApplicants) {
+        if (hasApplicants && newStartDate != null && !newStartDate.equals(applyStartDate)) {
+            throw new ApplyFormRuleException(ErrorMessage.APPLY_START_DATE_LOCKED);
+        }
+    }
+
 
     public void endRecruiting() {
         this.isRecruiting = false;

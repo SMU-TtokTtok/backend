@@ -156,6 +156,20 @@ class ApplyFormTest {
         }
 
         @Test
+        @DisplayName("지원서가 제출된 폼은 시작일을 바꿀 수 없고, 같은 날짜면 통과한다")
+        void validateStartDateChange_LockedWithApplicants() {
+            // given
+            ApplyForm applyForm = createDefaultApplyForm();
+
+            // when & then
+            assertThatThrownBy(() -> applyForm.validateStartDateChange(LocalDate.of(2026, 7, 2), true))
+                    .isInstanceOf(ApplyFormRuleException.class)
+                    .hasMessage(ErrorMessage.APPLY_START_DATE_LOCKED.getMessage());
+            applyForm.validateStartDateChange(LocalDate.of(2026, 7, 1), true);
+            applyForm.validateStartDateChange(LocalDate.of(2026, 7, 2), false);
+        }
+
+        @Test
         @DisplayName("모집 인원이 1명 미만이거나 학년이 비면 거절한다")
         void updateApplyInfo_RejectsInvalidCountAndGrades() {
             // given

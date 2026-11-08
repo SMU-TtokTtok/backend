@@ -83,26 +83,23 @@ public class ClubAdminService {
 
         Optional<ApplyForm> form = applyFormRepository.findByClubIdAndStatus(clubId, ACTIVE);
 
-        if (form.isPresent()) {
-            boolean wasRecruiting = form.get().isRecruiting();
-            form.get().toggleRecruiting();
-
-            log.info("Current apply form status toggled for club: {}, status: {}", clubId, form.get().getStatus());
-
-            if (!wasRecruiting && form.get().isRecruiting()) {
-                sendRecruitmentNotification(form.get(), club);
-            }
-        } else {
+        if (form.isEmpty()) {
             ApplyForm latestForm = applyFormRepository.findTopByClubIdOrderByCreatedAtDesc(clubId)
                     .orElseThrow(ApplyFormNotFoundException::new);
 
-            log.info("No active apply form found for club: {}, activating latest form: {}", clubId, latestForm.getId());
-            latestForm.updateFormStatus();
-
-            if (latestForm.isRecruiting()) {
-                sendRecruitmentNotification(latestForm, club);
-            }
+            log.info("No active apply form found for club: {}, reactivating latest form: {}", clubId, latestForm.getId());
+            latestForm.reactivate();
+            return;
         }
+
+        ApplyForm activeForm = form.get();
+        if (activeForm.isRecruiting()) {
+            activeForm.endRecruiting();
+            return;
+        }
+        activeForm.startRecruiting();
+        log.info("Recruitment started for club: {}, form: {}", clubId, activeForm.getId());
+        sendRecruitmentNotification(activeForm, club);
     }
 
     public ClubDetailAdminServiceResponse getClubContent(String clubId) {
@@ -153,6 +150,11 @@ public class ClubAdminService {
 
         Optional<Set<ApplicableGrade>> grades = request.grades().isPresent() ?
                 Optional.of(request.grades().get()) : Optional.empty();
+
+        if (startDate.isPresent()) {
+            applyForm.validateStartDateChange(startDate.get(),
+                    applyFormRepository.existsApplicantByFormId(applyForm.getId()));
+        }
 
         applyForm.updateApplyInfo(
                 startDate.orElse(null),
