@@ -12,7 +12,8 @@ public record ApplyFormDetailResponse(
         String title,
         String subTitle,
         List<Question> questions,
-        List<BeforeApplyFormResponse> beforeForms
+        List<BeforeApplyFormResponse> beforeForms,
+        boolean hasApplicants
 ) {
     public static ApplyFormDetailResponse from(ApplyFormDetailServiceResponse response) {
         return ApplyFormDetailResponse.builder()
@@ -23,6 +24,7 @@ public record ApplyFormDetailResponse(
                 .beforeForms(response.beforeForms().stream()
                         .map(BeforeApplyFormResponse::from)
                         .toList())
+                .hasApplicants(response.hasApplicants())
                 .build();
     }
 }

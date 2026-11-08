@@ -89,6 +89,10 @@ public class ApplyFormAdminService {
         String subtitle = request.subTitle().isPresent() ? request.subTitle().get() : null;
         List<Question> questions = request.questions().isPresent() ? request.questions().get() : null;
 
+        if (questions != null && applyFormRepository.existsApplicantByFormId(applyForm.getId())) {
+            applyForm.validateQuestionsEditableWithApplicants(questions);
+        }
+
         applyForm.updateFormContent(title, subtitle, questions);
     }
 
@@ -114,12 +118,15 @@ public class ApplyFormAdminService {
 
         List<BeforeApplyFormServiceResponse> beforeForms = getBeforeForms(clubId);
 
+        ApplyForm activeForm = applyForm.get();
+
         return ApplyFormDetailServiceResponse.of(
-                applyForm.map(ApplyForm::getId).orElse(null),
-                applyForm.map(ApplyForm::getTitle).orElse(null),
-                applyForm.map(ApplyForm::getSubTitle).orElse(null),
-                applyForm.map(ApplyForm::getFormJson).orElse(List.of()),
-                beforeForms
+                activeForm.getId(),
+                activeForm.getTitle(),
+                activeForm.getSubTitle(),
+                activeForm.getFormJson(),
+                beforeForms,
+                applyFormRepository.existsApplicantByFormId(activeForm.getId())
         );
     }
 

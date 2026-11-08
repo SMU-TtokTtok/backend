@@ -30,7 +30,7 @@ public record ApplyFormUpdateRequest(
     private JsonNullable<List<Question>> questionRequestPresent(JsonNullable<List<QuestionRequestDto>> questions) {
         if (questions.isPresent()) {
             return JsonNullable.of(questions.get().stream()
-                    .map(QuestionRequestDto::toQuestion)
+                    .map(QuestionRequestDto::toQuestionKeepingId)
                     .toList());
         }
 

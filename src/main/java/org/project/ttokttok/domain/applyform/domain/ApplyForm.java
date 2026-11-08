@@ -172,6 +172,14 @@ public class ApplyForm extends BaseTimeEntity {
         return this.status == INACTIVE;
     }
 
+    /**
+     * 지원서가 제출된 폼에 새 질문 목록을 적용해도 되는지 검증한다.
+     * 규칙은 {@link ApplyFormEditLockPolicy} 에 정의되어 있다.
+     */
+    public void validateQuestionsEditableWithApplicants(List<Question> updatedQuestions) {
+        ApplyFormEditLockPolicy.validate(this.formJson, updatedQuestions);
+    }
+
     public void updateFormStatus() {
         this.status = (this.status == ACTIVE)
                 ? INACTIVE

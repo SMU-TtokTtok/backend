@@ -31,6 +31,9 @@ public interface ApplyFormRepository extends JpaRepository<ApplyForm, String> {
             + "WHERE a.club.id = :clubId AND t.userEmail = :userEmail")
     Map<String, Object> findTempData(String userEmail, String clubId);
 
+    @Query("SELECT COUNT(a) > 0 FROM Applicant a WHERE a.applyForm.id = :formId")
+    boolean existsApplicantByFormId(@Param("formId") String formId);
+
     @Modifying(clearAutomatically = true)
     @Query("DELETE FROM Applicant a WHERE a.applyForm.id = :formId")
     int deleteAllApplicantByFormId(String formId);
