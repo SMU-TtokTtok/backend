@@ -1,5 +1,7 @@
 package org.project.ttokttok.domain.memo.domain;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.project.ttokttok.global.exception.ErrorMessage;
 
 import org.project.ttokttok.domain.memo.exception.MemoValidationException;
@@ -27,6 +29,7 @@ public class Memo {
     private String content;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @OnDelete(action = OnDeleteAction.CASCADE) // 운영 스키마 V9 와 같은 FK 동작
     @JoinColumn(name = "document_phase_id", nullable = false)
     private DocumentPhase documentPhase;
 

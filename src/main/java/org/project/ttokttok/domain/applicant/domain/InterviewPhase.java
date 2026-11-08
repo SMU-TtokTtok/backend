@@ -1,5 +1,7 @@
 package org.project.ttokttok.domain.applicant.domain;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -21,6 +23,7 @@ public class InterviewPhase extends BaseTimeEntity {
     private String id;
 
     @OneToOne
+    @OnDelete(action = OnDeleteAction.CASCADE) // 운영 스키마 V9 와 같은 FK 동작
     @JoinColumn(name = "applicant_id")
     private Applicant applicant;
 
