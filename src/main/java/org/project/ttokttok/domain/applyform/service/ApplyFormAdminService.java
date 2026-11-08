@@ -82,11 +82,7 @@ public class ApplyFormAdminService {
     @Transactional
     public void updateApplyForm(ApplyFormUpdateServiceRequest request) {
         Club club = validateClubAdmin(request.username());
-
-        ApplyForm applyForm = applyFormRepository.findById(request.applyFormId())
-                .orElseThrow(ApplyFormNotFoundException::new);
-
-        validateAdmin(club.getAdmin().getUsername(), request.username());
+        ApplyForm applyForm = findOwnedForm(club, request.applyFormId());
 
         String title = request.title().isPresent() ? request.title().get() : null;
         String subtitle = request.subTitle().isPresent() ? request.subTitle().get() : null;
@@ -140,27 +136,14 @@ public class ApplyFormAdminService {
     @Transactional(readOnly = true)
     public List<Question> getPreviousApplyFormQuestions(String username, String formId) {
         Club club = validateClubAdmin(username);
-        
-        ApplyForm applyForm = applyFormRepository.findById(formId)
-                .orElseThrow(ApplyFormNotFoundException::new);
 
-        if (!applyForm.getClub().getId().equals(club.getId())) {
-            throw new NotClubAdminException();
-        }
-
-        return applyForm.getFormJson();
+        return findOwnedForm(club, formId).getFormJson();
     }
 
     @Transactional
     public void finishEvaluation(String adminName, String formId) {
         Club club = validateClubAdmin(adminName);
-        
-        ApplyForm applyForm = applyFormRepository.findById(formId)
-                .orElseThrow(ApplyFormNotFoundException::new);
-
-        if (!applyForm.getClub().getId().equals(club.getId())) {
-            throw new NotClubAdminException();
-        }
+        ApplyForm applyForm = findOwnedForm(club, formId);
 
         applyForm.updateFormStatus();
         applyFormRepository.saveAndFlush(applyForm);
@@ -172,6 +155,16 @@ public class ApplyFormAdminService {
     private Club validateClubAdmin(String username) {
         return clubRepository.findByAdminUsername(username)
                 .orElseThrow(NotClubAdminException::new);
+    }
+
+    private ApplyForm findOwnedForm(Club club, String formId) {
+        ApplyForm applyForm = applyFormRepository.findById(formId)
+                .orElseThrow(ApplyFormNotFoundException::new);
+
+        if (!applyForm.getClub().getId().equals(club.getId())) {
+            throw new NotClubAdminException();
+        }
+        return applyForm;
     }
 
     private void validateAdmin(String adminName, String requestAdminName) {
