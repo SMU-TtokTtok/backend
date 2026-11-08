@@ -94,6 +94,22 @@ public enum ErrorMessage {
     APPLY_FORM_INVALID_DATE_RANGE("잘못된 날짜 지정 범위 입니다.", HttpStatus.BAD_REQUEST),
     ACTIVE_APPLY_FORM_NOT_FOUND("활성화된 지원 폼을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
     ALREADY_ACTIVE_APPLY_FORM_EXISTS("이미 활성화된 지원폼이 존재합니다.", HttpStatus.BAD_REQUEST),
+    // 지원 폼 입력값 규칙 (400)
+    RECRUIT_PERIOD_TOO_LONG("모집 기간은 최대 3개월까지 설정할 수 있습니다.", HttpStatus.BAD_REQUEST),
+    APPLY_FORM_GRADES_REQUIRED("모집 대상 학년을 1개 이상 선택해 주세요.", HttpStatus.BAD_REQUEST),
+    APPLY_FORM_QUESTIONS_REQUIRED("질문을 1개 이상 추가해 주세요.", HttpStatus.BAD_REQUEST),
+    APPLY_FORM_MAX_COUNT_INVALID("모집 인원은 1명 이상이어야 합니다.", HttpStatus.BAD_REQUEST),
+    INTERVIEW_DATE_REQUIRED("면접이 있는 폼은 면접 시작일과 종료일을 입력해 주세요.", HttpStatus.BAD_REQUEST),
+    INTERVIEW_INVALID_DATE_RANGE("면접 시작일이 면접 종료일보다 늦을 수 없습니다.", HttpStatus.BAD_REQUEST),
+    // 지원 폼 상태 규칙 (409)
+    APPLY_FORM_NOT_STARTED("아직 모집 기간이 아닙니다.", HttpStatus.CONFLICT),
+    APPLY_FORM_CLOSED("모집이 마감되었습니다.", HttpStatus.CONFLICT),
+    TEMP_APPLY_NOT_OPEN("모집 기간이 아니라 임시저장할 수 없습니다.", HttpStatus.CONFLICT),
+    RECRUIT_PERIOD_NOT_OPEN("오늘은 모집 기간이 아닙니다. 모집 기간을 먼저 수정해 주세요.", HttpStatus.CONFLICT),
+    APPLY_FORM_EDIT_LOCKED("지원서가 제출된 폼이라 이 항목은 바꿀 수 없습니다.", HttpStatus.CONFLICT),
+    APPLY_START_DATE_LOCKED("지원서가 제출된 폼은 시작일을 바꿀 수 없습니다.", HttpStatus.CONFLICT),
+    FINISH_WHILE_RECRUITING("모집 중에는 지원자를 초기화할 수 없습니다. 먼저 지원을 마감해 주세요.", HttpStatus.CONFLICT),
+    FINISH_UNLINKED_PASSERS("부원으로 연동되지 않은 최종 합격자가 있습니다. '최종 부원연동'을 먼저 눌러 주세요.", HttpStatus.CONFLICT),
 
     // 지원자 에러 메시지
     APPLICANT_NOT_FOUND("지원자를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),

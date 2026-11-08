@@ -9,6 +9,7 @@ import org.hibernate.annotations.Type;
 import org.hibernate.type.SqlTypes;
 import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
 import org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus;
+import org.project.ttokttok.domain.applyform.domain.enums.RecruitState;
 import org.project.ttokttok.domain.applyform.domain.json.Question;
 import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.global.entity.BaseTimeEntity;
@@ -164,6 +165,15 @@ public class ApplyForm extends BaseTimeEntity {
 
     public void endRecruiting() {
         this.isRecruiting = false;
+    }
+
+    /** 오늘(한국 시간) 기준 모집 상태. 판정 규칙은 {@link RecruitStatePolicy} 에 있다. */
+    public RecruitState recruitState() {
+        return recruitState(RecruitStatePolicy.today());
+    }
+
+    public RecruitState recruitState(LocalDate today) {
+        return RecruitStatePolicy.of(status, isRecruiting, applyStartDate, applyEndDate, today);
     }
 
     /**
