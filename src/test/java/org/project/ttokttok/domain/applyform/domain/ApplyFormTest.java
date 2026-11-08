@@ -250,51 +250,32 @@ class ApplyFormTest {
     class StatusToggleTest {
 
         @Test
-        @DisplayName("updateFormStatus(): ACTIVE 상태를 호출하면 INACTIVE로 바뀐다")
-        void updateFormStatus_ActiveToInactive() {
+        @DisplayName("finish(): 몇 번을 호출해도 종료 상태로 남는다")
+        void finish_AlwaysInactive() {
             // given
             ApplyForm applyForm = createDefaultApplyForm();
-            assertThat(applyForm.getStatus()).isEqualTo(ApplyFormStatus.ACTIVE);
 
             // when
-            applyForm.updateFormStatus();
+            applyForm.finish();
+            applyForm.finish();
 
             // then
             assertThat(applyForm.getStatus()).isEqualTo(ApplyFormStatus.INACTIVE);
         }
 
         @Test
-        @DisplayName("updateFormStatus(): 다시 호출하면 ACTIVE로 되돌아간다")
-        void updateFormStatus_TogglesBack() {
+        @DisplayName("reactivate(): 종료된 폼을 활성으로 되살리되 모집 마감 상태로 시작한다")
+        void reactivate_StartsClosed() {
             // given
             ApplyForm applyForm = createDefaultApplyForm();
+            applyForm.finish();
 
             // when
-            applyForm.updateFormStatus();
-            applyForm.updateFormStatus();
+            applyForm.reactivate();
 
             // then
             assertThat(applyForm.getStatus()).isEqualTo(ApplyFormStatus.ACTIVE);
-        }
-
-        @Test
-        @DisplayName("toggleRecruiting(): 모집 상태를 반전시킨다")
-        void toggleRecruiting_Success() {
-            // given
-            ApplyForm applyForm = createDefaultApplyForm();
-            assertThat(applyForm.isRecruiting()).isTrue();
-
-            // when
-            applyForm.toggleRecruiting();
-
-            // then
             assertThat(applyForm.isRecruiting()).isFalse();
-
-            // when
-            applyForm.toggleRecruiting();
-
-            // then
-            assertThat(applyForm.isRecruiting()).isTrue();
         }
 
         @Test

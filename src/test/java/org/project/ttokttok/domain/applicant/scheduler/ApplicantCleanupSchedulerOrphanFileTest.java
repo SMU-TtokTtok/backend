@@ -38,7 +38,7 @@ class ApplicantCleanupSchedulerOrphanFileTest {
     void setUp() {
         S3KeyUrlGenerator keyUrlGenerator = new S3KeyUrlGenerator();
         ReflectionTestUtils.setField(keyUrlGenerator, "fileCloudUrl", BASE_URL);
-        scheduler = new ApplicantCleanupScheduler(null, null, null, null,
+        scheduler = new ApplicantCleanupScheduler(null, null, null,
                 applicantRepository, s3Service, keyUrlGenerator);
     }
 

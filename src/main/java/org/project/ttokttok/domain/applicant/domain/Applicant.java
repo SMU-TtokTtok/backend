@@ -13,7 +13,6 @@ import org.project.ttokttok.domain.applicant.domain.enums.*;
 import org.project.ttokttok.domain.applicant.domain.json.Answer;
 import org.project.ttokttok.domain.applicant.exception.InvalidPhaseTransitionException;
 import org.project.ttokttok.domain.applyform.domain.ApplyForm;
-import org.project.ttokttok.domain.applyform.domain.enums.QuestionType;
 import org.project.ttokttok.global.entity.BaseTimeEntity;
 
 import java.time.LocalDate;
@@ -205,12 +204,7 @@ public class Applicant extends BaseTimeEntity {
         if (documentPhase == null || documentPhase.getAnswers() == null) {
             return List.of();
         }
-        return documentPhase.getAnswers().stream()
-                .filter(answer -> answer.questionType() == QuestionType.FILE)
-                .map(Answer::value)
-                .filter(value -> value instanceof String url && !url.isBlank())
-                .map(String.class::cast)
-                .toList();
+        return documentPhase.getAnswers().stream().flatMap(answer -> answer.fileUrl().stream()).toList();
     }
 
     // 편의 메서드들

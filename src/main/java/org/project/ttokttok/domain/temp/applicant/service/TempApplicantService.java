@@ -5,8 +5,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.project.ttokttok.domain.applyform.domain.ApplyForm;
 import org.project.ttokttok.domain.applyform.domain.enums.RecruitState;
@@ -49,9 +51,9 @@ public class TempApplicantService {
 
         if (optionalTempApplicant.isPresent()) {
             TempApplicant tempApplicant = optionalTempApplicant.get();
-            List<String> oldFileUrls = extractTempFileUrls(tempApplicant.getTempData(), request.email());
+            Map<String, Object> oldData = tempApplicant.getTempData();
             tempApplicant.update(tempData);
-            deleteUnreferencedFiles(oldFileUrls, tempData);
+            deleteReplacedTempFiles(oldData, tempData, request.email());
 
             return tempApplicant.getId();
         }
@@ -159,32 +161,24 @@ public class TempApplicantService {
         return "temp-applicants/" + email + "/";
     }
 
-    /**
-     * 저장된 임시 답변 중 이 사용자의 임시 첨부 경로({@code temp-applicants/{email}/})에 있는 파일 URL 만 모은다.
-     */
-    private List<String> extractTempFileUrls(Map<String, Object> tempData, String email) {
-        List<String> urls = new ArrayList<>();
-        if (tempData == null || !(tempData.get("answers") instanceof List<?> answers)) {
-            return urls;
-        }
-        for (Object item : answers) {
-            if (item instanceof TempAnswer answer
-                    && answer.value() instanceof String url
-                    && url.contains("/" + tempDir(email))) {
-                urls.add(url);
-            }
-        }
-        return urls;
+    /** 이전 답변의 이 사용자 임시 첨부({@code temp-applicants/{email}/}) 중 새 답변에 없는 것을 커밋 후 지운다. */
+    private void deleteReplacedTempFiles(Map<String, Object> oldData, Map<String, Object> newData, String email) {
+        Set<Object> kept = answerValues(newData);
+        answerValues(oldData).stream()
+                .filter(value -> value instanceof String url && url.contains("/" + tempDir(email)) && !kept.contains(url))
+                .map(String.class::cast)
+                .forEach(s3Service::deleteFileAfterCommit);
     }
 
-    private void deleteUnreferencedFiles(List<String> oldFileUrls, Map<String, Object> newTempData) {
-        Set<Object> referenced = new HashSet<>();
-        for (Object item : (List<?>) newTempData.get("answers")) {
-            referenced.add(((TempAnswer) item).value());
+    private Set<Object> answerValues(Map<String, Object> data) {
+        if (data == null || !(data.get("answers") instanceof List<?> answers)) {
+            return Set.of();
         }
-        oldFileUrls.stream()
-                .filter(url -> !referenced.contains(url))
-                .forEach(s3Service::deleteFileAfterCommit);
+        return answers.stream()
+                .filter(TempAnswer.class::isInstance)
+                .map(answer -> ((TempAnswer) answer).value())
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
     }
 
     private static <T> List<T> orEmpty(List<T> list) {

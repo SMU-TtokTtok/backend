@@ -129,7 +129,7 @@ class ApplyFormAdminApiControllerTest {
                 new Question("q1", "이름", null, QuestionType.SHORT_ANSWER, true, null)
         );
         ApplyFormDetailServiceResponse serviceResponse = ApplyFormDetailServiceResponse.of(
-                "form-1", "동아리 지원폼", "부제목", questions, List.of()
+                "form-1", "동아리 지원폼", "부제목", questions, List.of(), false
         );
         given(applyFormAdminService.getApplyFormDetail("admin@sangmyung.kr", "club-1"))
                 .willReturn(serviceResponse);

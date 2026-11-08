@@ -162,7 +162,7 @@ class ApplyFormEditLockIntegrationTest {
     @Test
     void 활성_폼이_없으면_hasApplicants_false() throws Exception {
         Setup setup = createClubWithForm("G", true);
-        entityManager.find(ApplyForm.class, setup.formId()).updateFormStatus();
+        entityManager.find(ApplyForm.class, setup.formId()).finish();
         entityManager.flush();
         entityManager.clear();
 

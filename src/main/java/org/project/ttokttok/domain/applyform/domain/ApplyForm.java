@@ -180,16 +180,6 @@ public class ApplyForm extends BaseTimeEntity {
         ApplyFormEditLockPolicy.validate(this.formJson, updatedQuestions);
     }
 
-    public void updateFormStatus() {
-        this.status = (this.status == ACTIVE)
-                ? INACTIVE
-                : ACTIVE;
-    }
-
-    public void toggleRecruiting() {
-        this.isRecruiting = !this.isRecruiting;
-    }
-
     /** 모집 시작. 오늘(한국 시간)이 모집 기간 안일 때만 열 수 있다. */
     public void startRecruiting() {
         LocalDate today = RecruitStatePolicy.today();
@@ -219,11 +209,7 @@ public class ApplyForm extends BaseTimeEntity {
 
     /** 오늘(한국 시간) 기준 모집 상태. 판정 규칙은 {@link RecruitStatePolicy} 에 있다. */
     public RecruitState recruitState() {
-        return recruitState(RecruitStatePolicy.today());
-    }
-
-    public RecruitState recruitState(LocalDate today) {
-        return RecruitStatePolicy.of(status, isRecruiting, applyStartDate, applyEndDate, today);
+        return RecruitStatePolicy.of(status, isRecruiting, applyStartDate, applyEndDate, RecruitStatePolicy.today());
     }
 
     /** 지원서 제출은 모집 중일 때만 받는다. */

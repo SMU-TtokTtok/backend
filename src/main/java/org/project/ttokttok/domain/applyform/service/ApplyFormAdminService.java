@@ -119,10 +119,11 @@ public class ApplyFormAdminService {
                             tempForm.getTitle(),
                             tempForm.getSubTitle(),
                             tempForm.getFormJson(),
-                            getBeforeForms(clubId)
+                            getBeforeForms(clubId),
+                            false
                     ))
                     .orElse(ApplyFormDetailServiceResponse.of(
-                            null, null, null, List.of(), getBeforeForms(clubId)
+                            null, null, null, List.of(), getBeforeForms(clubId), false
                     ));
         }
 

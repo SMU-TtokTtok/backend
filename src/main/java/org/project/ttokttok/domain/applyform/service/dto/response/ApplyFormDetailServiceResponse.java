@@ -18,14 +18,6 @@ public record ApplyFormDetailServiceResponse(
                                                     String title,
                                                     String subTitle,
                                                     List<Question> questions,
-                                                    List<BeforeApplyFormServiceResponse> beforeForms) {
-        return of(formId, title, subTitle, questions, beforeForms, false);
-    }
-
-    public static ApplyFormDetailServiceResponse of(String formId,
-                                                    String title,
-                                                    String subTitle,
-                                                    List<Question> questions,
                                                     List<BeforeApplyFormServiceResponse> beforeForms,
                                                     boolean hasApplicants) {
         return ApplyFormDetailServiceResponse.builder()

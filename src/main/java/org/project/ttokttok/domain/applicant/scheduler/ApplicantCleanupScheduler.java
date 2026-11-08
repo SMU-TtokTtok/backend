@@ -1,6 +1,5 @@
 package org.project.ttokttok.domain.applicant.scheduler;
 
-import jakarta.persistence.EntityManager;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -13,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.project.ttokttok.domain.applicant.repository.ApplicantRepository;
 import org.project.ttokttok.domain.applyform.domain.ApplyForm;
 import org.project.ttokttok.domain.applyform.domain.RecruitStatePolicy;
-import org.project.ttokttok.domain.applyform.domain.enums.QuestionType;
 import org.project.ttokttok.domain.applyform.domain.enums.RecruitState;
 import org.project.ttokttok.domain.applyform.repository.ApplyFormRepository;
 import org.project.ttokttok.domain.temp.applicant.domain.TempApplicant;
@@ -39,7 +37,6 @@ public class ApplicantCleanupScheduler {
     static final Duration ORPHAN_FILE_GRACE = Duration.ofDays(1);
     static final String APPLICANT_FILE_PREFIX = "applicant/";
 
-    private final EntityManager entityManager;
     private final TransactionTemplate transactionTemplate;
     private final ApplyFormRepository applyFormRepository;
     private final TempApplicantRepository tempApplicantRepository;
@@ -70,10 +67,7 @@ public class ApplicantCleanupScheduler {
     public int deleteStaleTempApplicants() {
         LocalDateTime cutoff = LocalDateTime.now(RecruitStatePolicy.ZONE).minus(TEMP_DRAFT_RETENTION);
         Integer deleted = transactionTemplate.execute(status -> {
-            List<TempApplicant> stale = entityManager
-                    .createQuery("select t from TempApplicant t where t.updatedAt < :cutoff", TempApplicant.class)
-                    .setParameter("cutoff", cutoff)
-                    .getResultList();
+            List<TempApplicant> stale = tempApplicantRepository.findByUpdatedAtBefore(cutoff);
             Set<String> openFormIds = applyFormRepository
                     .findAllById(stale.stream().map(TempApplicant::getFormId).distinct().toList())
                     .stream()
@@ -92,7 +86,7 @@ public class ApplicantCleanupScheduler {
 
     /**
      * {@code applicant/} 아래 객체 중 생성 1일이 지났고 어떤 지원자 FILE 답변도 가리키지 않는 것을 삭제한다.
-     * 참조 집합을 만들지 못하면(조회 실패, 해석 불가한 URL) 아무것도 지우지 않고 예외를 던진다.
+     * 참조 집합을 만들지 못하면(조회 실패, 키로 바꿀 수 없는 URL) 아무것도 지우지 않고 예외를 던진다.
      * 제출 중인 업로드는 1일 유예로 보호한다. {@code temp-applicants/} 는 건드리지 않는다.
      *
      * @return 삭제한 객체 수
@@ -124,16 +118,8 @@ public class ApplicantCleanupScheduler {
         return applicantRepository.findAllDocumentAnswers().stream()
                 .filter(Objects::nonNull)
                 .flatMap(List::stream)
-                .filter(answer -> answer.questionType() == QuestionType.FILE && answer.value() != null)
-                .map(answer -> toKey(answer.value()))
-                .filter(key -> !key.isBlank())
+                .flatMap(answer -> answer.fileUrl().stream())
+                .map(keyUrlGenerator::extractKeyFromUrl)
                 .collect(Collectors.toSet());
-    }
-
-    private String toKey(Object fileValue) {
-        if (!(fileValue instanceof String url)) {
-            throw new IllegalStateException("FILE 답변 값이 문자열이 아닙니다: " + fileValue.getClass().getSimpleName());
-        }
-        return url.isBlank() ? "" : keyUrlGenerator.extractKeyFromUrl(url);
     }
 }
