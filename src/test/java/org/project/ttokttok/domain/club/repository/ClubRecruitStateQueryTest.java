@@ -115,4 +115,17 @@ class ClubRecruitStateQueryTest {
                     .as(name).isEqualTo(state);
         });
     }
+
+    @Test
+    void 관리자_상세는_모집_스위치가_꺼진_활성_폼의_기간과_학년과_인원을_보여준다() {
+        LocalDate today = LocalDate.now();
+
+        var admin = clubRepository.getAdminClubIntro(clubIds.get("수동마감"));
+
+        assertThat(admin.applyStartDate()).isEqualTo(today.minusDays(1));
+        assertThat(admin.applyDeadLine()).isEqualTo(today.plusDays(5));
+        assertThat(admin.grades()).containsExactly(ApplicableGrade.FIRST_GRADE);
+        assertThat(admin.maxApplyCount()).isEqualTo(10);
+        assertThat(admin.recruitState()).isEqualTo(RecruitState.CLOSED);
+    }
 }

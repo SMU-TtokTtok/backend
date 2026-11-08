@@ -251,12 +251,12 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
             return null;
         }
 
+        // 관리자는 모집 스위치가 꺼진 활성 폼(마감, 되살린 직후)의 기간도 보고 고칠 수 있어야 한다.
         ApplyForm activeForm = queryFactory
                 .selectFrom(applyForm)
                 .leftJoin(applyForm.grades).fetchJoin()
                 .where(applyForm.club.id.eq(clubId)
-                        .and(applyForm.status.eq(ACTIVE))
-                        .and(applyForm.isRecruiting.eq(true)))
+                        .and(applyForm.status.eq(ACTIVE)))
                 .fetchOne();
 
         return new ClubDetailAdminQueryResponse(
@@ -275,7 +275,7 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
 
     // --- Private Helper Methods ---
 
-    /** 모집 스위치가 켜진 활성 폼만 조회하므로, 없으면 마감이다. */
+    /** 조회된 활성 폼이 없으면 마감이다. */
     private RecruitState stateOf(ApplyForm form) {
         return form != null ? form.recruitState() : RecruitState.CLOSED;
     }
