@@ -124,7 +124,7 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
                 clubResult.get(2, ClubCategory.class),
                 clubResult.get(3, String.class),
                 Boolean.TRUE.equals(clubResult.get(4, Boolean.class)),
-                isOpen(activeForm),
+                stateOf(activeForm),
                 clubResult.get(5, String.class),
                 clubResult.get(6, String.class),
                 clubResult.get(7, Integer.class) != null ? clubResult.get(7, Integer.class) : 0,
@@ -262,7 +262,7 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
         return new ClubDetailAdminQueryResponse(
                 clubResult.get(0, String.class), clubResult.get(1, ClubType.class),
                 clubResult.get(2, ClubCategory.class), clubResult.get(3, String.class),
-                isOpen(activeForm), clubResult.get(4, String.class),
+                stateOf(activeForm), clubResult.get(4, String.class),
                 clubResult.get(5, String.class),
                 clubResult.get(6, Integer.class) != null ? clubResult.get(6, Integer.class) : 0,
                 clubResult.get(7, ClubUniv.class), activeForm != null ? activeForm.getApplyStartDate() : null,
@@ -275,8 +275,9 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
 
     // --- Private Helper Methods ---
 
-    private boolean isOpen(ApplyForm form) {
-        return form != null && form.recruitState() == RecruitState.OPEN;
+    /** 모집 스위치가 켜진 활성 폼만 조회하므로, 없으면 마감이다. */
+    private RecruitState stateOf(ApplyForm form) {
+        return form != null ? form.recruitState() : RecruitState.CLOSED;
     }
 
     private List<ClubCardQueryResponse> mapToClubCardQueryResponse(List<Object[]> results) {

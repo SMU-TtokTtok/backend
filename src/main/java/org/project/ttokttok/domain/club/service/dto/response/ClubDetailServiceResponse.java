@@ -1,5 +1,6 @@
 package org.project.ttokttok.domain.club.service.dto.response;
 
+import org.project.ttokttok.domain.applyform.domain.enums.RecruitState;
 import lombok.Builder;
 import org.project.ttokttok.domain.applyform.domain.ApplyDeadlinePolicy;
 import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
@@ -28,7 +29,8 @@ public record ClubDetailServiceResponse(
         Set<ApplicableGrade> grades, // 지원 가능한 학년
         int maxApplyCount, // 최대 지원자 수
 
-        String content // 동아리 소개 내용
+        String content, // 동아리 소개 내용
+        RecruitState recruitState // 모집 상태 (UPCOMING / OPEN / CLOSED)
 ) {
     public static ClubDetailServiceResponse from(ClubDetailQueryResponse response) {
         boolean isDeadlineImminent = ApplyDeadlinePolicy.isImminent(response.applyDeadLine());
@@ -40,6 +42,7 @@ public record ClubDetailServiceResponse(
                 .customCategory(response.customCategory())
                 .bookmarked(response.bookmarked())
                 .recruiting(response.recruiting())
+                .recruitState(response.recruitState())
                 .isDeadlineImminent(isDeadlineImminent)
                 .summary(response.summary())
                 .profileImageUrl(response.profileImageUrl())

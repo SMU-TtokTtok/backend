@@ -20,16 +20,32 @@ import org.project.ttokttok.domain.applyform.domain.json.Question;
 import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.domain.enums.ClubUniv;
 import org.project.ttokttok.domain.club.repository.dto.ClubCardQueryResponse;
-import org.project.ttokttok.support.RepositoryTestSupport;
+import org.project.ttokttok.infrastructure.email.service.EmailService;
+import org.project.ttokttok.infrastructure.firebase.service.FCMService;
+import org.project.ttokttok.infrastructure.s3.service.S3Service;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 
-@DisplayName("동아리 카드 조회의 모집 상태 (#456)")
-class ClubRecruitStateQueryTest implements RepositoryTestSupport {
+@SpringBootTest(properties = {
+        "spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.H2Dialect",
+        "spring.datasource.url=jdbc:h2:mem:clubRecruitState;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH"
+})
+@ActiveProfiles("test")
+@Transactional
+@DisplayName("동아리 카드·상세 조회의 모집 상태 (#456)")
+class ClubRecruitStateQueryTest {
+    @MockitoBean private EmailService emailService;
+    @MockitoBean private FCMService fcmService;
+    @MockitoBean private S3Service s3Service;
 
     @Autowired private ClubRepository clubRepository;
     @Autowired private EntityManager em;
 
     private int sequence;
+    private final java.util.HashMap<String, String> clubIds = new java.util.HashMap<>();
 
     @BeforeEach
     void setUp() {
@@ -47,6 +63,7 @@ class ClubRecruitStateQueryTest implements RepositoryTestSupport {
         em.persist(admin);
         Club club = Club.builder().admin(admin).clubName(name).clubUniv(ClubUniv.ENGINEERING).build();
         em.persist(club);
+        clubIds.put(name, club.getId());
         ApplyForm form = ApplyForm.createApplyForm(club, false, start, end, null, null, 10,
                 Set.of(ApplicableGrade.FIRST_GRADE), name, null,
                 List.of(new Question("q1", "지원 동기", null, QuestionType.LONG_ANSWER, false, List.of())));
@@ -87,5 +104,15 @@ class ClubRecruitStateQueryTest implements RepositoryTestSupport {
         List<ClubCardQueryResponse> cards = clubRepository.getAllPopularClubs("nobody@sangmyung.kr", 0.0);
 
         assertThat(statesByName(cards)).isEqualTo(EXPECTED);
+    }
+
+    @Test
+    void 상세와_관리자_상세도_모집_상태를_내린다() {
+        EXPECTED.forEach((name, state) -> {
+            assertThat(clubRepository.getClubIntroduction(clubIds.get(name), null).recruitState())
+                    .as(name).isEqualTo(state);
+            assertThat(clubRepository.getAdminClubIntro(clubIds.get(name)).recruitState())
+                    .as(name).isEqualTo(state);
+        });
     }
 }

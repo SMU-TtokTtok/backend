@@ -1,5 +1,6 @@
 package org.project.ttokttok.domain.club.service.dto.response;
 
+import org.project.ttokttok.domain.applyform.domain.enums.RecruitState;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -32,7 +33,7 @@ class ClubDetailServiceResponseTest {
                 ClubCategory.ACADEMIC,
                 null,
                 true,
-                true,
+                RecruitState.OPEN,
                 "한줄 소개",
                 "https://image/profile.png",
                 12,

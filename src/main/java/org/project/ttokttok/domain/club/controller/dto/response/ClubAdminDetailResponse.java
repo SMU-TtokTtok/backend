@@ -1,5 +1,6 @@
 package org.project.ttokttok.domain.club.controller.dto.response;
 
+import org.project.ttokttok.domain.applyform.domain.enums.RecruitState;
 import lombok.Builder;
 import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
 import org.project.ttokttok.domain.club.domain.enums.ClubCategory;
@@ -28,7 +29,8 @@ public record ClubAdminDetailResponse(
         Set<ApplicableGrade> grades, // 지원 가능한 학년
         int maxApplyCount, // 최대 지원자 수
 
-        String content // 동아리 소개 내용
+        String content, // 동아리 소개 내용
+        RecruitState recruitState // 모집 상태 (UPCOMING: 모집 예정 / OPEN / CLOSED)
 ) {
 
     public static ClubAdminDetailResponse from(ClubDetailAdminServiceResponse response) {
@@ -38,6 +40,7 @@ public record ClubAdminDetailResponse(
                 .clubCategory(response.clubCategory())
                 .customCategory(response.customCategory())
                 .recruiting(response.recruiting())
+                .recruitState(response.recruitState())
                 .summary(response.summary())
                 .profileImageUrl(response.profileImageUrl())
                 .clubMemberCount(response.clubMemberCount())

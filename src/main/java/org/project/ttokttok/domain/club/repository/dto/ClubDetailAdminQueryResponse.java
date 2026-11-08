@@ -1,5 +1,6 @@
 package org.project.ttokttok.domain.club.repository.dto;
 
+import org.project.ttokttok.domain.applyform.domain.enums.RecruitState;
 import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
 import org.project.ttokttok.domain.club.domain.enums.ClubCategory;
 import org.project.ttokttok.domain.club.domain.enums.ClubType;
@@ -13,7 +14,7 @@ public record ClubDetailAdminQueryResponse(
         ClubType clubType,
         ClubCategory clubCategory,
         String customCategory,
-        boolean recruiting,
+        RecruitState recruitState,
         String summary, // 한줄 소개
         String profileImageUrl, // 동아리 프로필 이미지 URL,
         int clubMemberCount,
@@ -26,4 +27,8 @@ public record ClubDetailAdminQueryResponse(
 
         String content // 동아리 소개 내용
 ) {
+    /** 모집 중(OPEN)일 때만 true. */
+    public boolean recruiting() {
+        return recruitState == RecruitState.OPEN;
+    }
 }
