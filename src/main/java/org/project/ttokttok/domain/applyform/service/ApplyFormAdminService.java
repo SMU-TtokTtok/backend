@@ -144,8 +144,11 @@ public class ApplyFormAdminService {
     public void finishEvaluation(String adminName, String formId) {
         Club club = validateClubAdmin(adminName);
         ApplyForm applyForm = findOwnedForm(club, formId);
+        if (applyForm.isFinished()) {
+            return;
+        }
 
-        applyForm.updateFormStatus();
+        applyForm.finish();
         applyFormRepository.saveAndFlush(applyForm);
 
         applyFormRepository.deleteAllTempApplicantByFormId(formId);

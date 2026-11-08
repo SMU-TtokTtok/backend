@@ -152,6 +152,15 @@ public class ApplyForm extends BaseTimeEntity {
         }
     }
 
+    /** 평가 종료. 이미 종료된 폼이어도 종료 상태로만 남는다. */
+    public void finish() {
+        this.status = INACTIVE;
+    }
+
+    public boolean isFinished() {
+        return this.status == INACTIVE;
+    }
+
     public void updateFormStatus() {
         this.status = (this.status == ACTIVE)
                 ? INACTIVE
