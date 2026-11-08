@@ -20,6 +20,7 @@ import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.domain.enums.ClubUniv;
 import org.project.ttokttok.domain.user.domain.User;
 import org.project.ttokttok.global.entity.Role;
+import org.project.ttokttok.global.exception.ErrorMessage;
 import org.project.ttokttok.infrastructure.email.service.EmailService;
 import org.project.ttokttok.infrastructure.firebase.service.FCMService;
 import org.project.ttokttok.infrastructure.jwt.JwtFactory;
@@ -145,6 +146,41 @@ class ApplicantUserApiControllerIntegrationTest {
         perform(request(VALID_ANSWERS).file(jsonPart("questionIds", "[\"text\"]"))
                 .file(filePart())).andExpect(status().isBadRequest());
         assertNoWritesOrExternalCalls();
+    }
+
+    @Test
+    void submissionBeforeStartDateIsRejected() throws Exception {
+        updateForm("set f.applyStartDate = :date", LocalDate.now().plusDays(1));
+
+        submit(VALID_ANSWERS, true).andExpect(status().isConflict())
+                .andExpect(jsonPath("$.details").value(ErrorMessage.APPLY_FORM_NOT_STARTED.getMessage()));
+        assertNoWritesOrExternalCalls();
+    }
+
+    @Test
+    void submissionAfterDeadlineIsRejectedBeforeScheduler() throws Exception {
+        updateForm("set f.applyEndDate = :date", LocalDate.now().minusDays(1));
+
+        submit(VALID_ANSWERS, true).andExpect(status().isConflict())
+                .andExpect(jsonPath("$.details").value(ErrorMessage.APPLY_FORM_CLOSED.getMessage()));
+        assertNoWritesOrExternalCalls();
+    }
+
+    @Test
+    void submissionAfterManualCloseIsRejected() throws Exception {
+        entityManager.createQuery("update ApplyForm f set f.isRecruiting = false where f.id = :id")
+                .setParameter("id", formId).executeUpdate();
+        flushAndClear();
+
+        submit(VALID_ANSWERS, true).andExpect(status().isConflict())
+                .andExpect(jsonPath("$.details").value(ErrorMessage.APPLY_FORM_CLOSED.getMessage()));
+        assertNoWritesOrExternalCalls();
+    }
+
+    private void updateForm(String setClause, LocalDate date) {
+        entityManager.createQuery("update ApplyForm f " + setClause + " where f.id = :id")
+                .setParameter("date", date).setParameter("id", formId).executeUpdate();
+        flushAndClear();
     }
 
     private ResultActions submit(String answers, boolean withFile) throws Exception {

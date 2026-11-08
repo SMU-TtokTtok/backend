@@ -11,7 +11,9 @@ import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
 import org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus;
 import org.project.ttokttok.domain.applyform.domain.enums.RecruitState;
 import org.project.ttokttok.domain.applyform.domain.json.Question;
+import org.project.ttokttok.domain.applyform.exception.ApplyFormRuleException;
 import org.project.ttokttok.domain.club.domain.Club;
+import org.project.ttokttok.global.exception.ErrorMessage;
 import org.project.ttokttok.global.entity.BaseTimeEntity;
 
 import java.time.LocalDate;
@@ -192,6 +194,17 @@ public class ApplyForm extends BaseTimeEntity {
 
     public RecruitState recruitState(LocalDate today) {
         return RecruitStatePolicy.of(status, isRecruiting, applyStartDate, applyEndDate, today);
+    }
+
+    /** 지원서 제출은 모집 중일 때만 받는다. */
+    public void validateOpenForApply() {
+        RecruitState state = recruitState();
+        if (state == RecruitState.UPCOMING) {
+            throw new ApplyFormRuleException(ErrorMessage.APPLY_FORM_NOT_STARTED);
+        }
+        if (state != RecruitState.OPEN) {
+            throw new ApplyFormRuleException(ErrorMessage.APPLY_FORM_CLOSED);
+        }
     }
 
     /**

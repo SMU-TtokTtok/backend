@@ -58,6 +58,7 @@ public class ApplicantUserService {
 
         // 2. 중복 지원 검증
         validateApplicantExists(email, form.getId());
+        form.validateOpenForApply();
 
         // 3. 답변 검증 및 조립 (파일 질문 처리 포함)
         List<Answer> answers = answerAssembler.assemble(
