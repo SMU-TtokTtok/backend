@@ -1,5 +1,6 @@
 package org.project.ttokttok.domain.applicant.service;
 
+import org.project.ttokttok.domain.applyform.domain.enums.RecruitState;
 import org.project.ttokttok.domain.applicant.domain.enums.ApplicationHistorySort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -181,7 +182,9 @@ public class ApplicantUserService {
                 queryResponse.clubMemberCount(),
                 queryResponse.recruiting(),
                 queryResponse.bookmarked(),
-                isDeadlineImminent
+                isDeadlineImminent,
+                // ponytail: 모집 예정은 구분하지 않는다. 필요하면 조회에 시작일 조건을 추가한다.
+                queryResponse.recruiting() ? RecruitState.OPEN : RecruitState.CLOSED
         );
     }
 

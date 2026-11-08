@@ -32,6 +32,7 @@ import org.project.ttokttok.domain.applyform.domain.enums.RecruitState;
 import static org.project.ttokttok.domain.applyform.domain.QApplyForm.applyForm;
 import static org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus.ACTIVE;
 import static org.project.ttokttok.domain.applyform.repository.ApplyFormQueryConditions.openOn;
+import static org.project.ttokttok.domain.applyform.repository.ApplyFormQueryConditions.upcomingOn;
 import static org.project.ttokttok.domain.club.domain.QClub.club;
 import static org.project.ttokttok.domain.clubmember.domain.QClubMember.clubMember;
 import static org.project.ttokttok.domain.favorite.domain.QFavorite.favorite;
@@ -54,6 +55,8 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
                 SELECT club_id, 
                        MAX(CASE WHEN is_recruiting = true AND apply_start_date <= :today AND apply_end_date >= :today
                                 THEN 1 ELSE 0 END) as is_recruiting,
+                       MAX(CASE WHEN is_recruiting = true AND apply_start_date > :today
+                                THEN 1 ELSE 0 END) as is_upcoming,
                        MAX(apply_end_date) as apply_end_date
                 FROM applyforms 
                 WHERE status = 'ACTIVE'
@@ -70,6 +73,7 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
                        COALESCE(mc.cnt, 0) as member_count,
                        (COALESCE(mc.cnt, 0) * 0.7 + COALESCE(fc.cnt, 0) * 2.5 + c.view_count * 0.7) AS score,
                        COALESCE(af_active.is_recruiting, 0) = 1 as recruiting,
+                       COALESCE(af_active.is_upcoming, 0) = 1 as upcoming,
                        COALESCE(uf_user.bookmarked, 0) = 1 as bookmarked,
                        af_active.apply_end_date as apply_deadline
                 FROM clubs c
@@ -79,7 +83,7 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
                 LEFT JOIN uf_user ON c.id = uf_user.club_id
             )
             SELECT id, name, club_type, club_category, custom_category, summary, profile_img,
-                   member_count, recruiting, bookmarked, apply_deadline, score
+                   member_count, recruiting, upcoming, bookmarked, apply_deadline, score
             FROM scored_clubs
             WHERE score >= :minScore
             """;
@@ -279,8 +283,8 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
         return results.stream().map(row -> new ClubCardQueryResponse(
                 (String) row[0], (String) row[1], ClubType.valueOf((String) row[2]),
                 ClubCategory.valueOf((String) row[3]), (String) row[4], (String) row[5],
-                (String) row[6], ((Number) row[7]).intValue(), (Boolean) row[8],
-                (Boolean) row[9], row[10] != null ? ((java.sql.Date) row[10]).toLocalDate() : null
+                (String) row[6], ((Number) row[7]).intValue(), (Boolean) row[8], (Boolean) row[9],
+                (Boolean) row[10], row[11] != null ? ((java.sql.Date) row[11]).toLocalDate() : null
         )).toList();
     }
 
@@ -301,6 +305,7 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
                         club.summary, club.profileImageUrl,
                         Expressions.numberTemplate(Integer.class, "({0})", memberCountSubQuery),
                         new CaseBuilder().when(openOn(applyForm, RecruitStatePolicy.today())).then(true).otherwise(false),
+                        new CaseBuilder().when(upcomingOn(applyForm, RecruitStatePolicy.today())).then(true).otherwise(false),
                         isBookmarked,
                         applyForm.applyEndDate
                 ))

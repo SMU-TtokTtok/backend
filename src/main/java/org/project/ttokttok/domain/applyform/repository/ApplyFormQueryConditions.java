@@ -21,4 +21,11 @@ public final class ApplyFormQueryConditions {
                 .and(form.applyStartDate.loe(today))
                 .and(form.applyEndDate.goe(today));
     }
+
+    /** 활성, 모집 스위치 켜짐, today < 시작일. */
+    public static BooleanExpression upcomingOn(QApplyForm form, LocalDate today) {
+        return form.status.eq(ACTIVE)
+                .and(form.isRecruiting.isTrue())
+                .and(form.applyStartDate.gt(today));
+    }
 }

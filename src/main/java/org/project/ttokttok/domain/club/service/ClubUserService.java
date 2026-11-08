@@ -129,7 +129,8 @@ public class ClubUserService {
                 queryResponse.clubMemberCount(),
                 queryResponse.recruiting(),
                 queryResponse.bookmarked(),
-                isDeadlineImminent
+                isDeadlineImminent,
+                queryResponse.recruitState()
         );
     }
 

@@ -45,7 +45,7 @@ class ClubUserServiceListTest {
     private ClubCardQueryResponse card(String id, LocalDate deadline) {
         return new ClubCardQueryResponse(
                 id, "동아리" + id, ClubType.CENTRAL, ClubCategory.ACADEMIC,
-                null, "요약", "http://img", 10, true, false, deadline
+                null, "요약", "http://img", 10, true, false, false, deadline
         );
     }
 

@@ -1,5 +1,6 @@
 package org.project.ttokttok.domain.club.controller.dto.response;
 
+import org.project.ttokttok.domain.applyform.domain.enums.RecruitState;
 import org.project.ttokttok.domain.club.domain.enums.ClubCategory;
 import org.project.ttokttok.domain.club.domain.enums.ClubType;
 import org.project.ttokttok.domain.club.service.dto.response.ClubCardServiceResponse;
@@ -19,7 +20,8 @@ public record ClubCardResponse(
         int clubMemberCount,                // 현재 멤버 수
         boolean recruiting,                 // 모집 여부
         boolean bookmarked,                 // 사용자 즐겨찾기 여부
-        boolean isDeadlineImminent          // 마감 임박 여부 (일주일 이내)
+        boolean isDeadlineImminent,         // 마감 임박 여부 (일주일 이내)
+        RecruitState recruitState           // 모집 상태 (UPCOMING: 모집 예정 / OPEN / CLOSED)
 ) {
     public static ClubCardResponse from(ClubCardServiceResponse response) {
         return new ClubCardResponse(
@@ -33,7 +35,8 @@ public record ClubCardResponse(
                 response.clubMemberCount(),
                 response.recruiting(),
                 response.bookmarked(),
-                response.isDeadlineImminent()
+                response.isDeadlineImminent(),
+                response.recruitState()
         );
     }
 }
