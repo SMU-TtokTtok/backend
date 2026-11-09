@@ -34,6 +34,8 @@ public interface ApplyFormAdminDocs {
                     - 질문 목록과 설정 정보가 포함됩니다.
                     - 임시 지원폼이 존재할 경우, 일부 필드가 **null**로 내려갈 수 있습니다.
                     - 아무런 정보도 존재하지 않을 경우, formJson 필드는 빈 배열, 다른 필드는 null이 반환됩니다.
+                    - `hasApplicants`: 활성 폼에 제출된 지원서가 있으면 true 입니다. true 이면 질문 수정이 제한되고 시작일을 바꿀 수 없습니다.
+                    - formJson 의 각 질문에는 `questionId` 가 있습니다. 수정 요청에서 기존 질문을 식별할 때 그대로 보내야 합니다.
                     """
     )
     @ApiResponses(value = {
@@ -134,8 +136,10 @@ public interface ApplyFormAdminDocs {
                     
                     *주의사항*
                     - 해당 동아리의 관리자만 수정 가능합니다.
-                    - 이미 제출된 지원서가 있는 경우 질문 수정 시 주의해야 합니다.
                     - questions 필드 수정 시 전체 질문 배열이 교체됩니다.
+                    - 기존 질문은 상세 조회에서 받은 `questionId` 를 그대로 보내고, 새 질문은 `questionId` 를 비워 둡니다.
+                    - 제출된 지원서가 있으면(409 `APPLY_FORM_EDIT_LOCKED`) 기존 질문 삭제, 유형 변경, 선택에서 필수로 변경,
+                      기존 선택지 삭제·이름 변경, 필수 질문 추가를 할 수 없습니다. 제목, 부제목, 순서, 선택지 추가, 필수에서 선택으로 변경은 됩니다.
                     
                     *요청 예시*
                     ```json

@@ -34,6 +34,7 @@ public interface ClubUserApiDocs {
             description = """
                     동아리 타고 들어갔을때의 소개글과 모집인원, 지원가능 학년 등을 조회합니다.
                     마감 임박 여부(일주일 이내)도 포함됩니다.
+                    `recruitState`: UPCOMING(시작일 전), OPEN(모집 중), CLOSED(마감 또는 지원 폼 없음). 지원 버튼은 OPEN 일 때만 엽니다.
                     """
     )
     @ApiResponses(
@@ -86,8 +87,11 @@ public interface ClubUserApiDocs {
                     - `type`: 동아리 분류 (CENTRAL: 중앙, UNION: 연합, DEPARTMENT: 과동아리)
                     - `clubUniv`: 대학 구분 (과동아리 선택 시 사용)
                     - `grades`: 지원 가능 학년 (복수 선택 가능)
-                    - `recruiting`: 모집 여부 (true: 모집중, false: 모집마감)
-                    
+                    - `recruiting`: 모집 여부 (true: 모집중(OPEN), false: 모집중이 아님. 모집 예정(UPCOMING)도 포함)
+
+                    **모집 상태(`recruitState`)**: UPCOMING(시작일 전), OPEN(모집 중), CLOSED(마감 또는 지원 폼 없음).
+                    `recruiting` 은 OPEN 일 때만 true 입니다.
+
                     **정렬 옵션**:
                     - `latest`: 최신등록순 (기본값)
                     - `popular`: 인기도순
