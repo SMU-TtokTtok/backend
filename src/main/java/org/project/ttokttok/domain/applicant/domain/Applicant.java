@@ -193,6 +193,20 @@ public class Applicant extends BaseTimeEntity {
         };
     }
 
+    /** 마지막 전형(면접이 있으면 면접, 없으면 서류)에서 합격했는지. */
+    public boolean isFinalPass() {
+        ApplicantPhase finalPhase = hasInterviewPhase() ? ApplicantPhase.INTERVIEW : ApplicantPhase.DOCUMENT;
+        return statusOf(finalPhase).filter(status -> status == PhaseStatus.PASS).isPresent();
+    }
+
+    /** 서류 답변 중 업로드된 파일 URL. */
+    public List<String> fileAnswerUrls() {
+        if (documentPhase == null || documentPhase.getAnswers() == null) {
+            return List.of();
+        }
+        return documentPhase.getAnswers().stream().flatMap(answer -> answer.fileUrl().stream()).toList();
+    }
+
     // 편의 메서드들
     public boolean isInDocumentPhase() {
         return currentPhase == ApplicantPhase.DOCUMENT;

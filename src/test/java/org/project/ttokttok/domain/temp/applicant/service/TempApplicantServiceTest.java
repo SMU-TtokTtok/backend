@@ -1,5 +1,6 @@
 package org.project.ttokttok.domain.temp.applicant.service;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -10,6 +11,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.project.ttokttok.domain.applicant.domain.enums.Gender;
 import org.project.ttokttok.domain.applicant.domain.enums.Grade;
 import org.project.ttokttok.domain.applicant.domain.enums.StudentStatus;
+import org.project.ttokttok.domain.applyform.domain.ApplyForm;
+import org.project.ttokttok.domain.applyform.domain.enums.RecruitState;
+import org.project.ttokttok.domain.applyform.repository.ApplyFormRepository;
 import org.project.ttokttok.domain.temp.applicant.domain.TempAnswer;
 import org.project.ttokttok.domain.temp.applicant.controller.dto.request.TempApplicantSaveRequest;
 import org.project.ttokttok.domain.temp.applicant.domain.TempApplicant;
@@ -38,10 +42,20 @@ class TempApplicantServiceTest {
     private TempApplicantRepository tempApplicantRepository;
 
     @Mock
+    private ApplyFormRepository applyFormRepository;
+
+    @Mock
     private S3Service s3Service;
 
     @InjectMocks
     private TempApplicantService tempApplicantService;
+
+    @BeforeEach
+    void openFormExists() {
+        ApplyForm form = mock(ApplyForm.class);
+        lenient().when(form.recruitState()).thenReturn(RecruitState.OPEN);
+        lenient().when(applyFormRepository.findById(anyString())).thenReturn(Optional.of(form));
+    }
 
     private TempApplicantSaveServiceRequest buildRequest(
             String email, String formId, List<TempAnswer> answers,

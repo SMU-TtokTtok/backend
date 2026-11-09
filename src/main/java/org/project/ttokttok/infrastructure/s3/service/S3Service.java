@@ -13,6 +13,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
 
 import java.io.IOException;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -47,11 +48,23 @@ public class S3Service {
     }
 
     public void deleteFile(String cloudFrontUrl) {
-        String key = keyUrlGenerator.extractKeyFromUrl(cloudFrontUrl);
+        deleteObject(keyUrlGenerator.extractKeyFromUrl(cloudFrontUrl));
+    }
+
+    public void deleteObject(String key) {
         s3Client.deleteObject(DeleteObjectRequest.builder()
                 .bucket(bucketName)
                 .key(key)
                 .build());
+    }
+
+    /** prefix 아래의 모든 객체를 페이지 단위로 끝까지 조회한다. */
+    public List<S3Object> listObjects(String prefix) {
+        return s3Client.listObjectsV2Paginator(ListObjectsV2Request.builder()
+                        .bucket(bucketName)
+                        .prefix(prefix)
+                        .build())
+                .contents().stream().toList();
     }
 
     /**

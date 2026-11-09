@@ -153,12 +153,12 @@ class ClubAdminServiceBehaviorTest {
 
             ApplyForm form = mock(ApplyForm.class);
             given(applyFormRepository.findByClubIdAndStatus(any(), any())).willReturn(Optional.of(form));
-            given(form.isRecruiting()).willReturn(false, true); // 토글 전 false, 토글 후 true
+            given(form.isRecruiting()).willReturn(false);
             given(fcmTokenRepository.findTokensByClubId(CLUB_ID)).willReturn(List.of("token-1"));
 
             clubAdminService.toggleRecruitment(USERNAME, CLUB_ID);
 
-            verify(form).toggleRecruiting();
+            verify(form).startRecruiting();
             verify(fcmService).sendNotification(any(FCMRequest.class));
         }
 
@@ -171,16 +171,16 @@ class ClubAdminServiceBehaviorTest {
 
             ApplyForm form = mock(ApplyForm.class);
             given(applyFormRepository.findByClubIdAndStatus(any(), any())).willReturn(Optional.of(form));
-            given(form.isRecruiting()).willReturn(true, false);
+            given(form.isRecruiting()).willReturn(true);
 
             clubAdminService.toggleRecruitment(USERNAME, CLUB_ID);
 
-            verify(form).toggleRecruiting();
+            verify(form).endRecruiting();
             verify(fcmService, never()).sendNotification(any());
         }
 
         @Test
-        @DisplayName("활성 폼이 없으면 최신 폼을 활성화한다")
+        @DisplayName("활성 폼이 없으면 최신 폼을 모집 마감 상태로 되살리고 알림을 보내지 않는다")
         void activatesLatestWhenNoActiveForm() {
             Club club = mock(Club.class);
             given(club.getId()).willReturn(CLUB_ID);
@@ -190,11 +190,11 @@ class ClubAdminServiceBehaviorTest {
             ApplyForm latest = mock(ApplyForm.class);
             given(applyFormRepository.findTopByClubIdOrderByCreatedAtDesc(CLUB_ID))
                     .willReturn(Optional.of(latest));
-            given(latest.isRecruiting()).willReturn(false);
 
             clubAdminService.toggleRecruitment(USERNAME, CLUB_ID);
 
-            verify(latest).updateFormStatus();
+            verify(latest).reactivate();
+            verify(fcmService, never()).sendNotification(any());
         }
 
         @Test

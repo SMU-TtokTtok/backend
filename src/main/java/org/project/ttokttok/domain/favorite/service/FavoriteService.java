@@ -1,5 +1,6 @@
 package org.project.ttokttok.domain.favorite.service;
 
+import org.project.ttokttok.domain.applyform.domain.enums.RecruitState;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -183,7 +184,9 @@ public class FavoriteService {
                 (int) memberCount,
                 recruiting,
                 true,
-                isDeadlineImminent
+                isDeadlineImminent,
+                // ponytail: 모집 예정은 구분하지 않는다. 필요하면 조회에 시작일 조건을 추가한다.
+                recruiting ? RecruitState.OPEN : RecruitState.CLOSED
         );
     }
 

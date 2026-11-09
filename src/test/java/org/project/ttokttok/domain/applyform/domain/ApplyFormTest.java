@@ -7,7 +7,10 @@ import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
 import org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus;
 import org.project.ttokttok.domain.applyform.domain.enums.QuestionType;
 import org.project.ttokttok.domain.applyform.domain.json.Question;
+import org.project.ttokttok.domain.applyform.exception.ApplyFormRuleException;
+import org.project.ttokttok.domain.applyform.exception.InvalidDateRangeException;
 import org.project.ttokttok.domain.club.domain.Club;
+import org.project.ttokttok.global.exception.ErrorMessage;
 
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -15,6 +18,7 @@ import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 
 class ApplyFormTest {
@@ -115,6 +119,70 @@ class ApplyFormTest {
         }
 
         @Test
+        @DisplayName("마감일만 바꿔도 기존 시작일과 합친 기간으로 검사한다")
+        void updateApplyInfo_RejectsMergedReversedPeriod() {
+            // given
+            ApplyForm applyForm = createDefaultApplyForm();
+
+            // when & then
+            assertThatThrownBy(() -> applyForm.updateApplyInfo(null, LocalDate.of(2026, 6, 30), null, null))
+                    .isInstanceOf(InvalidDateRangeException.class);
+            assertThat(applyForm.getApplyEndDate()).isEqualTo(LocalDate.of(2026, 7, 31));
+        }
+
+        @Test
+        @DisplayName("모집 기간은 시작일의 3개월 뒤 같은 날까지 허용한다")
+        void updateApplyInfo_AllowsUpToThreeMonths() {
+            // given
+            ApplyForm applyForm = createDefaultApplyForm();
+
+            // when
+            applyForm.updateApplyInfo(null, LocalDate.of(2026, 10, 1), null, null);
+
+            // then
+            assertThat(applyForm.getApplyEndDate()).isEqualTo(LocalDate.of(2026, 10, 1));
+        }
+
+        @Test
+        @DisplayName("모집 기간이 3개월을 넘으면 거절한다")
+        void updateApplyInfo_RejectsOverThreeMonths() {
+            // given
+            ApplyForm applyForm = createDefaultApplyForm();
+
+            // when & then
+            assertThatThrownBy(() -> applyForm.updateApplyInfo(null, LocalDate.of(2026, 10, 2), null, null))
+                    .isInstanceOf(ApplyFormRuleException.class)
+                    .hasMessage(ErrorMessage.RECRUIT_PERIOD_TOO_LONG.getMessage());
+        }
+
+        @Test
+        @DisplayName("지원서가 제출된 폼은 시작일을 바꿀 수 없고, 같은 날짜면 통과한다")
+        void validateStartDateChange_LockedWithApplicants() {
+            // given
+            ApplyForm applyForm = createDefaultApplyForm();
+
+            // when & then
+            assertThatThrownBy(() -> applyForm.validateStartDateChange(LocalDate.of(2026, 7, 2), true))
+                    .isInstanceOf(ApplyFormRuleException.class)
+                    .hasMessage(ErrorMessage.APPLY_START_DATE_LOCKED.getMessage());
+            applyForm.validateStartDateChange(LocalDate.of(2026, 7, 1), true);
+            applyForm.validateStartDateChange(LocalDate.of(2026, 7, 2), false);
+        }
+
+        @Test
+        @DisplayName("모집 인원이 1명 미만이거나 학년이 비면 거절한다")
+        void updateApplyInfo_RejectsInvalidCountAndGrades() {
+            // given
+            ApplyForm applyForm = createDefaultApplyForm();
+
+            // when & then
+            assertThatThrownBy(() -> applyForm.updateApplyInfo(null, null, 0, null))
+                    .isInstanceOf(ApplyFormRuleException.class);
+            assertThatThrownBy(() -> applyForm.updateApplyInfo(null, null, null, Set.of()))
+                    .isInstanceOf(ApplyFormRuleException.class);
+        }
+
+        @Test
         @DisplayName("null이 전달된 필드는 기존 값을 유지한다")
         void updateApplyInfo_NullValues_KeepsOriginal() {
             // given
@@ -182,51 +250,32 @@ class ApplyFormTest {
     class StatusToggleTest {
 
         @Test
-        @DisplayName("updateFormStatus(): ACTIVE 상태를 호출하면 INACTIVE로 바뀐다")
-        void updateFormStatus_ActiveToInactive() {
+        @DisplayName("finish(): 몇 번을 호출해도 종료 상태로 남는다")
+        void finish_AlwaysInactive() {
             // given
             ApplyForm applyForm = createDefaultApplyForm();
-            assertThat(applyForm.getStatus()).isEqualTo(ApplyFormStatus.ACTIVE);
 
             // when
-            applyForm.updateFormStatus();
+            applyForm.finish();
+            applyForm.finish();
 
             // then
             assertThat(applyForm.getStatus()).isEqualTo(ApplyFormStatus.INACTIVE);
         }
 
         @Test
-        @DisplayName("updateFormStatus(): 다시 호출하면 ACTIVE로 되돌아간다")
-        void updateFormStatus_TogglesBack() {
+        @DisplayName("reactivate(): 종료된 폼을 활성으로 되살리되 모집 마감 상태로 시작한다")
+        void reactivate_StartsClosed() {
             // given
             ApplyForm applyForm = createDefaultApplyForm();
+            applyForm.finish();
 
             // when
-            applyForm.updateFormStatus();
-            applyForm.updateFormStatus();
+            applyForm.reactivate();
 
             // then
             assertThat(applyForm.getStatus()).isEqualTo(ApplyFormStatus.ACTIVE);
-        }
-
-        @Test
-        @DisplayName("toggleRecruiting(): 모집 상태를 반전시킨다")
-        void toggleRecruiting_Success() {
-            // given
-            ApplyForm applyForm = createDefaultApplyForm();
-            assertThat(applyForm.isRecruiting()).isTrue();
-
-            // when
-            applyForm.toggleRecruiting();
-
-            // then
             assertThat(applyForm.isRecruiting()).isFalse();
-
-            // when
-            applyForm.toggleRecruiting();
-
-            // then
-            assertThat(applyForm.isRecruiting()).isTrue();
         }
 
         @Test

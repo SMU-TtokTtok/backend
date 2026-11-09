@@ -1,5 +1,8 @@
 package org.project.ttokttok.domain.club.service;
 
+import java.time.LocalDate;
+import org.project.ttokttok.domain.applyform.exception.ApplyFormRuleException;
+import org.project.ttokttok.global.exception.ErrorMessage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -162,7 +165,11 @@ class ClubAdminServiceTest {
         }
 
         private ApplyForm createApplyForm(Club club, boolean recruiting) {
-            ApplyForm form = ApplyForm.builder().club(club).build();
+            return createApplyForm(club, recruiting, LocalDate.now().minusDays(1), LocalDate.now().plusDays(10));
+        }
+
+        private ApplyForm createApplyForm(Club club, boolean recruiting, LocalDate start, LocalDate end) {
+            ApplyForm form = ApplyForm.builder().club(club).applyStartDate(start).applyEndDate(end).build();
             ReflectionTestUtils.setField(form, "isRecruiting", recruiting);
             return form;
         }
@@ -201,34 +208,46 @@ class ClubAdminServiceTest {
             }
         }
 
-        @ParameterizedTest(name = "최신 지원폼 모집 상태={0}")
+        @ParameterizedTest(name = "종료 전 모집 상태={0}")
         @ValueSource(booleans = {false, true})
-        @DisplayName("활성 지원폼이 없으면 최신 지원폼을 활성화하고 모집 중일 때만 알림을 보낸다")
-        void toggleRecruitment_activatesLatestForm(boolean recruiting) {
+        @DisplayName("활성 지원폼이 없으면 최신 지원폼을 모집 마감 상태로 되살리고 알림을 보내지 않는다 (#456)")
+        void toggleRecruitment_reactivatesLatestFormClosed(boolean recruiting) {
             // given
             Club club = createClub();
             ApplyForm form = createApplyForm(club, recruiting);
             ReflectionTestUtils.setField(form, "status", INACTIVE);
-            List<String> tokens = List.of("token-1");
             given(clubRepository.findByAdminUsername(USERNAME)).willReturn(Optional.of(club));
             given(applyFormRepository.findByClubIdAndStatus(CLUB_ID, ACTIVE)).willReturn(Optional.empty());
             given(applyFormRepository.findTopByClubIdOrderByCreatedAtDesc(CLUB_ID))
                     .willReturn(Optional.of(form));
-            if (recruiting) {
-                given(fcmTokenRepository.findTokensByClubId(CLUB_ID)).willReturn(tokens);
-            }
 
             // when
             clubAdminService.toggleRecruitment(USERNAME, CLUB_ID);
 
             // then
             assertThat(form.getStatus()).isEqualTo(ACTIVE);
-            assertThat(form.isRecruiting()).isEqualTo(recruiting);
-            if (recruiting) {
-                verifyRecruitmentNotification(tokens);
-            } else {
-                verifyNoInteractions(fcmTokenRepository, fcmService);
-            }
+            assertThat(form.isRecruiting()).isFalse();
+            verifyNoInteractions(fcmTokenRepository, fcmService);
+        }
+
+        @ParameterizedTest(name = "마감일 기준 {0}일")
+        @ValueSource(ints = {-1, 1})
+        @DisplayName("오늘이 모집 기간 밖이면 모집을 시작하지 않고 409로 거절한다 (#456)")
+        void toggleRecruitment_outsidePeriod_rejected(int offsetDays) {
+            // given
+            Club club = createClub();
+            LocalDate start = offsetDays > 0 ? LocalDate.now().plusDays(1) : LocalDate.now().minusDays(10);
+            LocalDate end = offsetDays > 0 ? LocalDate.now().plusDays(10) : LocalDate.now().minusDays(1);
+            ApplyForm form = createApplyForm(club, false, start, end);
+            given(clubRepository.findByAdminUsername(USERNAME)).willReturn(Optional.of(club));
+            given(applyFormRepository.findByClubIdAndStatus(CLUB_ID, ACTIVE)).willReturn(Optional.of(form));
+
+            // when & then
+            assertThatThrownBy(() -> clubAdminService.toggleRecruitment(USERNAME, CLUB_ID))
+                    .isInstanceOf(ApplyFormRuleException.class)
+                    .hasMessage(ErrorMessage.RECRUIT_PERIOD_NOT_OPEN.getMessage());
+            assertThat(form.isRecruiting()).isFalse();
+            verifyNoInteractions(fcmTokenRepository, fcmService);
         }
 
         @Test

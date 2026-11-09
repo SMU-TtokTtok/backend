@@ -25,8 +25,14 @@ import org.springframework.stereotype.Repository;
 import java.util.HashSet;
 import java.util.List;
 
+import com.querydsl.core.types.dsl.CaseBuilder;
+import org.project.ttokttok.domain.applyform.domain.RecruitStatePolicy;
+import org.project.ttokttok.domain.applyform.domain.enums.RecruitState;
+
 import static org.project.ttokttok.domain.applyform.domain.QApplyForm.applyForm;
 import static org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus.ACTIVE;
+import static org.project.ttokttok.domain.applyform.repository.ApplyFormQueryConditions.openOn;
+import static org.project.ttokttok.domain.applyform.repository.ApplyFormQueryConditions.upcomingOn;
 import static org.project.ttokttok.domain.club.domain.QClub.club;
 import static org.project.ttokttok.domain.clubmember.domain.QClubMember.clubMember;
 import static org.project.ttokttok.domain.favorite.domain.QFavorite.favorite;
@@ -47,7 +53,10 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
             ),
             af_active AS (
                 SELECT club_id, 
-                       MAX(CASE WHEN is_recruiting = true THEN 1 ELSE 0 END) as is_recruiting,
+                       MAX(CASE WHEN is_recruiting = true AND apply_start_date <= :today AND apply_end_date >= :today
+                                THEN 1 ELSE 0 END) as is_recruiting,
+                       MAX(CASE WHEN is_recruiting = true AND apply_start_date > :today
+                                THEN 1 ELSE 0 END) as is_upcoming,
                        MAX(apply_end_date) as apply_end_date
                 FROM applyforms 
                 WHERE status = 'ACTIVE'
@@ -64,6 +73,7 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
                        COALESCE(mc.cnt, 0) as member_count,
                        (COALESCE(mc.cnt, 0) * 0.7 + COALESCE(fc.cnt, 0) * 2.5 + c.view_count * 0.7) AS score,
                        COALESCE(af_active.is_recruiting, 0) = 1 as recruiting,
+                       COALESCE(af_active.is_upcoming, 0) = 1 as upcoming,
                        COALESCE(uf_user.bookmarked, 0) = 1 as bookmarked,
                        af_active.apply_end_date as apply_deadline
                 FROM clubs c
@@ -73,7 +83,7 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
                 LEFT JOIN uf_user ON c.id = uf_user.club_id
             )
             SELECT id, name, club_type, club_category, custom_category, summary, profile_img,
-                   member_count, recruiting, bookmarked, apply_deadline, score
+                   member_count, recruiting, upcoming, bookmarked, apply_deadline, score
             FROM scored_clubs
             WHERE score >= :minScore
             """;
@@ -114,7 +124,7 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
                 clubResult.get(2, ClubCategory.class),
                 clubResult.get(3, String.class),
                 Boolean.TRUE.equals(clubResult.get(4, Boolean.class)),
-                activeForm != null && activeForm.isRecruiting(),
+                stateOf(activeForm),
                 clubResult.get(5, String.class),
                 clubResult.get(6, String.class),
                 clubResult.get(7, Integer.class) != null ? clubResult.get(7, Integer.class) : 0,
@@ -162,6 +172,7 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
         var query = entityManager.createNativeQuery(sql);
         query.setParameter("userEmail", userEmail);
         query.setParameter("minScore", minScore);
+        query.setParameter("today", RecruitStatePolicy.today());
 
         return mapToClubCardQueryResponse(query.getResultList());
     }
@@ -191,6 +202,7 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
         var query = entityManager.createNativeQuery(sqlBuilder.toString());
         query.setParameter("userEmail", userEmail);
         query.setParameter("minScore", minScore);
+        query.setParameter("today", RecruitStatePolicy.today());
         query.setParameter("limit", size + 1);
         if (cursor != null) {
             query.setParameter("cursor", cursor);
@@ -239,18 +251,18 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
             return null;
         }
 
+        // 관리자는 모집 스위치가 꺼진 활성 폼(마감, 되살린 직후)의 기간도 보고 고칠 수 있어야 한다.
         ApplyForm activeForm = queryFactory
                 .selectFrom(applyForm)
                 .leftJoin(applyForm.grades).fetchJoin()
                 .where(applyForm.club.id.eq(clubId)
-                        .and(applyForm.status.eq(ACTIVE))
-                        .and(applyForm.isRecruiting.eq(true)))
+                        .and(applyForm.status.eq(ACTIVE)))
                 .fetchOne();
 
         return new ClubDetailAdminQueryResponse(
                 clubResult.get(0, String.class), clubResult.get(1, ClubType.class),
                 clubResult.get(2, ClubCategory.class), clubResult.get(3, String.class),
-                activeForm != null && activeForm.isRecruiting(), clubResult.get(4, String.class),
+                stateOf(activeForm), clubResult.get(4, String.class),
                 clubResult.get(5, String.class),
                 clubResult.get(6, Integer.class) != null ? clubResult.get(6, Integer.class) : 0,
                 clubResult.get(7, ClubUniv.class), activeForm != null ? activeForm.getApplyStartDate() : null,
@@ -263,12 +275,17 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
 
     // --- Private Helper Methods ---
 
+    /** 조회된 활성 폼이 없으면 마감이다. */
+    private RecruitState stateOf(ApplyForm form) {
+        return form != null ? form.recruitState() : RecruitState.CLOSED;
+    }
+
     private List<ClubCardQueryResponse> mapToClubCardQueryResponse(List<Object[]> results) {
         return results.stream().map(row -> new ClubCardQueryResponse(
                 (String) row[0], (String) row[1], ClubType.valueOf((String) row[2]),
                 ClubCategory.valueOf((String) row[3]), (String) row[4], (String) row[5],
-                (String) row[6], ((Number) row[7]).intValue(), (Boolean) row[8],
-                (Boolean) row[9], row[10] != null ? ((java.sql.Date) row[10]).toLocalDate() : null
+                (String) row[6], ((Number) row[7]).intValue(), (Boolean) row[8], (Boolean) row[9],
+                (Boolean) row[10], row[11] != null ? ((java.sql.Date) row[11]).toLocalDate() : null
         )).toList();
     }
 
@@ -288,7 +305,8 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
                         club.id, club.name, club.clubType, club.clubCategory, club.customCategory,
                         club.summary, club.profileImageUrl,
                         Expressions.numberTemplate(Integer.class, "({0})", memberCountSubQuery),
-                        applyForm.isRecruiting.coalesce(false),
+                        new CaseBuilder().when(openOn(applyForm, RecruitStatePolicy.today())).then(true).otherwise(false),
+                        new CaseBuilder().when(upcomingOn(applyForm, RecruitStatePolicy.today())).then(true).otherwise(false),
                         isBookmarked,
                         applyForm.applyEndDate
                 ))
@@ -349,8 +367,7 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
             return null;
         }
         BooleanExpression hasActive = JPAExpressions.selectOne().from(applyForm)
-                .where(applyForm.club.id.eq(club.id).and(applyForm.status.eq(ACTIVE))
-                        .and(applyForm.isRecruiting.eq(true))).exists();
+                .where(applyForm.club.id.eq(club.id).and(openOn(applyForm, RecruitStatePolicy.today()))).exists();
         return recruiting ? hasActive : hasActive.not();
     }
 

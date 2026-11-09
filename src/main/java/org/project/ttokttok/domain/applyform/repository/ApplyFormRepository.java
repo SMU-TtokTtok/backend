@@ -1,5 +1,6 @@
 package org.project.ttokttok.domain.applyform.repository;
 
+import org.project.ttokttok.domain.applyform.domain.RecruitStatePolicy;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +31,9 @@ public interface ApplyFormRepository extends JpaRepository<ApplyForm, String> {
             + "WHERE a.club.id = :clubId AND t.userEmail = :userEmail")
     Map<String, Object> findTempData(String userEmail, String clubId);
 
+    @Query("SELECT COUNT(a) > 0 FROM Applicant a WHERE a.applyForm.id = :formId")
+    boolean existsApplicantByFormId(@Param("formId") String formId);
+
     @Modifying(clearAutomatically = true)
     @Query("DELETE FROM Applicant a WHERE a.applyForm.id = :formId")
     int deleteAllApplicantByFormId(String formId);
@@ -51,6 +55,13 @@ public interface ApplyFormRepository extends JpaRepository<ApplyForm, String> {
     @Query("SELECT new org.project.ttokttok.domain.applyform.repository.dto.ClubRecruitmentQueryDto("
             + "a.club.id, a.applyEndDate) "
             + "FROM ApplyForm a "
-            + "WHERE a.club.id IN :clubIds AND a.status = 'ACTIVE' AND a.isRecruiting = true")
-    List<ClubRecruitmentQueryDto> findRecruitingFormsByClubIds(@Param("clubIds") List<String> clubIds);
+            + "WHERE a.club.id IN :clubIds AND a.status = 'ACTIVE' AND a.isRecruiting = true "
+            + "AND a.applyStartDate <= :today AND a.applyEndDate >= :today")
+    List<ClubRecruitmentQueryDto> findOpenFormsByClubIds(@Param("clubIds") List<String> clubIds,
+                                                         @Param("today") LocalDate today);
+
+    /** 오늘(한국 시간) 모집 중인 지원폼. 판정 규칙은 {@code RecruitStatePolicy} 의 OPEN 과 같다. */
+    default List<ClubRecruitmentQueryDto> findRecruitingFormsByClubIds(List<String> clubIds) {
+        return findOpenFormsByClubIds(clubIds, RecruitStatePolicy.today());
+    }
 }

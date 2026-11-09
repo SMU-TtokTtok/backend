@@ -131,7 +131,7 @@ class ApplyFormRepositoryTest implements RepositoryTestSupport {
         @DisplayName("status가 INACTIVE면 isRecruiting이 true여도 제외한다")
         void findRecruitingFormsByClubIds_ExcludesInactive() {
             ApplyForm applyForm = saveApplyForm(testClub1, LocalDate.now().plusDays(5));
-            applyForm.updateFormStatus(); // ACTIVE -> INACTIVE
+            applyForm.finish(); // ACTIVE -> INACTIVE
             em.flush();
             em.clear();
 

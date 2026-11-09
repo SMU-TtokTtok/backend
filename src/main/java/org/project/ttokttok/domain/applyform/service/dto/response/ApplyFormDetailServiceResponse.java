@@ -11,14 +11,17 @@ public record ApplyFormDetailServiceResponse(
         String title,
         String subTitle,
         List<Question> questions,
-        List<BeforeApplyFormServiceResponse> beforeForms
+        List<BeforeApplyFormServiceResponse> beforeForms,
+        boolean hasApplicants
 ) {
     public static ApplyFormDetailServiceResponse of(String formId,
                                                     String title,
                                                     String subTitle,
                                                     List<Question> questions,
-                                                    List<BeforeApplyFormServiceResponse> beforeForms) {
+                                                    List<BeforeApplyFormServiceResponse> beforeForms,
+                                                    boolean hasApplicants) {
         return ApplyFormDetailServiceResponse.builder()
+                .hasApplicants(hasApplicants)
                 .formId(formId)
                 .title(title)
                 .subTitle(subTitle)

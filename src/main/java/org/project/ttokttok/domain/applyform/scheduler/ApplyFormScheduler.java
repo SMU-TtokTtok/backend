@@ -3,6 +3,7 @@ package org.project.ttokttok.domain.applyform.scheduler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.project.ttokttok.domain.applyform.domain.ApplyForm;
+import org.project.ttokttok.domain.applyform.domain.RecruitStatePolicy;
 import org.project.ttokttok.domain.applyform.repository.ApplyFormRepository;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -18,13 +19,13 @@ public class ApplyFormScheduler {
 
     private final ApplyFormRepository applyFormRepository;
 
-    @Scheduled(cron = "0 0 4 * * *")
+    @Scheduled(cron = "0 0 4 * * *", zone = "Asia/Seoul")
     @Transactional
     public void updateExpiredApplyFormsStatus() {
         log.info("지원 폼 마감날짜 확인 스케줄러 시작");
 
         try {
-            LocalDate today = LocalDate.now();
+            LocalDate today = RecruitStatePolicy.today();
 
             // 활성화된 지원 폼들 중에서 마감날짜가 지난 것들 조회
             List<ApplyForm> expiredApplyForms = applyFormRepository.findExpiredApplyForms(today);

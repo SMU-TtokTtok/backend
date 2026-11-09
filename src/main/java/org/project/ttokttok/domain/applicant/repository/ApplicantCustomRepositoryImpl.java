@@ -21,6 +21,10 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+import org.project.ttokttok.domain.applyform.domain.QApplyForm;
+import org.project.ttokttok.domain.applyform.domain.RecruitStatePolicy;
+import org.project.ttokttok.domain.applyform.repository.ApplyFormQueryConditions;
+
 import static org.project.ttokttok.domain.applicant.domain.QApplicant.applicant;
 import static org.project.ttokttok.domain.applyform.domain.QApplyForm.applyForm;
 import static org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus.ACTIVE;
@@ -277,11 +281,13 @@ public class ApplicantCustomRepositoryImpl implements ApplicantCustomRepository 
     /**
      * 활성 지원폼 존재 여부 확인 (모집중 여부)
      */
+    /** 동아리에 지금 모집 중인 지원 폼이 있는지. 지원한 폼과 구분하려고 별도 별칭을 쓴다. */
     private BooleanExpression hasActiveApplyForm() {
+        QApplyForm openForm = new QApplyForm("openForm");
         return JPAExpressions.selectOne()
-                .from(applyForm)
-                .where(applyForm.club.eq(club)
-                        .and(applyForm.status.eq(ACTIVE)))
+                .from(openForm)
+                .where(openForm.club.eq(club)
+                        .and(ApplyFormQueryConditions.openOn(openForm, RecruitStatePolicy.today())))
                 .exists();
     }
 
