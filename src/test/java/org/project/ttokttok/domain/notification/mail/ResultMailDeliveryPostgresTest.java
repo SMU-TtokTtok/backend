@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -125,10 +126,53 @@ class ResultMailDeliveryPostgresTest {
             Set<String> union = new HashSet<>(firstIds);
             union.addAll(secondIds);
             assertThat(firstIds).doesNotContainAnyElementsOf(secondIds);
+            assertThat(firstIds.size() + secondIds.size()).as("한 스레드 안의 중복도 없다").isEqualTo(RECIPIENTS);
             assertThat(union).hasSize(RECIPIENTS);
             assertThat(countByStatus("SENDING")).isEqualTo(RECIPIENTS);
         } finally {
             executor.shutdownNow();
+        }
+    }
+
+    @Test
+    void workerDoesNotWaitForRowsLockedByAnotherWorker() throws Exception {
+        LocalDateTime now = truncatedNow();
+        enqueue(RECIPIENTS, now);
+        // 행마다 next_attempt_at을 달리해, 두 번째 워커가 처음 보는 10행이 첫 워커가 잠근 10행과 정확히 같게 한다.
+        jdbcTemplate.update("""
+                update result_mail_deliveries d set next_attempt_at = ? - n.seq * interval '1 second'
+                from (select id, row_number() over (order by id) as seq from result_mail_deliveries) n
+                where d.id = n.id
+                """, now);
+        CountDownLatch locked = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        try {
+            Future<List<String>> holder = executor.submit(() -> new TransactionTemplate(transactionManager).execute(status -> {
+                List<String> ids = service.claimDue(now).stream().map(ClaimedResultMail::id).toList();
+                locked.countDown();
+                await(release);
+                return ids;
+            }));
+            assertThat(locked.await(30, TimeUnit.SECONDS)).isTrue();
+            Future<List<ClaimedResultMail>> other = executor.submit(() -> service.claimDue(now));
+
+            List<ClaimedResultMail> claimed = other.get(5, TimeUnit.SECONDS); // FOR UPDATE만 있으면 여기서 TimeoutException
+            release.countDown();
+            assertThat(claimed).hasSize(CLAIM_SIZE);
+            assertThat(claimed).extracting(ClaimedResultMail::id)
+                    .doesNotContainAnyElementsOf(holder.get(30, TimeUnit.SECONDS));
+        } finally {
+            release.countDown();
+            executor.shutdownNow();
+        }
+    }
+
+    private static void await(CountDownLatch latch) {
+        try {
+            latch.await(30, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 
