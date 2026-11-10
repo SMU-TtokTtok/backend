@@ -22,15 +22,15 @@ import org.project.ttokttok.domain.club.exception.NotClubAdminException;
 import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.domain.clubmember.domain.ClubMember;
 import org.project.ttokttok.domain.clubmember.repository.ClubMemberRepository;
-import org.project.ttokttok.infrastructure.email.service.EmailService;
+import org.project.ttokttok.domain.notification.mail.service.ResultMailDeliveryService;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionTemplate;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import static org.project.ttokttok.domain.applicant.domain.enums.PhaseStatus.FAIL;
 import static org.project.ttokttok.domain.applicant.domain.enums.PhaseStatus.PASS;
@@ -46,9 +46,8 @@ public class ApplicantAdminService {
     private final ApplyFormRepository applyFormRepository;
     private final ClubRepository clubRepository;
     private final ClubMemberRepository clubMemberRepository;
-    private final EmailService emailService;
+    private final ResultMailDeliveryService resultMailDeliveryService;
     private final ClubAccessPolicy clubAccessPolicy;
-    private final PlatformTransactionManager transactionManager;
 
     public ApplicantPageServiceResponse getApplicantPage(ApplicantPageServiceRequest request) {
         Club club = validateClubAdmin(request.username());
@@ -183,19 +182,19 @@ public class ApplicantAdminService {
         return ApplicantFinalizeServiceResponse.of(passedApplicantCount, finalizedApplicantCount);
     }
 
-    // 수신자 조회만 읽기 트랜잭션으로 끝내 커넥션을 반납한 뒤 발송 작업을 등록한다.
-    // 트랜잭션 안에서 등록하면 mailExecutor가 가득 찼을 때 CallerRunsPolicy로 발송이 요청 스레드에서 돌아
-    // 발송 내내 커넥션을 쥔다(#435). 커밋 후 훅(afterCommit)도 커넥션을 반납하기 전에 실행되어 같은 문제가 남는다.
+    // 커밋이 곧 발송 작업 수락이다. 발송은 워커가 트랜잭션 밖에서 한다(#460).
+    @Transactional
     public void sendResultMailToApplicants(SendResultMailServiceRequest request,
                                            String username,
                                            String clubId,
                                            ApplicantPhase kind) {
 
-        ResultMailRecipients recipients = readOnlyTransaction()
-                .execute(status -> findResultMailRecipients(username, clubId, kind));
+        ResultMailRecipients recipients = findResultMailRecipients(username, clubId, kind);
 
-        emailService.sendResultMail(recipients.passed(), request.pass());
-        emailService.sendResultMail(recipients.failed(), request.fail());
+        String requestId = UUID.randomUUID().toString();
+        LocalDateTime now = LocalDateTime.now();
+        resultMailDeliveryService.enqueue(requestId, clubId, recipients.passed(), request.pass(), now);
+        resultMailDeliveryService.enqueue(requestId, clubId, recipients.failed(), request.fail(), now);
     }
 
     // 관리자 확인과 전형 상태 조회가 지연 로딩을 쓰므로 이메일 문자열까지 트랜잭션 안에서 꺼낸다.
@@ -218,12 +217,6 @@ public class ApplicantAdminService {
                 .toList();
 
         return new ResultMailRecipients(passedEmails, failedEmails);
-    }
-
-    private TransactionTemplate readOnlyTransaction() {
-        TransactionTemplate template = new TransactionTemplate(transactionManager);
-        template.setReadOnly(true);
-        return template;
     }
 
     private record ResultMailRecipients(List<String> passed, List<String> failed) {

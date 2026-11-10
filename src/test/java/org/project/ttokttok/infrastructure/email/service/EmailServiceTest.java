@@ -182,6 +182,43 @@ class EmailServiceTest {
         }
     }
 
+    // ===== sendResultEmail 테스트 =====
+
+    @Nested
+    @DisplayName("sendResultEmail 메서드")
+    class SendResultEmailTest {
+
+        private final ResultMailContent content = new ResultMailContent("합격 안내", "축하합니다");
+
+        @BeforeEach
+        void setUp() {
+            ReflectionTestUtils.setField(emailService, "fromAddress", "test@example.com");
+            ReflectionTestUtils.setField(emailService, "fromName", "TestSender");
+            ReflectionTestUtils.setField(emailService, "replyTo", "reply@example.com");
+        }
+
+        @ParameterizedTest
+        @NullAndEmptySource
+        @ValueSource(strings = {"not-an-email", "a@b"})
+        @DisplayName("유효하지 않은 주소면 EmailValidationException이 발생하고 발송하지 않는다")
+        void throwsForInvalidRecipient(String email) {
+            assertThatThrownBy(() -> emailService.sendResultEmail(email, content))
+                    .isInstanceOf(EmailValidationException.class)
+                    .hasMessage("유효하지 않은 수신자 이메일 주소입니다.");
+            verify(mailSender, never()).send(any(MimeMessage.class));
+        }
+
+        @Test
+        @DisplayName("유효한 주소면 한 번 발송한다")
+        void sendsOnceForValidRecipient() {
+            when(mailSender.createMimeMessage()).thenReturn(mock(MimeMessage.class));
+
+            emailService.sendResultEmail("user@example.com", content);
+
+            verify(mailSender, times(1)).send(any(MimeMessage.class));
+        }
+    }
+
     // ===== sendPasswordResetCode 테스트 =====
 
     @Nested

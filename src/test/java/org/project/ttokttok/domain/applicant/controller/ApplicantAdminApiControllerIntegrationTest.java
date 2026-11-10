@@ -1,7 +1,7 @@
 package org.project.ttokttok.domain.applicant.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.verify;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -18,7 +18,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.project.ttokttok.domain.admin.domain.Admin;
-import org.project.ttokttok.infrastructure.email.dto.ResultMailContent;
+import org.project.ttokttok.domain.notification.mail.domain.ResultMailDelivery;
+import org.project.ttokttok.domain.notification.mail.domain.ResultMailDeliveryStatus;
 import org.project.ttokttok.domain.applicant.domain.Applicant;
 import org.project.ttokttok.domain.applicant.domain.enums.ApplicantPhase;
 import org.project.ttokttok.domain.applicant.domain.enums.Gender;
@@ -263,10 +264,18 @@ class ApplicantAdminApiControllerIntegrationTest {
                 """;
 
         // when & then
-        perform(json(post(url).param("kind", "DOCUMENT"), body), clubB).andExpect(status().isOk());
-        verify(emailService).sendResultMail(List.of("B@example.com"), new ResultMailContent("합격", "축하합니다"));
-        verify(emailService).sendResultMail(List.of("failed@example.com"), new ResultMailContent("불합격", "다음에 만나요"));
-        verifyNoInteractions(fcmService, s3Service);
+        perform(json(post(url).param("kind", "DOCUMENT"), body), clubB).andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("이메일 전송이 완료되었습니다."));
+        verifyNoInteractions(emailService, fcmService, s3Service);
+        List<ResultMailDelivery> rows = entityManager
+                .createQuery("select d from ResultMailDelivery d order by d.recipientEmail", ResultMailDelivery.class)
+                .getResultList();
+        assertThat(rows).extracting(ResultMailDelivery::getRecipientEmail, ResultMailDelivery::getSubject,
+                        ResultMailDelivery::getStatus)
+                .containsExactly(
+                        tuple("B@example.com", "합격", ResultMailDeliveryStatus.PENDING),
+                        tuple("failed@example.com", "불합격", ResultMailDeliveryStatus.PENDING));
+        assertThat(rows).extracting(ResultMailDelivery::getRequestId).doesNotContainNull().containsOnly(rows.get(0).getRequestId());
     }
 
     private long memberCount() {

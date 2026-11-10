@@ -9,7 +9,6 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.willAnswer;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -18,7 +17,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus.ACTIVE;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
@@ -66,11 +65,8 @@ import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.domain.clubmember.domain.ClubMember;
 import org.project.ttokttok.domain.clubmember.domain.MemberRole;
 import org.project.ttokttok.domain.clubmember.repository.ClubMemberRepository;
-import org.project.ttokttok.infrastructure.email.service.EmailService;
+import org.project.ttokttok.domain.notification.mail.service.ResultMailDeliveryService;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.TransactionStatus;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicantAdminServiceTest {
@@ -91,13 +87,10 @@ class ApplicantAdminServiceTest {
     private ClubMemberRepository clubMemberRepository;
 
     @Mock
-    private EmailService emailService;
+    private ResultMailDeliveryService resultMailDeliveryService;
 
     @Spy
     private ClubAccessPolicy clubAccessPolicy;
-
-    @Mock
-    private PlatformTransactionManager transactionManager;
 
     private static final String USERNAME = "adminUser";
     private static final String CLUB_ID = "club-1";
@@ -153,7 +146,7 @@ class ApplicantAdminServiceTest {
             // when & then
             assertThatThrownBy(() -> applicantAdminService.updateApplicantStatus(request))
                     .isExactlyInstanceOf(NotClubAdminException.class);
-            verifyNoInteractions(applicantRepository, clubMemberRepository, emailService);
+            verifyNoInteractions(applicantRepository, clubMemberRepository, resultMailDeliveryService);
         }
 
         @Test
@@ -184,7 +177,7 @@ class ApplicantAdminServiceTest {
             // when & then
             assertThatThrownBy(() -> applicantAdminService.finalizeApplicantsStatus(request))
                     .isExactlyInstanceOf(NotClubAdminException.class);
-            verifyNoInteractions(applyFormRepository, applicantRepository, clubMemberRepository, emailService);
+            verifyNoInteractions(applyFormRepository, applicantRepository, clubMemberRepository, resultMailDeliveryService);
         }
 
         @Test
@@ -201,7 +194,7 @@ class ApplicantAdminServiceTest {
             assertThatThrownBy(() -> applicantAdminService.sendResultMailToApplicants(
                     request, USERNAME, OTHER_CLUB_ID, ApplicantPhase.DOCUMENT))
                     .isExactlyInstanceOf(NotClubAdminException.class);
-            verifyNoInteractions(applyFormRepository, applicantRepository, emailService);
+            verifyNoInteractions(applyFormRepository, applicantRepository, resultMailDeliveryService);
         }
     }
 
@@ -582,7 +575,7 @@ class ApplicantAdminServiceTest {
             assertThatThrownBy(() -> applicantAdminService.updateApplicantStatus(request))
                     .isInstanceOf(UnAuthorizedApplicantAccessException.class);
             verify(applicant, never()).changeEvaluationStatus(any(), any());
-            verifyNoInteractions(clubMemberRepository, emailService);
+            verifyNoInteractions(clubMemberRepository, resultMailDeliveryService);
         }
     }
 
@@ -608,7 +601,7 @@ class ApplicantAdminServiceTest {
             verifyNoInteractions(
                     applicantRepository,
                     applyFormRepository,
-                    emailService,
+                    resultMailDeliveryService,
                     clubMemberRepository
             );
         }
@@ -749,8 +742,8 @@ class ApplicantAdminServiceTest {
     class SendResultMailToApplicantsTest {
 
         @Test
-        @DisplayName("합격자와 불합격자 각각에게 결과 메일을 발송한다")
-        void sendResultMailToApplicants_success() {
+        @DisplayName("합격자와 불합격자 각각의 발송 작업을 같은 requestId로 저장한다")
+        void sendResultMailToApplicants_enqueuesPassedAndFailedWithSameRequestId() {
             // given
             SendResultMailServiceRequest request = createResultMailRequest();
 
@@ -761,72 +754,33 @@ class ApplicantAdminServiceTest {
             given(applyForm.getId()).willReturn(APPLY_FORM_ID);
             given(applyFormRepository.findByClubIdAndStatus(CLUB_ID, ACTIVE)).willReturn(Optional.of(applyForm));
 
-            Applicant passedApplicant = mock(Applicant.class);
-            given(passedApplicant.statusOf(ApplicantPhase.DOCUMENT)).willReturn(Optional.of(PhaseStatus.PASS));
-            given(passedApplicant.getEmail()).willReturn("passed@test.com");
+            Applicant passedApplicant1 = mock(Applicant.class);
+            given(passedApplicant1.statusOf(ApplicantPhase.DOCUMENT)).willReturn(Optional.of(PhaseStatus.PASS));
+            given(passedApplicant1.getEmail()).willReturn("passed1@test.com");
+
+            Applicant passedApplicant2 = mock(Applicant.class);
+            given(passedApplicant2.statusOf(ApplicantPhase.DOCUMENT)).willReturn(Optional.of(PhaseStatus.PASS));
+            given(passedApplicant2.getEmail()).willReturn("passed2@test.com");
 
             Applicant failedApplicant = mock(Applicant.class);
             given(failedApplicant.statusOf(ApplicantPhase.DOCUMENT)).willReturn(Optional.of(PhaseStatus.FAIL));
             given(failedApplicant.getEmail()).willReturn("failed@test.com");
 
             given(applicantRepository.findByApplyFormId(APPLY_FORM_ID))
-                    .willReturn(List.of(passedApplicant, failedApplicant));
+                    .willReturn(List.of(passedApplicant1, passedApplicant2, failedApplicant));
 
             // when
             applicantAdminService.sendResultMailToApplicants(request, USERNAME, CLUB_ID, ApplicantPhase.DOCUMENT);
 
             // then
-            verify(emailService).sendResultMail(List.of("passed@test.com"), request.pass());
-            verify(emailService).sendResultMail(List.of("failed@test.com"), request.fail());
-        }
-
-        @Test
-        @DisplayName("수신자는 읽기 트랜잭션 안에서 조회하고, 발송 작업은 트랜잭션이 끝난 뒤 등록한다 (#435)")
-        void sendResultMailToApplicants_registersMailAfterTransactionEnds() {
-            // given: 트랜잭션 시작·종료와 조회·발송 등록 순서를 한 목록에 기록한다
-            List<String> events = new ArrayList<>();
-            boolean[] inTransaction = {false};
-            given(transactionManager.getTransaction(any())).willAnswer(inv -> {
-                TransactionDefinition definition = inv.getArgument(0);
-                events.add("begin readOnly=" + definition.isReadOnly());
-                inTransaction[0] = true;
-                return mock(TransactionStatus.class);
-            });
-            willAnswer(inv -> {
-                events.add("commit");
-                inTransaction[0] = false;
-                return null;
-            }).given(transactionManager).commit(any());
-
-            SendResultMailServiceRequest request = createResultMailRequest();
-            Club club = createClub(CLUB_ID);
-            given(clubRepository.findById(CLUB_ID)).willReturn(Optional.of(club));
-            ApplyForm applyForm = mock(ApplyForm.class);
-            given(applyForm.getId()).willReturn(APPLY_FORM_ID);
-            given(applyFormRepository.findByClubIdAndStatus(CLUB_ID, ACTIVE)).willReturn(Optional.of(applyForm));
-            Applicant passedApplicant = mock(Applicant.class);
-            given(passedApplicant.statusOf(ApplicantPhase.DOCUMENT)).willReturn(Optional.of(PhaseStatus.PASS));
-            given(passedApplicant.getEmail()).willReturn("passed@test.com");
-            given(applicantRepository.findByApplyFormId(APPLY_FORM_ID)).willAnswer(inv -> {
-                events.add("query inTx=" + inTransaction[0]);
-                return List.of(passedApplicant);
-            });
-            willAnswer(inv -> {
-                events.add("send inTx=" + inTransaction[0]);
-                return null;
-            }).given(emailService).sendResultMail(anyList(), any());
-
-            // when
-            applicantAdminService.sendResultMailToApplicants(request, USERNAME, CLUB_ID, ApplicantPhase.DOCUMENT);
-
-            // then: 실행기가 가득 차 발송이 이 스레드에서 돌더라도 그때는 커넥션을 쥔 트랜잭션이 없다
-            assertThat(events).containsExactly(
-                    "begin readOnly=true",
-                    "query inTx=true",
-                    "query inTx=true",
-                    "commit",
-                    "send inTx=false",
-                    "send inTx=false");
+            ArgumentCaptor<String> passedRequestId = ArgumentCaptor.forClass(String.class);
+            ArgumentCaptor<String> failedRequestId = ArgumentCaptor.forClass(String.class);
+            verify(resultMailDeliveryService).enqueue(passedRequestId.capture(), eq(CLUB_ID),
+                    eq(List.of("passed1@test.com", "passed2@test.com")), eq(request.pass()),
+                    any(LocalDateTime.class));
+            verify(resultMailDeliveryService).enqueue(failedRequestId.capture(), eq(CLUB_ID),
+                    eq(List.of("failed@test.com")), eq(request.fail()), any(LocalDateTime.class));
+            assertThat(passedRequestId.getValue()).isNotBlank().isEqualTo(failedRequestId.getValue());
         }
 
         @Test
@@ -843,7 +797,7 @@ class ApplicantAdminServiceTest {
             assertThatThrownBy(() ->
                     applicantAdminService.sendResultMailToApplicants(request, USERNAME, CLUB_ID, ApplicantPhase.DOCUMENT))
                     .isInstanceOf(ActiveApplyFormNotFoundException.class);
-            verify(emailService, never()).sendResultMail(anyList(), any());
+            verifyNoInteractions(resultMailDeliveryService);
         }
 
         @Test
@@ -859,7 +813,7 @@ class ApplicantAdminServiceTest {
             assertThatThrownBy(() ->
                     applicantAdminService.sendResultMailToApplicants(request, USERNAME, CLUB_ID, ApplicantPhase.DOCUMENT))
                     .isInstanceOf(NotClubAdminException.class);
-            verifyNoInteractions(applyFormRepository, applicantRepository, emailService);
+            verifyNoInteractions(applyFormRepository, applicantRepository, resultMailDeliveryService);
         }
 
         @Test
@@ -873,7 +827,7 @@ class ApplicantAdminServiceTest {
             assertThatThrownBy(() -> applicantAdminService.sendResultMailToApplicants(
                     request, USERNAME, CLUB_ID, ApplicantPhase.DOCUMENT))
                     .isExactlyInstanceOf(ClubNotFoundException.class);
-            verifyNoInteractions(applyFormRepository, applicantRepository, emailService);
+            verifyNoInteractions(applyFormRepository, applicantRepository, resultMailDeliveryService);
         }
     }
 }

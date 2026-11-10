@@ -101,6 +101,14 @@ public class EmailService {
         log.debug("비밀번호 재설정 코드 발송 완료");
     }
 
+    // 결과 안내 이메일 한 통을 동기 발송한다. 호출부는 발송 작업 워커이며 트랜잭션 밖에서 부른다.
+    public void sendResultEmail(String email, ResultMailContent content) {
+        if (!isValidEmail(email)) {
+            throw new EmailValidationException(ErrorMessage.EMAIL_RESULT_RECIPIENT_INVALID);
+        }
+        sendEmail(EmailRequest.createResultEmail(email, content.title(), content.body()));
+    }
+
     /**
      * 동아리 지원 결과 안내 이메일 벌크 발송.
      *
