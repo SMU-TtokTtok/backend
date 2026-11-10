@@ -7,6 +7,7 @@
 | U1 | 결과 메일 조회 트랜잭션과 발송 등록 분리 | `before.json`, `after.json` |
 | U2 | SMTP 연결·읽기·쓰기 타임아웃 | `smtp-hang-before.json`, `smtp-hang-after.json` |
 | U3 | 배포 종료 때 사라지는 메일 작업 | `shutdown-before.json`, `shutdown-before-run1.json`, `shutdown-alt-wait8.json`, `shutdown-after.json` |
+| U4 | FCM 알림 실행기 확인과 분리 | `fcm-executor-before.json`, `fcm-executor-after.json` |
 
 ## U1. 결과 메일 API의 커넥션 점유
 
@@ -261,3 +262,51 @@ $env:TTOKTTOK_SHUTDOWN_EXPERIMENT_OUT = '<repo>\load-test\results\issue-435\shut
 - 종료가 끝난 뒤 들어온 작업을 `CallerRunsPolicy`가 조용히 버리는 경우는 여전히 로그가 없다.
 - 실험의 정리 단계 대기 시간은 Spring 기본값(10초)이다. Spring Boot 운영 앱은 기본 30초지만, 어느 쪽이든 배포의 강제 종료(10초)가 먼저 온다.
 - 단일 JVM, 로컬 PC에서 쟀다. 실제 `docker compose stop` 과정은 실행하지 않았다.
+
+## U4. FCM 알림 실행기 확인과 분리
+
+### 질문
+
+`FCMService.sendNotification`은 이름 없는 `@Async`였다. 실제로 어느 실행기의 스레드에서 도는가? 메일 실행기를 같이 쓰는가?
+
+### 방법
+
+- `@SpringBootTest`(test 프로필)에서 진짜 `FCMService`(@Async 프록시)를 쓴다. 외부 호출인 `FirebaseMessaging`만 가짜로 바꿔, 호출된 스레드 이름을 기록한다.
+- 측정: 알림 30건을 한꺼번에 보낸다. Firebase 호출 한 번에 200ms가 걸린다고 둔다. 생긴 스레드 수, 동시에 Firebase를 부른 수, 30건이 끝난 시간을 기록한다.
+- 코드: `src/test/java/org/project/ttokttok/infrastructure/firebase/service/FCMNotificationExecutorTest.java`. 측정은 `measureBurst`이고, 환경 변수가 있을 때만 돈다.
+
+```powershell
+$env:TTOKTTOK_FCM_EXPERIMENT_OUT = '<repo>\load-test\results\issue-435\fcm-executor-after.json'
+./gradlew.bat cleanTest test --tests "*FCMNotificationExecutorTest"
+```
+
+### 결과 (2026-11-11, 로컬 PC)
+
+| 측정 | 변경 전 (`fcm-executor-before.json`) | 변경 후 (`fcm-executor-after.json`) |
+|---|---|---|
+| 실행 스레드 | `SimpleAsyncTaskExecutor-N` (알림마다 새 스레드) | `fcm-1`, `fcm-2` |
+| 알림 30건에 생긴 스레드 | 30개 | 2개 |
+| 동시에 Firebase를 부른 수 | 30 | 2 |
+| 30건이 모두 끝난 시간 | 0.22초 | 3.2초 |
+
+- 메일 실행기는 같이 쓰지 않았다. 메일은 `mail-` 스레드에서, FCM은 Spring 기본 실행기에서 돌았다. 그래서 "느린 메일 뒤에서 알림이 기다리는" 간섭은 변경 전에도 없었다.
+- 원인: 직접 만든 `Executor` 빈(`mailExecutor`)이 있으면 Spring Boot는 기본 실행기(`applicationTaskExecutor`)를 만들지 않는다. 이름 없는 `@Async`는 하나로 정해지는 `TaskExecutor`나 `taskExecutor`라는 이름의 빈을 찾는다. 찾지 못하면 `SimpleAsyncTaskExecutor`를 쓴다.
+
+### 변경
+
+- `AsyncConfig`에 `fcmExecutor`를 추가했다. 스레드 2개, 큐 100, 스레드 이름 `fcm-`이다.
+- `FCMService.sendNotification`을 `@Async("fcmExecutor")`로 바꿨다.
+- 가득 차면 알림을 버리고 경고를 남긴다. 알림은 `ClubAdminService.toggleRecruitment`의 트랜잭션 안에서 등록된다. 그래서 호출 스레드에서 실행하면(CallerRuns) 발송 동안 DB 커넥션을 쥐고, 예외를 던지면(Abort) 모집 토글이 롤백된다. 모집 시작 알림은 최선 노력으로 보낸다.
+
+회귀 테스트:
+
+- `FCMNotificationExecutorTest.sendsNotificationOnFcmExecutor`: 알림이 `fcm-` 스레드에서 도는지 확인한다. 변경 전에는 실패했다.
+- `AsyncConfigTest.fcmExecutorIsBoundedPool`: 실행기 크기를 확인한다.
+- `AsyncConfigTest.fcmExecutorDiscardsOverflowWithoutRunningOnCaller`: 넘친 알림이 호출 스레드에서 돌지 않는지 확인한다.
+
+### 해석과 한계
+
+- 알림이 몰려도 스레드와 Firebase 동시 호출이 2개를 넘지 않는다. 대신 한꺼번에 많이 보내면 끝나는 시간이 늘어난다(30건 기준 0.22초에서 3.2초).
+- 큐 100칸을 넘는 알림은 버려진다. 지금 규모(동아리 24곳, 모집을 시작할 때만 발송)에서는 일어나기 어렵다고 보지만, 재지 않았다.
+- 스레드 2개는 Firebase 쪽 제한을 근거로 정한 값이 아니다. 알림 빈도가 낮아 작게 잡았다.
+- 알림 한 건 안의 토큰 묶음 발송(500개씩 순서대로)은 바꾸지 않았다.
