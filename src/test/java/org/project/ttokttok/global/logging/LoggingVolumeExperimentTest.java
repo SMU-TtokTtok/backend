@@ -82,7 +82,6 @@ class LoggingVolumeExperimentTest {
     private static final String PUBLIC_PATH = "/api/clubs/popular";
     private static final String PROTECTED_PATH = "/api/favorites";
     private static final Pattern RAW_EMAIL = Pattern.compile("[A-Za-z0-9._%+-]+@sangmyung\\.kr");
-    private static final Pattern MAIL_SUMMARY = Pattern.compile("성공: [0-9]+건");
     private static final Map<String, Object> RESULTS = new LinkedHashMap<>();
 
     @LocalServerPort private int port;
@@ -183,21 +182,16 @@ class LoggingVolumeExperimentTest {
         if (outage) {
             willThrow(new MailSendException("smtp unavailable")).given(mailSender).send(any(MimeMessage.class));
         }
+        ResultMailContent content = new ResultMailContent("title", "body");
         List<String> recipients = IntStream.range(0, RECIPIENTS).mapToObj(i -> "user" + i + "@sangmyung.kr").toList();
-        emailService.sendResultMail(recipients, new ResultMailContent("title", "body"));
-        awaitMailSummary();
-        record(name, RECIPIENTS, Map.of(), "no-token");
-    }
-
-    private void awaitMailSummary() throws InterruptedException {
-        long deadline = System.currentTimeMillis() + 30_000;
-        while (System.currentTimeMillis() < deadline) {
-            if (snapshot().stream().anyMatch(e -> MAIL_SUMMARY.matcher(e.getFormattedMessage()).find())) {
-                return;
+        for (String recipient : recipients) {
+            try {
+                emailService.sendResultEmail(recipient, content);
+            } catch (RuntimeException e) {
+                // 발송 작업 워커처럼 수신자별 실패는 다음 수신자 발송을 막지 않는다
             }
-            Thread.sleep(50);
         }
-        throw new IllegalStateException("Result mail summary was not logged");
+        record(name, RECIPIENTS, Map.of(), "no-token");
     }
 
     private List<ILoggingEvent> snapshot() {
