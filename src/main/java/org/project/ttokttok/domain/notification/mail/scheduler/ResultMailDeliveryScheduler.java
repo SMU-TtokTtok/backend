@@ -35,6 +35,7 @@ public class ResultMailDeliveryScheduler {
         int sent = 0;
         int retrying = 0;
         int failed = 0;
+        int recordErrors = 0;
         for (ClaimedResultMail mail : claimed) {
             try {
                 SendOutcome outcome = send(mail);
@@ -46,10 +47,11 @@ public class ResultMailDeliveryScheduler {
             } catch (Exception e) {
                 // 기록이 실패해도 배치는 계속한다. 이 행은 임대가 만료되면 다시 회수된다.
                 log.error("결과 메일 발송 결과 기록 실패: id={}, error={}", mail.id(), e.getClass().getSimpleName());
-                failed++;
+                recordErrors++;
             }
         }
-        log.info("결과 메일 발송 배치 완료 - 성공: {}건, 재시도 예정: {}건, 최종 실패: {}건", sent, retrying, failed);
+        log.info("결과 메일 발송 배치 완료 - 성공: {}건, 재시도 예정: {}건, 최종 실패: {}건, 기록 실패: {}건",
+                sent, retrying, failed, recordErrors);
     }
 
     private SendOutcome send(ClaimedResultMail mail) {
