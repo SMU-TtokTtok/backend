@@ -180,10 +180,12 @@ public class ApplyForm extends BaseTimeEntity {
         ApplyFormEditLockPolicy.validate(this.formJson, updatedQuestions);
     }
 
-    /** 모집 시작. 오늘(한국 시간)이 모집 기간 안일 때만 열 수 있다. */
+    /**
+     * 모집 스위치를 켠다. 마감일이 지났으면 열 수 없다.
+     * 시작일 전이면 모집 예정(UPCOMING)으로 돌아가고, 시작일에 저절로 모집 중이 된다.
+     */
     public void startRecruiting() {
-        LocalDate today = RecruitStatePolicy.today();
-        if (today.isBefore(applyStartDate) || today.isAfter(applyEndDate)) {
+        if (RecruitStatePolicy.today().isAfter(applyEndDate)) {
             throw new ApplyFormRuleException(ErrorMessage.RECRUIT_PERIOD_NOT_OPEN);
         }
         this.isRecruiting = true;
