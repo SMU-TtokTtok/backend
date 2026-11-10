@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.project.ttokttok.domain.applyform.domain.ApplyForm;
 import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
+import org.project.ttokttok.domain.applyform.domain.enums.RecruitState;
 import org.project.ttokttok.domain.applyform.exception.ApplyFormNotFoundException;
 import org.project.ttokttok.domain.applyform.repository.ApplyFormRepository;
 import org.project.ttokttok.domain.club.domain.Club;
@@ -98,8 +99,10 @@ public class ClubAdminService {
             return;
         }
         activeForm.startRecruiting();
-        log.info("Recruitment started for club: {}, form: {}", clubId, activeForm.getId());
-        sendRecruitmentNotification(activeForm, club);
+        log.info("Recruitment switched on for club: {}, form: {}", clubId, activeForm.getId());
+        if (activeForm.recruitState() == RecruitState.OPEN) { // 시작일 전(UPCOMING)이면 알림을 보내지 않는다
+            sendRecruitmentNotification(activeForm, club);
+        }
     }
 
     public ClubDetailAdminServiceResponse getClubContent(String clubId) {

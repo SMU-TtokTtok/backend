@@ -17,6 +17,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.openapitools.jackson.nullable.JsonNullable;
 import org.project.ttokttok.domain.admin.domain.Admin;
 import org.project.ttokttok.domain.applyform.domain.ApplyForm;
+import org.project.ttokttok.domain.applyform.domain.RecruitStatePolicy;
+import org.project.ttokttok.domain.applyform.domain.enums.RecruitState;
 import org.project.ttokttok.domain.applyform.exception.ApplyFormNotFoundException;
 import org.project.ttokttok.domain.applyform.repository.ApplyFormRepository;
 import org.project.ttokttok.domain.club.service.policy.ClubAccessPolicy;
@@ -230,15 +232,32 @@ class ClubAdminServiceTest {
             verifyNoInteractions(fcmTokenRepository, fcmService);
         }
 
-        @ParameterizedTest(name = "마감일 기준 {0}일")
-        @ValueSource(ints = {-1, 1})
-        @DisplayName("오늘이 모집 기간 밖이면 모집을 시작하지 않고 409로 거절한다 (#456)")
-        void toggleRecruitment_outsidePeriod_rejected(int offsetDays) {
+        @Test
+        @DisplayName("시작일 전 폼의 스위치를 켜면 모집 예정으로 돌아가고 알림을 보내지 않는다 (#456)")
+        void toggleRecruitment_beforeStart_returnsToUpcomingWithoutNotification() {
             // given
             Club club = createClub();
-            LocalDate start = offsetDays > 0 ? LocalDate.now().plusDays(1) : LocalDate.now().minusDays(10);
-            LocalDate end = offsetDays > 0 ? LocalDate.now().plusDays(10) : LocalDate.now().minusDays(1);
-            ApplyForm form = createApplyForm(club, false, start, end);
+            LocalDate today = RecruitStatePolicy.today();
+            ApplyForm form = createApplyForm(club, false, today.plusDays(1), today.plusDays(10));
+            given(clubRepository.findByAdminUsername(USERNAME)).willReturn(Optional.of(club));
+            given(applyFormRepository.findByClubIdAndStatus(CLUB_ID, ACTIVE)).willReturn(Optional.of(form));
+
+            // when
+            clubAdminService.toggleRecruitment(USERNAME, CLUB_ID);
+
+            // then
+            assertThat(form.isRecruiting()).isTrue();
+            assertThat(form.recruitState()).isEqualTo(RecruitState.UPCOMING);
+            verifyNoInteractions(fcmTokenRepository, fcmService);
+        }
+
+        @Test
+        @DisplayName("마감일이 지났으면 모집을 시작하지 않고 409로 거절한다 (#456)")
+        void toggleRecruitment_afterEnd_rejected() {
+            // given
+            Club club = createClub();
+            LocalDate today = RecruitStatePolicy.today();
+            ApplyForm form = createApplyForm(club, false, today.minusDays(10), today.minusDays(1));
             given(clubRepository.findByAdminUsername(USERNAME)).willReturn(Optional.of(club));
             given(applyFormRepository.findByClubIdAndStatus(CLUB_ID, ACTIVE)).willReturn(Optional.of(form));
 

@@ -9,6 +9,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.project.ttokttok.domain.applyform.domain.ApplyForm;
+import org.project.ttokttok.domain.applyform.domain.enums.RecruitState;
 import org.project.ttokttok.domain.applyform.exception.ApplyFormNotFoundException;
 import org.project.ttokttok.domain.applyform.repository.ApplyFormRepository;
 import org.project.ttokttok.domain.club.domain.Club;
@@ -154,6 +155,7 @@ class ClubAdminServiceBehaviorTest {
             ApplyForm form = mock(ApplyForm.class);
             given(applyFormRepository.findByClubIdAndStatus(any(), any())).willReturn(Optional.of(form));
             given(form.isRecruiting()).willReturn(false);
+            given(form.recruitState()).willReturn(RecruitState.OPEN);
             given(fcmTokenRepository.findTokensByClubId(CLUB_ID)).willReturn(List.of("token-1"));
 
             clubAdminService.toggleRecruitment(USERNAME, CLUB_ID);
