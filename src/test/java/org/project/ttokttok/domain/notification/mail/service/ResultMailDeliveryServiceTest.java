@@ -21,6 +21,7 @@ import org.project.ttokttok.infrastructure.email.exception.EmailValidationExcept
 import org.project.ttokttok.infrastructure.email.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mail.MailParseException;
 import org.springframework.mail.MailPreparationException;
 import org.springframework.mail.MailSendException;
@@ -44,6 +45,9 @@ class ResultMailDeliveryServiceTest {
 
     @Autowired
     private ResultMailDeliveryRepository repository;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @MockitoBean
     private EmailService emailService;
@@ -230,5 +234,34 @@ class ResultMailDeliveryServiceTest {
                 new RuntimeException(new UnsupportedEncodingException("x")))).isFalse();
         assertThat(ResultMailDeliveryService.isRetryable(
                 new EmailValidationException(ErrorMessage.EMAIL_RESULT_RECIPIENT_INVALID))).isFalse();
+    }
+
+    private String saveRow(String email, ResultMailDeliveryStatus status, LocalDateTime updatedAt) {
+        service.enqueue("req-1", "club-1", List.of(email), CONTENT, NOW);
+        String id = repository.findAll().stream()
+                .filter(row -> row.getRecipientEmail().equals(email))
+                .findFirst()
+                .orElseThrow()
+                .getId();
+        jdbcTemplate.update("UPDATE result_mail_deliveries SET status = ?, updated_at = ? WHERE id = ?",
+                status.name(), updatedAt, id);
+        return id;
+    }
+
+    @Test
+    @DisplayName("deleteFinished는 30일 넘게 지난 SENT·FAILED만 지우고 나머지는 남긴다")
+    void deleteFinished_deletesOnlyFinishedRowsPastRetention() {
+        saveRow("sent-old@example.com", ResultMailDeliveryStatus.SENT, NOW.minusDays(31));
+        saveRow("failed-old@example.com", ResultMailDeliveryStatus.FAILED, NOW.minusDays(31));
+        saveRow("sent-recent@example.com", ResultMailDeliveryStatus.SENT, NOW.minusDays(29));
+        saveRow("pending-old@example.com", ResultMailDeliveryStatus.PENDING, NOW.minusDays(31));
+        saveRow("sending-old@example.com", ResultMailDeliveryStatus.SENDING, NOW.minusDays(31));
+
+        int deleted = service.deleteFinished(NOW);
+
+        assertThat(deleted).isEqualTo(2);
+        assertThat(repository.findAll()).extracting(ResultMailDelivery::getRecipientEmail)
+                .containsExactlyInAnyOrder("sent-recent@example.com", "pending-old@example.com",
+                        "sending-old@example.com");
     }
 }

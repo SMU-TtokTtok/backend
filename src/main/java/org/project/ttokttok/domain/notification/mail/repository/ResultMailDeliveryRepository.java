@@ -1,9 +1,12 @@
 package org.project.ttokttok.domain.notification.mail.repository;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import org.project.ttokttok.domain.notification.mail.domain.ResultMailDelivery;
+import org.project.ttokttok.domain.notification.mail.domain.ResultMailDeliveryStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -19,4 +22,9 @@ public interface ResultMailDeliveryRepository extends JpaRepository<ResultMailDe
             FOR UPDATE SKIP LOCKED
             """, nativeQuery = true)
     List<ResultMailDelivery> findDueForUpdateSkipLocked(@Param("now") LocalDateTime now, @Param("limit") int limit);
+
+    @Modifying
+    @Query("delete from ResultMailDelivery d where d.status in :statuses and d.updatedAt < :cutoff")
+    int deleteFinishedBefore(@Param("statuses") Collection<ResultMailDeliveryStatus> statuses,
+                             @Param("cutoff") LocalDateTime cutoff);
 }

@@ -1,5 +1,6 @@
 package org.project.ttokttok.domain.notification.mail.service;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,6 +24,9 @@ import org.springframework.transaction.annotation.Transactional;
 public class ResultMailDeliveryService {
 
     static final int CLAIM_SIZE = 10;
+    static final Duration RETENTION = Duration.ofDays(30);
+    private static final List<ResultMailDeliveryStatus> FINISHED_STATUSES =
+            List.of(ResultMailDeliveryStatus.SENT, ResultMailDeliveryStatus.FAILED);
     private static final int LAST_ERROR_MAX_LENGTH = 255;
     private static final String LEASE_EXPIRED = "LEASE_EXPIRED";
     private static final String CAUSE_SEPARATOR = " <- ";
@@ -57,6 +61,11 @@ public class ResultMailDeliveryService {
                 .map(delivery -> new ClaimedResultMail(delivery.getId(), delivery.getRecipientEmail(),
                         delivery.content()))
                 .toList();
+    }
+
+    @Transactional
+    public int deleteFinished(LocalDateTime now) {
+        return repository.deleteFinishedBefore(FINISHED_STATUSES, now.minus(RETENTION));
     }
 
     @Transactional

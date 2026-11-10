@@ -54,6 +54,16 @@ public class ResultMailDeliveryScheduler {
                 sent, retrying, failed, recordErrors);
     }
 
+    @Scheduled(cron = "0 30 4 * * *", zone = "Asia/Seoul")
+    public void deleteFinishedMails() {
+        try {
+            int deleted = deliveryService.deleteFinished(LocalDateTime.now());
+            log.info("끝난 결과 메일 발송 작업 정리 완료: 삭제={}건", deleted);
+        } catch (Exception e) {
+            log.error("끝난 결과 메일 발송 작업 정리 중 오류 발생", e);
+        }
+    }
+
     private SendOutcome send(ClaimedResultMail mail) {
         try {
             emailService.sendResultEmail(mail.recipientEmail(), mail.content());
