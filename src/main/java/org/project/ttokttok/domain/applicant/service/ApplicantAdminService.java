@@ -24,7 +24,9 @@ import org.project.ttokttok.domain.clubmember.domain.ClubMember;
 import org.project.ttokttok.domain.clubmember.repository.ClubMemberRepository;
 import org.project.ttokttok.infrastructure.email.service.EmailService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -46,6 +48,7 @@ public class ApplicantAdminService {
     private final ClubMemberRepository clubMemberRepository;
     private final EmailService emailService;
     private final ClubAccessPolicy clubAccessPolicy;
+    private final PlatformTransactionManager transactionManager;
 
     public ApplicantPageServiceResponse getApplicantPage(ApplicantPageServiceRequest request) {
         Club club = validateClubAdmin(request.username());
@@ -180,21 +183,29 @@ public class ApplicantAdminService {
         return ApplicantFinalizeServiceResponse.of(passedApplicantCount, finalizedApplicantCount);
     }
 
-    // 조회 전용(쓰기 없음). 발송은 EmailService의 @Async로 트랜잭션 밖에서 처리되어
-    // SMTP I/O가 커넥션 점유 시간을 늘리지 않는다. readOnly로 lazy loading 세션만 유지한다.
-    @Transactional(readOnly = true)
+    // 수신자 조회만 읽기 트랜잭션으로 끝내 커넥션을 반납한 뒤 발송 작업을 등록한다.
+    // 트랜잭션 안에서 등록하면 mailExecutor가 가득 찼을 때 CallerRunsPolicy로 발송이 요청 스레드에서 돌아
+    // 발송 내내 커넥션을 쥔다(#435). 커밋 후 훅(afterCommit)도 커넥션을 반납하기 전에 실행되어 같은 문제가 남는다.
     public void sendResultMailToApplicants(SendResultMailServiceRequest request,
                                            String username,
                                            String clubId,
                                            ApplicantPhase kind) {
 
+        ResultMailRecipients recipients = readOnlyTransaction()
+                .execute(status -> findResultMailRecipients(username, clubId, kind));
+
+        emailService.sendResultMail(recipients.passed(), request.pass());
+        emailService.sendResultMail(recipients.failed(), request.fail());
+    }
+
+    // 관리자 확인과 전형 상태 조회가 지연 로딩을 쓰므로 이메일 문자열까지 트랜잭션 안에서 꺼낸다.
+    private ResultMailRecipients findResultMailRecipients(String username, String clubId, ApplicantPhase phase) {
         Club club = clubRepository.findById(clubId)
                 .orElseThrow(ClubNotFoundException::new);
 
         clubAccessPolicy.validateAdmin(club, username);
 
         ApplyForm currentApplyForm = findActiveApplyForm(clubId);
-        ApplicantPhase phase = kind;
 
         List<String> passedEmails = filterApplicantsByStatus(currentApplyForm.getId(), phase, PASS)
                 .stream()
@@ -206,8 +217,16 @@ public class ApplicantAdminService {
                 .map(Applicant::getEmail)
                 .toList();
 
-        emailService.sendResultMail(passedEmails, request.pass());
-        emailService.sendResultMail(failedEmails, request.fail());
+        return new ResultMailRecipients(passedEmails, failedEmails);
+    }
+
+    private TransactionTemplate readOnlyTransaction() {
+        TransactionTemplate template = new TransactionTemplate(transactionManager);
+        template.setReadOnly(true);
+        return template;
+    }
+
+    private record ResultMailRecipients(List<String> passed, List<String> failed) {
     }
 
     private Club validateClubAdmin(String username) {
