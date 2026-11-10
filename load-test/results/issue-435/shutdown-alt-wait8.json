@@ -1,0 +1,125 @@
+{
+  "conditions" : {
+    "recipientsPerBatch" : 100,
+    "lateBatchRecipients" : 10,
+    "mailDelayMs" : 25,
+    "killAfterMs" : 10000,
+    "java" : "17.0.8.1"
+  },
+  "4 batches (400 mails)" : [ {
+    "mailsRequested" : 400,
+    "atClose" : {
+      "active" : 2,
+      "queued" : 2,
+      "sentBeforeClose" : 4
+    },
+    "contextCloseMs" : 8020,
+    "sentWithinKillWindow" : 400,
+    "sentAfterKillWindow (lost in real deploy)" : 0,
+    "neverSent" : 10,
+    "lostInRealDeploy" : 10,
+    "lastSendMsSinceClose" : 9249,
+    "lateBatch" : {
+      "sentWithinKillWindow" : 0,
+      "sent" : 0,
+      "submit" : "accepted",
+      "requested" : 10
+    }
+  }, {
+    "mailsRequested" : 400,
+    "atClose" : {
+      "active" : 2,
+      "queued" : 2,
+      "sentBeforeClose" : 14
+    },
+    "contextCloseMs" : 8009,
+    "sentWithinKillWindow" : 400,
+    "sentAfterKillWindow (lost in real deploy)" : 0,
+    "neverSent" : 10,
+    "lostInRealDeploy" : 10,
+    "lastSendMsSinceClose" : 8929,
+    "lateBatch" : {
+      "sentWithinKillWindow" : 0,
+      "sent" : 0,
+      "submit" : "accepted",
+      "requested" : 10
+    }
+  }, {
+    "mailsRequested" : 400,
+    "atClose" : {
+      "active" : 2,
+      "queued" : 2,
+      "sentBeforeClose" : 12
+    },
+    "contextCloseMs" : 8014,
+    "sentWithinKillWindow" : 400,
+    "sentAfterKillWindow (lost in real deploy)" : 0,
+    "neverSent" : 10,
+    "lostInRealDeploy" : 10,
+    "lastSendMsSinceClose" : 8903,
+    "lateBatch" : {
+      "sentWithinKillWindow" : 0,
+      "sent" : 0,
+      "submit" : "accepted",
+      "requested" : 10
+    }
+  } ],
+  "10 batches (1000 mails)" : [ {
+    "mailsRequested" : 1000,
+    "atClose" : {
+      "active" : 2,
+      "queued" : 8,
+      "sentBeforeClose" : 12
+    },
+    "contextCloseMs" : 8014,
+    "sentWithinKillWindow" : 446,
+    "sentAfterKillWindow (lost in real deploy)" : 554,
+    "neverSent" : 10,
+    "lostInRealDeploy" : 564,
+    "lastSendMsSinceClose" : 22817,
+    "lateBatch" : {
+      "sentWithinKillWindow" : 0,
+      "sent" : 0,
+      "submit" : "accepted",
+      "requested" : 10
+    }
+  }, {
+    "mailsRequested" : 1000,
+    "atClose" : {
+      "active" : 2,
+      "queued" : 8,
+      "sentBeforeClose" : 13
+    },
+    "contextCloseMs" : 8015,
+    "sentWithinKillWindow" : 449,
+    "sentAfterKillWindow (lost in real deploy)" : 551,
+    "neverSent" : 10,
+    "lostInRealDeploy" : 561,
+    "lastSendMsSinceClose" : 20196,
+    "lateBatch" : {
+      "sentWithinKillWindow" : 0,
+      "sent" : 0,
+      "submit" : "accepted",
+      "requested" : 10
+    }
+  }, {
+    "mailsRequested" : 1000,
+    "atClose" : {
+      "active" : 2,
+      "queued" : 8,
+      "sentBeforeClose" : 18
+    },
+    "contextCloseMs" : 8009,
+    "sentWithinKillWindow" : 596,
+    "sentAfterKillWindow (lost in real deploy)" : 404,
+    "neverSent" : 10,
+    "lostInRealDeploy" : 414,
+    "lastSendMsSinceClose" : 16923,
+    "lateBatch" : {
+      "sentWithinKillWindow" : 0,
+      "sent" : 0,
+      "submit" : "accepted",
+      "requested" : 10
+    }
+  } ]
+}

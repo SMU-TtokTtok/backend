@@ -1,0 +1,21 @@
+{
+  "conditions" : {
+    "smtpProperties" : {
+      "mail.smtp.connectiontimeout" : "(unset)",
+      "mail.smtp.timeout" : "(unset)",
+      "mail.smtp.writetimeout" : "(unset)"
+    },
+    "java" : "17.0.8.1",
+    "limitSeconds" : 60,
+    "batchRecipients" : 3
+  },
+  "singleMail" : {
+    "outcome" : "still blocked at limit",
+    "elapsedMs" : 60003
+  },
+  "resultMailBatch" : {
+    "outcome" : "still blocked at limit",
+    "elapsedMs" : 60004
+  },
+  "connectionsAccepted" : 2
+}

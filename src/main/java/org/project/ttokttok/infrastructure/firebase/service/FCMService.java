@@ -22,7 +22,7 @@ public class FCMService {
     private final FCMTokenListPartitioner partitioner;
     private final FCMFailureHandler failureHandler;
 
-    @Async
+    @Async("fcmExecutor")
     public void sendNotification(FCMRequest request) {
         if (request.tokens() == null || request.tokens().isEmpty()) {
             return;

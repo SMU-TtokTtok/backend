@@ -1,0 +1,23 @@
+{
+  "conditions" : {
+    "java" : "17.0.8.1",
+    "limitSeconds" : 60,
+    "batchRecipients" : 3,
+    "smtpProperties" : {
+      "mail.smtp.connectiontimeout" : "5000",
+      "mail.smtp.timeout" : "10000",
+      "mail.smtp.writetimeout" : "10000"
+    }
+  },
+  "singleMail" : {
+    "outcome" : "failed",
+    "exception" : "org.springframework.mail.MailSendException",
+    "rootCause" : "java.net.SocketTimeoutException",
+    "elapsedMs" : 10135
+  },
+  "resultMailBatch" : {
+    "outcome" : "returned",
+    "elapsedMs" : 30060
+  },
+  "connectionsAccepted" : 4
+}

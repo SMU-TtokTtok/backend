@@ -1,0 +1,1645 @@
+{
+  "conditions" : {
+    "mailDelayMs" : 25,
+    "recipientsPerResult" : 20,
+    "recipientsPerRequest" : 40,
+    "repetitions" : 3,
+    "concurrency" : [ 1, 5, 10 ],
+    "probeThreads" : 4,
+    "baselineMs" : 2000,
+    "sampleIntervalMs" : 50,
+    "hikariMaximumPoolSize" : 10,
+    "hikariConnectionTimeoutMs" : 30000,
+    "mailExecutor" : {
+      "queueCapacity" : 100,
+      "max" : 5,
+      "core" : 2
+    },
+    "postgres" : "17.4",
+    "java" : "17.0.8.1"
+  },
+  "NORMAL" : {
+    "concurrency=1" : [ {
+      "mode" : "NORMAL",
+      "concurrency" : 1,
+      "executorBeforeLoad" : {
+        "poolSize" : 2,
+        "active" : 0,
+        "queued" : 0,
+        "queueRemaining" : 100
+      },
+      "loadWallMs" : 192.0,
+      "sendLatencyMs" : {
+        "count" : 1,
+        "p50" : 190.4,
+        "p95" : 190.4,
+        "max" : 190.4,
+        "over1000ms" : 0
+      },
+      "sendStatus" : {
+        "200" : 1
+      },
+      "mailsSentOnRequestThread" : 0,
+      "mailsSentOnMailThreadDuringLoad" : 0,
+      "probeBaselineLatencyMs" : {
+        "count" : 1200,
+        "p50" : 6.3,
+        "p95" : 9.4,
+        "max" : 13.0,
+        "over1000ms" : 0
+      },
+      "probeBaselineStatus" : {
+        "200" : 1200
+      },
+      "probeDuringLatencyMs" : {
+        "count" : 136,
+        "p50" : 5.5,
+        "p95" : 6.6,
+        "max" : 7.9,
+        "over1000ms" : 0
+      },
+      "probeDuringStatus" : {
+        "200" : 136
+      },
+      "connectionUsageMs" : {
+        "count" : 138,
+        "p50" : 3.0,
+        "p95" : 4.0,
+        "max" : 169.0,
+        "over1000ms" : 0
+      },
+      "sendConnectionUsageMs" : {
+        "count" : 2,
+        "p50" : 3.0,
+        "p95" : 169.0,
+        "max" : 169.0,
+        "over1000ms" : 0
+      },
+      "probeConnectionUsageMs" : {
+        "count" : 136,
+        "p50" : 3.0,
+        "p95" : 4.0,
+        "max" : 5.0,
+        "over1000ms" : 0
+      },
+      "connectionAcquireWaitMs" : {
+        "count" : 138,
+        "p50" : 0.0,
+        "p95" : 0.0,
+        "max" : 1.1,
+        "over1000ms" : 0
+      },
+      "connectionTimeouts" : 0,
+      "samples" : 37,
+      "hikariMaxActive" : 4,
+      "hikariMaxPending" : 0,
+      "samplesWithPending" : 0,
+      "samplesPoolExhausted" : 0,
+      "pgMaxIdleInTransaction" : 5,
+      "pgSamplesWithIdleInTransaction" : 16,
+      "pgMaxIdleInTransactionAgeMs" : 1,
+      "pgIdleInTransactionLastQuery" : {
+        "select count(n1_0.id) from result_mail_tx_hold_experiment.no" : 12,
+        "select dp1_0.id,dp1_0.answers,a1_0.id,a1_0.age,a1_0.applyfor" : 1,
+        "select ip1_0.id,a1_0.id,a1_0.age,a1_0.applyform_id,a1_0.crea" : 2,
+        "select n1_0.id,n1_0.content,n1_0.created_at,n1_0.created_by," : 47
+      }
+    }, {
+      "mode" : "NORMAL",
+      "concurrency" : 1,
+      "executorBeforeLoad" : {
+        "poolSize" : 2,
+        "active" : 0,
+        "queued" : 0,
+        "queueRemaining" : 100
+      },
+      "loadWallMs" : 175.1,
+      "sendLatencyMs" : {
+        "count" : 1,
+        "p50" : 174.5,
+        "p95" : 174.5,
+        "max" : 174.5,
+        "over1000ms" : 0
+      },
+      "sendStatus" : {
+        "200" : 1
+      },
+      "mailsSentOnRequestThread" : 0,
+      "mailsSentOnMailThreadDuringLoad" : 0,
+      "probeBaselineLatencyMs" : {
+        "count" : 1512,
+        "p50" : 5.1,
+        "p95" : 6.7,
+        "max" : 9.3,
+        "over1000ms" : 0
+      },
+      "probeBaselineStatus" : {
+        "200" : 1512
+      },
+      "probeDuringLatencyMs" : {
+        "count" : 136,
+        "p50" : 4.9,
+        "p95" : 5.9,
+        "max" : 6.4,
+        "over1000ms" : 0
+      },
+      "probeDuringStatus" : {
+        "200" : 136
+      },
+      "connectionUsageMs" : {
+        "count" : 142,
+        "p50" : 3.0,
+        "p95" : 4.0,
+        "max" : 157.0,
+        "over1000ms" : 0
+      },
+      "sendConnectionUsageMs" : {
+        "count" : 2,
+        "p50" : 3.0,
+        "p95" : 157.0,
+        "max" : 157.0,
+        "over1000ms" : 0
+      },
+      "probeConnectionUsageMs" : {
+        "count" : 140,
+        "p50" : 3.0,
+        "p95" : 4.0,
+        "max" : 4.0,
+        "over1000ms" : 0
+      },
+      "connectionAcquireWaitMs" : {
+        "count" : 138,
+        "p50" : 0.0,
+        "p95" : 0.0,
+        "max" : 0.0,
+        "over1000ms" : 0
+      },
+      "connectionTimeouts" : 0,
+      "samples" : 37,
+      "hikariMaxActive" : 5,
+      "hikariMaxPending" : 0,
+      "samplesWithPending" : 0,
+      "samplesPoolExhausted" : 0,
+      "pgMaxIdleInTransaction" : 5,
+      "pgSamplesWithIdleInTransaction" : 23,
+      "pgMaxIdleInTransactionAgeMs" : 1,
+      "pgIdleInTransactionLastQuery" : {
+        "select count(n1_0.id) from result_mail_tx_hold_experiment.no" : 24,
+        "select dp1_0.id,dp1_0.answers,a1_0.id,a1_0.age,a1_0.applyfor" : 1,
+        "select ip1_0.id,a1_0.id,a1_0.age,a1_0.applyform_id,a1_0.crea" : 2,
+        "select n1_0.id,n1_0.content,n1_0.created_at,n1_0.created_by," : 50
+      }
+    }, {
+      "mode" : "NORMAL",
+      "concurrency" : 1,
+      "executorBeforeLoad" : {
+        "poolSize" : 2,
+        "active" : 0,
+        "queued" : 0,
+        "queueRemaining" : 100
+      },
+      "loadWallMs" : 139.0,
+      "sendLatencyMs" : {
+        "count" : 1,
+        "p50" : 138.5,
+        "p95" : 138.5,
+        "max" : 138.5,
+        "over1000ms" : 0
+      },
+      "sendStatus" : {
+        "200" : 1
+      },
+      "mailsSentOnRequestThread" : 0,
+      "mailsSentOnMailThreadDuringLoad" : 0,
+      "probeBaselineLatencyMs" : {
+        "count" : 1832,
+        "p50" : 4.4,
+        "p95" : 5.5,
+        "max" : 7.7,
+        "over1000ms" : 0
+      },
+      "probeBaselineStatus" : {
+        "200" : 1832
+      },
+      "probeDuringLatencyMs" : {
+        "count" : 150,
+        "p50" : 3.6,
+        "p95" : 4.3,
+        "max" : 5.8,
+        "over1000ms" : 0
+      },
+      "probeDuringStatus" : {
+        "200" : 150
+      },
+      "connectionUsageMs" : {
+        "count" : 154,
+        "p50" : 2.0,
+        "p95" : 3.0,
+        "max" : 126.0,
+        "over1000ms" : 0
+      },
+      "sendConnectionUsageMs" : {
+        "count" : 2,
+        "p50" : 1.0,
+        "p95" : 126.0,
+        "max" : 126.0,
+        "over1000ms" : 0
+      },
+      "probeConnectionUsageMs" : {
+        "count" : 152,
+        "p50" : 2.0,
+        "p95" : 3.0,
+        "max" : 4.0,
+        "over1000ms" : 0
+      },
+      "connectionAcquireWaitMs" : {
+        "count" : 150,
+        "p50" : 0.0,
+        "p95" : 0.0,
+        "max" : 0.0,
+        "over1000ms" : 0
+      },
+      "connectionTimeouts" : 0,
+      "samples" : 36,
+      "hikariMaxActive" : 5,
+      "hikariMaxPending" : 0,
+      "samplesWithPending" : 0,
+      "samplesPoolExhausted" : 0,
+      "pgMaxIdleInTransaction" : 4,
+      "pgSamplesWithIdleInTransaction" : 24,
+      "pgMaxIdleInTransactionAgeMs" : 0,
+      "pgIdleInTransactionLastQuery" : {
+        "select count(n1_0.id) from result_mail_tx_hold_experiment.no" : 21,
+        "select ip1_0.id,a1_0.id,a1_0.age,a1_0.applyform_id,a1_0.crea" : 1,
+        "select n1_0.id,n1_0.content,n1_0.created_at,n1_0.created_by," : 66
+      }
+    } ],
+    "concurrency=5" : [ {
+      "mode" : "NORMAL",
+      "concurrency" : 5,
+      "executorBeforeLoad" : {
+        "poolSize" : 2,
+        "active" : 0,
+        "queued" : 0,
+        "queueRemaining" : 100
+      },
+      "loadWallMs" : 204.1,
+      "sendLatencyMs" : {
+        "count" : 5,
+        "p50" : 201.3,
+        "p95" : 202.8,
+        "max" : 202.8,
+        "over1000ms" : 0
+      },
+      "sendStatus" : {
+        "200" : 5
+      },
+      "mailsSentOnRequestThread" : 0,
+      "mailsSentOnMailThreadDuringLoad" : 2,
+      "probeBaselineLatencyMs" : {
+        "count" : 1848,
+        "p50" : 4.2,
+        "p95" : 5.7,
+        "max" : 7.6,
+        "over1000ms" : 0
+      },
+      "probeBaselineStatus" : {
+        "200" : 1848
+      },
+      "probeDuringLatencyMs" : {
+        "count" : 160,
+        "p50" : 5.0,
+        "p95" : 6.2,
+        "max" : 6.5,
+        "over1000ms" : 0
+      },
+      "probeDuringStatus" : {
+        "200" : 160
+      },
+      "connectionUsageMs" : {
+        "count" : 170,
+        "p50" : 3.0,
+        "p95" : 4.0,
+        "max" : 177.0,
+        "over1000ms" : 0
+      },
+      "sendConnectionUsageMs" : {
+        "count" : 10,
+        "p50" : 4.0,
+        "p95" : 177.0,
+        "max" : 177.0,
+        "over1000ms" : 0
+      },
+      "probeConnectionUsageMs" : {
+        "count" : 160,
+        "p50" : 3.0,
+        "p95" : 4.0,
+        "max" : 5.0,
+        "over1000ms" : 0
+      },
+      "connectionAcquireWaitMs" : {
+        "count" : 170,
+        "p50" : 0.0,
+        "p95" : 0.0,
+        "max" : 1.5,
+        "over1000ms" : 0
+      },
+      "connectionTimeouts" : 0,
+      "samples" : 37,
+      "hikariMaxActive" : 9,
+      "hikariMaxPending" : 0,
+      "samplesWithPending" : 0,
+      "samplesPoolExhausted" : 0,
+      "pgMaxIdleInTransaction" : 9,
+      "pgSamplesWithIdleInTransaction" : 18,
+      "pgMaxIdleInTransactionAgeMs" : 1,
+      "pgIdleInTransactionLastQuery" : {
+        "SELECT typinput='pg_catalog.array_in'::regproc as is_array, " : 3,
+        "select a1_0.id,a1_0.age,a1_0.applyform_id,a1_0.created_at,a1" : 1,
+        "select count(n1_0.id) from result_mail_tx_hold_experiment.no" : 36,
+        "select dp1_0.id,dp1_0.answers,a1_0.id,a1_0.age,a1_0.applyfor" : 2,
+        "select ip1_0.id,a1_0.id,a1_0.age,a1_0.applyform_id,a1_0.crea" : 9,
+        "select n1_0.id,n1_0.content,n1_0.created_at,n1_0.created_by," : 32
+      }
+    }, {
+      "mode" : "NORMAL",
+      "concurrency" : 5,
+      "executorBeforeLoad" : {
+        "poolSize" : 2,
+        "active" : 0,
+        "queued" : 0,
+        "queueRemaining" : 100
+      },
+      "loadWallMs" : 180.7,
+      "sendLatencyMs" : {
+        "count" : 5,
+        "p50" : 164.8,
+        "p95" : 179.4,
+        "max" : 179.4,
+        "over1000ms" : 0
+      },
+      "sendStatus" : {
+        "200" : 5
+      },
+      "mailsSentOnRequestThread" : 0,
+      "mailsSentOnMailThreadDuringLoad" : 2,
+      "probeBaselineLatencyMs" : {
+        "count" : 1867,
+        "p50" : 4.1,
+        "p95" : 6.0,
+        "max" : 9.6,
+        "over1000ms" : 0
+      },
+      "probeBaselineStatus" : {
+        "200" : 1867
+      },
+      "probeDuringLatencyMs" : {
+        "count" : 172,
+        "p50" : 4.1,
+        "p95" : 5.7,
+        "max" : 6.4,
+        "over1000ms" : 0
+      },
+      "probeDuringStatus" : {
+        "200" : 172
+      },
+      "connectionUsageMs" : {
+        "count" : 182,
+        "p50" : 3.0,
+        "p95" : 4.0,
+        "max" : 158.0,
+        "over1000ms" : 0
+      },
+      "sendConnectionUsageMs" : {
+        "count" : 10,
+        "p50" : 3.0,
+        "p95" : 158.0,
+        "max" : 158.0,
+        "over1000ms" : 0
+      },
+      "probeConnectionUsageMs" : {
+        "count" : 172,
+        "p50" : 3.0,
+        "p95" : 3.0,
+        "max" : 5.0,
+        "over1000ms" : 0
+      },
+      "connectionAcquireWaitMs" : {
+        "count" : 178,
+        "p50" : 0.0,
+        "p95" : 0.0,
+        "max" : 0.0,
+        "over1000ms" : 0
+      },
+      "connectionTimeouts" : 0,
+      "samples" : 37,
+      "hikariMaxActive" : 9,
+      "hikariMaxPending" : 0,
+      "samplesWithPending" : 0,
+      "samplesPoolExhausted" : 0,
+      "pgMaxIdleInTransaction" : 6,
+      "pgSamplesWithIdleInTransaction" : 21,
+      "pgMaxIdleInTransactionAgeMs" : 0,
+      "pgIdleInTransactionLastQuery" : {
+        "select a1_0.id,a1_0.age,a1_0.applyform_id,a1_0.created_at,a1" : 3,
+        "select count(n1_0.id) from result_mail_tx_hold_experiment.no" : 33,
+        "select dp1_0.id,dp1_0.answers,a1_0.id,a1_0.age,a1_0.applyfor" : 1,
+        "select ip1_0.id,a1_0.id,a1_0.age,a1_0.applyform_id,a1_0.crea" : 8,
+        "select n1_0.id,n1_0.content,n1_0.created_at,n1_0.created_by," : 27
+      }
+    }, {
+      "mode" : "NORMAL",
+      "concurrency" : 5,
+      "executorBeforeLoad" : {
+        "poolSize" : 2,
+        "active" : 0,
+        "queued" : 0,
+        "queueRemaining" : 100
+      },
+      "loadWallMs" : 155.7,
+      "sendLatencyMs" : {
+        "count" : 5,
+        "p50" : 154.5,
+        "p95" : 154.9,
+        "max" : 154.9,
+        "over1000ms" : 0
+      },
+      "sendStatus" : {
+        "200" : 5
+      },
+      "mailsSentOnRequestThread" : 0,
+      "mailsSentOnMailThreadDuringLoad" : 0,
+      "probeBaselineLatencyMs" : {
+        "count" : 2756,
+        "p50" : 2.8,
+        "p95" : 4.0,
+        "max" : 5.7,
+        "over1000ms" : 0
+      },
+      "probeBaselineStatus" : {
+        "200" : 2756
+      },
+      "probeDuringLatencyMs" : {
+        "count" : 160,
+        "p50" : 3.9,
+        "p95" : 4.9,
+        "max" : 5.5,
+        "over1000ms" : 0
+      },
+      "probeDuringStatus" : {
+        "200" : 160
+      },
+      "connectionUsageMs" : {
+        "count" : 170,
+        "p50" : 3.0,
+        "p95" : 4.0,
+        "max" : 140.0,
+        "over1000ms" : 0
+      },
+      "sendConnectionUsageMs" : {
+        "count" : 10,
+        "p50" : 1.0,
+        "p95" : 140.0,
+        "max" : 140.0,
+        "over1000ms" : 0
+      },
+      "probeConnectionUsageMs" : {
+        "count" : 160,
+        "p50" : 3.0,
+        "p95" : 3.0,
+        "max" : 4.0,
+        "over1000ms" : 0
+      },
+      "connectionAcquireWaitMs" : {
+        "count" : 166,
+        "p50" : 0.0,
+        "p95" : 0.0,
+        "max" : 0.0,
+        "over1000ms" : 0
+      },
+      "connectionTimeouts" : 0,
+      "samples" : 37,
+      "hikariMaxActive" : 9,
+      "hikariMaxPending" : 0,
+      "samplesWithPending" : 0,
+      "samplesPoolExhausted" : 0,
+      "pgMaxIdleInTransaction" : 5,
+      "pgSamplesWithIdleInTransaction" : 18,
+      "pgMaxIdleInTransactionAgeMs" : 0,
+      "pgIdleInTransactionLastQuery" : {
+        "select c1_0.id,c1_0.admin_id,c1_0.club_category,c1_0.club_ty" : 5,
+        "select count(n1_0.id) from result_mail_tx_hold_experiment.no" : 29,
+        "select dp1_0.id,dp1_0.answers,a1_0.id,a1_0.age,a1_0.applyfor" : 5,
+        "select ip1_0.id,a1_0.id,a1_0.age,a1_0.applyform_id,a1_0.crea" : 4,
+        "select n1_0.id,n1_0.content,n1_0.created_at,n1_0.created_by," : 24
+      }
+    } ],
+    "concurrency=10" : [ {
+      "mode" : "NORMAL",
+      "concurrency" : 10,
+      "executorBeforeLoad" : {
+        "poolSize" : 2,
+        "active" : 0,
+        "queued" : 0,
+        "queueRemaining" : 100
+      },
+      "loadWallMs" : 217.2,
+      "sendLatencyMs" : {
+        "count" : 10,
+        "p50" : 200.1,
+        "p95" : 215.5,
+        "max" : 215.5,
+        "over1000ms" : 0
+      },
+      "sendStatus" : {
+        "200" : 10
+      },
+      "mailsSentOnRequestThread" : 0,
+      "mailsSentOnMailThreadDuringLoad" : 2,
+      "probeBaselineLatencyMs" : {
+        "count" : 2849,
+        "p50" : 2.7,
+        "p95" : 3.7,
+        "max" : 5.3,
+        "over1000ms" : 0
+      },
+      "probeBaselineStatus" : {
+        "200" : 2849
+      },
+      "probeDuringLatencyMs" : {
+        "count" : 44,
+        "p50" : 5.2,
+        "p95" : 154.8,
+        "max" : 165.4,
+        "over1000ms" : 0
+      },
+      "probeDuringStatus" : {
+        "200" : 44
+      },
+      "connectionUsageMs" : {
+        "count" : 64,
+        "p50" : 4.0,
+        "p95" : 173.0,
+        "max" : 188.0,
+        "over1000ms" : 0
+      },
+      "sendConnectionUsageMs" : {
+        "count" : 20,
+        "p50" : 4.0,
+        "p95" : 183.0,
+        "max" : 188.0,
+        "over1000ms" : 0
+      },
+      "probeConnectionUsageMs" : {
+        "count" : 44,
+        "p50" : 3.0,
+        "p95" : 5.0,
+        "max" : 6.0,
+        "over1000ms" : 0
+      },
+      "connectionAcquireWaitMs" : {
+        "count" : 64,
+        "p50" : 0.0,
+        "p95" : 145.4,
+        "max" : 160.3,
+        "over1000ms" : 0
+      },
+      "connectionTimeouts" : 0,
+      "samples" : 38,
+      "hikariMaxActive" : 10,
+      "hikariMaxPending" : 4,
+      "samplesWithPending" : 3,
+      "samplesPoolExhausted" : 3,
+      "pgMaxIdleInTransaction" : 10,
+      "pgSamplesWithIdleInTransaction" : 20,
+      "pgMaxIdleInTransactionAgeMs" : 0,
+      "pgIdleInTransactionLastQuery" : {
+        "select count(n1_0.id) from result_mail_tx_hold_experiment.no" : 26,
+        "select dp1_0.id,dp1_0.answers,a1_0.id,a1_0.age,a1_0.applyfor" : 12,
+        "select ip1_0.id,a1_0.id,a1_0.age,a1_0.applyform_id,a1_0.crea" : 18,
+        "select n1_0.id,n1_0.content,n1_0.created_at,n1_0.created_by," : 34
+      }
+    }, {
+      "mode" : "NORMAL",
+      "concurrency" : 10,
+      "executorBeforeLoad" : {
+        "poolSize" : 2,
+        "active" : 0,
+        "queued" : 0,
+        "queueRemaining" : 100
+      },
+      "loadWallMs" : 288.5,
+      "sendLatencyMs" : {
+        "count" : 10,
+        "p50" : 284.2,
+        "p95" : 286.0,
+        "max" : 286.0,
+        "over1000ms" : 0
+      },
+      "sendStatus" : {
+        "200" : 10
+      },
+      "mailsSentOnRequestThread" : 0,
+      "mailsSentOnMailThreadDuringLoad" : 0,
+      "probeBaselineLatencyMs" : {
+        "count" : 2536,
+        "p50" : 3.0,
+        "p95" : 4.6,
+        "max" : 7.9,
+        "over1000ms" : 0
+      },
+      "probeBaselineStatus" : {
+        "200" : 2536
+      },
+      "probeDuringLatencyMs" : {
+        "count" : 24,
+        "p50" : 6.8,
+        "p95" : 254.3,
+        "max" : 254.4,
+        "over1000ms" : 0
+      },
+      "probeDuringStatus" : {
+        "200" : 24
+      },
+      "connectionUsageMs" : {
+        "count" : 42,
+        "p50" : 5.0,
+        "p95" : 254.0,
+        "max" : 255.0,
+        "over1000ms" : 0
+      },
+      "sendConnectionUsageMs" : {
+        "count" : 20,
+        "p50" : 2.0,
+        "p95" : 254.0,
+        "max" : 255.0,
+        "over1000ms" : 0
+      },
+      "probeConnectionUsageMs" : {
+        "count" : 22,
+        "p50" : 5.0,
+        "p95" : 7.0,
+        "max" : 7.0,
+        "over1000ms" : 0
+      },
+      "connectionAcquireWaitMs" : {
+        "count" : 46,
+        "p50" : 0.0,
+        "p95" : 245.7,
+        "max" : 249.3,
+        "over1000ms" : 0
+      },
+      "connectionTimeouts" : 0,
+      "samples" : 39,
+      "hikariMaxActive" : 10,
+      "hikariMaxPending" : 4,
+      "samplesWithPending" : 4,
+      "samplesPoolExhausted" : 4,
+      "pgMaxIdleInTransaction" : 10,
+      "pgSamplesWithIdleInTransaction" : 26,
+      "pgMaxIdleInTransactionAgeMs" : 2,
+      "pgIdleInTransactionLastQuery" : {
+        "select count(n1_0.id) from result_mail_tx_hold_experiment.no" : 28,
+        "select dp1_0.id,dp1_0.answers,a1_0.id,a1_0.age,a1_0.applyfor" : 13,
+        "select ip1_0.id,a1_0.id,a1_0.age,a1_0.applyform_id,a1_0.crea" : 27,
+        "select n1_0.id,n1_0.content,n1_0.created_at,n1_0.created_by," : 42
+      }
+    }, {
+      "mode" : "NORMAL",
+      "concurrency" : 10,
+      "executorBeforeLoad" : {
+        "poolSize" : 2,
+        "active" : 0,
+        "queued" : 0,
+        "queueRemaining" : 100
+      },
+      "loadWallMs" : 183.5,
+      "sendLatencyMs" : {
+        "count" : 10,
+        "p50" : 178.1,
+        "p95" : 182.0,
+        "max" : 182.0,
+        "over1000ms" : 0
+      },
+      "sendStatus" : {
+        "200" : 10
+      },
+      "mailsSentOnRequestThread" : 0,
+      "mailsSentOnMailThreadDuringLoad" : 0,
+      "probeBaselineLatencyMs" : {
+        "count" : 2697,
+        "p50" : 2.8,
+        "p95" : 4.1,
+        "max" : 5.9,
+        "over1000ms" : 0
+      },
+      "probeBaselineStatus" : {
+        "200" : 2697
+      },
+      "probeDuringLatencyMs" : {
+        "count" : 27,
+        "p50" : 4.6,
+        "p95" : 158.2,
+        "max" : 159.5,
+        "over1000ms" : 0
+      },
+      "probeDuringStatus" : {
+        "200" : 27
+      },
+      "connectionUsageMs" : {
+        "count" : 48,
+        "p50" : 3.0,
+        "p95" : 159.0,
+        "max" : 161.0,
+        "over1000ms" : 0
+      },
+      "sendConnectionUsageMs" : {
+        "count" : 20,
+        "p50" : 1.0,
+        "p95" : 159.0,
+        "max" : 161.0,
+        "over1000ms" : 0
+      },
+      "probeConnectionUsageMs" : {
+        "count" : 28,
+        "p50" : 3.0,
+        "p95" : 6.0,
+        "max" : 6.0,
+        "over1000ms" : 0
+      },
+      "connectionAcquireWaitMs" : {
+        "count" : 47,
+        "p50" : 0.0,
+        "p95" : 150.9,
+        "max" : 154.3,
+        "over1000ms" : 0
+      },
+      "connectionTimeouts" : 0,
+      "samples" : 38,
+      "hikariMaxActive" : 10,
+      "hikariMaxPending" : 4,
+      "samplesWithPending" : 3,
+      "samplesPoolExhausted" : 3,
+      "pgMaxIdleInTransaction" : 10,
+      "pgSamplesWithIdleInTransaction" : 19,
+      "pgMaxIdleInTransactionAgeMs" : 2,
+      "pgIdleInTransactionLastQuery" : {
+        "select count(n1_0.id) from result_mail_tx_hold_experiment.no" : 28,
+        "select dp1_0.id,dp1_0.answers,a1_0.id,a1_0.age,a1_0.applyfor" : 10,
+        "select ip1_0.id,a1_0.id,a1_0.age,a1_0.applyform_id,a1_0.crea" : 20,
+        "select n1_0.id,n1_0.content,n1_0.created_at,n1_0.created_by," : 24
+      }
+    } ]
+  },
+  "SATURATED" : {
+    "concurrency=1" : [ {
+      "mode" : "SATURATED",
+      "concurrency" : 1,
+      "executorBeforeLoad" : {
+        "poolSize" : 5,
+        "active" : 5,
+        "queued" : 100,
+        "queueRemaining" : 0,
+        "atStart" : {
+          "poolSize" : 2,
+          "active" : 0,
+          "queued" : 0,
+          "queueRemaining" : 100
+        },
+        "blockersSubmitted" : 105,
+        "blockersRejectedDuringSetup" : 0
+      },
+      "loadWallMs" : 1564.0,
+      "sendLatencyMs" : {
+        "count" : 1,
+        "p50" : 1563.4,
+        "p95" : 1563.4,
+        "max" : 1563.4,
+        "over1000ms" : 1
+      },
+      "sendStatus" : {
+        "200" : 1
+      },
+      "mailsSentOnRequestThread" : 40,
+      "mailsSentOnMailThreadDuringLoad" : 0,
+      "probeBaselineLatencyMs" : {
+        "count" : 2384,
+        "p50" : 3.3,
+        "p95" : 4.7,
+        "max" : 6.1,
+        "over1000ms" : 0
+      },
+      "probeBaselineStatus" : {
+        "200" : 2384
+      },
+      "probeDuringLatencyMs" : {
+        "count" : 1893,
+        "p50" : 3.2,
+        "p95" : 4.8,
+        "max" : 6.8,
+        "over1000ms" : 0
+      },
+      "probeDuringStatus" : {
+        "200" : 1893
+      },
+      "connectionUsageMs" : {
+        "count" : 1895,
+        "p50" : 2.0,
+        "p95" : 3.0,
+        "max" : 1550.0,
+        "over1000ms" : 1
+      },
+      "sendConnectionUsageMs" : {
+        "count" : 2,
+        "p50" : 1.0,
+        "p95" : 1550.0,
+        "max" : 1550.0,
+        "over1000ms" : 1
+      },
+      "probeConnectionUsageMs" : {
+        "count" : 1893,
+        "p50" : 2.0,
+        "p95" : 3.0,
+        "max" : 5.0,
+        "over1000ms" : 0
+      },
+      "connectionAcquireWaitMs" : {
+        "count" : 1895,
+        "p50" : 0.0,
+        "p95" : 0.0,
+        "max" : 0.0,
+        "over1000ms" : 0
+      },
+      "connectionTimeouts" : 0,
+      "samples" : 63,
+      "hikariMaxActive" : 5,
+      "hikariMaxPending" : 0,
+      "samplesWithPending" : 0,
+      "samplesPoolExhausted" : 0,
+      "pgMaxIdleInTransaction" : 5,
+      "pgSamplesWithIdleInTransaction" : 48,
+      "pgMaxIdleInTransactionAgeMs" : 1409,
+      "pgIdleInTransactionLastQuery" : {
+        "select a1_0.id,a1_0.age,a1_0.applyform_id,a1_0.created_at,a1" : 27,
+        "select count(n1_0.id) from result_mail_tx_hold_experiment.no" : 43,
+        "select ip1_0.id,a1_0.id,a1_0.age,a1_0.applyform_id,a1_0.crea" : 1,
+        "select n1_0.id,n1_0.content,n1_0.created_at,n1_0.created_by," : 82
+      }
+    }, {
+      "mode" : "SATURATED",
+      "concurrency" : 1,
+      "executorBeforeLoad" : {
+        "poolSize" : 5,
+        "active" : 5,
+        "queued" : 100,
+        "queueRemaining" : 0,
+        "atStart" : {
+          "poolSize" : 5,
+          "active" : 0,
+          "queued" : 0,
+          "queueRemaining" : 100
+        },
+        "blockersSubmitted" : 105,
+        "blockersRejectedDuringSetup" : 0
+      },
+      "loadWallMs" : 1508.5,
+      "sendLatencyMs" : {
+        "count" : 1,
+        "p50" : 1507.9,
+        "p95" : 1507.9,
+        "max" : 1507.9,
+        "over1000ms" : 1
+      },
+      "sendStatus" : {
+        "200" : 1
+      },
+      "mailsSentOnRequestThread" : 40,
+      "mailsSentOnMailThreadDuringLoad" : 0,
+      "probeBaselineLatencyMs" : {
+        "count" : 2879,
+        "p50" : 2.6,
+        "p95" : 3.8,
+        "max" : 5.8,
+        "over1000ms" : 0
+      },
+      "probeBaselineStatus" : {
+        "200" : 2879
+      },
+      "probeDuringLatencyMs" : {
+        "count" : 2250,
+        "p50" : 2.6,
+        "p95" : 3.5,
+        "max" : 5.5,
+        "over1000ms" : 0
+      },
+      "probeDuringStatus" : {
+        "200" : 2250
+      },
+      "connectionUsageMs" : {
+        "count" : 2252,
+        "p50" : 2.0,
+        "p95" : 2.0,
+        "max" : 1497.0,
+        "over1000ms" : 1
+      },
+      "sendConnectionUsageMs" : {
+        "count" : 2,
+        "p50" : 1.0,
+        "p95" : 1497.0,
+        "max" : 1497.0,
+        "over1000ms" : 1
+      },
+      "probeConnectionUsageMs" : {
+        "count" : 2250,
+        "p50" : 2.0,
+        "p95" : 2.0,
+        "max" : 4.0,
+        "over1000ms" : 0
+      },
+      "connectionAcquireWaitMs" : {
+        "count" : 2252,
+        "p50" : 0.0,
+        "p95" : 0.0,
+        "max" : 0.1,
+        "over1000ms" : 0
+      },
+      "connectionTimeouts" : 0,
+      "samples" : 63,
+      "hikariMaxActive" : 5,
+      "hikariMaxPending" : 0,
+      "samplesWithPending" : 0,
+      "samplesPoolExhausted" : 0,
+      "pgMaxIdleInTransaction" : 5,
+      "pgSamplesWithIdleInTransaction" : 49,
+      "pgMaxIdleInTransactionAgeMs" : 1341,
+      "pgIdleInTransactionLastQuery" : {
+        "select a1_0.id,a1_0.age,a1_0.applyform_id,a1_0.created_at,a1" : 26,
+        "select count(n1_0.id) from result_mail_tx_hold_experiment.no" : 59,
+        "select ip1_0.id,a1_0.id,a1_0.age,a1_0.applyform_id,a1_0.crea" : 1,
+        "select n1_0.id,n1_0.content,n1_0.created_at,n1_0.created_by," : 60
+      }
+    }, {
+      "mode" : "SATURATED",
+      "concurrency" : 1,
+      "executorBeforeLoad" : {
+        "poolSize" : 5,
+        "active" : 5,
+        "queued" : 100,
+        "queueRemaining" : 0,
+        "atStart" : {
+          "poolSize" : 5,
+          "active" : 0,
+          "queued" : 0,
+          "queueRemaining" : 100
+        },
+        "blockersSubmitted" : 105,
+        "blockersRejectedDuringSetup" : 0
+      },
+      "loadWallMs" : 1498.0,
+      "sendLatencyMs" : {
+        "count" : 1,
+        "p50" : 1497.5,
+        "p95" : 1497.5,
+        "max" : 1497.5,
+        "over1000ms" : 1
+      },
+      "sendStatus" : {
+        "200" : 1
+      },
+      "mailsSentOnRequestThread" : 40,
+      "mailsSentOnMailThreadDuringLoad" : 0,
+      "probeBaselineLatencyMs" : {
+        "count" : 3023,
+        "p50" : 2.6,
+        "p95" : 3.5,
+        "max" : 6.2,
+        "over1000ms" : 0
+      },
+      "probeBaselineStatus" : {
+        "200" : 3023
+      },
+      "probeDuringLatencyMs" : {
+        "count" : 2240,
+        "p50" : 2.6,
+        "p95" : 3.6,
+        "max" : 6.3,
+        "over1000ms" : 0
+      },
+      "probeDuringStatus" : {
+        "200" : 2240
+      },
+      "connectionUsageMs" : {
+        "count" : 2246,
+        "p50" : 2.0,
+        "p95" : 2.0,
+        "max" : 1487.0,
+        "over1000ms" : 1
+      },
+      "sendConnectionUsageMs" : {
+        "count" : 2,
+        "p50" : 1.0,
+        "p95" : 1487.0,
+        "max" : 1487.0,
+        "over1000ms" : 1
+      },
+      "probeConnectionUsageMs" : {
+        "count" : 2244,
+        "p50" : 2.0,
+        "p95" : 2.0,
+        "max" : 5.0,
+        "over1000ms" : 0
+      },
+      "connectionAcquireWaitMs" : {
+        "count" : 2242,
+        "p50" : 0.0,
+        "p95" : 0.0,
+        "max" : 0.0,
+        "over1000ms" : 0
+      },
+      "connectionTimeouts" : 0,
+      "samples" : 63,
+      "hikariMaxActive" : 5,
+      "hikariMaxPending" : 0,
+      "samplesWithPending" : 0,
+      "samplesPoolExhausted" : 0,
+      "pgMaxIdleInTransaction" : 5,
+      "pgSamplesWithIdleInTransaction" : 42,
+      "pgMaxIdleInTransactionAgeMs" : 1357,
+      "pgIdleInTransactionLastQuery" : {
+        "select a1_0.id,a1_0.age,a1_0.applyform_id,a1_0.created_at,a1" : 26,
+        "select count(n1_0.id) from result_mail_tx_hold_experiment.no" : 38,
+        "select ip1_0.id,a1_0.id,a1_0.age,a1_0.applyform_id,a1_0.crea" : 2,
+        "select n1_0.id,n1_0.content,n1_0.created_at,n1_0.created_by," : 50
+      }
+    } ],
+    "concurrency=5" : [ {
+      "mode" : "SATURATED",
+      "concurrency" : 5,
+      "executorBeforeLoad" : {
+        "poolSize" : 5,
+        "active" : 5,
+        "queued" : 100,
+        "queueRemaining" : 0,
+        "atStart" : {
+          "poolSize" : 5,
+          "active" : 0,
+          "queued" : 0,
+          "queueRemaining" : 100
+        },
+        "blockersSubmitted" : 105,
+        "blockersRejectedDuringSetup" : 0
+      },
+      "loadWallMs" : 1617.8,
+      "sendLatencyMs" : {
+        "count" : 5,
+        "p50" : 1588.0,
+        "p95" : 1617.1,
+        "max" : 1617.1,
+        "over1000ms" : 5
+      },
+      "sendStatus" : {
+        "200" : 5
+      },
+      "mailsSentOnRequestThread" : 200,
+      "mailsSentOnMailThreadDuringLoad" : 0,
+      "probeBaselineLatencyMs" : {
+        "count" : 2821,
+        "p50" : 2.7,
+        "p95" : 3.9,
+        "max" : 6.3,
+        "over1000ms" : 0
+      },
+      "probeBaselineStatus" : {
+        "200" : 2821
+      },
+      "probeDuringLatencyMs" : {
+        "count" : 1976,
+        "p50" : 3.1,
+        "p95" : 4.6,
+        "max" : 6.0,
+        "over1000ms" : 0
+      },
+      "probeDuringStatus" : {
+        "200" : 1976
+      },
+      "connectionUsageMs" : {
+        "count" : 1986,
+        "p50" : 2.0,
+        "p95" : 3.0,
+        "max" : 1602.0,
+        "over1000ms" : 5
+      },
+      "sendConnectionUsageMs" : {
+        "count" : 10,
+        "p50" : 1.0,
+        "p95" : 1602.0,
+        "max" : 1602.0,
+        "over1000ms" : 5
+      },
+      "probeConnectionUsageMs" : {
+        "count" : 1976,
+        "p50" : 2.0,
+        "p95" : 3.0,
+        "max" : 5.0,
+        "over1000ms" : 0
+      },
+      "connectionAcquireWaitMs" : {
+        "count" : 1986,
+        "p50" : 0.0,
+        "p95" : 0.0,
+        "max" : 0.4,
+        "over1000ms" : 0
+      },
+      "connectionTimeouts" : 0,
+      "samples" : 64,
+      "hikariMaxActive" : 9,
+      "hikariMaxPending" : 0,
+      "samplesWithPending" : 0,
+      "samplesPoolExhausted" : 0,
+      "pgMaxIdleInTransaction" : 9,
+      "pgSamplesWithIdleInTransaction" : 53,
+      "pgMaxIdleInTransactionAgeMs" : 1456,
+      "pgIdleInTransactionLastQuery" : {
+        "select a1_0.id,a1_0.age,a1_0.applyform_id,a1_0.created_at,a1" : 140,
+        "select count(n1_0.id) from result_mail_tx_hold_experiment.no" : 52,
+        "select dp1_0.id,dp1_0.answers,a1_0.id,a1_0.age,a1_0.applyfor" : 2,
+        "select ip1_0.id,a1_0.id,a1_0.age,a1_0.applyform_id,a1_0.crea" : 5,
+        "select n1_0.id,n1_0.content,n1_0.created_at,n1_0.created_by," : 87
+      }
+    }, {
+      "mode" : "SATURATED",
+      "concurrency" : 5,
+      "executorBeforeLoad" : {
+        "poolSize" : 5,
+        "active" : 5,
+        "queued" : 100,
+        "queueRemaining" : 0,
+        "atStart" : {
+          "poolSize" : 5,
+          "active" : 0,
+          "queued" : 0,
+          "queueRemaining" : 100
+        },
+        "blockersSubmitted" : 105,
+        "blockersRejectedDuringSetup" : 0
+      },
+      "loadWallMs" : 1631.4,
+      "sendLatencyMs" : {
+        "count" : 5,
+        "p50" : 1606.6,
+        "p95" : 1630.4,
+        "max" : 1630.4,
+        "over1000ms" : 5
+      },
+      "sendStatus" : {
+        "200" : 5
+      },
+      "mailsSentOnRequestThread" : 200,
+      "mailsSentOnMailThreadDuringLoad" : 0,
+      "probeBaselineLatencyMs" : {
+        "count" : 2953,
+        "p50" : 2.6,
+        "p95" : 3.7,
+        "max" : 6.1,
+        "over1000ms" : 0
+      },
+      "probeBaselineStatus" : {
+        "200" : 2953
+      },
+      "probeDuringLatencyMs" : {
+        "count" : 1980,
+        "p50" : 3.1,
+        "p95" : 4.8,
+        "max" : 7.5,
+        "over1000ms" : 0
+      },
+      "probeDuringStatus" : {
+        "200" : 1980
+      },
+      "connectionUsageMs" : {
+        "count" : 1987,
+        "p50" : 2.0,
+        "p95" : 3.0,
+        "max" : 1614.0,
+        "over1000ms" : 5
+      },
+      "sendConnectionUsageMs" : {
+        "count" : 10,
+        "p50" : 1.0,
+        "p95" : 1614.0,
+        "max" : 1614.0,
+        "over1000ms" : 5
+      },
+      "probeConnectionUsageMs" : {
+        "count" : 1977,
+        "p50" : 2.0,
+        "p95" : 3.0,
+        "max" : 6.0,
+        "over1000ms" : 0
+      },
+      "connectionAcquireWaitMs" : {
+        "count" : 1990,
+        "p50" : 0.0,
+        "p95" : 0.0,
+        "max" : 0.0,
+        "over1000ms" : 0
+      },
+      "connectionTimeouts" : 0,
+      "samples" : 65,
+      "hikariMaxActive" : 9,
+      "hikariMaxPending" : 0,
+      "samplesWithPending" : 0,
+      "samplesPoolExhausted" : 0,
+      "pgMaxIdleInTransaction" : 9,
+      "pgSamplesWithIdleInTransaction" : 54,
+      "pgMaxIdleInTransactionAgeMs" : 1472,
+      "pgIdleInTransactionLastQuery" : {
+        "select a1_0.id,a1_0.age,a1_0.applyform_id,a1_0.created_at,a1" : 136,
+        "select count(n1_0.id) from result_mail_tx_hold_experiment.no" : 96,
+        "select dp1_0.id,dp1_0.answers,a1_0.id,a1_0.age,a1_0.applyfor" : 2,
+        "select ip1_0.id,a1_0.id,a1_0.age,a1_0.applyform_id,a1_0.crea" : 6,
+        "select n1_0.id,n1_0.content,n1_0.created_at,n1_0.created_by," : 71
+      }
+    }, {
+      "mode" : "SATURATED",
+      "concurrency" : 5,
+      "executorBeforeLoad" : {
+        "poolSize" : 5,
+        "active" : 5,
+        "queued" : 100,
+        "queueRemaining" : 0,
+        "atStart" : {
+          "poolSize" : 5,
+          "active" : 0,
+          "queued" : 0,
+          "queueRemaining" : 100
+        },
+        "blockersSubmitted" : 105,
+        "blockersRejectedDuringSetup" : 0
+      },
+      "loadWallMs" : 1567.5,
+      "sendLatencyMs" : {
+        "count" : 5,
+        "p50" : 1536.8,
+        "p95" : 1566.7,
+        "max" : 1566.7,
+        "over1000ms" : 5
+      },
+      "sendStatus" : {
+        "200" : 5
+      },
+      "mailsSentOnRequestThread" : 200,
+      "mailsSentOnMailThreadDuringLoad" : 0,
+      "probeBaselineLatencyMs" : {
+        "count" : 3024,
+        "p50" : 2.6,
+        "p95" : 3.4,
+        "max" : 5.7,
+        "over1000ms" : 0
+      },
+      "probeBaselineStatus" : {
+        "200" : 3024
+      },
+      "probeDuringLatencyMs" : {
+        "count" : 2045,
+        "p50" : 3.0,
+        "p95" : 4.2,
+        "max" : 5.9,
+        "over1000ms" : 0
+      },
+      "probeDuringStatus" : {
+        "200" : 2045
+      },
+      "connectionUsageMs" : {
+        "count" : 2055,
+        "p50" : 2.0,
+        "p95" : 3.0,
+        "max" : 1553.0,
+        "over1000ms" : 5
+      },
+      "sendConnectionUsageMs" : {
+        "count" : 10,
+        "p50" : 2.0,
+        "p95" : 1553.0,
+        "max" : 1553.0,
+        "over1000ms" : 5
+      },
+      "probeConnectionUsageMs" : {
+        "count" : 2045,
+        "p50" : 2.0,
+        "p95" : 3.0,
+        "max" : 4.0,
+        "over1000ms" : 0
+      },
+      "connectionAcquireWaitMs" : {
+        "count" : 2055,
+        "p50" : 0.0,
+        "p95" : 0.0,
+        "max" : 0.0,
+        "over1000ms" : 0
+      },
+      "connectionTimeouts" : 0,
+      "samples" : 64,
+      "hikariMaxActive" : 9,
+      "hikariMaxPending" : 0,
+      "samplesWithPending" : 0,
+      "samplesPoolExhausted" : 0,
+      "pgMaxIdleInTransaction" : 9,
+      "pgSamplesWithIdleInTransaction" : 52,
+      "pgMaxIdleInTransactionAgeMs" : 1394,
+      "pgIdleInTransactionLastQuery" : {
+        "select a1_0.id,a1_0.age,a1_0.applyform_id,a1_0.created_at,a1" : 135,
+        "select c1_0.id,c1_0.admin_id,c1_0.club_category,c1_0.club_ty" : 5,
+        "select count(n1_0.id) from result_mail_tx_hold_experiment.no" : 75,
+        "select ip1_0.id,a1_0.id,a1_0.age,a1_0.applyform_id,a1_0.crea" : 3,
+        "select n1_0.id,n1_0.content,n1_0.created_at,n1_0.created_by," : 90
+      }
+    } ],
+    "concurrency=10" : [ {
+      "mode" : "SATURATED",
+      "concurrency" : 10,
+      "executorBeforeLoad" : {
+        "poolSize" : 5,
+        "active" : 5,
+        "queued" : 100,
+        "queueRemaining" : 0,
+        "atStart" : {
+          "poolSize" : 5,
+          "active" : 0,
+          "queued" : 0,
+          "queueRemaining" : 100
+        },
+        "blockersSubmitted" : 105,
+        "blockersRejectedDuringSetup" : 0
+      },
+      "loadWallMs" : 1597.7,
+      "sendLatencyMs" : {
+        "count" : 10,
+        "p50" : 1581.5,
+        "p95" : 1596.3,
+        "max" : 1596.3,
+        "over1000ms" : 10
+      },
+      "sendStatus" : {
+        "200" : 10
+      },
+      "mailsSentOnRequestThread" : 400,
+      "mailsSentOnMailThreadDuringLoad" : 0,
+      "probeBaselineLatencyMs" : {
+        "count" : 2840,
+        "p50" : 2.7,
+        "p95" : 3.9,
+        "max" : 5.9,
+        "over1000ms" : 0
+      },
+      "probeBaselineStatus" : {
+        "200" : 2840
+      },
+      "probeDuringLatencyMs" : {
+        "count" : 69,
+        "p50" : 2.5,
+        "p95" : 1540.7,
+        "max" : 1543.3,
+        "over1000ms" : 4
+      },
+      "probeDuringStatus" : {
+        "200" : 69
+      },
+      "connectionUsageMs" : {
+        "count" : 89,
+        "p50" : 1.0,
+        "p95" : 1562.0,
+        "max" : 1568.0,
+        "over1000ms" : 10
+      },
+      "sendConnectionUsageMs" : {
+        "count" : 20,
+        "p50" : 2.0,
+        "p95" : 1565.0,
+        "max" : 1568.0,
+        "over1000ms" : 10
+      },
+      "probeConnectionUsageMs" : {
+        "count" : 69,
+        "p50" : 1.0,
+        "p95" : 5.0,
+        "max" : 5.0,
+        "over1000ms" : 0
+      },
+      "connectionAcquireWaitMs" : {
+        "count" : 88,
+        "p50" : 0.0,
+        "p95" : 3.4,
+        "max" : 1540.4,
+        "over1000ms" : 4
+      },
+      "connectionTimeouts" : 0,
+      "samples" : 63,
+      "hikariMaxActive" : 10,
+      "hikariMaxPending" : 4,
+      "samplesWithPending" : 28,
+      "samplesPoolExhausted" : 29,
+      "pgMaxIdleInTransaction" : 10,
+      "pgSamplesWithIdleInTransaction" : 46,
+      "pgMaxIdleInTransactionAgeMs" : 1398,
+      "pgIdleInTransactionLastQuery" : {
+        "select a1_0.id,a1_0.age,a1_0.applyform_id,a1_0.created_at,a1" : 263,
+        "select a1_0.id,a1_0.created_at,a1_0.password,a1_0.updated_at" : 1,
+        "select af1_0.id,af1_0.apply_end_date,af1_0.apply_start_date," : 1,
+        "select c1_0.id,c1_0.admin_id,c1_0.club_category,c1_0.club_ty" : 3,
+        "select count(n1_0.id) from result_mail_tx_hold_experiment.no" : 34,
+        "select dp1_0.id,dp1_0.answers,a1_0.id,a1_0.age,a1_0.applyfor" : 4,
+        "select ip1_0.id,a1_0.id,a1_0.age,a1_0.applyform_id,a1_0.crea" : 15,
+        "select n1_0.id,n1_0.content,n1_0.created_at,n1_0.created_by," : 28
+      }
+    }, {
+      "mode" : "SATURATED",
+      "concurrency" : 10,
+      "executorBeforeLoad" : {
+        "poolSize" : 5,
+        "active" : 5,
+        "queued" : 100,
+        "queueRemaining" : 0,
+        "atStart" : {
+          "poolSize" : 5,
+          "active" : 0,
+          "queued" : 0,
+          "queueRemaining" : 100
+        },
+        "blockersSubmitted" : 105,
+        "blockersRejectedDuringSetup" : 0
+      },
+      "loadWallMs" : 1595.9,
+      "sendLatencyMs" : {
+        "count" : 10,
+        "p50" : 1557.4,
+        "p95" : 1594.6,
+        "max" : 1594.6,
+        "over1000ms" : 10
+      },
+      "sendStatus" : {
+        "200" : 10
+      },
+      "mailsSentOnRequestThread" : 400,
+      "mailsSentOnMailThreadDuringLoad" : 0,
+      "probeBaselineLatencyMs" : {
+        "count" : 2893,
+        "p50" : 2.6,
+        "p95" : 3.8,
+        "max" : 5.2,
+        "over1000ms" : 0
+      },
+      "probeBaselineStatus" : {
+        "200" : 2893
+      },
+      "probeDuringLatencyMs" : {
+        "count" : 100,
+        "p50" : 2.7,
+        "p95" : 5.5,
+        "max" : 1523.1,
+        "over1000ms" : 4
+      },
+      "probeDuringStatus" : {
+        "200" : 100
+      },
+      "connectionUsageMs" : {
+        "count" : 120,
+        "p50" : 2.0,
+        "p95" : 1534.0,
+        "max" : 1570.0,
+        "over1000ms" : 10
+      },
+      "sendConnectionUsageMs" : {
+        "count" : 20,
+        "p50" : 1.0,
+        "p95" : 1556.0,
+        "max" : 1570.0,
+        "over1000ms" : 10
+      },
+      "probeConnectionUsageMs" : {
+        "count" : 100,
+        "p50" : 2.0,
+        "p95" : 4.0,
+        "max" : 4.0,
+        "over1000ms" : 0
+      },
+      "connectionAcquireWaitMs" : {
+        "count" : 116,
+        "p50" : 0.0,
+        "p95" : 1.7,
+        "max" : 1519.3,
+        "over1000ms" : 4
+      },
+      "connectionTimeouts" : 0,
+      "samples" : 64,
+      "hikariMaxActive" : 10,
+      "hikariMaxPending" : 4,
+      "samplesWithPending" : 29,
+      "samplesPoolExhausted" : 29,
+      "pgMaxIdleInTransaction" : 10,
+      "pgSamplesWithIdleInTransaction" : 46,
+      "pgMaxIdleInTransactionAgeMs" : 1445,
+      "pgIdleInTransactionLastQuery" : {
+        "select a1_0.id,a1_0.age,a1_0.applyform_id,a1_0.created_at,a1" : 275,
+        "select count(n1_0.id) from result_mail_tx_hold_experiment.no" : 32,
+        "select ip1_0.id,a1_0.id,a1_0.age,a1_0.applyform_id,a1_0.crea" : 13,
+        "select n1_0.id,n1_0.content,n1_0.created_at,n1_0.created_by," : 28
+      }
+    }, {
+      "mode" : "SATURATED",
+      "concurrency" : 10,
+      "executorBeforeLoad" : {
+        "poolSize" : 5,
+        "active" : 5,
+        "queued" : 100,
+        "queueRemaining" : 0,
+        "atStart" : {
+          "poolSize" : 5,
+          "active" : 0,
+          "queued" : 0,
+          "queueRemaining" : 100
+        },
+        "blockersSubmitted" : 105,
+        "blockersRejectedDuringSetup" : 0
+      },
+      "loadWallMs" : 1761.5,
+      "sendLatencyMs" : {
+        "count" : 10,
+        "p50" : 1736.6,
+        "p95" : 1760.5,
+        "max" : 1760.5,
+        "over1000ms" : 10
+      },
+      "sendStatus" : {
+        "200" : 10
+      },
+      "mailsSentOnRequestThread" : 400,
+      "mailsSentOnMailThreadDuringLoad" : 0,
+      "probeBaselineLatencyMs" : {
+        "count" : 2824,
+        "p50" : 2.8,
+        "p95" : 3.7,
+        "max" : 5.5,
+        "over1000ms" : 0
+      },
+      "probeBaselineStatus" : {
+        "200" : 2824
+      },
+      "probeDuringLatencyMs" : {
+        "count" : 63,
+        "p50" : 4.3,
+        "p95" : 1690.2,
+        "max" : 1697.9,
+        "over1000ms" : 4
+      },
+      "probeDuringStatus" : {
+        "200" : 63
+      },
+      "connectionUsageMs" : {
+        "count" : 83,
+        "p50" : 2.0,
+        "p95" : 1716.0,
+        "max" : 1738.0,
+        "over1000ms" : 10
+      },
+      "sendConnectionUsageMs" : {
+        "count" : 20,
+        "p50" : 1.0,
+        "p95" : 1728.0,
+        "max" : 1738.0,
+        "over1000ms" : 10
+      },
+      "probeConnectionUsageMs" : {
+        "count" : 63,
+        "p50" : 2.0,
+        "p95" : 7.0,
+        "max" : 7.0,
+        "over1000ms" : 0
+      },
+      "connectionAcquireWaitMs" : {
+        "count" : 83,
+        "p50" : 0.0,
+        "p95" : 6.1,
+        "max" : 1694.5,
+        "over1000ms" : 4
+      },
+      "connectionTimeouts" : 0,
+      "samples" : 67,
+      "hikariMaxActive" : 10,
+      "hikariMaxPending" : 4,
+      "samplesWithPending" : 31,
+      "samplesPoolExhausted" : 31,
+      "pgMaxIdleInTransaction" : 10,
+      "pgSamplesWithIdleInTransaction" : 52,
+      "pgMaxIdleInTransactionAgeMs" : 1608,
+      "pgIdleInTransactionLastQuery" : {
+        "select a1_0.id,a1_0.age,a1_0.applyform_id,a1_0.created_at,a1" : 291,
+        "select c1_0.id,c1_0.admin_id,c1_0.club_category,c1_0.club_ty" : 1,
+        "select count(n1_0.id) from result_mail_tx_hold_experiment.no" : 27,
+        "select dp1_0.id,dp1_0.answers,a1_0.id,a1_0.age,a1_0.applyfor" : 5,
+        "select ip1_0.id,a1_0.id,a1_0.age,a1_0.applyform_id,a1_0.crea" : 15,
+        "select n1_0.id,n1_0.content,n1_0.created_at,n1_0.created_by," : 45
+      }
+    } ]
+  }
+}

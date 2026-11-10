@@ -12,6 +12,10 @@ import java.util.Properties;
 @Configuration
 public class EmailConfig {
 
+    static final int CONNECT_TIMEOUT_MS = 5_000;
+    static final int READ_TIMEOUT_MS = 10_000;
+    static final int WRITE_TIMEOUT_MS = 10_000;
+
     @Value("${spring.mail.host}")
     private String host;
 
@@ -44,6 +48,11 @@ public class EmailConfig {
         boolean useAuth = StringUtils.hasText(username);
         props.put("mail.smtp.auth", String.valueOf(useAuth));
         props.put("mail.smtp.starttls.enable", String.valueOf(useAuth));
+        // JavaMail은 타임아웃이 없으면 응답을 끝없이 기다린다. Postfix가 연결만 받고 멈추면 발송 스레드가 영영 풀리지 않는다(#435).
+        // 운영 Postfix는 한 통을 20~30ms에 받으므로 수백 배 여유를 둔다.
+        props.put("mail.smtp.connectiontimeout", String.valueOf(CONNECT_TIMEOUT_MS));
+        props.put("mail.smtp.timeout", String.valueOf(READ_TIMEOUT_MS));
+        props.put("mail.smtp.writetimeout", String.valueOf(WRITE_TIMEOUT_MS));
 
         return mailSender;
     }
