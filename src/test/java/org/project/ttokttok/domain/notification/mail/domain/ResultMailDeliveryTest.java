@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.project.ttokttok.infrastructure.email.dto.ResultMailContent;
 
 class ResultMailDeliveryTest {
@@ -53,5 +55,50 @@ class ResultMailDeliveryTest {
         assertThat(delivery.getStatus()).isEqualTo(ResultMailDeliveryStatus.SENT);
         assertThat(delivery.getSentAt()).isEqualTo(NOW.plusSeconds(3));
         assertThat(delivery.getLeaseUntil()).isNull();
+    }
+
+    private ResultMailDelivery afterAttempts(int attempts) {
+        ResultMailDelivery delivery = pending();
+        for (int i = 0; i < attempts; i++) {
+            delivery.startAttempt(NOW);
+        }
+        return delivery;
+    }
+
+    @ParameterizedTest(name = "{0}회 실패 뒤 재시도는 {1}분 뒤")
+    @CsvSource({"1,1", "2,2", "3,4", "4,8"})
+    @DisplayName("markFailed(retryable): 시도가 남았으면 PENDING으로 두고 1·2·4·8분 뒤로 미룬다")
+    void markFailed_retryable_backsOffExponentially(int attempts, long minutes) {
+        ResultMailDelivery delivery = afterAttempts(attempts);
+        LocalDateTime failedAt = NOW.plusSeconds(30);
+
+        delivery.markFailed("X", true, failedAt);
+
+        assertThat(delivery.getStatus()).isEqualTo(ResultMailDeliveryStatus.PENDING);
+        assertThat(delivery.getNextAttemptAt()).isEqualTo(failedAt.plusMinutes(minutes));
+        assertThat(delivery.getLastError()).isEqualTo("X");
+        assertThat(delivery.getLeaseUntil()).isNull();
+    }
+
+    @Test
+    @DisplayName("markFailed(retryable): 5번째 시도가 실패하면 FAILED")
+    void markFailed_retryable_failsAfterMaxAttempts() {
+        ResultMailDelivery delivery = afterAttempts(5);
+
+        delivery.markFailed("X", true, NOW);
+
+        assertThat(delivery.getStatus()).isEqualTo(ResultMailDeliveryStatus.FAILED);
+        assertThat(delivery.hasAttemptsLeft()).isFalse();
+    }
+
+    @Test
+    @DisplayName("markFailed(영구 실패): 시도가 남아 있어도 FAILED")
+    void markFailed_notRetryable_failsImmediately() {
+        ResultMailDelivery delivery = afterAttempts(1);
+
+        delivery.markFailed("X", false, NOW);
+
+        assertThat(delivery.getStatus()).isEqualTo(ResultMailDeliveryStatus.FAILED);
+        assertThat(delivery.getLastError()).isEqualTo("X");
     }
 }

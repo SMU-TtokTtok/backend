@@ -25,7 +25,9 @@ import org.project.ttokttok.infrastructure.email.dto.ResultMailContent;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ResultMailDelivery extends BaseTimeEntity {
 
+    static final int MAX_ATTEMPTS = 5;
     static final Duration LEASE = Duration.ofMinutes(5);
+    static final Duration RETRY_BASE = Duration.ofMinutes(1);
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -84,6 +86,10 @@ public class ResultMailDelivery extends BaseTimeEntity {
         return status == ResultMailDeliveryStatus.SENDING;
     }
 
+    public boolean hasAttemptsLeft() {
+        return attemptCount < MAX_ATTEMPTS;
+    }
+
     public void startAttempt(LocalDateTime now) {
         status = ResultMailDeliveryStatus.SENDING;
         attemptCount++;
@@ -96,11 +102,16 @@ public class ResultMailDelivery extends BaseTimeEntity {
         leaseUntil = null;
     }
 
-    // 재시도 정책이 아직 없어 retryable과 상관없이 FAILED로 끝낸다.
+    // 일시 실패이고 시도가 남았으면 RETRY_BASE × 2^(attemptCount-1) 뒤로 다시 미룬다. 아니면 끝낸다.
     public void markFailed(String error, boolean retryable, LocalDateTime now) {
-        status = ResultMailDeliveryStatus.FAILED;
         lastError = error;
         leaseUntil = null;
+        if (retryable && hasAttemptsLeft()) {
+            status = ResultMailDeliveryStatus.PENDING;
+            nextAttemptAt = now.plus(RETRY_BASE.multipliedBy(1L << Math.max(0, attemptCount - 1)));
+            return;
+        }
+        status = ResultMailDeliveryStatus.FAILED;
     }
 
     public ResultMailContent content() {
