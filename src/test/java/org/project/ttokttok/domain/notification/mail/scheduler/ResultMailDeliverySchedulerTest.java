@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verify;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.IntStream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -107,5 +108,25 @@ class ResultMailDeliverySchedulerTest {
         scheduler.sendDueMails();
 
         verify(deliveryService).recordSuccess(eq("id-2"), any(LocalDateTime.class));
+    }
+
+    @Test
+    @DisplayName("가져온 건수가 한 번에 가져오는 최대치와 같으면 쉬지 않고 다음 배치를 가져오고, 적으면 멈춘다")
+    void sendDueMails_fullBatch_continuesUntilShortBatch() {
+        List<ClaimedResultMail> fullBatch = mails(0, 10);
+        List<ClaimedResultMail> shortBatch = mails(10, 3);
+        given(deliveryService.claimDue(any(LocalDateTime.class))).willReturn(fullBatch, shortBatch, List.of());
+
+        scheduler.sendDueMails();
+
+        verify(deliveryService, times(2)).claimDue(any(LocalDateTime.class));
+        verify(emailService, times(13)).sendResultEmail(any(), eq(CONTENT));
+        verify(deliveryService, times(13)).recordSuccess(any(), any(LocalDateTime.class));
+    }
+
+    private static List<ClaimedResultMail> mails(int from, int count) {
+        return IntStream.range(from, from + count)
+                .mapToObj(i -> new ClaimedResultMail("id-" + i, "r" + i + "@example.com", CONTENT))
+                .toList();
     }
 }

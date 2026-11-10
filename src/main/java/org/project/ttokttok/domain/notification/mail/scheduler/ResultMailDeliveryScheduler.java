@@ -27,11 +27,16 @@ public class ResultMailDeliveryScheduler {
 
     @Scheduled(fixedDelayString = "${result-mail.worker.poll-delay-ms:5000}")
     public void sendDueMails() {
-        List<ClaimedResultMail> claimed = deliveryService.claimDue(LocalDateTime.now());
-        if (claimed.isEmpty()) {
-            return;
-        }
+        List<ClaimedResultMail> claimed;
+        do {
+            claimed = deliveryService.claimDue(LocalDateTime.now());
+            if (!claimed.isEmpty()) {
+                sendBatch(claimed);
+            }
+        } while (claimed.size() >= ResultMailDeliveryService.CLAIM_SIZE); // 가득 찬 배치 뒤에는 쉬지 않고 이어서 가져온다
+    }
 
+    private void sendBatch(List<ClaimedResultMail> claimed) {
         int sent = 0;
         int retrying = 0;
         int failed = 0;

@@ -23,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class ResultMailDeliveryService {
 
-    static final int CLAIM_SIZE = 10;
+    public static final int CLAIM_SIZE = 10;
     static final Duration RETENTION = Duration.ofDays(30);
     private static final List<ResultMailDeliveryStatus> FINISHED_STATUSES =
             List.of(ResultMailDeliveryStatus.SENT, ResultMailDeliveryStatus.FAILED);
