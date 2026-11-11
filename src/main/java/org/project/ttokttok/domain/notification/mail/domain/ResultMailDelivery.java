@@ -43,7 +43,7 @@ public class ResultMailDelivery extends BaseTimeEntity {
     @Column(name = "recipient_email", nullable = false, updatable = false)
     private String recipientEmail;
 
-    @Column(nullable = false, updatable = false)
+    @Column(nullable = false, updatable = false, columnDefinition = "TEXT")
     private String subject;
 
     @Column(nullable = false, updatable = false, columnDefinition = "TEXT")

@@ -6,7 +6,7 @@ CREATE TABLE result_mail_deliveries
     request_id      VARCHAR(36)  NOT NULL,
     club_id         VARCHAR(36)  NOT NULL REFERENCES clubs (id) ON DELETE CASCADE,
     recipient_email VARCHAR(255) NOT NULL,
-    subject         VARCHAR(255) NOT NULL,
+    subject         TEXT         NOT NULL,
     body            TEXT         NOT NULL,
     status          VARCHAR(20)  NOT NULL,
     attempt_count   INTEGER      NOT NULL DEFAULT 0,

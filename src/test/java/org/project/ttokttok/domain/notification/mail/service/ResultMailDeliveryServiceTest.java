@@ -76,6 +76,17 @@ class ResultMailDeliveryServiceTest {
     }
 
     @Test
+    @DisplayName("255자를 넘는 제목도 저장되고 다시 읽힌다")
+    void enqueue_longSubject_isSavedAndReadBack() {
+        String longTitle = "가".repeat(300);
+
+        service.enqueue("req-1", "club-1", recipients(1), new ResultMailContent(longTitle, "본문"), NOW);
+
+        assertThat(repository.findAll()).singleElement()
+                .extracting(ResultMailDelivery::getSubject).isEqualTo(longTitle);
+    }
+
+    @Test
     @DisplayName("content가 null이면 아무것도 저장하지 않는다")
     void enqueue_nullContent_savesNothing() {
         service.enqueue("req-1", "club-1", recipients(3), null, NOW);
