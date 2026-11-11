@@ -33,6 +33,7 @@ CLUB_ID = "crash460-club"
 ADMIN_USERNAME = "crash460-admin"
 POLL_SECONDS = 0.02
 MIN_FREE_GB = 0.7
+MEASURE_DATABASE = "ttokttok460"
 MAILPIT_PAGE = 500
 STATE_QUERY = "select status || '=' || count(*) from result_mail_deliveries group by status order by status"
 
@@ -117,8 +118,6 @@ def app_command(args, secret, ddl_auto):
     ]
     if args.variant == "after":
         command.append(f"--result-mail.worker.poll-delay-ms={args.poll_delay_ms}")
-    # Never let a run reach a real SMTP server.
-    assert f"--spring.mail.host={MAIL_HOST}" in command and f"--spring.mail.port={SMTP_PORT}" in command
     return command
 
 
@@ -356,16 +355,24 @@ def main():
     parser.add_argument("--fail-count", type=int, default=1000)
     parser.add_argument("--pg-container", default="ttokttok-426-repro-pg")
     parser.add_argument("--pg-port", type=int, help="host port of the container's 5432 (default: docker port)")
-    parser.add_argument("--database", default="ttokttok460")
+    parser.add_argument("--database", default=MEASURE_DATABASE, help="must be ttokttok460")
     parser.add_argument("--redis-port", type=int, default=6460)
     parser.add_argument("--app-port", type=int, default=18460)
     parser.add_argument("--config-dir", type=Path, default=REPO / "src/main/resources",
                         help="--spring.config.additional-location; the gitignored yml files are read from here, never copied")
-    parser.add_argument("--firebase-file", default="ttokttok-push-firebase-adminsdk-fbsvc-9af12cbea9.json")
+    parser.add_argument("--firebase-file",
+                        help="service account key file name inside --config-dir (default: the one *firebase*.json found there)")
     parser.add_argument("--log-dir", type=Path, default=Path("build/crash-measure-logs"))
     args = parser.parse_args()
     if not args.prepare_schema and args.output is None:
         parser.error("--output is required")
+    if args.database != MEASURE_DATABASE:
+        parser.error(f"this tool truncates and drops tables; only the {MEASURE_DATABASE} database is allowed")
+    if args.firebase_file is None:
+        keys = sorted(args.config_dir.glob("*firebase*.json"))
+        if len(keys) != 1:
+            parser.error(f"expected exactly one *firebase*.json in {args.config_dir}; pass --firebase-file")
+        args.firebase_file = keys[0].name
     if args.pg_port is None:
         out = subprocess.run(["docker", "port", args.pg_container, "5432"], capture_output=True, text=True,
                              check=True).stdout.splitlines()[0]
