@@ -278,6 +278,28 @@ class ApplicantAdminApiControllerIntegrationTest {
         assertThat(rows).extracting(ResultMailDelivery::getRequestId).doesNotContainNull().containsOnly(rows.get(0).getRequestId());
     }
 
+    @Test
+    void sendMail_applicantWithoutEmail_isSkippedAndOthersAreQueued() throws Exception {
+        entityManager.find(Applicant.class, clubB.applicantId()).passDocumentEvaluation();
+        Applicant noEmail = Applicant.createApplicant("noemail@sangmyung.kr", "이메일없음", 20, "컴퓨터공학",
+                null, "01012345678", StudentStatus.ENROLLED, Grade.FIRST_GRADE,
+                Gender.MALE, entityManager.find(ApplyForm.class, clubB.formId()));
+        noEmail.submitDocument(List.of());
+        noEmail.passDocumentEvaluation();
+        persist(noEmail);
+        flushAndClear();
+        String url = "/api/admin/applies/" + clubB.clubId() + "/send-email";
+        String body = """
+                {"pass":{"title":"합격","body":"축하합니다"},"fail":{"title":"불합격","body":"다음에 만나요"}}
+                """;
+
+        // when & then
+        perform(json(post(url).param("kind", "DOCUMENT"), body), clubB).andExpect(status().isOk());
+        List<ResultMailDelivery> rows = entityManager
+                .createQuery("select d from ResultMailDelivery d", ResultMailDelivery.class).getResultList();
+        assertThat(rows).extracting(ResultMailDelivery::getRecipientEmail).containsExactly("B@example.com");
+    }
+
     private long memberCount() {
         return entityManager.createQuery("select count(m) from ClubMember m", Long.class).getSingleResult();
     }

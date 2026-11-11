@@ -784,6 +784,49 @@ class ApplicantAdminServiceTest {
         }
 
         @Test
+        @DisplayName("이메일이 null이거나 공백인 지원자는 건너뛰고 나머지만 저장한다")
+        void sendResultMailToApplicants_skipsApplicantsWithoutEmail() {
+            // given
+            SendResultMailServiceRequest request = createResultMailRequest();
+
+            Club club = createClub(CLUB_ID);
+            given(clubRepository.findById(CLUB_ID)).willReturn(Optional.of(club));
+
+            ApplyForm applyForm = mock(ApplyForm.class);
+            given(applyForm.getId()).willReturn(APPLY_FORM_ID);
+            given(applyFormRepository.findByClubIdAndStatus(CLUB_ID, ACTIVE)).willReturn(Optional.of(applyForm));
+
+            Applicant passed1 = mock(Applicant.class);
+            given(passed1.statusOf(ApplicantPhase.DOCUMENT)).willReturn(Optional.of(PhaseStatus.PASS));
+            given(passed1.getEmail()).willReturn("passed1@test.com");
+
+            Applicant passedNoEmail = mock(Applicant.class);
+            given(passedNoEmail.statusOf(ApplicantPhase.DOCUMENT)).willReturn(Optional.of(PhaseStatus.PASS));
+            given(passedNoEmail.getEmail()).willReturn(null);
+
+            Applicant passed2 = mock(Applicant.class);
+            given(passed2.statusOf(ApplicantPhase.DOCUMENT)).willReturn(Optional.of(PhaseStatus.PASS));
+            given(passed2.getEmail()).willReturn("passed2@test.com");
+
+            Applicant failedBlankEmail = mock(Applicant.class);
+            given(failedBlankEmail.statusOf(ApplicantPhase.DOCUMENT)).willReturn(Optional.of(PhaseStatus.FAIL));
+            given(failedBlankEmail.getEmail()).willReturn("  ");
+
+            given(applicantRepository.findByApplyFormId(APPLY_FORM_ID))
+                    .willReturn(List.of(passed1, passedNoEmail, passed2, failedBlankEmail));
+
+            // when
+            applicantAdminService.sendResultMailToApplicants(request, USERNAME, CLUB_ID, ApplicantPhase.DOCUMENT);
+
+            // then
+            verify(resultMailDeliveryService).enqueue(any(), eq(CLUB_ID),
+                    eq(List.of("passed1@test.com", "passed2@test.com")), eq(request.pass()),
+                    any(LocalDateTime.class));
+            verify(resultMailDeliveryService).enqueue(any(), eq(CLUB_ID),
+                    eq(List.of()), eq(request.fail()), any(LocalDateTime.class));
+        }
+
+        @Test
         @DisplayName("활성 지원폼이 없으면 ActiveApplyFormNotFoundException이 발생한다")
         void sendResultMailToApplicants_throwsActiveApplyFormNotFoundException() {
             // given

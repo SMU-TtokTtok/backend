@@ -216,7 +216,18 @@ public class ApplicantAdminService {
                 .map(Applicant::getEmail)
                 .toList();
 
-        return new ResultMailRecipients(passedEmails, failedEmails);
+        List<String> passed = passedEmails.stream().filter(this::hasEmail).toList();
+        List<String> failed = failedEmails.stream().filter(this::hasEmail).toList();
+        int skipped = passedEmails.size() + failedEmails.size() - passed.size() - failed.size();
+        if (skipped > 0) {
+            log.warn("결과 메일 수신자 중 이메일이 없는 지원자를 건너뜀: {}명", skipped);
+        }
+
+        return new ResultMailRecipients(passed, failed);
+    }
+
+    private boolean hasEmail(String email) {
+        return email != null && !email.isBlank();
     }
 
     private record ResultMailRecipients(List<String> passed, List<String> failed) {
