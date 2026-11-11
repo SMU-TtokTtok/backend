@@ -22,6 +22,7 @@ import subprocess
 import time
 import urllib.error
 import urllib.request
+from datetime import datetime
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
@@ -200,7 +201,7 @@ def send_email(args, secret):
 def wait_for_completion(args, restart_started, ready_at, is_after):
     """Ends after a stall of --stall-seconds (after: also no PENDING/SENDING row).
 
-    Returns (stop_reason, last_mail_monotonic, pending_zero_monotonic). pending_zero is the first time no
+    Returns (stop_reason, last_mail_monotonic, pending_zero_monotonic, mail_total_seen). pending_zero is the first time no
     PENDING row was left, so only SENDING rows (waiting for lease recovery) remain; None for the old code.
     """
     total = mail_total()
@@ -210,21 +211,42 @@ def wait_for_completion(args, restart_started, ready_at, is_after):
     next_db_check = 0
     while True:
         now = time.monotonic()
+        states = None
+        if is_after and now >= next_db_check:
+            next_db_check = now + 2
+            states = delivery_states(args)
         current = mail_total()
         if current > total:
             total, last_increase, stalled_from = current, now, now
         if now - restart_started > args.max_wait_seconds:
-            return "timeout", last_increase, pending_zero
-        if is_after and now >= next_db_check:
-            next_db_check = now + 2
-            states = delivery_states(args)
+            return "timeout", last_increase, pending_zero, total
+        if states is not None:
             if pending_zero is None and states.get("PENDING", 0) == 0:
                 pending_zero = now
             if now - stalled_from >= args.stall_seconds and states.get("PENDING", 0) + states.get("SENDING", 0) == 0:
-                return "drained", last_increase, pending_zero
+                return "drained", last_increase, pending_zero, total
         if not is_after and now - stalled_from >= args.stall_seconds:
-            return "stalled", last_increase, None
+            return "stalled", last_increase, None, total
         time.sleep(.5)
+
+
+def recovered_rows(args, sending_at_kill):
+    """For each row that was SENDING at kill: seconds from its claim to its lease expiry and to its final send."""
+    rows = []
+    for row_id, (lease_until, claimed_at) in sending_at_kill.items():
+        out = psql(args, f"select attempt_count || '|' || coalesce(sent_at::text, '') from result_mail_deliveries "
+                         f"where id = '{row_id}'")
+        attempts, sent_at = out.split("|")
+        lease = datetime.fromisoformat(lease_until)
+        sent = datetime.fromisoformat(sent_at) if sent_at else None
+        rows.append({
+            "attempt_count": int(attempts),
+            "lease_seconds": (lease - datetime.fromisoformat(claimed_at)).total_seconds(),
+            "sent_seconds_after_claim": None if sent is None else
+                round((sent - datetime.fromisoformat(claimed_at)).total_seconds(), 1),
+            "sent_seconds_after_lease_expiry": None if sent is None else round((sent - lease).total_seconds(), 1),
+        })
+    return rows
 
 
 def free_memory_gb():
@@ -263,13 +285,22 @@ def run_once(args, repetition):
             process.kill()
     received_at_kill = settled_total()
     db_at_kill = delivery_states(args) if is_after else None
+    sending_at_kill = {}
+    if is_after:
+        for line in psql(args, "select id || '|' || lease_until || '|' || updated_at from result_mail_deliveries "
+                               "where status = 'SENDING'").splitlines():
+            row_id, lease_until, claimed_at = line.split("|")
+            sending_at_kill[row_id] = (lease_until, claimed_at)
 
     restart_started = time.monotonic()
     process, _, restart_ready_seconds = start_app(args, secret, f"{args.variant}-r{repetition}-second.log")
     try:
         ready_at = time.monotonic()
-        stop_reason, last_increase, pending_zero = wait_for_completion(args, restart_started, ready_at, is_after)
-        settled_total()
+        stop_reason, last_increase, pending_zero, seen = wait_for_completion(args, restart_started, ready_at, is_after)
+        returned_at = time.monotonic()
+        # Mailpit's API can lag the SMTP side; a mail that lands while we settle is the last mail (upper bound: now).
+        if settled_total() > seen:
+            last_increase = returned_at
     finally:
         kill_app(process)  # the run is over; nothing is in flight
 
@@ -298,6 +329,7 @@ def run_once(args, repetition):
     if is_after:
         row["delivery_states_at_kill"] = db_at_kill
         row["delivery_states_final"] = delivery_states(args)
+        row["recovered_rows"] = recovered_rows(args, sending_at_kill)
         row["rows_with_attempt_count_over_1"] = int(psql(
             args, "select count(*) from result_mail_deliveries where attempt_count > 1"))
     return row
