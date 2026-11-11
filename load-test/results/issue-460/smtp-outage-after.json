@@ -1,0 +1,289 @@
+{
+  "variant": "after",
+  "code_ref": "4cdc41a",
+  "pause_after_mails": 100,
+  "pause_seconds": 60,
+  "app_heap": "512m",
+  "stall_seconds": 30,
+  "max_wait_seconds": 1200,
+  "poll_delay_ms": 5000,
+  "mail_host": "127.0.0.1:1025",
+  "runs": [
+    {
+      "repetition": 1,
+      "expected_recipients": 300,
+      "received_total": 300,
+      "received_distinct": 300,
+      "missing": 0,
+      "duplicates": 0,
+      "received_at_pause_detected": 102,
+      "pause_seconds": 60,
+      "seconds_unpause_to_last_mail": 54.3,
+      "stop_reason": "drained",
+      "send_failures_logged": {
+        "MailSendException": 5
+      },
+      "send_email_http_status": 200,
+      "send_email_response_seconds": 2.199,
+      "app_ready_seconds": 12.2,
+      "seconds_unpause_to_queue_empty": 54.3,
+      "delivery_attempts_at_unpause": {
+        "PENDING:0": 180,
+        "PENDING:1": 5,
+        "SENDING:1": 10,
+        "SENT:1": 105
+      },
+      "delivery_attempts_final": {
+        "SENT:1": 295,
+        "SENT:2": 5
+      },
+      "final_failed": 0,
+      "rows_with_attempt_count_over_1": 5,
+      "seconds_unpause_to_last_first_attempt_mail": 3.6,
+      "seconds_unpause_to_first_retried_mail": 13.7,
+      "seconds_unpause_to_last_retried_mail": 54.1,
+      "timeline_during_pause": [
+        {
+          "seconds_since_pause": 0.0,
+          "delivery_states": {
+            "PENDING": 190,
+            "SENDING": 5,
+            "SENT": 105
+          }
+        },
+        {
+          "seconds_since_pause": 10.1,
+          "delivery_states": {
+            "PENDING": 191,
+            "SENDING": 4,
+            "SENT": 105
+          }
+        },
+        {
+          "seconds_since_pause": 20.2,
+          "delivery_states": {
+            "PENDING": 192,
+            "SENDING": 3,
+            "SENT": 105
+          }
+        },
+        {
+          "seconds_since_pause": 30.3,
+          "delivery_states": {
+            "PENDING": 193,
+            "SENDING": 2,
+            "SENT": 105
+          }
+        },
+        {
+          "seconds_since_pause": 40.4,
+          "delivery_states": {
+            "PENDING": 194,
+            "SENDING": 1,
+            "SENT": 105
+          }
+        },
+        {
+          "seconds_since_pause": 50.5,
+          "delivery_states": {
+            "PENDING": 195,
+            "SENT": 105
+          }
+        }
+      ]
+    },
+    {
+      "repetition": 2,
+      "expected_recipients": 300,
+      "received_total": 301,
+      "received_distinct": 300,
+      "missing": 0,
+      "duplicates": 1,
+      "received_at_pause_detected": 102,
+      "pause_seconds": 60,
+      "seconds_unpause_to_last_mail": 54.2,
+      "stop_reason": "drained",
+      "send_failures_logged": {
+        "MailSendException": 5
+      },
+      "send_email_http_status": 200,
+      "send_email_response_seconds": 2.562,
+      "app_ready_seconds": 13.3,
+      "seconds_unpause_to_queue_empty": 54.2,
+      "delivery_attempts_at_unpause": {
+        "PENDING:0": 180,
+        "PENDING:1": 5,
+        "SENDING:1": 10,
+        "SENT:1": 105
+      },
+      "delivery_attempts_final": {
+        "SENT:1": 295,
+        "SENT:2": 5
+      },
+      "final_failed": 0,
+      "rows_with_attempt_count_over_1": 5,
+      "seconds_unpause_to_last_first_attempt_mail": 3.8,
+      "seconds_unpause_to_first_retried_mail": 13.9,
+      "seconds_unpause_to_last_retried_mail": 54.2,
+      "timeline_during_pause": [
+        {
+          "seconds_since_pause": 0.0,
+          "delivery_states": {
+            "PENDING": 190,
+            "SENDING": 5,
+            "SENT": 105
+          }
+        },
+        {
+          "seconds_since_pause": 10.1,
+          "delivery_states": {
+            "PENDING": 191,
+            "SENDING": 4,
+            "SENT": 105
+          }
+        },
+        {
+          "seconds_since_pause": 20.2,
+          "delivery_states": {
+            "PENDING": 192,
+            "SENDING": 3,
+            "SENT": 105
+          }
+        },
+        {
+          "seconds_since_pause": 30.3,
+          "delivery_states": {
+            "PENDING": 193,
+            "SENDING": 2,
+            "SENT": 105
+          }
+        },
+        {
+          "seconds_since_pause": 40.4,
+          "delivery_states": {
+            "PENDING": 194,
+            "SENDING": 1,
+            "SENT": 105
+          }
+        },
+        {
+          "seconds_since_pause": 50.5,
+          "delivery_states": {
+            "PENDING": 195,
+            "SENT": 105
+          }
+        }
+      ]
+    },
+    {
+      "repetition": 3,
+      "expected_recipients": 300,
+      "received_total": 301,
+      "received_distinct": 300,
+      "missing": 0,
+      "duplicates": 1,
+      "received_at_pause_detected": 102,
+      "pause_seconds": 60,
+      "seconds_unpause_to_last_mail": 53.9,
+      "stop_reason": "drained",
+      "send_failures_logged": {
+        "MailSendException": 5
+      },
+      "send_email_http_status": 200,
+      "send_email_response_seconds": 2.159,
+      "app_ready_seconds": 12.2,
+      "seconds_unpause_to_queue_empty": 53.9,
+      "delivery_attempts_at_unpause": {
+        "PENDING:0": 180,
+        "PENDING:1": 5,
+        "SENDING:1": 10,
+        "SENT:1": 105
+      },
+      "delivery_attempts_final": {
+        "SENT:1": 295,
+        "SENT:2": 5
+      },
+      "final_failed": 0,
+      "rows_with_attempt_count_over_1": 5,
+      "seconds_unpause_to_last_first_attempt_mail": 3.5,
+      "seconds_unpause_to_first_retried_mail": 13.6,
+      "seconds_unpause_to_last_retried_mail": 53.9,
+      "timeline_during_pause": [
+        {
+          "seconds_since_pause": 0.0,
+          "delivery_states": {
+            "PENDING": 190,
+            "SENDING": 5,
+            "SENT": 105
+          }
+        },
+        {
+          "seconds_since_pause": 10.1,
+          "delivery_states": {
+            "PENDING": 191,
+            "SENDING": 4,
+            "SENT": 105
+          }
+        },
+        {
+          "seconds_since_pause": 20.2,
+          "delivery_states": {
+            "PENDING": 192,
+            "SENDING": 3,
+            "SENT": 105
+          }
+        },
+        {
+          "seconds_since_pause": 30.3,
+          "delivery_states": {
+            "PENDING": 193,
+            "SENDING": 2,
+            "SENT": 105
+          }
+        },
+        {
+          "seconds_since_pause": 40.4,
+          "delivery_states": {
+            "PENDING": 194,
+            "SENDING": 1,
+            "SENT": 105
+          }
+        },
+        {
+          "seconds_since_pause": 50.5,
+          "delivery_states": {
+            "PENDING": 195,
+            "SENT": 105
+          }
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "received_total": {
+      "median": 301,
+      "min": 300,
+      "max": 301
+    },
+    "received_distinct": {
+      "median": 300,
+      "min": 300,
+      "max": 300
+    },
+    "missing": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    },
+    "duplicates": {
+      "median": 1,
+      "min": 0,
+      "max": 1
+    },
+    "seconds_unpause_to_last_mail": {
+      "median": 54.2,
+      "min": 53.9,
+      "max": 54.3
+    }
+  }
+}
