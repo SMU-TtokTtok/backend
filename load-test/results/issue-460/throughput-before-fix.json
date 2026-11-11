@@ -1,0 +1,59 @@
+{
+  "variant": "after",
+  "code_ref": "fix/#460@d989c8f",
+  "kill_after_mails": 500,
+  "app_heap": "512m",
+  "stall_seconds": 30,
+  "max_wait_seconds": 360,
+  "poll_delay_ms": 1000,
+  "mail_host": "127.0.0.1:1025",
+  "runs": [
+    {
+      "repetition": 1,
+      "expected_recipients": 2000,
+      "received_total": 2000,
+      "received_distinct": 2000,
+      "missing": 0,
+      "duplicates": 0,
+      "received_at_kill_detected": 502,
+      "received_after_kill_settled": 510,
+      "seconds_restart_to_last_mail": 196.7,
+      "stop_reason": "drained",
+      "send_email_http_status": 200,
+      "send_email_response_seconds": 9.207,
+      "app_ready_seconds": 17.0,
+      "restart_ready_seconds": 14.6,
+      "kill_command": "taskkill /F /PID 50268",
+      "delivery_states_at_kill": {
+        "PENDING": 1490,
+        "SENT": 510
+      },
+      "delivery_states_final": {
+        "SENT": 2000
+      },
+      "rows_with_attempt_count_over_1": 0
+    }
+  ],
+  "summary": {
+    "received_total": {
+      "median": 2000,
+      "min": 2000,
+      "max": 2000
+    },
+    "received_distinct": {
+      "median": 2000,
+      "min": 2000,
+      "max": 2000
+    },
+    "missing": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    },
+    "duplicates": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    }
+  }
+}

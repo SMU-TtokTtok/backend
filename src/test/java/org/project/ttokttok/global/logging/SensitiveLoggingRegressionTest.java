@@ -33,6 +33,7 @@ import java.util.Date;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
@@ -152,7 +153,7 @@ class SensitiveLoggingRegressionTest {
     }
 
     @Test
-    void mailOutageHasMaskedRecipientsAndOneStackTracePerBatch() {
+    void mailOutageHasMaskedRecipientsAndNoStackTracePerRecipient() {
         capture(EmailService.class);
         JavaMailSender mailSender = mock(JavaMailSender.class);
         given(mailSender.createMimeMessage()).willAnswer(i -> new MimeMessage((Session) null));
@@ -160,11 +161,15 @@ class SensitiveLoggingRegressionTest {
         EmailService emailService = new EmailService(mailSender);
         ReflectionTestUtils.setField(emailService, "fromAddress", "noreply@sangmyung.kr");
         ReflectionTestUtils.setField(emailService, "fromName", "ttokttok");
+        ReflectionTestUtils.setField(emailService, "replyTo", "noreply@sangmyung.kr");
 
-        emailService.sendResultMail(List.of("kim@sangmyung.kr", "lee@sangmyung.kr"), new ResultMailContent("title", "body"));
+        ResultMailContent content = new ResultMailContent("title", "body");
+        for (String recipient : List.of("kim@sangmyung.kr", "lee@sangmyung.kr")) {
+            assertThatThrownBy(() -> emailService.sendResultEmail(recipient, content)).isInstanceOf(RuntimeException.class);
+        }
 
+        assertThat(appender.list).hasSize(2);
         assertThat(appender.list).noneMatch(e -> e.getFormattedMessage().matches(".*(kim|lee)@sangmyung.*"));
-        assertThat(appender.list).filteredOn(e -> e.getThrowableProxy() != null).singleElement()
-                .satisfies(event -> assertThat(event.getLevel()).isEqualTo(Level.ERROR));
+        assertThat(appender.list).allMatch(e -> e.getLevel() == Level.WARN && e.getThrowableProxy() == null);
     }
 }

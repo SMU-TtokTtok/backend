@@ -10,6 +10,8 @@
 | U4 | FCM 알림 실행기 확인과 분리 | `fcm-executor-before.json`, `fcm-executor-after.json` |
 | U5 | 메일 실행기가 넘칠 때의 정책 결정 | (U1~U4 결과로 판단) |
 
+#460에서 `mailExecutor`와 실험 테스트(`MailExecutorSaturationTest`, `MailExecutorShutdownExperimentTest`, `ResultMailTxHoldExperimentTest`)를 지웠으므로, 이 문서의 재현 명령은 #435 커밋(`e82157f`)에서만 돈다.
+
 ## U1. 결과 메일 API의 커넥션 점유
 
 ### 질문

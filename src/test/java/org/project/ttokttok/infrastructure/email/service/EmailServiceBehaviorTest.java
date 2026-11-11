@@ -10,18 +10,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.project.ttokttok.infrastructure.email.dto.ResultMailContent;
 import org.project.ttokttok.infrastructure.email.dto.EmailRequest;
 import org.springframework.mail.MailSendException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -114,17 +111,5 @@ class EmailServiceBehaviorTest {
         emailService.sendPasswordResetCode("user@sangmyung.kr", "123456");
 
         verify(mailSender).send(org.mockito.ArgumentMatchers.any(MimeMessage.class));
-    }
-
-    @Test
-    @DisplayName("sendResultMail은 유효하지 않은 이메일은 건너뛰고 유효한 이메일에만 발송한다")
-    void sendResultMail_skipsInvalidEmails() {
-        given(mailSender.createMimeMessage()).willReturn(emptyMimeMessage());
-        ResultMailContent request = new ResultMailContent("합격", "축하합니다");
-
-        emailService.sendResultMail(List.of("valid@sangmyung.kr", "invalid-email", "another@gmail.com"), request);
-
-        // 유효한 이메일 2건에 대해서만 발송 시도 (invalid-email 제외)
-        verify(mailSender, atLeastOnce()).send(org.mockito.ArgumentMatchers.any(MimeMessage.class));
     }
 }

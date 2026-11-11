@@ -13,14 +13,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import java.io.UnsupportedEncodingException;
 import java.security.SecureRandom;
-import java.util.List;
 
 @Slf4j
 @Service
@@ -101,51 +99,12 @@ public class EmailService {
         log.debug("비밀번호 재설정 코드 발송 완료");
     }
 
-    /**
-     * 동아리 지원 결과 안내 이메일 벌크 발송.
-     *
-     * <p>메서드 전체를 {@code mailExecutor} 풀에서 비동기 실행한다. 호출부
-     * ({@code ApplicantAdminService})는 다른 빈이므로 Spring AOP 프록시가 적용되어
-     * {@code @Async}가 정상 동작한다(과거 self-invocation + protected 조합은 프록시를
-     * 우회해 동기 실행됐음). 덕분에 느린 SMTP I/O가 호출자의 트랜잭션 스레드를 막지 않아
-     * DB 커넥션이 조기에 반납된다.
-     *
-     * <p>인자는 이미 구체화된 {@code List<String>}이라 비동기 스레드로 넘겨도
-     * 지연 로딩(영속성 컨텍스트) 이슈가 없다.
-     */
-    @Async("mailExecutor")
-    public void sendResultMail(List<String> emails, ResultMailContent request) {
-        int successCount = 0;
-        int failureCount = 0;
-        Exception lastFailure = null;
-
-        for (String email : emails) {
-            if (!isValidEmail(email)) {
-                log.warn("유효하지 않은 이메일 주소: {}", LogMasker.email(email));
-                failureCount++;
-                continue;
-            }
-
-            try {
-                EmailRequest emailRequest = EmailRequest.createResultEmail(email, request.title(), request.body());
-                sendEmail(emailRequest);
-                successCount++;
-            } catch (Exception e) {
-                failureCount++;
-                lastFailure = e;
-            }
+    // 결과 안내 이메일 한 통을 동기 발송한다. 결과 메일은 #460부터 DB 발송 작업과 워커로 보내며, 호출부는 워커이고 트랜잭션 밖에서 부른다.
+    public void sendResultEmail(String email, ResultMailContent content) {
+        if (!isValidEmail(email)) {
+            throw new EmailValidationException(ErrorMessage.EMAIL_RESULT_RECIPIENT_INVALID);
         }
-
-        logResultMailSummary(successCount, failureCount, lastFailure);
-    }
-
-    // 수신자별 실패는 sendEmail이 한 줄씩 남기므로 스택트레이스는 배치당 한 번만 남긴다.
-    private void logResultMailSummary(int successCount, int failureCount, Exception lastFailure) {
-        if (failureCount == 0) {
-            log.info("지원 결과 안내 이메일 발송 완료 - 성공: {}건, 실패: {}건", successCount, failureCount);
-            return;
-        }
-        log.error("지원 결과 안내 이메일 발송 완료 - 성공: {}건, 실패: {}건", successCount, failureCount, lastFailure);
+        sendEmail(EmailRequest.createResultEmail(email, content.title(), content.body()));
     }
 
     // 순수 이메일 주소 검증 메서드

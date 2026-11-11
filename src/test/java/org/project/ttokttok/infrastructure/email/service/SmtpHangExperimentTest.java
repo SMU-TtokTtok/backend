@@ -66,7 +66,14 @@ class SmtpHangExperimentTest {
                 recipients.add("r" + i + "@example.com");
             }
             result.put("resultMailBatch", timed(() -> {
-                emailService.sendResultMail(recipients, new ResultMailContent("결과", "본문"));
+                ResultMailContent content = new ResultMailContent("결과", "본문");
+                for (String recipient : recipients) {
+                    try {
+                        emailService.sendResultEmail(recipient, content);
+                    } catch (RuntimeException e) {
+                        // 이전 묶음 발송처럼 실패해도 다음 수신자를 이어서 보낸다
+                    }
+                }
                 return null;
             }));
             result.put("connectionsAccepted", server.accepted());

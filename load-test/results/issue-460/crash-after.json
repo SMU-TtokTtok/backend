@@ -1,0 +1,158 @@
+{
+  "variant": "after",
+  "code_ref": "19cc700",
+  "kill_after_mails": 500,
+  "app_heap": "512m",
+  "stall_seconds": 30,
+  "max_wait_seconds": 360,
+  "poll_delay_ms": 5000,
+  "mail_host": "127.0.0.1:1025",
+  "runs": [
+    {
+      "repetition": 1,
+      "expected_recipients": 2000,
+      "received_total": 2000,
+      "received_distinct": 2000,
+      "missing": 0,
+      "duplicates": 0,
+      "received_at_kill_detected": 501,
+      "received_after_kill_settled": 527,
+      "seconds_restart_to_last_mail": 300.2,
+      "stop_reason": "drained",
+      "send_email_http_status": 200,
+      "send_email_response_seconds": 7.992,
+      "app_ready_seconds": 11.7,
+      "restart_ready_seconds": 12.2,
+      "kill_command": "taskkill /F /PID 42620",
+      "sending_row_seen_before_kill": true,
+      "seconds_restart_to_pending_zero": 39.9,
+      "delivery_states_at_kill": {
+        "PENDING": 1470,
+        "SENDING": 3,
+        "SENT": 527
+      },
+      "delivery_states_final": {
+        "SENT": 2000
+      },
+      "recovered_rows": [
+        {
+          "attempt_count": 2,
+          "lease_seconds": 299.996111,
+          "sent_seconds_after_claim": 302.3,
+          "sent_seconds_after_lease_expiry": 2.3
+        },
+        {
+          "attempt_count": 2,
+          "lease_seconds": 299.996111,
+          "sent_seconds_after_claim": 302.4,
+          "sent_seconds_after_lease_expiry": 2.4
+        },
+        {
+          "attempt_count": 2,
+          "lease_seconds": 299.996111,
+          "sent_seconds_after_claim": 302.4,
+          "sent_seconds_after_lease_expiry": 2.4
+        }
+      ],
+      "rows_with_attempt_count_over_1": 3
+    },
+    {
+      "repetition": 2,
+      "expected_recipients": 2000,
+      "received_total": 2000,
+      "received_distinct": 2000,
+      "missing": 0,
+      "duplicates": 0,
+      "received_at_kill_detected": 502,
+      "received_after_kill_settled": 530,
+      "seconds_restart_to_last_mail": 35.9,
+      "stop_reason": "drained",
+      "send_email_http_status": 200,
+      "send_email_response_seconds": 7.207,
+      "app_ready_seconds": 13.3,
+      "restart_ready_seconds": 10.9,
+      "kill_command": "taskkill /F /PID 32892",
+      "sending_row_seen_before_kill": true,
+      "seconds_restart_to_pending_zero": 36.4,
+      "delivery_states_at_kill": {
+        "PENDING": 1470,
+        "SENT": 530
+      },
+      "delivery_states_final": {
+        "SENT": 2000
+      },
+      "recovered_rows": [],
+      "rows_with_attempt_count_over_1": 0
+    },
+    {
+      "repetition": 3,
+      "expected_recipients": 2000,
+      "received_total": 2001,
+      "received_distinct": 2000,
+      "missing": 0,
+      "duplicates": 1,
+      "received_at_kill_detected": 502,
+      "received_after_kill_settled": 528,
+      "seconds_restart_to_last_mail": 301.9,
+      "stop_reason": "drained",
+      "send_email_http_status": 200,
+      "send_email_response_seconds": 7.05,
+      "app_ready_seconds": 11.7,
+      "restart_ready_seconds": 11.7,
+      "kill_command": "taskkill /F /PID 37572",
+      "sending_row_seen_before_kill": true,
+      "seconds_restart_to_pending_zero": 41.6,
+      "delivery_states_at_kill": {
+        "PENDING": 1470,
+        "SENDING": 3,
+        "SENT": 527
+      },
+      "delivery_states_final": {
+        "SENT": 2000
+      },
+      "recovered_rows": [
+        {
+          "attempt_count": 2,
+          "lease_seconds": 299.996055,
+          "sent_seconds_after_claim": 304.0,
+          "sent_seconds_after_lease_expiry": 4.0
+        },
+        {
+          "attempt_count": 2,
+          "lease_seconds": 299.996055,
+          "sent_seconds_after_claim": 304.0,
+          "sent_seconds_after_lease_expiry": 4.0
+        },
+        {
+          "attempt_count": 2,
+          "lease_seconds": 299.996055,
+          "sent_seconds_after_claim": 304.0,
+          "sent_seconds_after_lease_expiry": 4.0
+        }
+      ],
+      "rows_with_attempt_count_over_1": 3
+    }
+  ],
+  "summary": {
+    "received_total": {
+      "median": 2000,
+      "min": 2000,
+      "max": 2001
+    },
+    "received_distinct": {
+      "median": 2000,
+      "min": 2000,
+      "max": 2000
+    },
+    "missing": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    },
+    "duplicates": {
+      "median": 0,
+      "min": 0,
+      "max": 1
+    }
+  }
+}

@@ -1,0 +1,118 @@
+{
+  "variant": "after",
+  "code_ref": "19cc700",
+  "kill_after_mails": 500,
+  "app_heap": "512m",
+  "stall_seconds": 30,
+  "max_wait_seconds": 360,
+  "poll_delay_ms": 5000,
+  "mail_host": "127.0.0.1:1025",
+  "runs": [
+    {
+      "repetition": 1,
+      "expected_recipients": 2000,
+      "received_total": 2000,
+      "received_distinct": 2000,
+      "missing": 0,
+      "duplicates": 0,
+      "received_at_kill_detected": 502,
+      "received_after_kill_settled": 528,
+      "seconds_restart_to_last_mail": 298.4,
+      "stop_reason": "drained",
+      "send_email_http_status": 200,
+      "send_email_response_seconds": 7.01,
+      "app_ready_seconds": 14.5,
+      "restart_ready_seconds": 11.7,
+      "kill_command": "taskkill /F /PID 51276",
+      "sending_row_seen_before_kill": true,
+      "seconds_restart_to_pending_zero": 37.3,
+      "delivery_states_at_kill": {
+        "PENDING": 1470,
+        "SENDING": 2,
+        "SENT": 528
+      },
+      "delivery_states_final": {
+        "SENT": 2000
+      },
+      "rows_with_attempt_count_over_1": 2
+    },
+    {
+      "repetition": 2,
+      "expected_recipients": 2000,
+      "received_total": 2000,
+      "received_distinct": 2000,
+      "missing": 0,
+      "duplicates": 0,
+      "received_at_kill_detected": 501,
+      "received_after_kill_settled": 529,
+      "seconds_restart_to_last_mail": 38.1,
+      "stop_reason": "drained",
+      "send_email_http_status": 200,
+      "send_email_response_seconds": 6.758,
+      "app_ready_seconds": 11.6,
+      "restart_ready_seconds": 10.9,
+      "kill_command": "taskkill /F /PID 52904",
+      "sending_row_seen_before_kill": true,
+      "seconds_restart_to_pending_zero": 38.7,
+      "delivery_states_at_kill": {
+        "PENDING": 1470,
+        "SENDING": 1,
+        "SENT": 529
+      },
+      "delivery_states_final": {
+        "SENT": 2000
+      },
+      "rows_with_attempt_count_over_1": 1
+    },
+    {
+      "repetition": 3,
+      "expected_recipients": 2000,
+      "received_total": 2000,
+      "received_distinct": 2000,
+      "missing": 0,
+      "duplicates": 0,
+      "received_at_kill_detected": 501,
+      "received_after_kill_settled": 524,
+      "seconds_restart_to_last_mail": 302.7,
+      "stop_reason": "drained",
+      "send_email_http_status": 200,
+      "send_email_response_seconds": 7.618,
+      "app_ready_seconds": 11.7,
+      "restart_ready_seconds": 13.2,
+      "kill_command": "taskkill /F /PID 52468",
+      "sending_row_seen_before_kill": true,
+      "seconds_restart_to_pending_zero": 47.6,
+      "delivery_states_at_kill": {
+        "PENDING": 1470,
+        "SENDING": 6,
+        "SENT": 524
+      },
+      "delivery_states_final": {
+        "SENT": 2000
+      },
+      "rows_with_attempt_count_over_1": 6
+    }
+  ],
+  "summary": {
+    "received_total": {
+      "median": 2000,
+      "min": 2000,
+      "max": 2000
+    },
+    "received_distinct": {
+      "median": 2000,
+      "min": 2000,
+      "max": 2000
+    },
+    "missing": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    },
+    "duplicates": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    }
+  }
+}

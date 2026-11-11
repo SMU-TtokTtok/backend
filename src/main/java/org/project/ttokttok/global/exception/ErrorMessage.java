@@ -45,6 +45,7 @@ public enum ErrorMessage {
     INVALID_APPLICABLE_GRADE("잘못된 학년입니다.", HttpStatus.BAD_REQUEST),
     INVALID_REGISTRATION_ROLE("잘못된 역할명입니다: ", HttpStatus.BAD_REQUEST),
     EMAIL_SIGNUP_DOMAIN_INVALID("상명대학교 이메일만 가입 가능합니다.", HttpStatus.BAD_REQUEST),
+    EMAIL_RESULT_RECIPIENT_INVALID("유효하지 않은 수신자 이메일 주소입니다.", HttpStatus.BAD_REQUEST),
     S3_CONTENT_EMPTY("파일이 비어있거나 존재하지 않습니다.", HttpStatus.BAD_REQUEST),
     S3_FILE_NAME_EMPTY("파일 이름이 비어있습니다.", HttpStatus.BAD_REQUEST),
     S3_FILE_NAME_CHARACTERS_INVALID("파일 이름에 허용되지 않는 특수 문자가 포함되어 있습니다.", HttpStatus.BAD_REQUEST),

@@ -11,7 +11,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.List;
 import org.project.ttokttok.infrastructure.email.dto.ResultMailContent;
 
 import jakarta.mail.internet.MimeMessage;
@@ -182,6 +181,43 @@ class EmailServiceTest {
         }
     }
 
+    // ===== sendResultEmail 테스트 =====
+
+    @Nested
+    @DisplayName("sendResultEmail 메서드")
+    class SendResultEmailTest {
+
+        private final ResultMailContent content = new ResultMailContent("합격 안내", "축하합니다");
+
+        @BeforeEach
+        void setUp() {
+            ReflectionTestUtils.setField(emailService, "fromAddress", "test@example.com");
+            ReflectionTestUtils.setField(emailService, "fromName", "TestSender");
+            ReflectionTestUtils.setField(emailService, "replyTo", "reply@example.com");
+        }
+
+        @ParameterizedTest
+        @NullAndEmptySource
+        @ValueSource(strings = {"not-an-email", "a@b"})
+        @DisplayName("유효하지 않은 주소면 EmailValidationException이 발생하고 발송하지 않는다")
+        void throwsForInvalidRecipient(String email) {
+            assertThatThrownBy(() -> emailService.sendResultEmail(email, content))
+                    .isInstanceOf(EmailValidationException.class)
+                    .hasMessage("유효하지 않은 수신자 이메일 주소입니다.");
+            verify(mailSender, never()).send(any(MimeMessage.class));
+        }
+
+        @Test
+        @DisplayName("유효한 주소면 한 번 발송한다")
+        void sendsOnceForValidRecipient() {
+            when(mailSender.createMimeMessage()).thenReturn(mock(MimeMessage.class));
+
+            emailService.sendResultEmail("user@example.com", content);
+
+            verify(mailSender, times(1)).send(any(MimeMessage.class));
+        }
+    }
+
     // ===== sendPasswordResetCode 테스트 =====
 
     @Nested
@@ -209,51 +245,6 @@ class EmailServiceTest {
 
             // then
             verify(mailSender).send(any(MimeMessage.class));
-        }
-    }
-
-    // ===== sendResultMail 테스트 =====
-
-    @Nested
-    @DisplayName("sendResultMail 메서드")
-    class SendResultMailTest {
-
-        @BeforeEach
-        void setUp() {
-            ReflectionTestUtils.setField(emailService, "fromAddress", "test@example.com");
-            ReflectionTestUtils.setField(emailService, "fromName", "TestSender");
-            ReflectionTestUtils.setField(emailService, "replyTo", "reply@example.com");
-        }
-
-        @Test
-        @DisplayName("유효한 이메일마다 한 번씩 실제 발송(sendEmail)을 수행한다")
-        void sendsOncePerValidEmail() {
-            // given
-            MimeMessage mimeMessage = mock(MimeMessage.class);
-            when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
-            List<String> emails = List.of("a@sangmyung.kr", "b@gmail.com", "c@naver.com");
-            ResultMailContent request = new ResultMailContent("합격 안내", "축하합니다.");
-
-            // when
-            emailService.sendResultMail(emails, request);
-
-            // then
-            verify(mailSender, times(3)).send(any(MimeMessage.class));
-        }
-
-        @Test
-        @DisplayName("유효하지 않은 이메일은 건너뛰고 발송하지 않는다")
-        void skipsInvalidEmails() {
-            // given
-            List<String> emails = List.of("not-an-email", "  ", "@no-local.kr");
-            ResultMailContent request = new ResultMailContent("합격 안내", "축하합니다.");
-
-            // when
-            emailService.sendResultMail(emails, request);
-
-            // then: 유효하지 않아 MimeMessage 생성/발송이 전혀 일어나지 않음
-            verify(mailSender, never()).createMimeMessage();
-            verify(mailSender, never()).send(any(MimeMessage.class));
         }
     }
 }

@@ -1,0 +1,94 @@
+{
+  "variant": "before",
+  "code_ref": "d50a4a5",
+  "pause_after_mails": 100,
+  "pause_seconds": 60,
+  "app_heap": "512m",
+  "stall_seconds": 30,
+  "max_wait_seconds": 1200,
+  "poll_delay_ms": null,
+  "mail_host": "127.0.0.1:1025",
+  "runs": [
+    {
+      "repetition": 1,
+      "expected_recipients": 300,
+      "received_total": 289,
+      "received_distinct": 289,
+      "missing": 11,
+      "duplicates": 0,
+      "received_at_pause_detected": 102,
+      "pause_seconds": 60,
+      "seconds_unpause_to_last_mail": 1.3,
+      "stop_reason": "stalled",
+      "send_failures_logged": {
+        "MailSendException": 12
+      },
+      "send_email_http_status": 200,
+      "send_email_response_seconds": 1.767,
+      "app_ready_seconds": 12.2
+    },
+    {
+      "repetition": 2,
+      "expected_recipients": 300,
+      "received_total": 289,
+      "received_distinct": 289,
+      "missing": 11,
+      "duplicates": 0,
+      "received_at_pause_detected": 103,
+      "pause_seconds": 60,
+      "seconds_unpause_to_last_mail": 1.3,
+      "stop_reason": "stalled",
+      "send_failures_logged": {
+        "MailSendException": 12
+      },
+      "send_email_http_status": 200,
+      "send_email_response_seconds": 1.95,
+      "app_ready_seconds": 12.7
+    },
+    {
+      "repetition": 3,
+      "expected_recipients": 300,
+      "received_total": 288,
+      "received_distinct": 288,
+      "missing": 12,
+      "duplicates": 0,
+      "received_at_pause_detected": 104,
+      "pause_seconds": 60,
+      "seconds_unpause_to_last_mail": 1.3,
+      "stop_reason": "stalled",
+      "send_failures_logged": {
+        "MailSendException": 12
+      },
+      "send_email_http_status": 200,
+      "send_email_response_seconds": 1.705,
+      "app_ready_seconds": 12.7
+    }
+  ],
+  "summary": {
+    "received_total": {
+      "median": 289,
+      "min": 288,
+      "max": 289
+    },
+    "received_distinct": {
+      "median": 289,
+      "min": 288,
+      "max": 289
+    },
+    "missing": {
+      "median": 11,
+      "min": 11,
+      "max": 12
+    },
+    "duplicates": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    },
+    "seconds_unpause_to_last_mail": {
+      "median": 1.3,
+      "min": 1.3,
+      "max": 1.3
+    }
+  }
+}
