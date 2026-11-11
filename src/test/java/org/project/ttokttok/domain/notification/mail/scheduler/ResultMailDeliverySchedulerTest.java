@@ -113,8 +113,8 @@ class ResultMailDeliverySchedulerTest {
     @Test
     @DisplayName("가져온 건수가 한 번에 가져오는 최대치와 같으면 쉬지 않고 다음 배치를 가져오고, 적으면 멈춘다")
     void sendDueMails_fullBatch_continuesUntilShortBatch() {
-        List<ClaimedResultMail> fullBatch = mails(0, 10);
-        List<ClaimedResultMail> shortBatch = mails(10, 3);
+        List<ClaimedResultMail> fullBatch = mails(0, ResultMailDeliveryService.CLAIM_SIZE);
+        List<ClaimedResultMail> shortBatch = mails(ResultMailDeliveryService.CLAIM_SIZE, 3);
         given(deliveryService.claimDue(any(LocalDateTime.class))).willReturn(fullBatch, shortBatch, List.of());
 
         scheduler.sendDueMails();
@@ -122,6 +122,18 @@ class ResultMailDeliverySchedulerTest {
         verify(deliveryService, times(2)).claimDue(any(LocalDateTime.class));
         verify(emailService, times(13)).sendResultEmail(any(), eq(CONTENT));
         verify(deliveryService, times(13)).recordSuccess(any(), any(LocalDateTime.class));
+    }
+
+    @Test
+    @DisplayName("가득 찬 배치에 실패가 섞이면 이어서 가져오지 않고 이번 호출을 끝낸다")
+    void sendDueMails_fullBatchWithFailure_stopsUntilNextPoll() {
+        List<ClaimedResultMail> fullBatch = mails(0, ResultMailDeliveryService.CLAIM_SIZE);
+        given(deliveryService.claimDue(any(LocalDateTime.class))).willReturn(fullBatch, fullBatch, List.of());
+        willThrow(new RuntimeException("smtp down")).given(emailService).sendResultEmail("r3@example.com", CONTENT);
+
+        scheduler.sendDueMails();
+
+        verify(deliveryService, times(1)).claimDue(any(LocalDateTime.class));
     }
 
     private static List<ClaimedResultMail> mails(int from, int count) {

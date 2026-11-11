@@ -28,15 +28,16 @@ public class ResultMailDeliveryScheduler {
     @Scheduled(fixedDelayString = "${result-mail.worker.poll-delay-ms:5000}")
     public void sendDueMails() {
         List<ClaimedResultMail> claimed;
+        boolean allSent;
         do {
             claimed = deliveryService.claimDue(LocalDateTime.now());
-            if (!claimed.isEmpty()) {
-                sendBatch(claimed);
-            }
-        } while (claimed.size() >= ResultMailDeliveryService.CLAIM_SIZE); // 가득 찬 배치 뒤에는 쉬지 않고 이어서 가져온다
+            allSent = claimed.isEmpty() || sendBatch(claimed);
+            // 가득 찬 배치가 모두 성공했을 때만 쉬지 않고 이어서 가져온다.
+            // 실패가 섞이면 SMTP 장애일 수 있어 다음 폴링까지 기다린다(스케줄러 스레드가 크론과 공유된다).
+        } while (allSent && claimed.size() >= ResultMailDeliveryService.CLAIM_SIZE);
     }
 
-    private void sendBatch(List<ClaimedResultMail> claimed) {
+    private boolean sendBatch(List<ClaimedResultMail> claimed) {
         int sent = 0;
         int retrying = 0;
         int failed = 0;
@@ -57,6 +58,7 @@ public class ResultMailDeliveryScheduler {
         }
         log.info("결과 메일 발송 배치 완료 - 성공: {}건, 재시도 예정: {}건, 최종 실패: {}건, 기록 실패: {}건",
                 sent, retrying, failed, recordErrors);
+        return retrying + failed + recordErrors == 0;
     }
 
     @Scheduled(cron = "0 30 4 * * *", zone = "Asia/Seoul")
