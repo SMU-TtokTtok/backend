@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
+import static org.project.ttokttok.domain.notification.mail.service.ResultMailDeliveryService.CLAIM_SIZE;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -72,7 +73,6 @@ import org.springframework.transaction.support.TransactionTemplate;
 class ResultMailDeliveryPostgresTest {
 
     private static final int RECIPIENTS = 200;
-    private static final int CLAIM_SIZE = 10;
     private static final ResultMailContent CONTENT = new ResultMailContent("결과 안내", "본문");
 
     @Autowired private ResultMailDeliveryService service;
