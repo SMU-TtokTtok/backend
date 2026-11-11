@@ -1,0 +1,85 @@
+{
+  "variant": "before",
+  "code_ref": "d50a4a5",
+  "kill_after_mails": 500,
+  "app_heap": "512m",
+  "stall_seconds": 30,
+  "max_wait_seconds": 360,
+  "poll_delay_ms": null,
+  "mail_host": "127.0.0.1:1025",
+  "runs": [
+    {
+      "repetition": 1,
+      "expected_recipients": 2000,
+      "received_total": 570,
+      "received_distinct": 570,
+      "missing": 1430,
+      "duplicates": 0,
+      "received_at_kill_detected": 506,
+      "received_after_kill_settled": 570,
+      "seconds_restart_to_last_mail": null,
+      "stop_reason": "stalled",
+      "send_email_http_status": 200,
+      "send_email_response_seconds": 7.665,
+      "app_ready_seconds": 12.7,
+      "restart_ready_seconds": 11.6,
+      "kill_command": "taskkill /F /PID 38632"
+    },
+    {
+      "repetition": 2,
+      "expected_recipients": 2000,
+      "received_total": 549,
+      "received_distinct": 549,
+      "missing": 1451,
+      "duplicates": 0,
+      "received_at_kill_detected": 501,
+      "received_after_kill_settled": 549,
+      "seconds_restart_to_last_mail": null,
+      "stop_reason": "stalled",
+      "send_email_http_status": 200,
+      "send_email_response_seconds": 5.491,
+      "app_ready_seconds": 12.7,
+      "restart_ready_seconds": 12.2,
+      "kill_command": "taskkill /F /PID 52396"
+    },
+    {
+      "repetition": 3,
+      "expected_recipients": 2000,
+      "received_total": 562,
+      "received_distinct": 562,
+      "missing": 1438,
+      "duplicates": 0,
+      "received_at_kill_detected": 503,
+      "received_after_kill_settled": 562,
+      "seconds_restart_to_last_mail": null,
+      "stop_reason": "stalled",
+      "send_email_http_status": 200,
+      "send_email_response_seconds": 5.117,
+      "app_ready_seconds": 10.8,
+      "restart_ready_seconds": 10.9,
+      "kill_command": "taskkill /F /PID 27288"
+    }
+  ],
+  "summary": {
+    "received_total": {
+      "median": 562,
+      "min": 549,
+      "max": 570
+    },
+    "received_distinct": {
+      "median": 562,
+      "min": 549,
+      "max": 570
+    },
+    "missing": {
+      "median": 1438,
+      "min": 1430,
+      "max": 1451
+    },
+    "duplicates": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    }
+  }
+}
