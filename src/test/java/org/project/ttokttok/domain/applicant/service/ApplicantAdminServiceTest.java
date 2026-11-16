@@ -26,6 +26,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
@@ -45,6 +47,13 @@ import org.project.ttokttok.domain.applicant.domain.json.Answer;
 import org.project.ttokttok.domain.applicant.exception.ApplicantNotFoundException;
 import org.project.ttokttok.domain.applicant.exception.UnAuthorizedApplicantAccessException;
 import org.project.ttokttok.domain.applicant.repository.ApplicantRepository;
+import org.project.ttokttok.domain.applicant.repository.ResultAnnouncementRepository;
+import org.project.ttokttok.domain.applicant.domain.ResultAnnouncement;
+import org.project.ttokttok.domain.applicant.exception.ResultAnnouncementException;
+import org.project.ttokttok.domain.applicant.service.dto.request.ResultAnnouncementServiceRequest;
+import org.project.ttokttok.domain.applicant.service.dto.response.ResultAnnouncementServiceResponse;
+import org.project.ttokttok.global.exception.ErrorMessage;
+import org.springframework.http.HttpStatus;
 import org.project.ttokttok.domain.applicant.repository.dto.response.ApplicantPageQueryResponse;
 import org.project.ttokttok.domain.applicant.service.dto.request.ApplicantFinalizationRequest;
 import org.project.ttokttok.domain.applicant.service.dto.request.ApplicantPageServiceRequest;
@@ -88,6 +97,9 @@ class ApplicantAdminServiceTest {
 
     @Mock
     private ResultMailDeliveryService resultMailDeliveryService;
+
+    @Mock
+    private ResultAnnouncementRepository resultAnnouncementRepository;
 
     @Spy
     private ClubAccessPolicy clubAccessPolicy;
@@ -871,6 +883,118 @@ class ApplicantAdminServiceTest {
                     request, USERNAME, CLUB_ID, ApplicantPhase.DOCUMENT))
                     .isExactlyInstanceOf(ClubNotFoundException.class);
             verifyNoInteractions(applyFormRepository, applicantRepository, resultMailDeliveryService);
+        }
+    }
+    @Nested
+    @DisplayName("announceResults(): 확정과 발송 작업 저장을 묶은 결과 발표 (#465)")
+    class AnnounceResultsTest {
+
+        private static final String KEY = "key-1";
+
+        private ResultAnnouncementServiceRequest request(String key) {
+            return new ResultAnnouncementServiceRequest(USERNAME, CLUB_ID, ApplicantPhase.DOCUMENT, key,
+                    createResultMailRequest());
+        }
+
+        private ResultAnnouncement previous(String fingerprint) {
+            ResultAnnouncement announcement = ResultAnnouncement.of(CLUB_ID, APPLY_FORM_ID, ApplicantPhase.DOCUMENT,
+                    KEY, fingerprint, 2, 1);
+            ReflectionTestUtils.setField(announcement, "id", "announcement-1");
+            return announcement;
+        }
+
+        @ParameterizedTest(name = "[{index}] key=<{0}>")
+        @NullAndEmptySource
+        @ValueSource(strings = {"   "})
+        @DisplayName("Idempotency-Key가 없거나 비어 있으면 400")
+        void request_blankKey_badRequest(String key) {
+            assertThatThrownBy(() -> request(key))
+                    .isInstanceOf(ResultAnnouncementException.class)
+                    .hasMessage(ErrorMessage.IDEMPOTENCY_KEY_INVALID.getMessage());
+        }
+
+        @Test
+        @DisplayName("Idempotency-Key가 100자를 넘으면 400, 100자는 받는다")
+        void request_tooLongKey_badRequest() {
+            assertThat(request("k".repeat(100)).idempotencyKey()).hasSize(100);
+            assertThatThrownBy(() -> request("k".repeat(101)))
+                    .isInstanceOf(ResultAnnouncementException.class)
+                    .extracting("status").isEqualTo(HttpStatus.BAD_REQUEST);
+        }
+
+        @Test
+        @DisplayName("fingerprint는 전형이나 메일 내용이 바뀌면 달라진다")
+        void fingerprint_changesWithContent() {
+            ResultAnnouncementServiceRequest base = request(KEY);
+            ResultAnnouncementServiceRequest otherKind = new ResultAnnouncementServiceRequest(USERNAME, CLUB_ID,
+                    ApplicantPhase.INTERVIEW, KEY, createResultMailRequest());
+            ResultAnnouncementServiceRequest otherBody = new ResultAnnouncementServiceRequest(USERNAME, CLUB_ID,
+                    ApplicantPhase.DOCUMENT, KEY, SendResultMailServiceRequest.builder()
+                    .pass(new ResultMailContent("합격 안내", "축하합니다!")).build());
+
+            assertThat(base.fingerprint()).hasSize(64).isEqualTo(request(KEY).fingerprint());
+            assertThat(otherKind.fingerprint()).isNotEqualTo(base.fingerprint());
+            assertThat(otherBody.fingerprint()).isNotEqualTo(base.fingerprint());
+        }
+
+        @Test
+        @DisplayName("다른 동아리 관리자는 거부하고 발표 기록·확정·발송을 하지 않는다")
+        void announceResults_otherClub_forbidden() {
+            Club otherClub = createClub(OTHER_CLUB_ID, OTHER_USERNAME);
+            given(clubRepository.findByIdForUpdate(CLUB_ID)).willReturn(Optional.of(otherClub));
+
+            assertThatThrownBy(() -> applicantAdminService.announceResults(request(KEY)))
+                    .isExactlyInstanceOf(NotClubAdminException.class);
+            verifyNoInteractions(resultAnnouncementRepository, applyFormRepository, applicantRepository,
+                    clubMemberRepository, resultMailDeliveryService);
+        }
+
+        @Test
+        @DisplayName("같은 키·같은 내용 재요청은 처음 결과를 돌려주고 확정·발송을 다시 하지 않는다")
+        void announceResults_sameKey_replaysFirstResult() {
+            Club club = createClub(CLUB_ID);
+            given(clubRepository.findByIdForUpdate(CLUB_ID)).willReturn(Optional.of(club));
+            ResultAnnouncementServiceRequest request = request(KEY);
+            given(resultAnnouncementRepository.findByClubIdAndIdempotencyKey(CLUB_ID, KEY))
+                    .willReturn(Optional.of(previous(request.fingerprint())));
+
+            ResultAnnouncementServiceResponse response = applicantAdminService.announceResults(request);
+
+            assertThat(response).isEqualTo(new ResultAnnouncementServiceResponse("announcement-1", 2, 1));
+            verifyNoInteractions(applyFormRepository, applicantRepository, clubMemberRepository,
+                    resultMailDeliveryService);
+        }
+
+        @Test
+        @DisplayName("같은 키를 다른 내용에 다시 쓰면 422")
+        void announceResults_sameKeyOtherContent_unprocessable() {
+            Club club = createClub(CLUB_ID);
+            given(clubRepository.findByIdForUpdate(CLUB_ID)).willReturn(Optional.of(club));
+            given(resultAnnouncementRepository.findByClubIdAndIdempotencyKey(CLUB_ID, KEY))
+                    .willReturn(Optional.of(previous("other-fingerprint")));
+
+            assertThatThrownBy(() -> applicantAdminService.announceResults(request(KEY)))
+                    .isInstanceOf(ResultAnnouncementException.class)
+                    .extracting("status").isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+            verifyNoInteractions(applyFormRepository, applicantRepository, resultMailDeliveryService);
+        }
+
+        @Test
+        @DisplayName("새 키라도 이미 발표한 지원 폼·전형이면 409이고 확정·발송을 하지 않는다")
+        void announceResults_alreadyAnnounced_conflict() {
+            Club club = createClub(CLUB_ID);
+            given(clubRepository.findByIdForUpdate(CLUB_ID)).willReturn(Optional.of(club));
+            given(resultAnnouncementRepository.findByClubIdAndIdempotencyKey(CLUB_ID, KEY)).willReturn(Optional.empty());
+            ApplyForm applyForm = mock(ApplyForm.class);
+            given(applyForm.getId()).willReturn(APPLY_FORM_ID);
+            given(applyFormRepository.findByClubIdAndStatus(CLUB_ID, ACTIVE)).willReturn(Optional.of(applyForm));
+            given(resultAnnouncementRepository.existsByApplyFormIdAndPhase(APPLY_FORM_ID, ApplicantPhase.DOCUMENT))
+                    .willReturn(true);
+
+            assertThatThrownBy(() -> applicantAdminService.announceResults(request(KEY)))
+                    .isInstanceOf(ResultAnnouncementException.class)
+                    .extracting("status").isEqualTo(HttpStatus.CONFLICT);
+            verifyNoInteractions(applicantRepository, clubMemberRepository, resultMailDeliveryService);
         }
     }
 }

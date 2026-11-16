@@ -3,15 +3,18 @@ package org.project.ttokttok.domain.applicant.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.project.ttokttok.domain.applicant.domain.Applicant;
+import org.project.ttokttok.domain.applicant.domain.ResultAnnouncement;
 import org.project.ttokttok.domain.applicant.domain.enums.ApplicantPhase;
 import org.project.ttokttok.domain.applicant.domain.enums.PhaseStatus;
 import org.project.ttokttok.domain.applicant.exception.*;
 import org.project.ttokttok.domain.applicant.repository.ApplicantRepository;
+import org.project.ttokttok.domain.applicant.repository.ResultAnnouncementRepository;
 import org.project.ttokttok.domain.applicant.service.dto.request.*;
 import org.project.ttokttok.domain.applicant.service.dto.response.ApplicantDetailServiceResponse;
 import org.project.ttokttok.domain.applicant.service.dto.response.ApplicantFinalizeServiceResponse;
 import org.project.ttokttok.domain.applicant.service.dto.response.ApplicantPageServiceResponse;
 import org.project.ttokttok.domain.applicant.service.dto.response.MemoResponse;
+import org.project.ttokttok.domain.applicant.service.dto.response.ResultAnnouncementServiceResponse;
 import org.project.ttokttok.domain.club.service.policy.ClubAccessPolicy;
 import org.project.ttokttok.domain.applyform.domain.ApplyForm;
 import org.project.ttokttok.domain.applyform.exception.ActiveApplyFormNotFoundException;
@@ -23,6 +26,8 @@ import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.domain.clubmember.domain.ClubMember;
 import org.project.ttokttok.domain.clubmember.repository.ClubMemberRepository;
 import org.project.ttokttok.domain.notification.mail.service.ResultMailDeliveryService;
+import org.project.ttokttok.global.exception.ErrorMessage;
+import org.project.ttokttok.infrastructure.email.dto.ResultMailContent;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +35,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.project.ttokttok.domain.applicant.domain.enums.PhaseStatus.FAIL;
@@ -47,6 +53,7 @@ public class ApplicantAdminService {
     private final ClubRepository clubRepository;
     private final ClubMemberRepository clubMemberRepository;
     private final ResultMailDeliveryService resultMailDeliveryService;
+    private final ResultAnnouncementRepository resultAnnouncementRepository;
     private final ClubAccessPolicy clubAccessPolicy;
 
     public ApplicantPageServiceResponse getApplicantPage(ApplicantPageServiceRequest request) {
@@ -182,6 +189,44 @@ public class ApplicantAdminService {
         return ApplicantFinalizeServiceResponse.of(passedApplicantCount, finalizedApplicantCount);
     }
 
+    // 확정과 발표 기록, 수신자별 발송 작업을 한 커밋으로 저장한다. 커밋이 곧 발송 작업 수락이다(#465).
+    // 동아리 행 잠금으로 같은 동아리의 발표·확정 요청을 줄 세운다. UNIQUE 제약(V33)은 마지막 방어선이다.
+    @Transactional
+    public ResultAnnouncementServiceResponse announceResults(ResultAnnouncementServiceRequest request) {
+        Club club = clubRepository.findByIdForUpdate(request.clubId())
+                .orElseThrow(ClubNotFoundException::new);
+        clubAccessPolicy.validateAdmin(club, request.username());
+
+        String fingerprint = request.fingerprint();
+        Optional<ResultAnnouncement> previous =
+                resultAnnouncementRepository.findByClubIdAndIdempotencyKey(club.getId(), request.idempotencyKey());
+        if (previous.isPresent()) {
+            return ResultAnnouncementServiceResponse.from(previous.get().replay(fingerprint));
+        }
+        return ResultAnnouncementServiceResponse.from(announce(club, request, fingerprint));
+    }
+
+    private ResultAnnouncement announce(Club club, ResultAnnouncementServiceRequest request, String fingerprint) {
+        ApplyForm form = findActiveApplyForm(club.getId());
+        ApplicantPhase phase = request.kind();
+        if (resultAnnouncementRepository.existsByApplyFormIdAndPhase(form.getId(), phase)) {
+            throw new ResultAnnouncementException(ErrorMessage.RESULT_ALREADY_ANNOUNCED);
+        }
+        processApplicants(form, club, phase);
+
+        ResultMailRecipients recipients = collectResultMailRecipients(form.getId(), phase);
+        SendResultMailServiceRequest mail = request.mail();
+        ResultAnnouncement announcement = resultAnnouncementRepository.save(ResultAnnouncement.of(
+                club.getId(), form.getId(), phase, request.idempotencyKey(), fingerprint,
+                mailCount(recipients.passed(), mail.pass()), mailCount(recipients.failed(), mail.fail())));
+        enqueueResultMails(announcement.getId(), club.getId(), recipients, mail);
+        return announcement;
+    }
+
+    private int mailCount(List<String> recipients, ResultMailContent content) {
+        return content == null ? 0 : recipients.size();
+    }
+
     // 커밋이 곧 발송 작업 수락이다. 발송은 워커가 트랜잭션 밖에서 한다(#460).
     @Transactional
     public void sendResultMailToApplicants(SendResultMailServiceRequest request,
@@ -190,28 +235,33 @@ public class ApplicantAdminService {
                                            ApplicantPhase kind) {
 
         ResultMailRecipients recipients = findResultMailRecipients(username, clubId, kind);
-
-        String requestId = UUID.randomUUID().toString();
-        LocalDateTime now = LocalDateTime.now();
-        resultMailDeliveryService.enqueue(requestId, clubId, recipients.passed(), request.pass(), now);
-        resultMailDeliveryService.enqueue(requestId, clubId, recipients.failed(), request.fail(), now);
+        enqueueResultMails(UUID.randomUUID().toString(), clubId, recipients, request);
     }
 
-    // 관리자 확인과 전형 상태 조회가 지연 로딩을 쓰므로 이메일 문자열까지 트랜잭션 안에서 꺼낸다.
+    private void enqueueResultMails(String requestId, String clubId, ResultMailRecipients recipients,
+                                    SendResultMailServiceRequest mail) {
+        LocalDateTime now = LocalDateTime.now();
+        resultMailDeliveryService.enqueue(requestId, clubId, recipients.passed(), mail.pass(), now);
+        resultMailDeliveryService.enqueue(requestId, clubId, recipients.failed(), mail.fail(), now);
+    }
+
     private ResultMailRecipients findResultMailRecipients(String username, String clubId, ApplicantPhase phase) {
         Club club = clubRepository.findById(clubId)
                 .orElseThrow(ClubNotFoundException::new);
 
         clubAccessPolicy.validateAdmin(club, username);
 
-        ApplyForm currentApplyForm = findActiveApplyForm(clubId);
+        return collectResultMailRecipients(findActiveApplyForm(clubId).getId(), phase);
+    }
 
-        List<String> passedEmails = filterApplicantsByStatus(currentApplyForm.getId(), phase, PASS)
+    // 전형 상태 조회가 지연 로딩을 쓰므로 이메일 문자열까지 트랜잭션 안에서 꺼낸다.
+    private ResultMailRecipients collectResultMailRecipients(String applyFormId, ApplicantPhase phase) {
+        List<String> passedEmails = filterApplicantsByStatus(applyFormId, phase, PASS)
                 .stream()
                 .map(Applicant::getEmail)
                 .toList();
 
-        List<String> failedEmails = filterApplicantsByStatus(currentApplyForm.getId(), phase, FAIL)
+        List<String> failedEmails = filterApplicantsByStatus(applyFormId, phase, FAIL)
                 .stream()
                 .map(Applicant::getEmail)
                 .toList();
