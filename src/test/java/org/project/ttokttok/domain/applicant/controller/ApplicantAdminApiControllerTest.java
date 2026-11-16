@@ -14,6 +14,7 @@ import org.project.ttokttok.domain.applicant.service.dto.request.StatusUpdateSer
 import org.project.ttokttok.domain.applicant.service.dto.response.ApplicantDetailServiceResponse;
 import org.project.ttokttok.domain.applicant.service.dto.response.ApplicantFinalizeServiceResponse;
 import org.project.ttokttok.domain.applicant.service.dto.response.ApplicantPageServiceResponse;
+import org.project.ttokttok.domain.applicant.service.dto.response.ResultAnnouncementServiceResponse;
 import org.project.ttokttok.global.annotationresolver.auth.AuthUserInfoResolver;
 import org.project.ttokttok.global.auth.jwt.service.TokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -195,4 +196,50 @@ class ApplicantAdminApiControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("이메일 전송이 완료되었습니다."));
     }
+
+    @Test
+    @WithMockUser
+    @DisplayName("결과 발표 API는 Idempotency-Key와 메일 내용을 서비스로 넘기고 202와 발표 id를 반환한다")
+    void announceResults() throws Exception {
+        mockAuthUser("admin@sangmyung.kr");
+        given(applicantAdminService.announceResults(any()))
+                .willReturn(new ResultAnnouncementServiceResponse("announcement-1", 2, 1));
+
+        mockMvc.perform(post("/api/admin/applies/{clubId}/result-announcements", "club-1").with(csrf())
+                        .header("Idempotency-Key", "key-1")
+                        .param("kind", "INTERVIEW")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(RESULT_MAIL_BODY))
+                .andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.announcementId").value("announcement-1"))
+                .andExpect(jsonPath("$.passMailCount").value(2))
+                .andExpect(jsonPath("$.failMailCount").value(1));
+
+        verify(applicantAdminService).announceResults(argThat(request ->
+                request.username().equals("admin@sangmyung.kr")
+                        && request.clubId().equals("club-1")
+                        && request.kind() == ApplicantPhase.INTERVIEW
+                        && request.idempotencyKey().equals("key-1")
+                        && request.mail().pass().title().equals("합격 안내")
+                        && request.mail().fail().title().equals("불합격 안내")));
+    }
+
+    @Test
+    @WithMockUser
+    @DisplayName("결과 발표 API에 Idempotency-Key가 없으면 400이고 서비스를 부르지 않는다")
+    void announceResults_withoutIdempotencyKey_badRequest() throws Exception {
+        mockAuthUser("admin@sangmyung.kr");
+
+        mockMvc.perform(post("/api/admin/applies/{clubId}/result-announcements", "club-1").with(csrf())
+                        .param("kind", "DOCUMENT")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(RESULT_MAIL_BODY))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details").value("필수 헤더 'Idempotency-Key'가 누락되었습니다."));
+
+        verifyNoInteractions(applicantAdminService);
+    }
+
+    private static final String RESULT_MAIL_BODY = "{\"pass\":{\"title\":\"합격 안내\",\"body\":\"축하합니다\"},"
+            + "\"fail\":{\"title\":\"불합격 안내\",\"body\":\"감사합니다\"}}";
 }

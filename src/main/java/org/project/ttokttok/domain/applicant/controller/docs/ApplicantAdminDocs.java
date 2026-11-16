@@ -12,6 +12,7 @@ import org.project.ttokttok.domain.applicant.controller.dto.request.SendResultMa
 import org.project.ttokttok.domain.applicant.controller.dto.response.ApplicantDetailResponse;
 import org.project.ttokttok.domain.applicant.controller.dto.response.ApplicantFinalizeResponse;
 import org.project.ttokttok.domain.applicant.controller.dto.response.ApplicantPageResponse;
+import org.project.ttokttok.domain.applicant.controller.dto.response.ResultAnnouncementResponse;
 import org.project.ttokttok.domain.applicant.controller.enums.Kind;
 import org.project.ttokttok.domain.applicant.domain.enums.Sort;
 import org.project.ttokttok.domain.applicant.domain.enums.PhaseStatus;
@@ -315,6 +316,7 @@ public interface ApplicantAdminDocs {
                     - 한번 확정하면 되돌리기 어려우므로 신중하게 진행하세요.
                     - 모든 지원자의 평가가 완료된 후 실행하는 것을 권장합니다.
                     - 평가 중인 지원자는 제외하고 실행됩니다.
+                    - 결과 메일 없이 확정만 할 때 씁니다. 메일과 함께 발표하려면 `POST /{clubId}/result-announcements`를 쓰세요.
                     """
     )
     @ApiResponses(value = {
@@ -356,20 +358,80 @@ public interface ApplicantAdminDocs {
     );
 
     @Operation(
-            summary = "지원자에게 결과 이메일 발송",
+            summary = "전형 결과 발표 (확정 + 결과 메일 접수)",
             description = """
-                    해당 동아리의 지원자들에게 결과 이메일을 일괄 발송합니다.
+                    전형 결과를 확정하고 지원자별 결과 메일 발송 작업을 한 번에 접수합니다.
+                    확정과 접수는 함께 성공하거나 함께 실패합니다. 메일은 응답 뒤에 서버가 차례로 보냅니다.
+
+                    *Idempotency-Key*
+                    - 필수 헤더입니다. 발표 화면을 열 때 한 번 만들고, 재시도에는 같은 값을 다시 보내 주세요.
+                    - 같은 키로 다시 보내면 처음 응답을 그대로 돌려주고 메일을 다시 접수하지 않습니다.
+                    - 같은 키에 다른 전형이나 메일 내용을 보내면 422입니다.
+                    - 이미 발표한 전형을 새 키로 다시 발표하면 409입니다.
+                    """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "202",
+                    description = "확정과 메일 접수 완료. 같은 키 재요청도 202와 처음 응답"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 요청 (Idempotency-Key 누락·형식 오류, 메일 내용 오류)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "인증 실패",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "권한 없음 (해당 동아리 관리자 권한 필요)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "동아리 또는 활성 지원 폼을 찾을 수 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "이미 결과를 발표한 전형",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "422",
+                    description = "이미 다른 내용의 발표에 쓴 Idempotency-Key",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    ResponseEntity<ResultAnnouncementResponse> announceResults(
+            @Parameter(hidden = true) String username,
+            @Parameter(description = "동아리 ID", example = "UUID") String clubId,
+            @Parameter(description = "재요청을 같은 발표로 묶는 키 (1~100자)", required = true, example = "UUID") String idempotencyKey,
+            @Parameter(description = "이메일 발송 요청 정보") SendResultMailRequest request,
+            @Parameter(description = "서류 / 면접 구분", schema = @Schema(implementation = Kind.class), example = "DOCUMENT / INTERVIEW") Kind kind
+    );
+
+    @Operation(
+            summary = "지원자에게 결과 이메일 발송 (지원 중단 예정)",
+            deprecated = true,
+            description = """
+                    해당 동아리의 지원자들에게 보낼 결과 이메일 발송 작업을 접수합니다.
                     합격/불합격 상태에 따라 다른 내용의 이메일이 발송됩니다.
+                    메일은 응답 뒤에 서버가 차례로 보내며, 일시 오류는 약 24시간 동안 다시 시도합니다.
                     
                     *주의사항*
-                    - 이메일은 한번 발송하면 취소할 수 없습니다.
-                    - 지원자 상태가 확정된 후 발송하는 것을 권장합니다.
+                    - 이메일은 한번 접수하면 취소할 수 없습니다.
+                    - 멱등하지 않습니다. 다시 호출하면 같은 메일이 한 번 더 접수됩니다.
+                    - 확정과 발송을 함께 하려면 `POST /{clubId}/result-announcements`를 쓰세요. 프론트가 옮기면 이 API는 삭제합니다.
                     """
     )
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
-                    description = "이메일 발송 성공"
+                    description = "이메일 발송 작업 접수 완료 (발송 완료가 아님)"
             ),
             @ApiResponse(
                     responseCode = "400",
