@@ -25,9 +25,13 @@ import org.project.ttokttok.infrastructure.email.dto.ResultMailContent;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ResultMailDelivery extends BaseTimeEntity {
 
-    static final int MAX_ATTEMPTS = 5;
+    // 재시도 간격은 1·2·4·8·16분 뒤 30분 상한이다. 53회면 기다리는 시간이 모두 1,441분(약 24시간)이라,
+    // SMTP가 몇 시간 멈춰도 운영자가 고치는 동안 메일이 기다렸다가 나간다(#465).
+    public static final int MAX_ATTEMPTS = 53;
     static final Duration LEASE = Duration.ofMinutes(5);
     static final Duration RETRY_BASE = Duration.ofMinutes(1);
+    static final Duration RETRY_MAX = Duration.ofMinutes(30);
+    private static final int RETRY_DOUBLING_LIMIT = 5;
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -102,16 +106,23 @@ public class ResultMailDelivery extends BaseTimeEntity {
         leaseUntil = null;
     }
 
-    // 일시 실패이고 시도가 남았으면 RETRY_BASE × 2^(attemptCount-1) 뒤로 다시 미룬다. 아니면 끝낸다.
+    // 일시 실패이고 시도가 남았으면 retryDelay() 뒤로 다시 미룬다. 아니면 끝낸다.
     public void markFailed(String error, boolean retryable, LocalDateTime now) {
         lastError = error;
         leaseUntil = null;
         if (retryable && hasAttemptsLeft()) {
             status = ResultMailDeliveryStatus.PENDING;
-            nextAttemptAt = now.plus(RETRY_BASE.multipliedBy(1L << Math.max(0, attemptCount - 1)));
+            nextAttemptAt = now.plus(retryDelay());
             return;
         }
         status = ResultMailDeliveryStatus.FAILED;
+    }
+
+    // RETRY_BASE × 2^(attemptCount-1), 상한 RETRY_MAX
+    private Duration retryDelay() {
+        int doublings = Math.min(Math.max(0, attemptCount - 1), RETRY_DOUBLING_LIMIT);
+        Duration delay = RETRY_BASE.multipliedBy(1L << doublings);
+        return delay.compareTo(RETRY_MAX) > 0 ? RETRY_MAX : delay;
     }
 
     public ResultMailContent content() {

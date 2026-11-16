@@ -2,6 +2,7 @@ package org.project.ttokttok.domain.notification.mail.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -66,8 +67,8 @@ class ResultMailDeliveryTest {
     }
 
     @ParameterizedTest(name = "{0}회 실패 뒤 재시도는 {1}분 뒤")
-    @CsvSource({"1,1", "2,2", "3,4", "4,8"})
-    @DisplayName("markFailed(retryable): 시도가 남았으면 PENDING으로 두고 1·2·4·8분 뒤로 미룬다")
+    @CsvSource({"1,1", "2,2", "3,4", "4,8", "5,16", "6,30", "7,30", "52,30"})
+    @DisplayName("markFailed(retryable): 시도가 남았으면 PENDING으로 두고 1·2·4·8·16분, 이후 30분 뒤로 미룬다")
     void markFailed_retryable_backsOffExponentially(int attempts, long minutes) {
         ResultMailDelivery delivery = afterAttempts(attempts);
         LocalDateTime failedAt = NOW.plusSeconds(30);
@@ -81,9 +82,27 @@ class ResultMailDeliveryTest {
     }
 
     @Test
-    @DisplayName("markFailed(retryable): 5번째 시도가 실패하면 FAILED")
+    @DisplayName("markFailed(retryable): 계속 일시 실패하면 약 24시간(1,441분) 동안 53번 시도한 뒤 FAILED")
+    void markFailed_retryable_keepsRetryingForAboutADay() {
+        ResultMailDelivery delivery = pending();
+        LocalDateTime now = NOW;
+        int attempts = 0;
+        while (delivery.getStatus() == ResultMailDeliveryStatus.PENDING) {
+            now = delivery.getNextAttemptAt();
+            delivery.startAttempt(now);
+            attempts++;
+            delivery.markFailed("MailSendException", true, now);
+        }
+
+        assertThat(delivery.getStatus()).isEqualTo(ResultMailDeliveryStatus.FAILED);
+        assertThat(attempts).isEqualTo(53);
+        assertThat(Duration.between(NOW, now)).isEqualTo(Duration.ofMinutes(1_441));
+    }
+
+    @Test
+    @DisplayName("markFailed(retryable): 마지막 시도가 실패하면 FAILED")
     void markFailed_retryable_failsAfterMaxAttempts() {
-        ResultMailDelivery delivery = afterAttempts(5);
+        ResultMailDelivery delivery = afterAttempts(ResultMailDelivery.MAX_ATTEMPTS);
 
         delivery.markFailed("X", true, NOW);
 
