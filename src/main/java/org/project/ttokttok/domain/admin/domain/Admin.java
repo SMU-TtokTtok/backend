@@ -1,19 +1,21 @@
 package org.project.ttokttok.domain.admin.domain;
 
-import org.project.ttokttok.global.exception.ErrorMessage;
-
+import org.project.ttokttok.domain.admin.exception.AdminPasswordNotMatchException;
 import org.project.ttokttok.domain.admin.exception.AdminValidationException;
+import org.project.ttokttok.global.entity.BaseTimeEntity;
+import org.project.ttokttok.global.exception.ErrorMessage;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.project.ttokttok.domain.admin.exception.AdminPasswordNotMatchException;
-import org.project.ttokttok.global.entity.BaseTimeEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
-
-import java.util.UUID;
 
 @Entity
 @Table(name = "admins")

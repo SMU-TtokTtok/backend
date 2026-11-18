@@ -1,19 +1,19 @@
 package org.project.ttokttok.domain.notification.fcm.service;
 
-import org.project.ttokttok.domain.notification.fcm.exception.FCMTokenValidationException;
-
 import static org.project.ttokttok.global.exception.ErrorMessage.FCM_FIELD_BLANK;
 
-import java.util.List;
 import java.util.Optional;
-import lombok.RequiredArgsConstructor;
+
 import org.project.ttokttok.domain.notification.fcm.domain.DeviceType;
 import org.project.ttokttok.domain.notification.fcm.domain.FCMToken;
+import org.project.ttokttok.domain.notification.fcm.exception.FCMTokenValidationException;
 import org.project.ttokttok.domain.notification.fcm.repository.FCMTokenRepository;
 import org.project.ttokttok.domain.notification.fcm.service.dto.FCMTokenDeleteServiceRequest;
 import org.project.ttokttok.domain.notification.fcm.service.dto.FCMTokenSaveServiceRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
