@@ -38,6 +38,7 @@ import org.project.ttokttok.domain.admin.domain.Admin;
 import org.project.ttokttok.infrastructure.email.dto.ResultMailContent;
 import org.project.ttokttok.domain.applicant.domain.Applicant;
 import org.project.ttokttok.domain.applicant.domain.DocumentPhase;
+import org.project.ttokttok.domain.applicant.domain.ResultAnnouncement;
 import org.project.ttokttok.domain.applicant.domain.enums.ApplicantPhase;
 import org.project.ttokttok.domain.applicant.domain.enums.Gender;
 import org.project.ttokttok.domain.applicant.domain.enums.Grade;
@@ -45,24 +46,21 @@ import org.project.ttokttok.domain.applicant.domain.enums.PhaseStatus;
 import org.project.ttokttok.domain.applicant.domain.enums.StudentStatus;
 import org.project.ttokttok.domain.applicant.domain.json.Answer;
 import org.project.ttokttok.domain.applicant.exception.ApplicantNotFoundException;
+import org.project.ttokttok.domain.applicant.exception.ResultAnnouncementException;
 import org.project.ttokttok.domain.applicant.exception.UnAuthorizedApplicantAccessException;
 import org.project.ttokttok.domain.applicant.repository.ApplicantRepository;
 import org.project.ttokttok.domain.applicant.repository.ResultAnnouncementRepository;
-import org.project.ttokttok.domain.applicant.domain.ResultAnnouncement;
-import org.project.ttokttok.domain.applicant.exception.ResultAnnouncementException;
-import org.project.ttokttok.domain.applicant.service.dto.request.ResultAnnouncementServiceRequest;
-import org.project.ttokttok.domain.applicant.service.dto.response.ResultAnnouncementServiceResponse;
-import org.project.ttokttok.global.exception.ErrorMessage;
-import org.springframework.http.HttpStatus;
 import org.project.ttokttok.domain.applicant.repository.dto.response.ApplicantPageQueryResponse;
 import org.project.ttokttok.domain.applicant.service.dto.request.ApplicantFinalizationRequest;
 import org.project.ttokttok.domain.applicant.service.dto.request.ApplicantPageServiceRequest;
 import org.project.ttokttok.domain.applicant.service.dto.request.ApplicantSearchServiceRequest;
 import org.project.ttokttok.domain.applicant.service.dto.request.ApplicantStatusServiceRequest;
+import org.project.ttokttok.domain.applicant.service.dto.request.ResultAnnouncementServiceRequest;
 import org.project.ttokttok.domain.applicant.service.dto.request.SendResultMailServiceRequest;
 import org.project.ttokttok.domain.applicant.service.dto.request.StatusUpdateServiceRequest;
 import org.project.ttokttok.domain.applicant.service.dto.response.ApplicantFinalizeServiceResponse;
 import org.project.ttokttok.domain.applicant.service.dto.response.ApplicantPageServiceResponse;
+import org.project.ttokttok.domain.applicant.service.dto.response.ResultAnnouncementServiceResponse;
 import org.project.ttokttok.domain.club.service.policy.ClubAccessPolicy;
 import org.project.ttokttok.domain.applyform.domain.ApplyForm;
 import org.project.ttokttok.domain.applyform.exception.ActiveApplyFormNotFoundException;
@@ -75,6 +73,8 @@ import org.project.ttokttok.domain.clubmember.domain.ClubMember;
 import org.project.ttokttok.domain.clubmember.domain.MemberRole;
 import org.project.ttokttok.domain.clubmember.repository.ClubMemberRepository;
 import org.project.ttokttok.domain.notification.mail.service.ResultMailDeliveryService;
+import org.project.ttokttok.global.exception.ErrorMessage;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
@@ -885,6 +885,7 @@ class ApplicantAdminServiceTest {
             verifyNoInteractions(applyFormRepository, applicantRepository, resultMailDeliveryService);
         }
     }
+
     @Nested
     @DisplayName("announceResults(): 확정과 발송 작업 저장을 묶은 결과 발표 (#465)")
     class AnnounceResultsTest {
@@ -935,6 +936,124 @@ class ApplicantAdminServiceTest {
             assertThat(base.fingerprint()).hasSize(64).isEqualTo(request(KEY).fingerprint());
             assertThat(otherKind.fingerprint()).isNotEqualTo(base.fingerprint());
             assertThat(otherBody.fingerprint()).isNotEqualTo(base.fingerprint());
+        }
+
+        @Test
+        @DisplayName("fingerprint 형식은 고정이다. 바뀌면 이미 저장된 발표의 같은 키 재요청이 422가 된다")
+        void fingerprint_formatIsPinned() {
+            // SHA-256("DOCUMENT|5:합격 안내|6:축하합니다.|6:불합격 안내|6:아쉽습니다.")
+            assertThat(request(KEY).fingerprint())
+                    .isEqualTo("051a94ba9d931c6e5dbb6c197b13aa747bae8b1149c45311be2a0ccd3f381ea4");
+        }
+
+        @Test
+        @DisplayName("fingerprint는 값 경계를 구분한다: 제목·본문을 나누는 위치가 다르면 다르다")
+        void fingerprint_separatesFieldBoundaries() {
+            ResultAnnouncementServiceRequest ab = new ResultAnnouncementServiceRequest(USERNAME, CLUB_ID,
+                    ApplicantPhase.DOCUMENT, KEY, SendResultMailServiceRequest.builder()
+                    .pass(new ResultMailContent("ab", "c")).build());
+            ResultAnnouncementServiceRequest bc = new ResultAnnouncementServiceRequest(USERNAME, CLUB_ID,
+                    ApplicantPhase.DOCUMENT, KEY, SendResultMailServiceRequest.builder()
+                    .pass(new ResultMailContent("a", "bc")).build());
+
+            assertThat(ab.fingerprint()).isNotEqualTo(bc.fingerprint());
+        }
+
+        private ApplyForm activeFormWithInterview() {
+            ApplyForm applyForm = mock(ApplyForm.class);
+            given(applyForm.getId()).willReturn(APPLY_FORM_ID);
+            given(applyForm.isHasInterview()).willReturn(true);
+            given(applyFormRepository.findByClubIdAndStatus(CLUB_ID, ACTIVE)).willReturn(Optional.of(applyForm));
+            return applyForm;
+        }
+
+        private Applicant documentApplicant(PhaseStatus status, String email) {
+            Applicant applicant = mock(Applicant.class);
+            given(applicant.statusOf(ApplicantPhase.DOCUMENT)).willReturn(Optional.of(status));
+            lenient().when(applicant.getEmail()).thenReturn(email);
+            return applicant;
+        }
+
+        private void givenNewAnnouncementSavedAs(String id) {
+            given(resultAnnouncementRepository.findByClubIdAndIdempotencyKey(CLUB_ID, KEY)).willReturn(Optional.empty());
+            given(resultAnnouncementRepository.existsByApplyFormIdAndPhase(APPLY_FORM_ID, ApplicantPhase.DOCUMENT))
+                    .willReturn(false);
+            given(resultAnnouncementRepository.save(any(ResultAnnouncement.class))).willAnswer(invocation -> {
+                ResultAnnouncement saved = invocation.getArgument(0);
+                ReflectionTestUtils.setField(saved, "id", id);
+                return saved;
+            });
+        }
+
+        @Test
+        @DisplayName("새 발표는 확정한 뒤 발표 기록을 저장하고, 발송 작업을 발표 id로 묶어 저장한다")
+        void announceResults_new_savesAnnouncementAndEnqueuesWithItsId() {
+            Club club = createClub(CLUB_ID);
+            given(clubRepository.findByIdForUpdate(CLUB_ID)).willReturn(Optional.of(club));
+            activeFormWithInterview();
+            Applicant passed1 = documentApplicant(PhaseStatus.PASS, "passed1@test.com");
+            Applicant passed2 = documentApplicant(PhaseStatus.PASS, "passed2@test.com");
+            Applicant failed = documentApplicant(PhaseStatus.FAIL, "failed@test.com");
+            given(applicantRepository.findByApplyFormId(APPLY_FORM_ID)).willReturn(List.of(passed1, passed2, failed));
+            givenNewAnnouncementSavedAs("announcement-1");
+            ResultAnnouncementServiceRequest request = request(KEY);
+
+            ResultAnnouncementServiceResponse response = applicantAdminService.announceResults(request);
+
+            assertThat(response).isEqualTo(new ResultAnnouncementServiceResponse("announcement-1", 2, 1));
+            verify(passed1).updateToInterviewPhase(any());
+            verify(passed2).updateToInterviewPhase(any());
+            ArgumentCaptor<ResultAnnouncement> saved = ArgumentCaptor.forClass(ResultAnnouncement.class);
+            verify(resultAnnouncementRepository).save(saved.capture());
+            assertThat(saved.getValue())
+                    .extracting(ResultAnnouncement::getClubId, ResultAnnouncement::getApplyFormId,
+                            ResultAnnouncement::getPhase, ResultAnnouncement::getIdempotencyKey,
+                            ResultAnnouncement::getRequestFingerprint)
+                    .containsExactly(CLUB_ID, APPLY_FORM_ID, ApplicantPhase.DOCUMENT, KEY, request.fingerprint());
+            verify(resultMailDeliveryService).enqueue(eq("announcement-1"), eq(CLUB_ID),
+                    eq(List.of("passed1@test.com", "passed2@test.com")), eq(request.mail().pass()),
+                    any(LocalDateTime.class));
+            verify(resultMailDeliveryService).enqueue(eq("announcement-1"), eq(CLUB_ID),
+                    eq(List.of("failed@test.com")), eq(request.mail().fail()), any(LocalDateTime.class));
+        }
+
+        @Test
+        @DisplayName("메일 내용이 없는 쪽은 수신자가 있어도 메일 수를 0으로 기록한다")
+        void announceResults_missingContent_countsZeroMails() {
+            Club club = createClub(CLUB_ID);
+            given(clubRepository.findByIdForUpdate(CLUB_ID)).willReturn(Optional.of(club));
+            activeFormWithInterview();
+            Applicant passed = documentApplicant(PhaseStatus.PASS, "passed@test.com");
+            Applicant failed = documentApplicant(PhaseStatus.FAIL, "failed@test.com");
+            given(applicantRepository.findByApplyFormId(APPLY_FORM_ID)).willReturn(List.of(passed, failed));
+            givenNewAnnouncementSavedAs("announcement-2");
+            SendResultMailServiceRequest passOnly = SendResultMailServiceRequest.builder()
+                    .pass(new ResultMailContent("합격 안내", "축하합니다.")).build();
+
+            ResultAnnouncementServiceResponse response = applicantAdminService.announceResults(
+                    new ResultAnnouncementServiceRequest(USERNAME, CLUB_ID, ApplicantPhase.DOCUMENT, KEY, passOnly));
+
+            assertThat(response).isEqualTo(new ResultAnnouncementServiceResponse("announcement-2", 1, 0));
+        }
+
+        @Test
+        @DisplayName("평가 중인 지원자는 메일 대상에서 빠진다 (의도된 동작)")
+        void announceResults_evaluatingApplicant_isNotMailed() {
+            Club club = createClub(CLUB_ID);
+            given(clubRepository.findByIdForUpdate(CLUB_ID)).willReturn(Optional.of(club));
+            activeFormWithInterview();
+            Applicant passed = documentApplicant(PhaseStatus.PASS, "passed@test.com");
+            Applicant evaluating = documentApplicant(PhaseStatus.EVALUATING, "evaluating@test.com");
+            given(applicantRepository.findByApplyFormId(APPLY_FORM_ID)).willReturn(List.of(passed, evaluating));
+            givenNewAnnouncementSavedAs("announcement-3");
+
+            ResultAnnouncementServiceResponse response = applicantAdminService.announceResults(request(KEY));
+
+            assertThat(response).isEqualTo(new ResultAnnouncementServiceResponse("announcement-3", 1, 0));
+            verify(resultMailDeliveryService).enqueue(eq("announcement-3"), eq(CLUB_ID),
+                    eq(List.of("passed@test.com")), any(), any(LocalDateTime.class));
+            verify(resultMailDeliveryService).enqueue(eq("announcement-3"), eq(CLUB_ID),
+                    eq(List.of()), any(), any(LocalDateTime.class));
         }
 
         @Test
