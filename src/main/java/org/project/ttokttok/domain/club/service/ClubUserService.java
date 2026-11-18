@@ -1,6 +1,7 @@
 package org.project.ttokttok.domain.club.service;
 
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+
 import org.project.ttokttok.domain.applyform.domain.ApplyDeadlinePolicy;
 import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
 import org.project.ttokttok.domain.club.domain.enums.ClubCategory;
@@ -14,13 +15,10 @@ import org.project.ttokttok.domain.club.service.dto.response.ClubCardServiceResp
 import org.project.ttokttok.domain.club.service.dto.response.ClubDetailServiceResponse;
 import org.project.ttokttok.domain.club.service.dto.response.ClubListServiceResponse;
 import org.project.ttokttok.global.config.ClubPopularityConfig;
-import org.project.ttokttok.infrastructure.s3.service.S3Service;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import lombok.RequiredArgsConstructor;
 
 /**
  * 동아리 서비스 클래스
@@ -32,7 +30,6 @@ public class ClubUserService {
 
     // 소개글 조회
     private final ClubRepository clubRepository;
-    private final S3Service s3Service;
 
     // 동아리 인기글 조회
     private final ClubPopularityConfig popularityConfig;

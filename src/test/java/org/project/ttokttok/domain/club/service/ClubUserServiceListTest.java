@@ -12,7 +12,6 @@ import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.domain.club.repository.dto.ClubCardQueryResponse;
 import org.project.ttokttok.domain.club.service.dto.response.ClubListServiceResponse;
 import org.project.ttokttok.global.config.ClubPopularityConfig;
-import org.project.ttokttok.infrastructure.s3.service.S3Service;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -30,9 +29,6 @@ class ClubUserServiceListTest {
 
     @Mock
     private ClubRepository clubRepository;
-
-    @Mock
-    private S3Service s3Service;
 
     @Mock
     private ClubPopularityConfig popularityConfig;
