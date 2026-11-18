@@ -2,7 +2,6 @@ package org.project.ttokttok.domain.club.service;
 
 import java.util.List;
 
-import org.project.ttokttok.domain.applyform.domain.ApplyDeadlinePolicy;
 import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
 import org.project.ttokttok.domain.club.domain.enums.ClubCategory;
 import org.project.ttokttok.domain.club.domain.enums.ClubType;
@@ -100,35 +99,10 @@ public class ClubUserService {
         }
 
         List<ClubCardServiceResponse> clubs = results.stream()
-                .map(this::toServiceResponse)
+                .map(ClubCardServiceResponse::from)
                 .toList();
 
         return new ClubListServiceResponse(clubs, clubs.size(), 0L, hasNext, nextCursor);
-    }
-
-    /**
-     * ClubCardQueryResponse 를 ClubCardServiceResponse 로 변환
-     *
-     * @param queryResponse Repository 에서 조회한 결과
-     * @return Service 레이어 응답 DTO
-     * */
-    private ClubCardServiceResponse toServiceResponse(ClubCardQueryResponse queryResponse) {
-        boolean isDeadlineImminent = ApplyDeadlinePolicy.isImminent(queryResponse.applyDeadLine());
-
-        return new ClubCardServiceResponse(
-                queryResponse.id(),
-                queryResponse.name(),
-                queryResponse.clubType(),
-                queryResponse.clubCategory(),
-                queryResponse.customCategory(),
-                queryResponse.summary(),
-                queryResponse.profileImageUrl(),
-                queryResponse.clubMemberCount(),
-                queryResponse.recruiting(),
-                queryResponse.bookmarked(),
-                isDeadlineImminent,
-                queryResponse.recruitState()
-        );
     }
 
     /**
@@ -144,7 +118,7 @@ public class ClubUserService {
         );
 
         List<ClubCardServiceResponse> clubs = results.stream()
-                .map(this::toServiceResponse)
+                .map(ClubCardServiceResponse::from)
                 .toList();
 
         return new ClubListServiceResponse(clubs, clubs.size(), (long) clubs.size(), false, null);
@@ -184,7 +158,7 @@ public class ClubUserService {
         }
 
         List<ClubCardServiceResponse> clubs = results.stream()
-                .map(this::toServiceResponse)
+                .map(ClubCardServiceResponse::from)
                 .toList();
 
         return new ClubListServiceResponse(clubs, clubs.size(), 0L, hasNext, nextCursor);
@@ -214,7 +188,7 @@ public class ClubUserService {
 
         // 4. DTO 변환
         List<ClubCardServiceResponse> results = queryResults.stream()
-                .map(this::toServiceResponse)
+                .map(ClubCardServiceResponse::from)
                 .toList();
 
         // 5. 다음 커서 생성

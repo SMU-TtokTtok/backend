@@ -1,8 +1,10 @@
 package org.project.ttokttok.domain.club.service.dto.response;
 
+import org.project.ttokttok.domain.applyform.domain.ApplyDeadlinePolicy;
 import org.project.ttokttok.domain.applyform.domain.enums.RecruitState;
 import org.project.ttokttok.domain.club.domain.enums.ClubCategory;
 import org.project.ttokttok.domain.club.domain.enums.ClubType;
+import org.project.ttokttok.domain.club.repository.dto.ClubCardQueryResponse;
 
 /**
  * 동아리 카드 정보 서비스 응답 DTO
@@ -22,4 +24,22 @@ public record ClubCardServiceResponse(
         boolean isDeadlineImminent,         // 마감 임박 여부 (일주일 이내)
         RecruitState recruitState           // 모집 상태 (UPCOMING / OPEN / CLOSED)
 ) {
+    public static ClubCardServiceResponse from(ClubCardQueryResponse response) {
+        boolean isDeadlineImminent = ApplyDeadlinePolicy.isImminent(response.applyDeadLine());
+
+        return new ClubCardServiceResponse(
+                response.id(),
+                response.name(),
+                response.clubType(),
+                response.clubCategory(),
+                response.customCategory(),
+                response.summary(),
+                response.profileImageUrl(),
+                response.clubMemberCount(),
+                response.recruiting(),
+                response.bookmarked(),
+                isDeadlineImminent,
+                response.recruitState()
+        );
+    }
 }
