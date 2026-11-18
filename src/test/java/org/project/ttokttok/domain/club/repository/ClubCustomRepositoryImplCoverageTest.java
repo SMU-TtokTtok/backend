@@ -43,19 +43,10 @@ class ClubCustomRepositoryImplCoverageTest implements RepositoryTestSupport {
     }
 
     @Test
-    @DisplayName("getAllPopularClubs는 빈 결과를 반환한다")
-    void getAllPopularClubs() {
-        assertThat(clubRepository.getAllPopularClubs(USER, 7.0)).isNotNull();
-        assertThat(clubRepository.getAllPopularClubs(null, 7.0)).isNotNull();
-    }
-
-    @Test
-    @DisplayName("getPopularClubsWithFilters는 다양한 정렬에서 빈 결과를 반환한다")
-    void getPopularClubsWithFilters() {
-        for (String sort : List.of("latest", "popular", "member_count")) {
-            assertThat(clubRepository.getPopularClubsWithFilters(10, null, sort, USER, 7.0)).isNotNull();
-        }
-        assertThat(clubRepository.getPopularClubsWithFilters(10, "cursor-1", "popular", null, 7.0)).isNotNull();
+    @DisplayName("findPopularClubCandidates는 빈 DB에서 빈 결과를 반환한다")
+    void findPopularClubCandidates() {
+        assertThat(clubRepository.findPopularClubCandidates(USER)).isEmpty();
+        assertThat(clubRepository.findPopularClubCandidates(null)).isEmpty();
     }
 
     @Test

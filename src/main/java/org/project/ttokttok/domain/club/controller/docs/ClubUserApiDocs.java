@@ -15,6 +15,7 @@ import org.project.ttokttok.domain.club.controller.dto.response.ClubListResponse
 import org.project.ttokttok.domain.club.controller.dto.response.FilterOptionsResponse;
 import org.project.ttokttok.domain.club.domain.enums.ClubUniv;
 import org.project.ttokttok.global.exception.dto.ErrorResponse;
+import org.project.ttokttok.global.policy.PopularityPolicy;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
@@ -158,10 +159,8 @@ public interface ClubUserApiDocs {
      */
     @Operation(
             summary = "메인 배너 인기 동아리 조회",
-            description = """
-                    메인 화면 상단 배너에 표시될 모든 인기 동아리를 한번에 조회합니다.
-                    (멤버수 x 0.7) + (즐겨찾기 수 x 0.3) 기준으로 정렬됩니다.
-                    """
+            description = "메인 화면 상단 배너에 표시될 인기 동아리를 최대 " + PopularityPolicy.BANNER_SIZE + "개까지 조회합니다.\n"
+                    + "인기도 점수(멤버 수, 즐겨찾기 수, 조회수 기반)가 높은 순으로 정렬되며, 점수가 기준 미만인 동아리는 제외됩니다.\n"
     )
     @ApiResponses(
             value = {

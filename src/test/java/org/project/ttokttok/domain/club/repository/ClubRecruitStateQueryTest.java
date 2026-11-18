@@ -14,6 +14,7 @@ import org.project.ttokttok.domain.applyform.domain.json.Question;
 import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.domain.enums.ClubUniv;
 import org.project.ttokttok.domain.club.repository.dto.ClubCardQueryResponse;
+import org.project.ttokttok.domain.club.repository.dto.PopularClubCandidate;
 import org.project.ttokttok.infrastructure.email.service.EmailService;
 import org.project.ttokttok.infrastructure.firebase.service.FCMService;
 import org.project.ttokttok.infrastructure.s3.service.S3Service;
@@ -146,7 +147,9 @@ class ClubRecruitStateQueryTest {
     @DisplayName("인기 동아리 native 조회도 같은 판정을 쓴다")
     void popularNativeQuery_usesSameJudgement() {
         // when
-        List<ClubCardQueryResponse> cards = clubRepository.getAllPopularClubs("nobody@sangmyung.kr", 0.0);
+        List<ClubCardQueryResponse> cards = clubRepository.findPopularClubCandidates("nobody@sangmyung.kr").stream()
+                .map(PopularClubCandidate::card)
+                .toList();
 
         // then
         assertThat(statesByName(cards)).isEqualTo(EXPECTED_STATES);

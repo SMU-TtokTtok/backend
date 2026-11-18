@@ -58,9 +58,6 @@ class FavoriteServiceTest {
     @Mock
     private ClubMemberRepository clubMemberRepository;
 
-    @Mock
-    private PopularityCalculator popularityCalculator;
-
     /** 모집중인 지원폼이 하나도 없는 상태를 만든다. */
     private void givenNoRecruitingForm() {
         given(applyFormRepository.findRecruitingFormsByClubIds(any())).willReturn(Collections.emptyList());
@@ -233,9 +230,6 @@ class FavoriteServiceTest {
             given(favoriteRepository.findAllByUserEmailWithClub(request.userEmail())).willReturn(List.of(fav1, fav2));
             given(favoriteRepository.countClubFavoritesForEach(any())).willReturn(Collections.emptyList());
             givenNoClubMembers();
-
-            given(popularityCalculator.calculate(eq(0L), eq(0L), eq(100L))).willReturn(10.0);
-            given(popularityCalculator.calculate(eq(0L), eq(0L), eq(200L))).willReturn(20.0);
 
             givenNoRecruitingForm();
 

@@ -5,6 +5,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.project.ttokttok.domain.admin.domain.Admin;
 import org.project.ttokttok.domain.admin.repository.AdminRepository;
 import org.project.ttokttok.domain.applicant.domain.enums.Gender;
@@ -12,12 +14,18 @@ import org.project.ttokttok.domain.applicant.domain.enums.Grade;
 import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.domain.enums.ClubUniv;
 import org.project.ttokttok.domain.club.repository.dto.ClubCardQueryResponse;
+import org.project.ttokttok.domain.club.service.ClubUserService;
+import org.project.ttokttok.domain.club.service.dto.response.ClubCardServiceResponse;
+import org.project.ttokttok.domain.club.service.dto.response.ClubListServiceResponse;
 import org.project.ttokttok.domain.clubmember.domain.ClubMember;
 import org.project.ttokttok.domain.clubmember.domain.MemberRole;
 import org.project.ttokttok.domain.clubmember.repository.ClubMemberRepository;
+import org.project.ttokttok.global.policy.PopularityPolicy;
 import org.project.ttokttok.support.RepositoryTestSupport;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -32,7 +40,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * <p>정렬 기준이 서로 다른 결과를 내도록 픽스처를 잡았다.
  * <ul>
  *   <li>{@code 조회수많은동아리} — 멤버 0명, 조회수 100 → 인기 점수 70.0</li>
- *   <li>{@code 멤버많은동아리} — 멤버 2명, 조회수 0 → 인기 점수 1.4</li>
+ *   <li>{@code 멤버많은동아리} — 멤버 11명, 조회수 0 → 인기 점수 7.7</li>
  * </ul>
  * 따라서 {@code popular} 와 {@code member_count} 는 <b>반대 순서</b>가 나와야 하며,
  * 두 분기가 뒤바뀌면 즉시 실패한다.
@@ -55,6 +63,9 @@ class ClubCustomRepositorySortingTest implements RepositoryTestSupport {
 
     @Autowired
     private EntityManager em;
+
+    @Autowired
+    private ClubUserService clubUserService;
 
     private int adminSequence;
 
@@ -98,15 +109,29 @@ class ClubCustomRepositorySortingTest implements RepositoryTestSupport {
         return club;
     }
 
-    /** 인기순과 멤버순이 반대 결과를 내도록 두 동아리를 만든다. */
+    /**
+     * 인기순과 멤버순이 반대 결과를 내도록 두 동아리를 만든다.
+     * 인기 목록 최소 점수(7.0)를 넘도록 점수는 조회수많은동아리 70.0, 멤버많은동아리 7.7 이다.
+     */
     private void givenContrastingClubs() {
         givenClub(HIGH_VIEW_CLUB, 100, 0);
-        givenClub(MANY_MEMBER_CLUB, 0, 2);
+        givenClub(MANY_MEMBER_CLUB, 0, 11);
         flushAndClear();
     }
 
     private List<String> namesOf(List<ClubCardQueryResponse> clubs) {
         return clubs.stream().map(ClubCardQueryResponse::name).toList();
+    }
+
+    private List<String> namesOf(ClubListServiceResponse response) {
+        return response.clubs().stream().map(ClubCardServiceResponse::name).toList();
+    }
+
+    private void setCreatedAt(Club club, LocalDateTime createdAt) {
+        em.createNativeQuery("UPDATE clubs SET created_at = :createdAt WHERE id = :id")
+                .setParameter("createdAt", createdAt)
+                .setParameter("id", club.getId())
+                .executeUpdate();
     }
 
     private void flushAndClear() {
@@ -230,7 +255,7 @@ class ClubCustomRepositorySortingTest implements RepositoryTestSupport {
     }
 
     @Nested
-    @DisplayName("getPopularClubsWithFilters(): native SQL 정렬 경로")
+    @DisplayName("getPopularClubsWithFilters(): 인기 목록 정렬")
     class PopularClubsNativeSorting {
 
         @Test
@@ -238,8 +263,8 @@ class ClubCustomRepositorySortingTest implements RepositoryTestSupport {
         void popularSort_ordersByScoreDesc() {
             givenContrastingClubs();
 
-            List<ClubCardQueryResponse> result =
-                    clubRepository.getPopularClubsWithFilters(10, null, "popular", USER, 0.0);
+            ClubListServiceResponse result =
+                    clubUserService.getPopularClubsWithFilters(10, null, "popular", USER);
 
             assertThat(namesOf(result)).containsExactly(HIGH_VIEW_CLUB, MANY_MEMBER_CLUB);
         }
@@ -249,8 +274,8 @@ class ClubCustomRepositorySortingTest implements RepositoryTestSupport {
         void memberCountSort_ordersByMemberCountDesc() {
             givenContrastingClubs();
 
-            List<ClubCardQueryResponse> result =
-                    clubRepository.getPopularClubsWithFilters(10, null, "member_count", USER, 0.0);
+            ClubListServiceResponse result =
+                    clubUserService.getPopularClubsWithFilters(10, null, "member_count", USER);
 
             assertThat(namesOf(result)).containsExactly(MANY_MEMBER_CLUB, HIGH_VIEW_CLUB);
         }
@@ -258,13 +283,12 @@ class ClubCustomRepositorySortingTest implements RepositoryTestSupport {
         @Test
         @DisplayName("모든 정렬 값에서 SQL이 깨지지 않고 같은 동아리 집합을 반환한다")
         void everySortKeyExecutes() {
-            // native SQL 문자열을 switch로 조립하도록 바꾼 경로다.
-            // ORDER BY 절이 깨지면 여기서 SQL 예외로 드러난다.
+            // 정렬 키마다 비교 기준이 갈리는 경로다. 어느 분기가 깨져도 여기서 드러난다.
             givenContrastingClubs();
 
             for (String sort : List.of("popular", "member_count", "latest", "알 수 없는 값")) {
-                List<ClubCardQueryResponse> result =
-                        clubRepository.getPopularClubsWithFilters(10, null, sort, USER, 0.0);
+                ClubListServiceResponse result =
+                        clubUserService.getPopularClubsWithFilters(10, null, sort, USER);
 
                 assertThat(namesOf(result))
                         .as("sort=%s 는 정렬만 다를 뿐 같은 동아리 집합을 반환한다", sort)
@@ -273,15 +297,89 @@ class ClubCustomRepositorySortingTest implements RepositoryTestSupport {
         }
 
         @Test
+        @DisplayName("latest 정렬은 등록 시각이 늦은 동아리가 먼저 온다")
+        void latestSort_ordersByCreatedAtDesc() {
+            // 만든 순서와 반대로 시각을 줘서 id 나 저장 순서로는 우연히 맞지 않게 한다.
+            Club newest = givenClub("최신동아리", 20, 0);
+            Club middle = givenClub("중간동아리", 20, 0);
+            Club oldest = givenClub("오래된동아리", 20, 0);
+            flushAndClear();
+            setCreatedAt(newest, LocalDateTime.of(2026, 3, 1, 0, 0));
+            setCreatedAt(middle, LocalDateTime.of(2026, 2, 1, 0, 0));
+            setCreatedAt(oldest, LocalDateTime.of(2026, 1, 1, 0, 0));
+
+            ClubListServiceResponse result =
+                    clubUserService.getPopularClubsWithFilters(10, null, "latest", USER);
+
+            assertThat(namesOf(result)).containsExactly("최신동아리", "중간동아리", "오래된동아리");
+        }
+
+        @Test
         @DisplayName("minScore 미만인 동아리는 제외된다")
         void filtersOutBelowMinScore() {
             givenContrastingClubs();
+            givenClub("점수낮은동아리", 0, 1);
+            flushAndClear();
 
-            // 점수: 조회수많은동아리 = 100 * 0.7 = 70.0, 멤버많은동아리 = 2 * 0.7 = 1.4
-            List<ClubCardQueryResponse> result =
-                    clubRepository.getPopularClubsWithFilters(10, null, "popular", USER, 10.0);
+            // 점수: 조회수많은동아리 = 70.0, 멤버많은동아리 = 7.7, 점수낮은동아리 = 1 * 0.7 = 0.7 (최소 점수 7.0 미만)
+            ClubListServiceResponse result =
+                    clubUserService.getPopularClubsWithFilters(10, null, "popular", USER);
 
-            assertThat(namesOf(result)).containsExactly(HIGH_VIEW_CLUB);
+            assertThat(namesOf(result)).containsExactly(HIGH_VIEW_CLUB, MANY_MEMBER_CLUB);
+        }
+    }
+
+    /**
+     * 커서는 서비스가 만들고(nextCursor) 다시 받으므로 서비스를 거쳐 끝까지 넘겨 본다.
+     * 서비스 메서드 시그니처는 커서 형식이 바뀌어도 유지된다.
+     */
+    @Nested
+    @DisplayName("getPopularClubsWithFilters(): 커서로 끝까지 넘기기 (#464)")
+    class PopularClubsCursorPaging {
+
+        private static final int CLUB_COUNT = 6;
+
+        /**
+         * 인기 점수와 멤버 수가 모두 서로 다르고 두 정렬이 반대 순서가 되도록 만든다.
+         * 점수 = 0.7 × (조회수 + 멤버 수) = 0.7 × (15 + i) 라서 모두 PopularityPolicy 최소 점수(7.0) 이상이다.
+         * 동아리 id 는 UUID 라 점수·멤버 수와 무관한 임의 순서다.
+         */
+        private void givenPagedClubs() {
+            for (int i = 0; i < CLUB_COUNT; i++) {
+                givenClub("페이징동아리" + i, 10 + 2 * i, 5 - i);
+            }
+            flushAndClear();
+        }
+
+        /** nextCursor 를 따라 마지막 페이지까지 받아 이름을 이어 붙인다. */
+        private List<String> fetchAllPages(String sort, int size) {
+            List<String> names = new ArrayList<>();
+            String cursor = null;
+
+            for (int page = 0; page <= CLUB_COUNT; page++) {
+                ClubListServiceResponse response =
+                        clubUserService.getPopularClubsWithFilters(size, cursor, sort, USER);
+                response.clubs().forEach(club -> names.add(club.name()));
+
+                if (!response.hasNext()) {
+                    return names;
+                }
+                cursor = response.nextCursor();
+            }
+            throw new AssertionError("hasNext 가 끝나지 않는다: " + names);
+        }
+
+        @ParameterizedTest(name = "sort={0}")
+        @ValueSource(strings = {"popular", "member_count", "latest"})
+        @DisplayName("size=2로 끝까지 넘긴 결과가 한 번에 받은 결과와 같다 - 누락·중복 없음")
+        void pagedResultEqualsSinglePage(String sort) {
+            givenPagedClubs();
+
+            List<String> singlePage = fetchAllPages(sort, 100);
+            List<String> paged = fetchAllPages(sort, 2);
+
+            assertThat(singlePage).hasSize(CLUB_COUNT);
+            assertThat(paged).isEqualTo(singlePage);
         }
     }
 }

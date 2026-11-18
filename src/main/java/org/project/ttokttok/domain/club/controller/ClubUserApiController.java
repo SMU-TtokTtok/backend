@@ -118,10 +118,10 @@ public class ClubUserApiController implements ClubUserApiDocs {
 
     /**
      * 메인 화면 배너용 인기 동아리 조회 API
-     * 메인 화면 상단 배너에 표시될 인기 동아리를 조회합니다.
-     * 화살표 버튼을 통해 다음/이전 페이지로 이동할 수 있습니다.
+     * 메인 화면 상단 배너에 표시될 인기 동아리를 최대 {@code PopularityPolicy.BANNER_SIZE}개까지 조회합니다.
+     * 전체 목록은 "더보기"의 인기 동아리 목록 API가 맡는다.
      *
-     * @return (멤버수 x 0.7) + (즐겨찾기 수 x 0.3) 기준으로 정렬된 인기 동아리 목록
+     * @return 인기도 점수({@code PopularityPolicy}) 순으로 정렬된 인기 동아리 상위 목록
      * */
     @Override
     @GetMapping("/banner/popular")
@@ -139,7 +139,7 @@ public class ClubUserApiController implements ClubUserApiDocs {
      * @param size 페이지 크기 (기본값: 20)
      * @param cursor 무한스크롤 커서 (첫 요청시 생략)
      * @param sort 정렬 방식 (popular : 인기도순, member_count : 멤버많은 순, latest : 최신등록 순) - 기본값 : popular
-     * @return 멤버수 기준으로 정렬된 인기 동아리 목록
+     * @return 선택한 정렬 기준으로 정렬된 인기 동아리 목록
      * */
     @Override
     @GetMapping("/popular")
