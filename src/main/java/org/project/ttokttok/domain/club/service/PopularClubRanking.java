@@ -3,7 +3,6 @@ package org.project.ttokttok.domain.club.service;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 import org.project.ttokttok.domain.club.domain.enums.ClubSortType;
 import org.project.ttokttok.domain.club.repository.dto.PopularClubCandidate;
@@ -29,22 +28,44 @@ final class PopularClubRanking {
     static List<PopularClubCandidate> page(List<PopularClubCandidate> all, ClubSortType sort,
                                            String cursor, int limit) {
         Comparator<PopularClubCandidate> order = orderOf(sort);
+        List<PopularClubCandidate> ranked = rank(all, order);
 
-        Stream<PopularClubCandidate> ranked = all.stream()
-                .filter(candidate -> candidate.score() >= PopularityPolicy.MIN_SCORE)
-                .sorted(order);
-
-        if (cursor != null) {
-            Optional<PopularClubCandidate> last = all.stream()
-                    .filter(candidate -> candidate.id().equals(cursor))
-                    .findFirst();
-            if (last.isEmpty()) {
-                return List.of();
-            }
-            ranked = ranked.filter(candidate -> order.compare(candidate, last.get()) > 0);
+        if (cursor == null) {
+            return firstOf(ranked, limit);
         }
 
-        return ranked.limit(limit).toList();
+        return findById(all, cursor)
+                .map(last -> firstOf(after(ranked, last, order), limit))
+                .orElse(List.of());
+    }
+
+    /** 최소 점수 이상인 후보만 골라 정렬한다. */
+    private static List<PopularClubCandidate> rank(List<PopularClubCandidate> all,
+                                                   Comparator<PopularClubCandidate> order) {
+        return all.stream()
+                .filter(candidate -> candidate.score() >= PopularityPolicy.MIN_SCORE)
+                .sorted(order)
+                .toList();
+    }
+
+    /** 커서 동아리는 점수 미달로 순위에서 빠졌어도 찾을 수 있게 후보 전체에서 찾는다. */
+    private static Optional<PopularClubCandidate> findById(List<PopularClubCandidate> all, String id) {
+        return all.stream()
+                .filter(candidate -> candidate.id().equals(id))
+                .findFirst();
+    }
+
+    /** {@code last} 와 같은 규칙으로 비교해 그보다 뒤에 오는 후보만 남긴다. */
+    private static List<PopularClubCandidate> after(List<PopularClubCandidate> ranked,
+                                                    PopularClubCandidate last,
+                                                    Comparator<PopularClubCandidate> order) {
+        return ranked.stream()
+                .filter(candidate -> order.compare(candidate, last) > 0)
+                .toList();
+    }
+
+    private static List<PopularClubCandidate> firstOf(List<PopularClubCandidate> candidates, int limit) {
+        return candidates.stream().limit(limit).toList();
     }
 
     /** 앞에 올수록 작은 순서다. 인기순은 점수, 멤버순은 멤버 수, 최신순은 등록 시각이 큰 쪽이 앞이다. */
