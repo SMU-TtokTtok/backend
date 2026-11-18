@@ -24,7 +24,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
 /**
- * 지원 임시 저장과 지원자 첨부 파일의 자동 정리 (매일 새벽 4시, 한국 시간)
+ * 지원 임시 저장과 지원자 첨부 파일의 자동 정리 (매일 새벽 4시 10분, 한국 시간. 지원 폼 마감 처리 뒤)
  *
  * <p>두 작업은 서로 독립이다. 한쪽이 실패해도 다른 쪽은 실행한다.
  */
@@ -44,7 +44,7 @@ public class ApplicantCleanupScheduler {
     private final S3Service s3Service;
     private final S3KeyUrlGenerator keyUrlGenerator;
 
-    @Scheduled(cron = "0 0 4 * * *", zone = "Asia/Seoul")
+    @Scheduled(cron = "0 10 4 * * *", zone = "Asia/Seoul")
     public void cleanup() {
         try {
             deleteStaleTempApplicants();

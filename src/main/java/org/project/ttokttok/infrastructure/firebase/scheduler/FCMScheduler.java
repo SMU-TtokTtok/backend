@@ -15,8 +15,8 @@ public class FCMScheduler {
 
     private final FCMTokenRepository fcmTokenRepository;
 
-    // 매일 새벽 4시에 실행 (초 분 시 일 월 요일)
-    @Scheduled(cron = "0 0 4 * * *")
+    // 매일 새벽 4시 20분, 한국 시간 (초 분 시 일 월 요일). 04시대 크론끼리 시각을 나눠 스케줄러 스레드를 다투지 않게 한다(#467)
+    @Scheduled(cron = "0 20 4 * * *", zone = "Asia/Seoul")
     @Transactional
     public void cleanupStaleTokens() {
         // 1. 기준 시간 설정 (오늘로부터 2달 전)
