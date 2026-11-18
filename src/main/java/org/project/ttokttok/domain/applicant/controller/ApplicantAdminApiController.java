@@ -9,6 +9,7 @@ import org.project.ttokttok.domain.applicant.controller.dto.request.SendResultMa
 import org.project.ttokttok.domain.applicant.controller.dto.response.ApplicantDetailResponse;
 import org.project.ttokttok.domain.applicant.controller.dto.response.ApplicantFinalizeResponse;
 import org.project.ttokttok.domain.applicant.controller.dto.response.ApplicantPageResponse;
+import org.project.ttokttok.domain.applicant.controller.dto.response.ResultAnnouncementResponse;
 import org.project.ttokttok.domain.applicant.controller.enums.Kind;
 import org.project.ttokttok.domain.applicant.domain.enums.Sort;
 import org.project.ttokttok.domain.applicant.service.ApplicantAdminService;
@@ -169,6 +170,28 @@ public class ApplicantAdminApiController implements ApplicantAdminDocs {
         );
 
         return ResponseEntity.ok()
+                .body(response);
+    }
+
+    @PostMapping("/{clubId}/result-announcements")
+    public ResponseEntity<ResultAnnouncementResponse> announceResults(@AuthUserInfo String username,
+                                                                      @PathVariable String clubId,
+                                                                      @RequestHeader("Idempotency-Key") String idempotencyKey,
+                                                                      @Valid @RequestBody SendResultMailRequest request,
+                                                                      @RequestParam Kind kind) {
+        ResultAnnouncementServiceRequest serviceRequest = new ResultAnnouncementServiceRequest(
+                username,
+                clubId,
+                ApplicantPhase.valueOf(kind.name()),
+                idempotencyKey,
+                request.toServiceRequest()
+        );
+
+        ResultAnnouncementResponse response = ResultAnnouncementResponse.from(
+                applicantAdminService.announceResults(serviceRequest)
+        );
+
+        return ResponseEntity.accepted()
                 .body(response);
     }
 

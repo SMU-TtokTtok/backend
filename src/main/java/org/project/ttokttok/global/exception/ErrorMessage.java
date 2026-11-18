@@ -125,6 +125,11 @@ public enum ErrorMessage {
     ALREADY_APPLICANT_EXISTS("이미 지원한 동아리입니다.", HttpStatus.CONFLICT),
     QUESTION_PARSE_FAIL("질문을 받아오는데 실패했습니다.", HttpStatus.BAD_REQUEST),
 
+    // 결과 발표 에러 메시지 (#465)
+    IDEMPOTENCY_KEY_INVALID("Idempotency-Key 헤더는 1자 이상 100자 이하로 보내 주세요.", HttpStatus.BAD_REQUEST),
+    IDEMPOTENCY_KEY_REUSED("이미 다른 내용의 발표에 쓴 Idempotency-Key입니다.", HttpStatus.UNPROCESSABLE_ENTITY),
+    RESULT_ALREADY_ANNOUNCED("이미 결과를 발표한 전형입니다.", HttpStatus.CONFLICT),
+
     // 메모 에러 메시지
     MEMO_NOT_FOUND("메모를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
 

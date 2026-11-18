@@ -22,6 +22,7 @@ import org.project.ttokttok.infrastructure.email.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.mail.MailAuthenticationException;
 import org.springframework.mail.MailParseException;
 import org.springframework.mail.MailPreparationException;
 import org.springframework.mail.MailSendException;
@@ -197,7 +198,7 @@ class ResultMailDeliveryServiceTest {
     @DisplayName("시도가 바닥난 채 임대가 만료된 행은 가져오지 않고 LEASE_EXPIRED로 FAILED 처리한다")
     void claimDue_exhaustedExpiredLease_failsWithoutReturning() {
         LocalDateTime leaseUntil = NOW.plusMinutes(5);
-        String id = saveSending(5, leaseUntil);
+        String id = saveSending(ResultMailDelivery.MAX_ATTEMPTS, leaseUntil);
 
         List<ClaimedResultMail> claimed = service.claimDue(leaseUntil);
 
@@ -205,7 +206,7 @@ class ResultMailDeliveryServiceTest {
         ResultMailDelivery row = repository.findById(id).orElseThrow();
         assertThat(row.getStatus()).isEqualTo(ResultMailDeliveryStatus.FAILED);
         assertThat(row.getLastError()).isEqualTo("LEASE_EXPIRED");
-        assertThat(row.getAttemptCount()).isEqualTo(5);
+        assertThat(row.getAttemptCount()).isEqualTo(ResultMailDelivery.MAX_ATTEMPTS);
     }
 
     @Test
@@ -238,6 +239,9 @@ class ResultMailDeliveryServiceTest {
     void isRetryable_classifiesFailures() {
         assertThat(ResultMailDeliveryService.isRetryable(new RuntimeException(new MailSendException("x")))).isTrue();
         assertThat(ResultMailDeliveryService.isRetryable(new MailSendException("x"))).isTrue();
+        // SMTP 인증 실패 같은 설정 오류도 재시도한다. 운영자가 설정을 고치는 동안 메일이 기다린다(#465).
+        assertThat(ResultMailDeliveryService.isRetryable(
+                new RuntimeException(new MailAuthenticationException("x")))).isTrue();
         assertThat(ResultMailDeliveryService.isRetryable(new RuntimeException(new MailParseException("x")))).isFalse();
         assertThat(ResultMailDeliveryService.isRetryable(new RuntimeException(new MailPreparationException("x")))).isFalse();
         assertThat(ResultMailDeliveryService.isRetryable(new RuntimeException(new MessagingException("x")))).isFalse();
