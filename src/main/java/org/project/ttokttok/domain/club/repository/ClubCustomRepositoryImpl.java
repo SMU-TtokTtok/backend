@@ -1,34 +1,5 @@
 package org.project.ttokttok.domain.club.repository;
 
-import com.querydsl.core.types.Projections;
-import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.core.types.dsl.Expressions;
-import com.querydsl.core.types.dsl.NumberExpression;
-import com.querydsl.jpa.JPAExpressions;
-import com.querydsl.jpa.JPQLQuery;
-import com.querydsl.jpa.impl.JPAQuery;
-import com.querydsl.jpa.impl.JPAQueryFactory;
-import jakarta.persistence.EntityManager;
-import lombok.RequiredArgsConstructor;
-import org.project.ttokttok.domain.applyform.domain.ApplyForm;
-import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
-import org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus;
-import org.project.ttokttok.domain.club.domain.enums.ClubCategory;
-import org.project.ttokttok.domain.club.domain.enums.ClubSortType;
-import org.project.ttokttok.domain.club.domain.enums.ClubType;
-import org.project.ttokttok.domain.club.domain.enums.ClubUniv;
-import org.project.ttokttok.domain.club.repository.dto.ClubCardQueryResponse;
-import org.project.ttokttok.domain.club.repository.dto.ClubDetailAdminQueryResponse;
-import org.project.ttokttok.domain.club.repository.dto.ClubDetailQueryResponse;
-import org.springframework.stereotype.Repository;
-
-import java.util.HashSet;
-import java.util.List;
-
-import com.querydsl.core.types.dsl.CaseBuilder;
-import org.project.ttokttok.domain.applyform.domain.RecruitStatePolicy;
-import org.project.ttokttok.domain.applyform.domain.enums.RecruitState;
-
 import static org.project.ttokttok.domain.applyform.domain.QApplyForm.applyForm;
 import static org.project.ttokttok.domain.applyform.domain.enums.ApplyFormStatus.ACTIVE;
 import static org.project.ttokttok.domain.applyform.repository.ApplyFormQueryConditions.openOn;
@@ -36,6 +7,37 @@ import static org.project.ttokttok.domain.applyform.repository.ApplyFormQueryCon
 import static org.project.ttokttok.domain.club.domain.QClub.club;
 import static org.project.ttokttok.domain.clubmember.domain.QClubMember.clubMember;
 import static org.project.ttokttok.domain.favorite.domain.QFavorite.favorite;
+
+import java.util.HashSet;
+import java.util.List;
+
+import org.project.ttokttok.domain.applyform.domain.ApplyForm;
+import org.project.ttokttok.domain.applyform.domain.RecruitStatePolicy;
+import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
+import org.project.ttokttok.domain.applyform.domain.enums.RecruitState;
+import org.project.ttokttok.domain.club.domain.enums.ClubCategory;
+import org.project.ttokttok.domain.club.domain.enums.ClubSortType;
+import org.project.ttokttok.domain.club.domain.enums.ClubType;
+import org.project.ttokttok.domain.club.domain.enums.ClubUniv;
+import org.project.ttokttok.domain.club.repository.dto.ClubCardQueryResponse;
+import org.project.ttokttok.domain.club.repository.dto.ClubDetailAdminQueryResponse;
+import org.project.ttokttok.domain.club.repository.dto.ClubDetailQueryResponse;
+import org.project.ttokttok.domain.club.repository.dto.PopularClubCandidate;
+import org.project.ttokttok.global.policy.PopularityPolicy;
+import org.springframework.stereotype.Repository;
+
+import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.CaseBuilder;
+import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.core.types.dsl.NumberExpression;
+import com.querydsl.jpa.JPAExpressions;
+import com.querydsl.jpa.JPQLQuery;
+import com.querydsl.jpa.impl.JPAQuery;
+import com.querydsl.jpa.impl.JPAQueryFactory;
+
+import jakarta.persistence.EntityManager;
+import lombok.RequiredArgsConstructor;
 
 @Repository
 @RequiredArgsConstructor
@@ -67,25 +69,21 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
                 FROM user_favorites f
                 JOIN users u ON f.user_id = u.id
                 WHERE u.email = :userEmail
-            ),
-            scored_clubs AS (
-                SELECT c.id, c.name, c.club_type, c.club_category, c.custom_category, c.summary, c.profile_img, c.view_count, c.created_at,
-                       COALESCE(mc.cnt, 0) as member_count,
-                       (COALESCE(mc.cnt, 0) * 0.7 + COALESCE(fc.cnt, 0) * 2.5 + c.view_count * 0.7) AS score,
-                       COALESCE(af_active.is_recruiting, 0) = 1 as recruiting,
-                       COALESCE(af_active.is_upcoming, 0) = 1 as upcoming,
-                       COALESCE(uf_user.bookmarked, 0) = 1 as bookmarked,
-                       af_active.apply_end_date as apply_deadline
-                FROM clubs c
-                LEFT JOIN mc ON c.id = mc.club_id
-                LEFT JOIN fc ON c.id = fc.club_id
-                LEFT JOIN af_active ON c.id = af_active.club_id
-                LEFT JOIN uf_user ON c.id = uf_user.club_id
             )
-            SELECT id, name, club_type, club_category, custom_category, summary, profile_img,
-                   member_count, recruiting, upcoming, bookmarked, apply_deadline, score
-            FROM scored_clubs
-            WHERE score >= :minScore
+            SELECT c.id, c.name, c.club_type, c.club_category, c.custom_category, c.summary, c.profile_img,
+                   COALESCE(mc.cnt, 0) as member_count,
+                   COALESCE(af_active.is_recruiting, 0) = 1 as recruiting,
+                   COALESCE(af_active.is_upcoming, 0) = 1 as upcoming,
+                   COALESCE(uf_user.bookmarked, 0) = 1 as bookmarked,
+                   af_active.apply_end_date as apply_deadline,
+                   COALESCE(fc.cnt, 0) as favorite_count,
+                   c.view_count,
+                   c.created_at
+            FROM clubs c
+            LEFT JOIN mc ON c.id = mc.club_id
+            LEFT JOIN fc ON c.id = fc.club_id
+            LEFT JOIN af_active ON c.id = af_active.club_id
+            LEFT JOIN uf_user ON c.id = uf_user.club_id
             """;
 
     @Override
@@ -166,49 +164,14 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
 
     @Override
     @SuppressWarnings("unchecked")
-    public List<ClubCardQueryResponse> getAllPopularClubs(String userEmail, double minScore) {
-        String sql = POPULAR_CLUB_BASE_SQL + " ORDER BY score DESC, id DESC ";
-
-        var query = entityManager.createNativeQuery(sql);
+    public List<PopularClubCandidate> findPopularClubCandidates(String userEmail) {
+        var query = entityManager.createNativeQuery(POPULAR_CLUB_BASE_SQL);
         query.setParameter("userEmail", userEmail);
-        query.setParameter("minScore", minScore);
         query.setParameter("today", RecruitStatePolicy.today());
 
-        return mapToClubCardQueryResponse(query.getResultList());
-    }
+        List<Object[]> rows = query.getResultList();
 
-    @Override
-    @SuppressWarnings("unchecked")
-    public List<ClubCardQueryResponse> getPopularClubsWithFilters(
-            int size,
-            String cursor,
-            String sort,
-            String userEmail,
-            double minScore) {
-
-        StringBuilder sqlBuilder = new StringBuilder(POPULAR_CLUB_BASE_SQL);
-        if (cursor != null) {
-            sqlBuilder.append(" AND id < :cursor ");
-        }
-
-        switch (ClubSortType.from(sort)) {
-            case POPULAR -> sqlBuilder.append(" ORDER BY score DESC, id DESC ");
-            case MEMBER_COUNT -> sqlBuilder.append(" ORDER BY member_count DESC, id DESC ");
-            case LATEST -> sqlBuilder.append(" ORDER BY id DESC, created_at DESC ");
-        }
-
-        sqlBuilder.append(" LIMIT :limit ");
-
-        var query = entityManager.createNativeQuery(sqlBuilder.toString());
-        query.setParameter("userEmail", userEmail);
-        query.setParameter("minScore", minScore);
-        query.setParameter("today", RecruitStatePolicy.today());
-        query.setParameter("limit", size + 1);
-        if (cursor != null) {
-            query.setParameter("cursor", cursor);
-        }
-
-        return mapToClubCardQueryResponse(query.getResultList());
+        return rows.stream().map(this::toPopularClubCandidate).toList();
     }
 
     @Override
@@ -280,13 +243,21 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
         return form != null ? form.recruitState() : RecruitState.CLOSED;
     }
 
-    private List<ClubCardQueryResponse> mapToClubCardQueryResponse(List<Object[]> results) {
-        return results.stream().map(row -> new ClubCardQueryResponse(
+    /** {@link #POPULAR_CLUB_BASE_SQL} 의 한 행을 후보로 바꾼다. 컬럼 순서가 SELECT 와 같아야 한다. */
+    private PopularClubCandidate toPopularClubCandidate(Object[] row) {
+        ClubCardQueryResponse card = new ClubCardQueryResponse(
                 (String) row[0], (String) row[1], ClubType.valueOf((String) row[2]),
                 ClubCategory.valueOf((String) row[3]), (String) row[4], (String) row[5],
                 (String) row[6], ((Number) row[7]).intValue(), (Boolean) row[8], (Boolean) row[9],
                 (Boolean) row[10], row[11] != null ? ((java.sql.Date) row[11]).toLocalDate() : null
-        )).toList();
+        );
+
+        return new PopularClubCandidate(
+                card,
+                ((Number) row[12]).longValue(),
+                ((Number) row[13]).longValue(),
+                ((java.sql.Timestamp) row[14]).toLocalDateTime()
+        );
     }
 
     /**
@@ -330,7 +301,8 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
                 .where(favorite.club.id.eq(club.id));
 
         return Expressions.numberTemplate(Double.class,
-                "({0}) * 0.7 + ({1}) * 2.5 + ({2}) * 0.7",
+                "({0}) * " + PopularityPolicy.MEMBER_WEIGHT + " + ({1}) * " + PopularityPolicy.FAVORITE_WEIGHT
+                        + " + ({2}) * " + PopularityPolicy.VIEW_WEIGHT,
                 memberCountSubQuery, favoriteCountSubQuery, club.viewCount);
     }
 

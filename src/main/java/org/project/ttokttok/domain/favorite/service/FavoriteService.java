@@ -28,6 +28,7 @@ import org.project.ttokttok.domain.favorite.service.dto.response.FavoriteToggleS
 import org.project.ttokttok.domain.user.domain.User;
 import org.project.ttokttok.domain.user.exception.UserNotFoundException;
 import org.project.ttokttok.domain.user.repository.UserRepository;
+import org.project.ttokttok.global.policy.PopularityPolicy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,7 +45,6 @@ public class FavoriteService {
     private final UserRepository userRepository;
     private final ApplyFormRepository applyFormRepository;
     private final ClubMemberRepository clubMemberRepository;
-    private final PopularityCalculator popularityCalculator;
 
     /**
      * 즐겨찾기 토글 (추가/제거) 이미 즐겨찾기가 되어 있으면 제거하고, 없으면 추가합니다.
@@ -116,7 +116,7 @@ public class FavoriteService {
 
         List<Club> sortedClubs = clubs.stream()
                 .sorted(Comparator.comparingDouble(
-                        (Club club) -> popularityCalculator.calculate(
+                        (Club club) -> PopularityPolicy.score(
                                 memberCountMap.getOrDefault(club.getId(), 0L),
                                 favoriteCountMap.getOrDefault(club.getId(), 0L),
                                 club.getViewCount())).reversed())

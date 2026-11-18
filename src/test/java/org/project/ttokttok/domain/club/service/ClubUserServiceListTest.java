@@ -10,11 +10,14 @@ import org.project.ttokttok.domain.club.domain.enums.ClubCategory;
 import org.project.ttokttok.domain.club.domain.enums.ClubType;
 import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.domain.club.repository.dto.ClubCardQueryResponse;
+import org.project.ttokttok.domain.club.repository.dto.PopularClubCandidate;
+import org.project.ttokttok.domain.club.service.dto.response.ClubCardServiceResponse;
 import org.project.ttokttok.domain.club.service.dto.response.ClubListServiceResponse;
-import org.project.ttokttok.global.config.ClubPopularityConfig;
-import org.project.ttokttok.infrastructure.s3.service.S3Service;
+import org.project.ttokttok.global.policy.PopularityPolicy;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -31,12 +34,6 @@ class ClubUserServiceListTest {
     @Mock
     private ClubRepository clubRepository;
 
-    @Mock
-    private S3Service s3Service;
-
-    @Mock
-    private ClubPopularityConfig popularityConfig;
-
     @InjectMocks
     private ClubUserService clubUserService;
 
@@ -47,6 +44,11 @@ class ClubUserServiceListTest {
                 id, "동아리" + id, ClubType.CENTRAL, ClubCategory.ACADEMIC,
                 null, "요약", "http://img", 10, true, false, false, deadline
         );
+    }
+
+    /** 인기 점수 = 10 × 0.7 + views × 0.7. views 가 클수록 앞선다. */
+    private PopularClubCandidate candidate(String id, long views) {
+        return new PopularClubCandidate(card(id, null), 0, views, LocalDateTime.of(2026, 1, 1, 0, 0));
     }
 
     @Test
@@ -102,30 +104,65 @@ class ClubUserServiceListTest {
     }
 
     @Test
-    @DisplayName("전체 인기 동아리 목록을 조회한다")
+    @DisplayName("전체 인기 동아리 목록은 점수 높은 순이고 최소 점수 미만은 뺀다")
     void getAllPopularClubs() {
-        given(popularityConfig.getMinScore()).willReturn(7.0);
-        given(clubRepository.getAllPopularClubs(eq(USER), eq(7.0)))
-                .willReturn(List.of(card("1", null), card("2", null)));
+        // 멤버 1명, 조회 0 → 점수 0.7 로 최소 점수(7.0) 미만
+        PopularClubCandidate belowMinScore = new PopularClubCandidate(
+                new ClubCardQueryResponse("3", "동아리3", ClubType.CENTRAL, ClubCategory.ACADEMIC,
+                        null, "요약", "http://img", 1, true, false, false, null),
+                0, 0, LocalDateTime.of(2026, 1, 1, 0, 0));
+        given(clubRepository.findPopularClubCandidates(eq(USER)))
+                .willReturn(List.of(candidate("1", 20), candidate("2", 30), belowMinScore));
 
         ClubListServiceResponse response = clubUserService.getAllPopularClubs(USER);
 
-        assertThat(response.clubs()).hasSize(2);
+        assertThat(response.clubs()).extracting(ClubCardServiceResponse::id).containsExactly("2", "1");
         assertThat(response.hasNext()).isFalse();
+    }
+
+    @Test
+    @DisplayName("전체 인기 동아리 목록은 배너 최대 개수까지만 돌려준다")
+    void getAllPopularClubs_limitsToBannerSize() {
+        List<PopularClubCandidate> candidates = new ArrayList<>();
+        for (int i = 0; i < PopularityPolicy.BANNER_SIZE + 3; i++) {
+            candidates.add(candidate("c" + i, 20 + i));
+        }
+        given(clubRepository.findPopularClubCandidates(eq(USER))).willReturn(candidates);
+
+        ClubListServiceResponse response = clubUserService.getAllPopularClubs(USER);
+
+        // 조회수가 클수록 앞서므로 가장 큰 c12 부터 BANNER_SIZE 개다
+        List<String> expected = new ArrayList<>();
+        for (int i = candidates.size() - 1; i >= candidates.size() - PopularityPolicy.BANNER_SIZE; i--) {
+            expected.add("c" + i);
+        }
+        assertThat(response.clubs()).extracting(ClubCardServiceResponse::id).containsExactlyElementsOf(expected);
     }
 
     @Test
     @DisplayName("필터가 있는 인기 동아리 목록을 무한스크롤 조회한다")
     void getPopularClubsWithFilters_hasNext() {
-        given(popularityConfig.getMinScore()).willReturn(7.0);
-        given(clubRepository.getPopularClubsWithFilters(anyInt(), any(), anyString(), anyString(), eq(7.0)))
-                .willReturn(List.of(card("1", null), card("2", null), card("3", null)));
+        given(clubRepository.findPopularClubCandidates(eq(USER)))
+                .willReturn(List.of(candidate("1", 30), candidate("2", 20), candidate("3", 10)));
 
         ClubListServiceResponse response = clubUserService.getPopularClubsWithFilters(2, null, "popular", USER);
 
         assertThat(response.hasNext()).isTrue();
         assertThat(response.clubs()).hasSize(2);
         assertThat(response.nextCursor()).isEqualTo("2");
+    }
+
+    @Test
+    @DisplayName("커서를 주면 그 동아리 다음부터 이어서 돌려준다")
+    void getPopularClubsWithFilters_continuesAfterCursor() {
+        given(clubRepository.findPopularClubCandidates(eq(USER)))
+                .willReturn(List.of(candidate("1", 30), candidate("2", 20), candidate("3", 10)));
+
+        ClubListServiceResponse response = clubUserService.getPopularClubsWithFilters(2, "2", "popular", USER);
+
+        assertThat(response.clubs()).extracting(ClubCardServiceResponse::id).containsExactly("3");
+        assertThat(response.hasNext()).isFalse();
+        assertThat(response.nextCursor()).isNull();
     }
 
     @Test

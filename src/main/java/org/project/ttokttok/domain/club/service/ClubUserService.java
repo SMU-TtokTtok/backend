@@ -1,26 +1,25 @@
 package org.project.ttokttok.domain.club.service;
 
-import lombok.RequiredArgsConstructor;
-import org.project.ttokttok.domain.applyform.domain.ApplyDeadlinePolicy;
+import java.util.List;
+
 import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
 import org.project.ttokttok.domain.club.domain.enums.ClubCategory;
+import org.project.ttokttok.domain.club.domain.enums.ClubSortType;
 import org.project.ttokttok.domain.club.domain.enums.ClubType;
 import org.project.ttokttok.domain.club.domain.enums.ClubUniv;
 import org.project.ttokttok.domain.club.exception.ClubNotFoundException;
 import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.domain.club.repository.dto.ClubCardQueryResponse;
 import org.project.ttokttok.domain.club.repository.dto.ClubDetailQueryResponse;
+import org.project.ttokttok.domain.club.repository.dto.PopularClubCandidate;
 import org.project.ttokttok.domain.club.service.dto.response.ClubCardServiceResponse;
 import org.project.ttokttok.domain.club.service.dto.response.ClubDetailServiceResponse;
 import org.project.ttokttok.domain.club.service.dto.response.ClubListServiceResponse;
-import org.project.ttokttok.global.config.ClubPopularityConfig;
-import org.project.ttokttok.infrastructure.s3.service.S3Service;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.project.ttokttok.global.policy.PopularityPolicy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import lombok.RequiredArgsConstructor;
 
 /**
  * 동아리 서비스 클래스
@@ -32,10 +31,6 @@ public class ClubUserService {
 
     // 소개글 조회
     private final ClubRepository clubRepository;
-    private final S3Service s3Service;
-
-    // 동아리 인기글 조회
-    private final ClubPopularityConfig popularityConfig;
 
     /**
      * 동아리 상세 정보 조회
@@ -103,51 +98,25 @@ public class ClubUserService {
         }
 
         List<ClubCardServiceResponse> clubs = results.stream()
-                .map(this::toServiceResponse)
+                .map(ClubCardServiceResponse::from)
                 .toList();
 
         return new ClubListServiceResponse(clubs, clubs.size(), 0L, hasNext, nextCursor);
     }
 
     /**
-     * ClubCardQueryResponse 를 ClubCardServiceResponse 로 변환
+     * 메인 배너용 인기 동아리 목록 조회 (인기도 점수 기준)
+     * 인기도 점수가 최소 점수 이상인 동아리를 점수가 높은 순으로 최대 {@code PopularityPolicy.BANNER_SIZE}개 조회합니다.
      *
-     * @param queryResponse Repository 에서 조회한 결과
-     * @return Service 레이어 응답 DTO
-     * */
-    private ClubCardServiceResponse toServiceResponse(ClubCardQueryResponse queryResponse) {
-        boolean isDeadlineImminent = ApplyDeadlinePolicy.isImminent(queryResponse.applyDeadLine());
-
-        return new ClubCardServiceResponse(
-                queryResponse.id(),
-                queryResponse.name(),
-                queryResponse.clubType(),
-                queryResponse.clubCategory(),
-                queryResponse.customCategory(),
-                queryResponse.summary(),
-                queryResponse.profileImageUrl(),
-                queryResponse.clubMemberCount(),
-                queryResponse.recruiting(),
-                queryResponse.bookmarked(),
-                isDeadlineImminent,
-                queryResponse.recruitState()
-        );
-    }
-
-    /**
-     * 메인 배너용 인기 동아리 목록 조회 (멤버수 기준)
-     * 멤버수가 많은 순으로 동아리를 조회합니다.
-     *
-     * @return 전체 인기 동아리 목록
+     * @return 상위 인기 동아리 목록
      * */
     public ClubListServiceResponse getAllPopularClubs(String userEmail) {
 
-        List<ClubCardQueryResponse> results = clubRepository.getAllPopularClubs(
-                userEmail, popularityConfig.getMinScore()
-        );
-
-        List<ClubCardServiceResponse> clubs = results.stream()
-                .map(this::toServiceResponse)
+        List<ClubCardServiceResponse> clubs = PopularClubRanking
+                .page(clubRepository.findPopularClubCandidates(userEmail), ClubSortType.POPULAR, null,
+                        PopularityPolicy.BANNER_SIZE)
+                .stream()
+                .map(candidate -> ClubCardServiceResponse.from(candidate.card()))
                 .toList();
 
         return new ClubListServiceResponse(clubs, clubs.size(), (long) clubs.size(), false, null);
@@ -169,10 +138,11 @@ public class ClubUserService {
             String sort,
             String userEmail) {
 
-        // 새로운 복합 인기도 기준 메서드 적용
-        List<ClubCardQueryResponse> results = clubRepository.getPopularClubsWithFilters(
-                size, cursor, sort, userEmail, popularityConfig.getMinScore()
-        );
+        List<ClubCardQueryResponse> results = PopularClubRanking
+                .page(clubRepository.findPopularClubCandidates(userEmail), ClubSortType.from(sort), cursor, size + 1)
+                .stream()
+                .map(PopularClubCandidate::card)
+                .toList();
 
         // hasNext 확인을 위해 size+1로 조회했으므로
         boolean hasNext = results.size() > size;
@@ -187,7 +157,7 @@ public class ClubUserService {
         }
 
         List<ClubCardServiceResponse> clubs = results.stream()
-                .map(this::toServiceResponse)
+                .map(ClubCardServiceResponse::from)
                 .toList();
 
         return new ClubListServiceResponse(clubs, clubs.size(), 0L, hasNext, nextCursor);
@@ -217,7 +187,7 @@ public class ClubUserService {
 
         // 4. DTO 변환
         List<ClubCardServiceResponse> results = queryResults.stream()
-                .map(this::toServiceResponse)
+                .map(ClubCardServiceResponse::from)
                 .toList();
 
         // 5. 다음 커서 생성

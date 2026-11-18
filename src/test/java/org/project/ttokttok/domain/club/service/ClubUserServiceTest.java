@@ -12,8 +12,6 @@ import org.project.ttokttok.domain.club.exception.ClubNotFoundException;
 import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.domain.club.repository.dto.ClubDetailQueryResponse;
 import org.project.ttokttok.domain.club.service.dto.response.ClubDetailServiceResponse;
-import org.project.ttokttok.global.config.ClubPopularityConfig;
-import org.project.ttokttok.infrastructure.s3.service.S3Service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -26,12 +24,6 @@ class ClubUserServiceTest {
 
     @Mock
     private ClubRepository clubRepository;
-
-    @Mock
-    private S3Service s3Service;
-
-    @Mock
-    private ClubPopularityConfig popularityConfig;
 
     @InjectMocks
     private ClubUserService clubUserService;
