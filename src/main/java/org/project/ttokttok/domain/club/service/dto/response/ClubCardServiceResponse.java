@@ -25,7 +25,9 @@ public record ClubCardServiceResponse(
         RecruitState recruitState           // 모집 상태 (UPCOMING / OPEN / CLOSED)
 ) {
     public static ClubCardServiceResponse from(ClubCardQueryResponse response) {
-        boolean isDeadlineImminent = ApplyDeadlinePolicy.isImminent(response.applyDeadLine());
+        // 마감 임박은 모집 중인 동아리만 해당한다. 수동 마감한 폼의 마감일은 보지 않는다.
+        boolean isDeadlineImminent = response.recruiting()
+                && ApplyDeadlinePolicy.isImminent(response.applyDeadLine());
 
         return new ClubCardServiceResponse(
                 response.id(),
