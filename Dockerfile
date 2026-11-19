@@ -41,7 +41,11 @@ USER ttokttok
 EXPOSE 8080
 
 # 힙을 고정값(-Xmx)이 아니라 비율로 잡아, compose 의 메모리 제한만 조정해도 힙이 따라오게 한다.
-ENV JAVA_OPTS="-XX:MaxRAMPercentage=75.0 -XX:+UseG1GC"
+#
+# -XX:-UseBASE64Intrinsics 는 CVE-2026-114938(Java4Shell) 임시 완화다. AVX-512 VBMI CPU 에서
+# Base64 디코더 intrinsic 이 조작된 입력으로 메모리를 덮어쓴다. 고정 버전(17.0.21.1)의 Temurin
+# 이미지가 아직 없어 플래그로 경로를 끈다. 그 이미지로 재빌드되면 제거해도 된다. (이슈 #471)
+ENV JAVA_OPTS="-XX:MaxRAMPercentage=75.0 -XX:+UseG1GC -XX:-UseBASE64Intrinsics"
 
 # exec 로 넘겨 java 가 PID 1 이 되게 한다. SIGTERM 이 셸에 먹히지 않고 그대로 전달되어야
 # Spring 의 graceful shutdown 이 동작한다.
