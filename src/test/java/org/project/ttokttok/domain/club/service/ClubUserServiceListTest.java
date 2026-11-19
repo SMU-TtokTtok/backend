@@ -38,6 +38,9 @@ class ClubUserServiceListTest {
     private ClubRepository clubRepository;
 
     @Mock
+    private PopularClubCandidateCache popularClubCandidateCache;
+
+    @Mock
     private FavoriteRepository favoriteRepository;
 
     @InjectMocks
@@ -117,7 +120,7 @@ class ClubUserServiceListTest {
                 new ClubCardQueryResponse("3", "동아리3", ClubType.CENTRAL, ClubCategory.ACADEMIC,
                         null, "요약", "http://img", 1, true, false, false, null),
                 0, 0, LocalDateTime.of(2026, 1, 1, 0, 0));
-        given(clubRepository.findPopularClubCandidates())
+        given(popularClubCandidateCache.get())
                 .willReturn(List.of(candidate("1", 20), candidate("2", 30), belowMinScore));
 
         ClubListServiceResponse response = clubUserService.getAllPopularClubs(USER);
@@ -133,7 +136,7 @@ class ClubUserServiceListTest {
         for (int i = 0; i < PopularityPolicy.BANNER_SIZE + 3; i++) {
             candidates.add(candidate("c" + i, 20 + i));
         }
-        given(clubRepository.findPopularClubCandidates()).willReturn(candidates);
+        given(popularClubCandidateCache.get()).willReturn(candidates);
 
         ClubListServiceResponse response = clubUserService.getAllPopularClubs(USER);
 
@@ -148,7 +151,7 @@ class ClubUserServiceListTest {
     @Test
     @DisplayName("필터가 있는 인기 동아리 목록을 무한스크롤 조회한다")
     void getPopularClubsWithFilters_hasNext() {
-        given(clubRepository.findPopularClubCandidates())
+        given(popularClubCandidateCache.get())
                 .willReturn(List.of(candidate("1", 30), candidate("2", 20), candidate("3", 10)));
 
         ClubListServiceResponse response = clubUserService.getPopularClubsWithFilters(2, null, "popular", USER);
@@ -161,7 +164,7 @@ class ClubUserServiceListTest {
     @Test
     @DisplayName("커서를 주면 그 동아리 다음부터 이어서 돌려준다")
     void getPopularClubsWithFilters_continuesAfterCursor() {
-        given(clubRepository.findPopularClubCandidates())
+        given(popularClubCandidateCache.get())
                 .willReturn(List.of(candidate("1", 30), candidate("2", 20), candidate("3", 10)));
 
         ClubListServiceResponse response = clubUserService.getPopularClubsWithFilters(2, "2", "popular", USER);
@@ -172,9 +175,9 @@ class ClubUserServiceListTest {
     }
 
     @Test
-    @DisplayName("인기 목록의 북마크는 후보 조회가 아니라 로그인 사용자의 즐겨찾기로 정한다")
+    @DisplayName("인기 목록의 북마크는 캐시가 아니라 로그인 사용자의 즐겨찾기로 정한다")
     void popularClubs_bookmarkedComesFromUserFavorites() {
-        given(clubRepository.findPopularClubCandidates())
+        given(popularClubCandidateCache.get())
                 .willReturn(List.of(candidate("1", 30), candidate("2", 20), candidate("3", 10)));
         given(favoriteRepository.findClubIdsByUserEmail(USER)).willReturn(Set.of("2"));
 

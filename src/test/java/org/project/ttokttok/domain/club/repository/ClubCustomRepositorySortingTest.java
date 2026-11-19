@@ -15,6 +15,7 @@ import org.project.ttokttok.domain.club.domain.Club;
 import org.project.ttokttok.domain.club.domain.enums.ClubUniv;
 import org.project.ttokttok.domain.club.repository.dto.ClubCardQueryResponse;
 import org.project.ttokttok.domain.club.service.ClubUserService;
+import org.project.ttokttok.domain.club.service.PopularClubCandidateCache;
 import org.project.ttokttok.domain.club.service.dto.response.ClubCardServiceResponse;
 import org.project.ttokttok.domain.club.service.dto.response.ClubListServiceResponse;
 import org.project.ttokttok.domain.clubmember.domain.ClubMember;
@@ -23,6 +24,7 @@ import org.project.ttokttok.domain.clubmember.repository.ClubMemberRepository;
 import org.project.ttokttok.global.policy.PopularityPolicy;
 import org.project.ttokttok.support.RepositoryTestSupport;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -69,9 +71,22 @@ class ClubCustomRepositorySortingTest implements RepositoryTestSupport {
 
     private int adminSequence;
 
+    @Autowired
+    private RedisTemplate<String, String> redisTemplate;
+
     @BeforeEach
     void setUp() {
         adminSequence = 0;
+        // 인기 목록은 후보를 Redis 에 캐시한다. 테스트마다 픽스처가 다르므로 앞 테스트가 채운 값을 지운다.
+        clearPopularClubCache();
+    }
+
+    private void clearPopularClubCache() {
+        try {
+            redisTemplate.delete(PopularClubCandidateCache.KEY);
+        } catch (RuntimeException ignored) {
+            // Redis 가 없으면 캐시도 DB 로 바로 읽으므로 지울 것이 없다.
+        }
     }
 
     /**

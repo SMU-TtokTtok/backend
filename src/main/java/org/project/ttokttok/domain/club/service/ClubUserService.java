@@ -33,6 +33,7 @@ public class ClubUserService {
 
     // 소개글 조회
     private final ClubRepository clubRepository;
+    private final PopularClubCandidateCache popularClubCandidateCache;
     private final FavoriteRepository favoriteRepository;
 
     /**
@@ -116,7 +117,7 @@ public class ClubUserService {
     public ClubListServiceResponse getAllPopularClubs(String userEmail) {
 
         List<PopularClubCandidate> top = PopularClubRanking
-                .page(clubRepository.findPopularClubCandidates(), ClubSortType.POPULAR, null, PopularityPolicy.BANNER_SIZE);
+                .page(popularClubCandidateCache.get(), ClubSortType.POPULAR, null, PopularityPolicy.BANNER_SIZE);
         List<ClubCardServiceResponse> clubs = cardsWithBookmarks(top, userEmail).stream()
                 .map(ClubCardServiceResponse::from)
                 .toList();
@@ -141,7 +142,7 @@ public class ClubUserService {
             String userEmail) {
 
         List<ClubCardQueryResponse> results = cardsWithBookmarks(PopularClubRanking
-                .page(clubRepository.findPopularClubCandidates(), ClubSortType.from(sort), cursor, size + 1), userEmail);
+                .page(popularClubCandidateCache.get(), ClubSortType.from(sort), cursor, size + 1), userEmail);
 
         // hasNext 확인을 위해 size+1로 조회했으므로
         boolean hasNext = results.size() > size;
@@ -162,7 +163,7 @@ public class ClubUserService {
         return new ClubListServiceResponse(clubs, clubs.size(), 0L, hasNext, nextCursor);
     }
 
-    /** 후보는 사용자와 무관하게 조회해 북마크가 모두 false 다. 로그인 사용자면 그 사용자의 즐겨찾기로 덧씌운다. */
+    /** 캐시된 후보는 북마크가 모두 false 다. 로그인 사용자면 그 사용자의 즐겨찾기로 덧씌운다. */
     private List<ClubCardQueryResponse> cardsWithBookmarks(List<PopularClubCandidate> candidates, String userEmail) {
         Set<String> bookmarked = userEmail == null ? Set.of() : favoriteRepository.findClubIdsByUserEmail(userEmail);
         return candidates.stream()
