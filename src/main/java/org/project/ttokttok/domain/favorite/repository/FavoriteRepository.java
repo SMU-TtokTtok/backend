@@ -2,6 +2,7 @@ package org.project.ttokttok.domain.favorite.repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.project.ttokttok.domain.favorite.domain.Favorite;
 import org.project.ttokttok.domain.favorite.repository.dto.ClubFavoriteCountQueryDto;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -33,6 +34,12 @@ public interface FavoriteRepository extends JpaRepository<Favorite, String>, Fav
     boolean existsByUserEmailAndClubId(@Param("userEmail") String userEmail,
                                       @Param("clubId") String clubId);
     
+    /**
+     * 사용자가 즐겨찾기한 동아리 id 전체
+     */
+    @Query("SELECT f.club.id FROM Favorite f WHERE f.user.email = :userEmail")
+    Set<String> findClubIdsByUserEmail(@Param("userEmail") String userEmail);
+
     /**
      * 동아리의 즐겨찾기 수 조회
      */

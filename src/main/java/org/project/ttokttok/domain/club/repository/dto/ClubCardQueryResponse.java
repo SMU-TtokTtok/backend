@@ -20,6 +20,11 @@ public record ClubCardQueryResponse(
         boolean bookmarked,
         LocalDate applyDeadLine  // applyDeadLine -> applyEndDate로 변경
 ) {
+    public ClubCardQueryResponse withBookmarked(boolean bookmarked) {
+        return new ClubCardQueryResponse(id, name, clubType, clubCategory, customCategory, summary, profileImageUrl,
+                clubMemberCount, recruiting, upcoming, bookmarked, applyDeadLine);
+    }
+
     public RecruitState recruitState() {
         if (recruiting) {
             return RecruitState.OPEN;
