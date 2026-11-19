@@ -78,13 +78,9 @@ class ClubCustomRepositorySortingTest implements RepositoryTestSupport {
     void setUp() {
         adminSequence = 0;
         // 인기 목록은 후보를 Redis 에 캐시한다. 테스트마다 픽스처가 다르므로 앞 테스트가 채운 값을 지운다.
-        clearPopularClubCache();
-    }
-
-    private void clearPopularClubCache() {
         try {
             redisTemplate.delete(PopularClubCandidateCache.KEY);
-        } catch (RuntimeException ignored) {
+        } catch (RuntimeException redisDown) {
             // Redis 가 없으면 캐시도 DB 로 바로 읽으므로 지울 것이 없다.
         }
     }
