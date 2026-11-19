@@ -48,7 +48,7 @@ public class PopularClubCandidateCache {
     List<PopularClubCandidate> get() {
         try {
             Entry cached = read();
-            if (cached != null && !cached.isStale(System.currentTimeMillis())) {
+            if (cached != null && System.currentTimeMillis() < cached.refreshAt()) {
                 return cached.candidates();
             }
             if (tryLock()) {
@@ -120,8 +120,5 @@ public class PopularClubCandidateCache {
 
     /** Redis 에 저장하는 값. {@code refreshAt} 은 epoch 밀리초다. */
     record Entry(long refreshAt, List<PopularClubCandidate> candidates) {
-        boolean isStale(long nowMillis) {
-            return nowMillis >= refreshAt;
-        }
     }
 }
