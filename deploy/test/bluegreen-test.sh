@@ -34,7 +34,7 @@ trap cleanup EXIT
 step "더미 앱 이미지 빌드"
 mkdir -p "$TESTROOT/dummy"
 cat > "$TESTROOT/dummy/Dockerfile" <<'EOF'
-FROM nginx:1.27-alpine
+FROM nginx:1.30.7-alpine
 ARG CONF=t1.conf
 RUN apk add --no-cache curl
 COPY ${CONF} /etc/nginx/conf.d/default.conf
