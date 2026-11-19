@@ -1,13 +1,10 @@
 package org.project.ttokttok.domain.club.service;
 
-import java.time.Clock;
 import java.time.Duration;
 import java.util.List;
-import java.util.function.Supplier;
 
 import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.domain.club.repository.dto.PopularClubCandidate;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -15,6 +12,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -30,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class PopularClubCandidateCache {
 
     public static final String KEY = "club:popular:candidates";
@@ -44,25 +43,12 @@ public class PopularClubCandidateCache {
     static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().registerModule(new JavaTimeModule());
 
     private final RedisTemplate<String, String> redisTemplate;
-    private final Supplier<List<PopularClubCandidate>> loader;
-    private final Clock clock;
-
-    @Autowired
-    PopularClubCandidateCache(RedisTemplate<String, String> redisTemplate, ClubRepository clubRepository) {
-        this(redisTemplate, clubRepository::findPopularClubCandidates, Clock.systemUTC());
-    }
-
-    PopularClubCandidateCache(RedisTemplate<String, String> redisTemplate,
-                              Supplier<List<PopularClubCandidate>> loader, Clock clock) {
-        this.redisTemplate = redisTemplate;
-        this.loader = loader;
-        this.clock = clock;
-    }
+    private final ClubRepository clubRepository;
 
     List<PopularClubCandidate> get() {
         try {
             Entry cached = read();
-            if (cached != null && !cached.isStale(clock.millis())) {
+            if (cached != null && !cached.isStale(System.currentTimeMillis())) {
                 return cached.candidates();
             }
             if (tryLock()) {
@@ -71,7 +57,7 @@ public class PopularClubCandidateCache {
             return cached != null ? cached.candidates() : waitForOther();
         } catch (RuntimeException e) {
             log.warn("[PopularClubCandidateCache] 캐시를 쓰지 못해 DB 에서 읽는다 - error: {}", e.getClass().getSimpleName());
-            return loader.get();
+            return clubRepository.findPopularClubCandidates();
         }
     }
 
@@ -85,13 +71,13 @@ public class PopularClubCandidateCache {
                 return cached.candidates();
             }
         }
-        return loader.get();
+        return clubRepository.findPopularClubCandidates();
     }
 
     private List<PopularClubCandidate> refresh() {
         try {
-            List<PopularClubCandidate> candidates = loader.get();
-            write(new Entry(clock.millis() + REFRESH_AFTER.toMillis(), candidates));
+            List<PopularClubCandidate> candidates = clubRepository.findPopularClubCandidates();
+            write(new Entry(System.currentTimeMillis() + REFRESH_AFTER.toMillis(), candidates));
             return candidates;
         } finally {
             redisTemplate.delete(LOCK_KEY);
