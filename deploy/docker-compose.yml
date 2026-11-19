@@ -133,7 +133,7 @@ services:
 
   # ── 리버스 프록시 — 유일한 공개 지점 ──────────────────────────────────────
   nginx:
-    image: nginx:1.27-alpine
+    image: nginx:1.30.7-alpine
     container_name: ttokttok-nginx
     restart: unless-stopped
     ports:
