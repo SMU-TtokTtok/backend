@@ -1,6 +1,7 @@
 package org.project.ttokttok.domain.club.service;
 
 import java.util.List;
+import java.util.Set;
 
 import org.project.ttokttok.domain.applyform.domain.enums.ApplicableGrade;
 import org.project.ttokttok.domain.club.domain.enums.ClubCategory;
@@ -15,6 +16,7 @@ import org.project.ttokttok.domain.club.repository.dto.PopularClubCandidate;
 import org.project.ttokttok.domain.club.service.dto.response.ClubCardServiceResponse;
 import org.project.ttokttok.domain.club.service.dto.response.ClubDetailServiceResponse;
 import org.project.ttokttok.domain.club.service.dto.response.ClubListServiceResponse;
+import org.project.ttokttok.domain.favorite.repository.FavoriteRepository;
 import org.project.ttokttok.global.policy.PopularityPolicy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +33,8 @@ public class ClubUserService {
 
     // 소개글 조회
     private final ClubRepository clubRepository;
+    private final PopularClubCandidateCache popularClubCandidateCache;
+    private final FavoriteRepository favoriteRepository;
 
     /**
      * 동아리 상세 정보 조회
@@ -112,11 +116,10 @@ public class ClubUserService {
      * */
     public ClubListServiceResponse getAllPopularClubs(String userEmail) {
 
-        List<ClubCardServiceResponse> clubs = PopularClubRanking
-                .page(clubRepository.findPopularClubCandidates(userEmail), ClubSortType.POPULAR, null,
-                        PopularityPolicy.BANNER_SIZE)
-                .stream()
-                .map(candidate -> ClubCardServiceResponse.from(candidate.card()))
+        List<PopularClubCandidate> top = PopularClubRanking
+                .page(popularClubCandidateCache.get(), ClubSortType.POPULAR, null, PopularityPolicy.BANNER_SIZE);
+        List<ClubCardServiceResponse> clubs = cardsWithBookmarks(top, userEmail).stream()
+                .map(ClubCardServiceResponse::from)
                 .toList();
 
         return new ClubListServiceResponse(clubs, clubs.size(), (long) clubs.size(), false, null);
@@ -138,11 +141,8 @@ public class ClubUserService {
             String sort,
             String userEmail) {
 
-        List<ClubCardQueryResponse> results = PopularClubRanking
-                .page(clubRepository.findPopularClubCandidates(userEmail), ClubSortType.from(sort), cursor, size + 1)
-                .stream()
-                .map(PopularClubCandidate::card)
-                .toList();
+        List<ClubCardQueryResponse> results = cardsWithBookmarks(PopularClubRanking
+                .page(popularClubCandidateCache.get(), ClubSortType.from(sort), cursor, size + 1), userEmail);
 
         // hasNext 확인을 위해 size+1로 조회했으므로
         boolean hasNext = results.size() > size;
@@ -161,6 +161,14 @@ public class ClubUserService {
                 .toList();
 
         return new ClubListServiceResponse(clubs, clubs.size(), 0L, hasNext, nextCursor);
+    }
+
+    /** 캐시된 후보는 북마크가 모두 false 다. 로그인 사용자면 그 사용자의 즐겨찾기로 덧씌운다. */
+    private List<ClubCardQueryResponse> cardsWithBookmarks(List<PopularClubCandidate> candidates, String userEmail) {
+        Set<String> bookmarked = userEmail == null ? Set.of() : favoriteRepository.findClubIdsByUserEmail(userEmail);
+        return candidates.stream()
+                .map(candidate -> candidate.card().withBookmarked(bookmarked.contains(candidate.id())))
+                .toList();
     }
 
     /**

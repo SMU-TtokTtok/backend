@@ -63,18 +63,12 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
                 FROM applyforms 
                 WHERE status = 'ACTIVE'
                 GROUP BY club_id
-            ),
-            uf_user AS (
-                SELECT f.club_id, 1 as bookmarked 
-                FROM user_favorites f
-                JOIN users u ON f.user_id = u.id
-                WHERE u.email = :userEmail
             )
             SELECT c.id, c.name, c.club_type, c.club_category, c.custom_category, c.summary, c.profile_img,
                    COALESCE(mc.cnt, 0) as member_count,
                    COALESCE(af_active.is_recruiting, 0) = 1 as recruiting,
                    COALESCE(af_active.is_upcoming, 0) = 1 as upcoming,
-                   COALESCE(uf_user.bookmarked, 0) = 1 as bookmarked,
+                   false as bookmarked,
                    af_active.apply_end_date as apply_deadline,
                    COALESCE(fc.cnt, 0) as favorite_count,
                    c.view_count,
@@ -83,7 +77,6 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
             LEFT JOIN mc ON c.id = mc.club_id
             LEFT JOIN fc ON c.id = fc.club_id
             LEFT JOIN af_active ON c.id = af_active.club_id
-            LEFT JOIN uf_user ON c.id = uf_user.club_id
             """;
 
     @Override
@@ -164,9 +157,8 @@ public class ClubCustomRepositoryImpl implements ClubCustomRepository {
 
     @Override
     @SuppressWarnings("unchecked")
-    public List<PopularClubCandidate> findPopularClubCandidates(String userEmail) {
+    public List<PopularClubCandidate> findPopularClubCandidates() {
         var query = entityManager.createNativeQuery(POPULAR_CLUB_BASE_SQL);
-        query.setParameter("userEmail", userEmail);
         query.setParameter("today", RecruitStatePolicy.today());
 
         List<Object[]> rows = query.getResultList();

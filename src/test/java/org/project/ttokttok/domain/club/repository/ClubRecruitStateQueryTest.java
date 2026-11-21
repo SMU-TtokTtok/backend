@@ -147,7 +147,7 @@ class ClubRecruitStateQueryTest {
     @DisplayName("인기 동아리 native 조회도 같은 판정을 쓴다")
     void popularNativeQuery_usesSameJudgement() {
         // when
-        List<ClubCardQueryResponse> cards = clubRepository.findPopularClubCandidates("nobody@sangmyung.kr").stream()
+        List<ClubCardQueryResponse> cards = clubRepository.findPopularClubCandidates().stream()
                 .map(PopularClubCandidate::card)
                 .toList();
 
