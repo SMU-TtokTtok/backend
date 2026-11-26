@@ -1,11 +1,14 @@
 package org.project.ttokttok.domain.club.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import java.time.LocalDateTime;
@@ -22,6 +25,7 @@ import org.project.ttokttok.domain.club.domain.enums.ClubType;
 import org.project.ttokttok.domain.club.repository.ClubRepository;
 import org.project.ttokttok.domain.club.repository.dto.ClubCardQueryResponse;
 import org.project.ttokttok.domain.club.repository.dto.PopularClubCandidate;
+import org.springframework.dao.QueryTimeoutException;
 import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
@@ -100,6 +104,29 @@ class PopularClubCandidateCacheTest {
 
         assertThat(ids(cache.get())).containsExactly("db");
         verify(clubRepository).findPopularClubCandidates();
+    }
+
+    @Test
+    @DisplayName("DB 는 읽었는데 Redis 에 쓰지 못하면 읽은 값을 그대로 돌려주고 DB 를 다시 읽지 않는다")
+    void writeFailureKeepsDbResult() throws Exception {
+        givenCached(System.currentTimeMillis() - 60_000);
+        given(values.setIfAbsent(eq(PopularClubCandidateCache.LOCK_KEY), anyString(), any())).willReturn(true);
+        given(clubRepository.findPopularClubCandidates()).willReturn(FROM_DB);
+        willThrow(new RedisConnectionFailureException("down")).given(values).set(anyString(), anyString(), any());
+
+        assertThat(ids(cache.get())).containsExactly("db");
+        verify(clubRepository, times(1)).findPopularClubCandidates();
+    }
+
+    @Test
+    @DisplayName("갱신 중 DB 가 실패하면 DB 를 다시 읽지 않고 예외를 그대로 올린다")
+    void dbFailureDuringRefreshIsNotRetried() throws Exception {
+        givenCached(System.currentTimeMillis() - 60_000);
+        given(values.setIfAbsent(eq(PopularClubCandidateCache.LOCK_KEY), anyString(), any())).willReturn(true);
+        given(clubRepository.findPopularClubCandidates()).willThrow(new QueryTimeoutException("db down"));
+
+        assertThatThrownBy(() -> cache.get()).isInstanceOf(QueryTimeoutException.class);
+        verify(clubRepository, times(1)).findPopularClubCandidates();
     }
 
     @Test
