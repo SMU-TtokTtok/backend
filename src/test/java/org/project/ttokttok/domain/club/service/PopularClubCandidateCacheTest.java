@@ -80,14 +80,15 @@ class PopularClubCandidateCacheTest {
     }
 
     @Test
-    @DisplayName("캐시가 비었고 다른 요청이 채우는 중이면 기다렸다가 채워진 값을 읽는다")
-    void coldWithoutLockWaitsForOther() throws Exception {
+    @DisplayName("캐시가 비었고 다른 요청이 채우는 중이면 기다리지 않고 DB 를 직접 읽는다")
+    void coldWithoutLockReadsDb() {
         given(redisTemplate.opsForValue()).willReturn(values);
-        given(values.get(PopularClubCandidateCache.KEY)).willReturn(null, null, json(System.currentTimeMillis() + 60_000));
+        given(values.get(PopularClubCandidateCache.KEY)).willReturn(null);
         given(values.setIfAbsent(eq(PopularClubCandidateCache.LOCK_KEY), anyString(), any())).willReturn(false);
+        given(clubRepository.findPopularClubCandidates()).willReturn(FROM_DB);
 
-        assertThat(ids(cache.get())).containsExactly("cached");
-        verify(clubRepository, never()).findPopularClubCandidates();
+        assertThat(ids(cache.get())).containsExactly("db");
+        verify(values, never()).set(anyString(), anyString(), any());
     }
 
     @Test

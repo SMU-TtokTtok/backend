@@ -23,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>스탬피드 방지: 값에 갱신 시각({@link #REFRESH_AFTER})을 함께 저장하고, 실제 만료({@link #HARD_TTL})는 훨씬 길게 둔다.
  * 갱신 시각이 지나면 락({@code SET NX})을 잡은 요청 하나만 DB 를 다시 읽고, 나머지는 기존 값을 그대로 쓴다.
- * 값이 아예 없을 때(최초, 장기 미사용, Redis 초기화)도 락을 잡은 하나만 DB 를 읽고, 나머지는 잠깐 기다렸다가 채워진 값을 읽는다.
+ * 값이 아예 없을 때(최초, 장기 미사용, Redis 초기화)는 락을 잡은 하나가 채우는 동안(쿼리 한 번)만 나머지도 DB 를 직접 읽는다.
  * Redis 장애나 역직렬화 실패는 요청을 실패시키지 않고 DB 로 직접 읽는다.
  */
 @Slf4j
@@ -36,8 +36,6 @@ public class PopularClubCandidateCache {
     static final Duration REFRESH_AFTER = Duration.ofSeconds(30);
     static final Duration HARD_TTL = Duration.ofMinutes(10);
     static final Duration LOCK_TTL = Duration.ofSeconds(5);
-    static final Duration COLD_WAIT = Duration.ofMillis(50);
-    static final int COLD_WAIT_TRIES = 20;
 
     /** 저장 형식은 이 캐시만 읽고 쓴다. 전역 ObjectMapper 빈 설정에 끌려가지 않게 따로 둔다. */
     static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().registerModule(new JavaTimeModule());
@@ -54,24 +52,11 @@ public class PopularClubCandidateCache {
             if (tryLock()) {
                 return refresh();
             }
-            return cached != null ? cached.candidates() : waitForOther();
+            return cached != null ? cached.candidates() : clubRepository.findPopularClubCandidates();
         } catch (RuntimeException e) {
             log.warn("[PopularClubCandidateCache] 캐시를 쓰지 못해 DB 에서 읽는다 - error: {}", e.getClass().getSimpleName());
             return clubRepository.findPopularClubCandidates();
         }
-    }
-
-    /** 다른 요청이 채우는 중이면 잠깐 기다린다. 끝내 채워지지 않으면 직접 읽는다. */
-    // ponytail: 폴링 대기라 빈 캐시에서는 요청이 최대 1초 묶인다. 대기 요청이 많아지면 pub/sub 알림으로 바꾼다.
-    private List<PopularClubCandidate> waitForOther() {
-        for (int i = 0; i < COLD_WAIT_TRIES; i++) {
-            sleep(COLD_WAIT);
-            Entry cached = read();
-            if (cached != null) {
-                return cached.candidates();
-            }
-        }
-        return clubRepository.findPopularClubCandidates();
     }
 
     private List<PopularClubCandidate> refresh() {
@@ -105,15 +90,6 @@ public class PopularClubCandidateCache {
         try {
             redisTemplate.opsForValue().set(KEY, OBJECT_MAPPER.writeValueAsString(entry), HARD_TTL);
         } catch (JsonProcessingException e) {
-            throw new IllegalStateException(e);
-        }
-    }
-
-    private static void sleep(Duration duration) {
-        try {
-            Thread.sleep(duration.toMillis());
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
             throw new IllegalStateException(e);
         }
     }
