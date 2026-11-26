@@ -45,8 +45,7 @@ class ClubCustomRepositoryImplCoverageTest implements RepositoryTestSupport {
     @Test
     @DisplayName("findPopularClubCandidates는 빈 DB에서 빈 결과를 반환한다")
     void findPopularClubCandidates() {
-        assertThat(clubRepository.findPopularClubCandidates(USER)).isEmpty();
-        assertThat(clubRepository.findPopularClubCandidates(null)).isEmpty();
+        assertThat(clubRepository.findPopularClubCandidates()).isEmpty();
     }
 
     @Test

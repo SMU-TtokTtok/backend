@@ -17,14 +17,12 @@ public class PopularClubPerformanceTest implements RepositoryTestSupport {
     @Test
     @DisplayName("인기 동아리 조회 성능 측정")
     void measurePopularClubQueryPerformance() {
-        // Given
-        String userEmail = null;
 
         StopWatch stopWatch = new StopWatch();
 
         // When
         stopWatch.start();
-        List<PopularClubCandidate> results = clubRepository.findPopularClubCandidates(userEmail);
+        List<PopularClubCandidate> results = clubRepository.findPopularClubCandidates();
         stopWatch.stop();
 
         // Then

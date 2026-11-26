@@ -30,8 +30,8 @@ public interface ClubCustomRepository {
             String userEmail
     );
 
-    // 인기 목록 후보 전체 조회. 점수 계산, 필터, 정렬, 페이징은 서비스에서 한다.
-    List<PopularClubCandidate> findPopularClubCandidates(String userEmail);
+    // 인기 목록 후보 전체 조회. 사용자와 무관하다(bookmarked 는 항상 false). 점수 계산, 필터, 정렬, 페이징, 북마크는 서비스에서 한다.
+    List<PopularClubCandidate> findPopularClubCandidates();
 
     // 키워드 검색을 위한 메서드
     List<ClubCardQueryResponse> searchByKeyword(
