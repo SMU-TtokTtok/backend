@@ -14,10 +14,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.project.ttokttok.domain.user.domain.EmailVerification;
 import org.project.ttokttok.domain.user.repository.EmailVerificationRepository;
 import org.project.ttokttok.infrastructure.email.service.EmailService;
+import org.project.ttokttok.infrastructure.redis.service.VerificationAttemptRedisService;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.*;
@@ -26,14 +28,16 @@ import static org.mockito.Mockito.*;
 class EmailVerificationServiceTest {
     private static final String EMAIL = "test@sangmyung.kr";
     private static final String CODE = "123456";
+    private static final String IP = "10.0.0.1";
     @Mock private EmailVerificationRepository verificationRepository;
     @Mock private EmailService emailService;
+    @Mock private VerificationAttemptRedisService verificationAttemptRedisService;
     private EmailVerificationService service;
 
     @BeforeEach
     void setUp() {
         service = new EmailVerificationService(verificationRepository, emailService,
-                new TransactionTemplate(mock(PlatformTransactionManager.class)));
+                new TransactionTemplate(mock(PlatformTransactionManager.class)), verificationAttemptRedisService);
     }
 
     @Test
@@ -47,7 +51,7 @@ class EmailVerificationServiceTest {
         ArgumentCaptor<EmailVerification> saved = ArgumentCaptor.forClass(EmailVerification.class);
         InOrder order = inOrder(emailService, verificationRepository);
         order.verify(emailService).isValidSangmyungEmail(EMAIL);
-        order.verify(verificationRepository).expireAllPendingVerifications(EMAIL);
+        order.verify(verificationRepository).expireAllPendingVerifications(eq(EMAIL), any());
         order.verify(verificationRepository).save(saved.capture());
         order.verify(emailService).sendVerificationCode(EMAIL, CODE);
         assertThat(saved.getValue().getEmail()).isEqualTo(EMAIL);
@@ -82,7 +86,7 @@ class EmailVerificationServiceTest {
         given(verificationRepository.findByEmailAndCodeAndIsVerifiedFalse(EMAIL, CODE))
                 .willReturn(Optional.of(verification));
 
-        assertThat(service.verifyEmail(EMAIL, CODE)).isTrue();
+        assertThat(service.verifyEmail(EMAIL, CODE, IP)).isTrue();
 
         assertThat(verification.isVerified()).isTrue();
         verify(verificationRepository, never()).save(any());
@@ -90,7 +94,7 @@ class EmailVerificationServiceTest {
 
     @Test
     void unknownCodePreservesMessage() {
-        assertThatThrownBy(() -> service.verifyEmail(EMAIL, CODE))
+        assertThatThrownBy(() -> service.verifyEmail(EMAIL, CODE, IP))
                 .isInstanceOf(UserValidationException.class).hasMessage("올바르지 않은 인증코드입니다.");
     }
 
@@ -100,7 +104,7 @@ class EmailVerificationServiceTest {
         given(verificationRepository.findByEmailAndCodeAndIsVerifiedFalse(EMAIL, CODE))
                 .willReturn(Optional.of(verification));
 
-        assertThatThrownBy(() -> service.verifyEmail(EMAIL, CODE))
+        assertThatThrownBy(() -> service.verifyEmail(EMAIL, CODE, IP))
                 .isInstanceOf(UserValidationException.class).hasMessage("인증코드가 만료되었습니다.");
         assertThat(verification.isVerified()).isFalse();
     }

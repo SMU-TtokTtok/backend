@@ -18,11 +18,13 @@ import org.project.ttokttok.domain.user.repository.EmailVerificationRepository;
 import org.project.ttokttok.domain.user.repository.UserRepository;
 import org.project.ttokttok.domain.user.service.dto.request.ResetPasswordServiceRequest;
 import org.project.ttokttok.infrastructure.email.service.EmailService;
+import org.project.ttokttok.infrastructure.redis.service.VerificationAttemptRedisService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.*;
@@ -35,19 +37,20 @@ class PasswordResetServiceTest {
     @Mock private EmailVerificationRepository verificationRepository;
     @Mock private EmailService emailService;
     @Mock private PasswordEncoder passwordEncoder;
+    @Mock private VerificationAttemptRedisService verificationAttemptRedisService;
     private PasswordResetService service;
 
     @BeforeEach
     void setUp() {
         service = new PasswordResetService(userRepository,
                 new EmailVerificationService(verificationRepository, emailService,
-                        new TransactionTemplate(mock(PlatformTransactionManager.class))), passwordEncoder);
+                        new TransactionTemplate(mock(PlatformTransactionManager.class)), verificationAttemptRedisService), passwordEncoder);
     }
 
     @Test
     void resetUpdatesEncodedPasswordAfterVerificationAndLookup() {
         User user = localUser();
-        given(verificationRepository.existsByEmailAndCodeAndIsVerifiedTrue(EMAIL, CODE)).willReturn(true);
+        given(verificationRepository.consumeVerifiedCode(eq(EMAIL), eq(CODE), any())).willReturn(1);
         given(userRepository.findByEmail(EMAIL)).willReturn(Optional.of(user));
         given(passwordEncoder.encode("NewPassword123!")).willReturn("encoded-new");
 
@@ -55,7 +58,7 @@ class PasswordResetServiceTest {
 
         assertThat(user.getPassword()).isEqualTo("encoded-new");
         InOrder order = inOrder(verificationRepository, userRepository, passwordEncoder);
-        order.verify(verificationRepository).existsByEmailAndCodeAndIsVerifiedTrue(EMAIL, CODE);
+        order.verify(verificationRepository).consumeVerifiedCode(eq(EMAIL), eq(CODE), any());
         order.verify(userRepository).findByEmail(EMAIL);
         order.verify(passwordEncoder).encode("NewPassword123!");
         order.verify(userRepository).save(user);
@@ -77,7 +80,7 @@ class PasswordResetServiceTest {
 
     @Test
     void missingUserDoesNotEncodeOrSave() {
-        given(verificationRepository.existsByEmailAndCodeAndIsVerifiedTrue(EMAIL, CODE)).willReturn(true);
+        given(verificationRepository.consumeVerifiedCode(eq(EMAIL), eq(CODE), any())).willReturn(1);
         assertThatThrownBy(() -> service.resetPassword(request("NewPassword123!")))
                 .isInstanceOf(UserValidationException.class).hasMessage("존재하지 않는 사용자입니다.");
         verifyNoInteractions(passwordEncoder, emailService);
@@ -87,7 +90,7 @@ class PasswordResetServiceTest {
     @Test
     void oauthAccountCannotResetPassword() {
         User user = User.signUpWithGoogle(EMAIL, "사용자", "google-sub");
-        given(verificationRepository.existsByEmailAndCodeAndIsVerifiedTrue(EMAIL, CODE)).willReturn(true);
+        given(verificationRepository.consumeVerifiedCode(eq(EMAIL), eq(CODE), any())).willReturn(1);
         given(userRepository.findByEmail(EMAIL)).willReturn(Optional.of(user));
 
         assertThatThrownBy(() -> service.resetPassword(request("NewPassword123!")))
@@ -108,7 +111,7 @@ class PasswordResetServiceTest {
         ArgumentCaptor<EmailVerification> saved = ArgumentCaptor.forClass(EmailVerification.class);
         InOrder order = inOrder(userRepository, verificationRepository, emailService);
         order.verify(userRepository).findByEmail(EMAIL);
-        order.verify(verificationRepository).expireAllPendingVerifications(EMAIL);
+        order.verify(verificationRepository).expireAllPendingVerifications(eq(EMAIL), any());
         order.verify(verificationRepository).save(saved.capture());
         order.verify(emailService).sendPasswordResetCode(EMAIL, CODE);
         assertThat(saved.getValue().getEmail()).isEqualTo(EMAIL);

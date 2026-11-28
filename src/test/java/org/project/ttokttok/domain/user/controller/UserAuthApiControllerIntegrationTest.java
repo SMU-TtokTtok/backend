@@ -32,6 +32,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -54,6 +55,7 @@ class UserAuthApiControllerIntegrationTest {
     private static final String CODE = "123456";
     private static final String NEWER_CODE = "654321";
     private static final String PASSWORD = "NewPassword123!";
+    private static final String ATTEMPTS_EXCEEDED = "인증 시도 횟수를 초과했습니다. 인증코드를 다시 요청해주세요.";
 
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
@@ -243,7 +245,7 @@ class UserAuthApiControllerIntegrationTest {
         perform(passwordReset ? "send-reset-code" : "send-verification", Map.of("email", email))
                 .andExpect(status().isInternalServerError());
 
-        assertThat(verificationRepository.findById(pending.getId()).orElseThrow().isVerified()).isTrue();
+        assertThat(verificationRepository.findById(pending.getId()).orElseThrow().isExpired()).isTrue();
         assertThat(verificationRepository.findByEmailAndCodeAndIsVerifiedFalse(email, NEWER_CODE)).isPresent();
     }
 
@@ -277,6 +279,97 @@ class UserAuthApiControllerIntegrationTest {
                 .andExpect(status().isOk());
     }
 
+    // 코드를 다시 요청해 무효가 된 이전 코드가 '인증됨'으로 바뀌면 메일함을 열지 않고 가입할 수 있다.
+    @Test
+    void resendingCode_doesNotVerifyPreviousCodeForSignup() throws Exception {
+        given(emailService.isValidSangmyungEmail(email)).willReturn(true);
+        given(emailService.generateVerificationCode()).willReturn(CODE, NEWER_CODE);
+        perform("send-verification", Map.of("email", email)).andExpect(status().isOk());
+        perform("send-verification", Map.of("email", email)).andExpect(status().isOk());
+
+        perform("signup", signupBody())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details").value("이메일 인증이 완료되지 않았습니다."));
+
+        assertThat(userRepository.existsByEmail(email)).isFalse();
+    }
+
+    @Test
+    void expiredVerifiedCode_cannotResetPassword() throws Exception {
+        User user = saveLocalUser();
+        saveVerification(true, LocalDateTime.now().minusMinutes(1));
+
+        perform("reset-password", resetBody(PASSWORD))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details").value("인증 코드 성공 여부가 존재하지 않습니다."));
+
+        assertThat(userRepository.findByEmail(email).orElseThrow().getPassword()).isEqualTo(user.getPassword());
+    }
+
+    @Test
+    void usedVerifiedCode_cannotResetPasswordAgain() throws Exception {
+        saveLocalUser();
+        saveVerification(true, LocalDateTime.now().plusMinutes(5));
+        perform("reset-password", resetBody(PASSWORD)).andExpect(status().isOk());
+
+        perform("reset-password", Map.of("email", email, "verificationCode", CODE,
+                "newPassword", "Another123!", "newPasswordConfirm", "Another123!"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details").value("인증 코드 성공 여부가 존재하지 않습니다."));
+
+        assertThat(passwordEncoder.matches(PASSWORD, userRepository.findByEmail(email).orElseThrow().getPassword())).isTrue();
+    }
+
+    // 남이 내 이메일로 틀려도 그 IP만 막히고 내 코드는 살아 있어야 한다.
+    @Test
+    void wrongCodesFromOtherIp_doNotBlockMyCorrectCode() throws Exception {
+        sendCode();
+        for (int i = 0; i < 5; i++) {
+            verifyFrom("10.0.0.1", "000000").andExpect(jsonPath("$.details").value("올바르지 않은 인증코드입니다."));
+        }
+
+        verifyFrom("10.0.0.2", CODE).andExpect(status().isOk());
+    }
+
+    @Test
+    void moreThanFiveAttemptsFromSameIp_areRejectedEvenWithCorrectCode() throws Exception {
+        sendCode();
+        for (int i = 0; i < 5; i++) {
+            verifyFrom("10.0.0.1", "000000").andExpect(status().isBadRequest());
+        }
+
+        verifyFrom("10.0.0.1", CODE)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details").value(ATTEMPTS_EXCEEDED));
+    }
+
+    @Test
+    void moreThanTwentyFailuresPerEmail_expireCode() throws Exception {
+        sendCode();
+        for (int i = 0; i < 20; i++) {
+            verifyFrom("10.0.1." + (i / 5), "000000")
+                    .andExpect(jsonPath("$.details").value("올바르지 않은 인증코드입니다."));
+        }
+
+        verifyFrom("10.0.2.1", CODE)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details").value(ATTEMPTS_EXCEEDED));
+        assertThat(verificationRepository.findByEmailAndCodeAndIsVerifiedFalse(email, CODE).orElseThrow().isExpired()).isTrue();
+    }
+
+    private void sendCode() throws Exception {
+        given(emailService.isValidSangmyungEmail(email)).willReturn(true);
+        given(emailService.generateVerificationCode()).willReturn(CODE);
+        perform("send-verification", Map.of("email", email)).andExpect(status().isOk());
+    }
+
+    // 운영에서는 Nginx 가 X-Real-IP 를 접속 주소로 덮어써 넘긴다.
+    private ResultActions verifyFrom(String ip, String code) throws Exception {
+        return mockMvc.perform(post("/api/user/auth/verify-email").header("X-Real-IP", ip)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(Map.of("email", email, "code", code))));
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {"send-reset-code", "reset-password"})
     void oauthAccount_isRejectedBeforeMailOrPasswordMutation(String endpoint) throws Exception {
@@ -296,6 +389,7 @@ class UserAuthApiControllerIntegrationTest {
         if (verified) {
             verification.markAsVerified();
         }
+        ReflectionTestUtils.setField(verification, "expiresAt", expiresAt);
         return verificationRepository.save(verification);
     }
 

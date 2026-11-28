@@ -62,8 +62,8 @@ public class UserAuthService {
             throw new UserValidationException(ErrorMessage.USER_EMAIL_ALREADY_REGISTERED);
         }
 
-        // 3-3. 이메일 인증 확인
-        emailVerificationService.requireVerifiedEmail(request.email());
+        // 3-3. 이메일 인증 확인 (인증된 코드를 소비한다)
+        emailVerificationService.consumeVerifiedEmail(request.email(), request.verificationCode());
 
         // 3-4. 사용자 정보 저장
         User user = User.signUp(
