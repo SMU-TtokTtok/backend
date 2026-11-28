@@ -49,18 +49,24 @@ public class EmailVerificationService {
         return true;
     }
 
-    @Transactional(readOnly = true)
-    public void requireVerifiedEmail(String email) {
-        if (!emailVerificationRepository.existsByEmailAndIsVerifiedTrue(email)) {
+    // 회원가입용. 인증된 코드를 소비하므로 호출한 트랜잭션이 롤백되면 코드도 되살아난다.
+    @Transactional
+    public void consumeVerifiedEmail(String email, String code) {
+        if (!consume(email, code)) {
             throw new UserValidationException(ErrorMessage.VERIFICATION_EMAIL_NOT_VERIFIED);
         }
     }
 
-    @Transactional(readOnly = true)
-    public void requireVerifiedCode(String email, String code) {
-        if (!emailVerificationRepository.existsByEmailAndCodeAndIsVerifiedTrue(email, code)) {
+    // 비밀번호 재설정용. 소비 방식은 consumeVerifiedEmail 과 같다.
+    @Transactional
+    public void consumeVerifiedCode(String email, String code) {
+        if (!consume(email, code)) {
             throw new UserValidationException(ErrorMessage.VERIFICATION_RECORD_NOT_FOUND);
         }
+    }
+
+    private boolean consume(String email, String code) {
+        return emailVerificationRepository.consumeVerifiedCode(email, code, LocalDateTime.now()) == 1;
     }
 
     public void sendPasswordResetCode(String email) {
@@ -74,7 +80,7 @@ public class EmailVerificationService {
     private void sendCode(String email, BiConsumer<String, String> mailer) {
         String code = emailService.generateVerificationCode();
         transactionTemplate.executeWithoutResult(status -> {
-            emailVerificationRepository.expireAllPendingVerifications(email);
+            emailVerificationRepository.expireAllPendingVerifications(email, LocalDateTime.now());
             emailVerificationRepository.save(EmailVerification.builder()
                     .email(email)
                     .code(code)

@@ -29,7 +29,7 @@ public class PasswordResetService {
             throw new UserValidationException(ErrorMessage.USER_NEW_PASSWORD_MISMATCH);
         }
 
-        emailVerificationService.requireVerifiedCode(request.email(), request.verificationCode());
+        emailVerificationService.consumeVerifiedCode(request.email(), request.verificationCode());
 
         User user = findPasswordAccount(request.email());
 

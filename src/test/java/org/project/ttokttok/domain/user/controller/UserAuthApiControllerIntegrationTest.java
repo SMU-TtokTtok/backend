@@ -32,6 +32,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -243,7 +244,7 @@ class UserAuthApiControllerIntegrationTest {
         perform(passwordReset ? "send-reset-code" : "send-verification", Map.of("email", email))
                 .andExpect(status().isInternalServerError());
 
-        assertThat(verificationRepository.findById(pending.getId()).orElseThrow().isVerified()).isTrue();
+        assertThat(verificationRepository.findById(pending.getId()).orElseThrow().isExpired()).isTrue();
         assertThat(verificationRepository.findByEmailAndCodeAndIsVerifiedFalse(email, NEWER_CODE)).isPresent();
     }
 
@@ -277,6 +278,47 @@ class UserAuthApiControllerIntegrationTest {
                 .andExpect(status().isOk());
     }
 
+    // 코드를 다시 요청해 무효가 된 이전 코드가 '인증됨'으로 바뀌면 메일함을 열지 않고 가입할 수 있다.
+    @Test
+    void resendingCode_doesNotVerifyPreviousCodeForSignup() throws Exception {
+        given(emailService.isValidSangmyungEmail(email)).willReturn(true);
+        given(emailService.generateVerificationCode()).willReturn(CODE, NEWER_CODE);
+        perform("send-verification", Map.of("email", email)).andExpect(status().isOk());
+        perform("send-verification", Map.of("email", email)).andExpect(status().isOk());
+
+        perform("signup", signupBody())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details").value("이메일 인증이 완료되지 않았습니다."));
+
+        assertThat(userRepository.existsByEmail(email)).isFalse();
+    }
+
+    @Test
+    void expiredVerifiedCode_cannotResetPassword() throws Exception {
+        User user = saveLocalUser();
+        saveVerification(true, LocalDateTime.now().minusMinutes(1));
+
+        perform("reset-password", resetBody(PASSWORD))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details").value("인증 코드 성공 여부가 존재하지 않습니다."));
+
+        assertThat(userRepository.findByEmail(email).orElseThrow().getPassword()).isEqualTo(user.getPassword());
+    }
+
+    @Test
+    void usedVerifiedCode_cannotResetPasswordAgain() throws Exception {
+        saveLocalUser();
+        saveVerification(true, LocalDateTime.now().plusMinutes(5));
+        perform("reset-password", resetBody(PASSWORD)).andExpect(status().isOk());
+
+        perform("reset-password", Map.of("email", email, "verificationCode", CODE,
+                "newPassword", "Another123!", "newPasswordConfirm", "Another123!"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details").value("인증 코드 성공 여부가 존재하지 않습니다."));
+
+        assertThat(passwordEncoder.matches(PASSWORD, userRepository.findByEmail(email).orElseThrow().getPassword())).isTrue();
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {"send-reset-code", "reset-password"})
     void oauthAccount_isRejectedBeforeMailOrPasswordMutation(String endpoint) throws Exception {
@@ -296,6 +338,7 @@ class UserAuthApiControllerIntegrationTest {
         if (verified) {
             verification.markAsVerified();
         }
+        ReflectionTestUtils.setField(verification, "expiresAt", expiresAt);
         return verificationRepository.save(verification);
     }
 

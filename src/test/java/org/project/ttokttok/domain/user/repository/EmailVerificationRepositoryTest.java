@@ -145,8 +145,8 @@ class EmailVerificationRepositoryTest implements RepositoryTestSupport {
     class ExpireAllPendingVerificationsTest {
 
         @Test
-        @DisplayName("특정 이메일의 모든 미인증 코드들을 인증 처리한다")
-        void expireAllPendingVerifications_MarksAllAsVerified() {
+        @DisplayName("특정 이메일의 미인증 코드들을 인증 처리하지 않고 만료시킨다")
+        void expireAllPendingVerifications_ExpiresWithoutVerifying() {
             // given
             EmailVerification verification1 = EmailVerification.builder()
                     .email(TEST_EMAIL)
@@ -162,13 +162,15 @@ class EmailVerificationRepositoryTest implements RepositoryTestSupport {
             emailVerificationRepository.save(verification2);
 
             // when
-            emailVerificationRepository.expireAllPendingVerifications(TEST_EMAIL);
+            emailVerificationRepository.expireAllPendingVerifications(TEST_EMAIL, LocalDateTime.now());
 
             // then
             Optional<EmailVerification> found = emailVerificationRepository
                     .findFirstByEmailAndIsVerifiedFalseAndExpiresAtAfterOrderByCreatedAtDescIdDesc(
                             TEST_EMAIL, LocalDateTime.now());
             assertThat(found).isEmpty();
+            assertThat(emailVerificationRepository.findAll())
+                    .allSatisfy(v -> assertThat(v.isVerified()).isFalse());
         }
     }
 
@@ -203,13 +205,12 @@ class EmailVerificationRepositoryTest implements RepositoryTestSupport {
     }
 
     @Nested
-    @DisplayName("existsByEmailAndIsVerifiedTrue 메서드")
-    class ExistsByEmailAndIsVerifiedTrueTest {
+    @DisplayName("consumeVerifiedCode 메서드")
+    class ConsumeVerifiedCodeTest {
 
         @Test
-        @DisplayName("인증 완료된 이메일이 존재하면 true를 반환한다")
-        void existsByEmailAndIsVerifiedTrue_ReturnsTrue() {
-            // given
+        @DisplayName("인증된 코드는 한 번만 소비된다")
+        void consumeVerifiedCode_OnlyOnce() {
             EmailVerification verification = EmailVerification.builder()
                     .email(TEST_EMAIL)
                     .code(TEST_CODE)
@@ -218,72 +219,21 @@ class EmailVerificationRepositoryTest implements RepositoryTestSupport {
             verification.markAsVerified();
             emailVerificationRepository.save(verification);
 
-            // when
-            boolean exists = emailVerificationRepository.existsByEmailAndIsVerifiedTrue(TEST_EMAIL);
-
-            // then
-            assertThat(exists).isTrue();
+            assertThat(emailVerificationRepository.consumeVerifiedCode(TEST_EMAIL, TEST_CODE, LocalDateTime.now())).isEqualTo(1);
+            assertThat(emailVerificationRepository.consumeVerifiedCode(TEST_EMAIL, TEST_CODE, LocalDateTime.now())).isZero();
         }
 
         @Test
-        @DisplayName("인증 완료된 이메일이 없으면 false를 반환한다")
-        void existsByEmailAndIsVerifiedTrue_ReturnsFalse() {
-            // given
-            EmailVerification verification = EmailVerification.builder()
+        @DisplayName("인증되지 않은 코드나 다른 코드는 소비되지 않는다")
+        void consumeVerifiedCode_RejectsPendingOrWrongCode() {
+            emailVerificationRepository.save(EmailVerification.builder()
                     .email(TEST_EMAIL)
                     .code(TEST_CODE)
                     .expiresAt(LocalDateTime.now().plusMinutes(5))
-                    .build();
-            emailVerificationRepository.save(verification);
+                    .build());
 
-            // when
-            boolean exists = emailVerificationRepository.existsByEmailAndIsVerifiedTrue(TEST_EMAIL);
-
-            // then
-            assertThat(exists).isFalse();
-        }
-    }
-
-    @Nested
-    @DisplayName("existsByEmailAndCodeAndIsVerifiedTrue 메서드")
-    class ExistsByEmailAndCodeAndIsVerifiedTrueTest {
-
-        @Test
-        @DisplayName("이메일과 코드가 일치하고 인증 완료된 경우 true를 반환한다")
-        void existsByEmailAndCodeAndIsVerifiedTrue_ReturnsTrue() {
-            // given
-            EmailVerification verification = EmailVerification.builder()
-                    .email(TEST_EMAIL)
-                    .code(TEST_CODE)
-                    .expiresAt(LocalDateTime.now().plusMinutes(5))
-                    .build();
-            verification.markAsVerified();
-            emailVerificationRepository.save(verification);
-
-            // when
-            boolean exists = emailVerificationRepository.existsByEmailAndCodeAndIsVerifiedTrue(TEST_EMAIL, TEST_CODE);
-
-            // then
-            assertThat(exists).isTrue();
-        }
-
-        @Test
-        @DisplayName("코드가 일치하지 않으면 false를 반환한다")
-        void existsByEmailAndCodeAndIsVerifiedTrue_WrongCode_ReturnsFalse() {
-            // given
-            EmailVerification verification = EmailVerification.builder()
-                    .email(TEST_EMAIL)
-                    .code(TEST_CODE)
-                    .expiresAt(LocalDateTime.now().plusMinutes(5))
-                    .build();
-            verification.markAsVerified();
-            emailVerificationRepository.save(verification);
-
-            // when
-            boolean exists = emailVerificationRepository.existsByEmailAndCodeAndIsVerifiedTrue(TEST_EMAIL, "000000");
-
-            // then
-            assertThat(exists).isFalse();
+            assertThat(emailVerificationRepository.consumeVerifiedCode(TEST_EMAIL, TEST_CODE, LocalDateTime.now())).isZero();
+            assertThat(emailVerificationRepository.consumeVerifiedCode(TEST_EMAIL, "000000", LocalDateTime.now())).isZero();
         }
     }
 }

@@ -18,6 +18,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.*;
@@ -47,7 +48,7 @@ class EmailVerificationServiceTest {
         ArgumentCaptor<EmailVerification> saved = ArgumentCaptor.forClass(EmailVerification.class);
         InOrder order = inOrder(emailService, verificationRepository);
         order.verify(emailService).isValidSangmyungEmail(EMAIL);
-        order.verify(verificationRepository).expireAllPendingVerifications(EMAIL);
+        order.verify(verificationRepository).expireAllPendingVerifications(eq(EMAIL), any());
         order.verify(verificationRepository).save(saved.capture());
         order.verify(emailService).sendVerificationCode(EMAIL, CODE);
         assertThat(saved.getValue().getEmail()).isEqualTo(EMAIL);

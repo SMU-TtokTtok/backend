@@ -71,6 +71,7 @@ class UserAuthServiceTest {
             // given
             SignupServiceRequest request = SignupServiceRequest.builder()
                     .email("test@sangmyung.kr")
+                    .verificationCode("123456")
                     .password("password123")
                     .passwordConfirm("password123")
                     .name("테스터")
@@ -78,7 +79,7 @@ class UserAuthServiceTest {
                     .build();
 
             given(userRepository.existsByEmail(request.email())).willReturn(false);
-            given(emailVerificationRepository.existsByEmailAndIsVerifiedTrue(request.email())).willReturn(true);
+            given(emailVerificationRepository.consumeVerifiedCode(eq(request.email()), eq("123456"), any())).willReturn(1);
             given(passwordEncoder.encode(request.password())).willReturn("encoded-password");
             
             User user = User.signUp(request.email(), "encoded-password", request.name(), true);

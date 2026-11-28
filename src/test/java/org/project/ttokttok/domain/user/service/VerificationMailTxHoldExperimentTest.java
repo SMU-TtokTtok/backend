@@ -297,7 +297,7 @@ class VerificationMailTxHoldExperimentTest {
             Thread.sleep(delayMs);
         }
         transactionTemplate.executeWithoutResult(status -> {
-            emailVerificationRepository.expireAllPendingVerifications(email);
+            emailVerificationRepository.expireAllPendingVerifications(email, LocalDateTime.now());
             emailVerificationRepository.save(EmailVerification.builder()
                     .email(email).code("123456").expiresAt(LocalDateTime.now().plusMinutes(5)).build());
             if (placement.equals("IN_TX")) {

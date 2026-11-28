@@ -13,6 +13,9 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class EmailVerification extends BaseTimeEntity {
+    // 인증된 코드로 회원가입·비밀번호 재설정을 마쳐야 하는 시간
+    private static final long VERIFIED_VALIDITY_MINUTES = 30;
+
     // PK
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -40,9 +43,10 @@ public class EmailVerification extends BaseTimeEntity {
         this.expiresAt = expiresAt;
     }
 
-    // 인증 완료 처리
+    // 인증 완료 처리. 인증된 코드는 회원가입·재설정에 한 번 쓰이거나 만료되면 효력을 잃는다.
     public void markAsVerified() {
         this.isVerified = true;
+        this.expiresAt = LocalDateTime.now().plusMinutes(VERIFIED_VALIDITY_MINUTES);
     }
 
     // 만료 여부 확인
