@@ -55,6 +55,7 @@ class UserAuthApiControllerIntegrationTest {
     private static final String CODE = "123456";
     private static final String NEWER_CODE = "654321";
     private static final String PASSWORD = "NewPassword123!";
+    private static final String ATTEMPTS_EXCEEDED = "인증 시도 횟수를 초과했습니다. 인증코드를 다시 요청해주세요.";
 
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
@@ -319,23 +320,54 @@ class UserAuthApiControllerIntegrationTest {
         assertThat(passwordEncoder.matches(PASSWORD, userRepository.findByEmail(email).orElseThrow().getPassword())).isTrue();
     }
 
+    // 남이 내 이메일로 틀려도 그 IP만 막히고 내 코드는 살아 있어야 한다.
     @Test
-    void tooManyWrongCodes_rejectsCorrectCodeAfterwards() throws Exception {
-        given(emailService.isValidSangmyungEmail(email)).willReturn(true);
-        given(emailService.generateVerificationCode()).willReturn(CODE);
-        perform("send-verification", Map.of("email", email)).andExpect(status().isOk());
+    void wrongCodesFromOtherIp_doNotBlockMyCorrectCode() throws Exception {
+        sendCode();
         for (int i = 0; i < 5; i++) {
-            perform("verify-email", Map.of("email", email, "code", "000000"))
-                    .andExpect(status().isBadRequest())
+            verifyFrom("10.0.0.1", "000000").andExpect(jsonPath("$.details").value("올바르지 않은 인증코드입니다."));
+        }
+
+        verifyFrom("10.0.0.2", CODE).andExpect(status().isOk());
+    }
+
+    @Test
+    void moreThanFiveAttemptsFromSameIp_areRejectedEvenWithCorrectCode() throws Exception {
+        sendCode();
+        for (int i = 0; i < 5; i++) {
+            verifyFrom("10.0.0.1", "000000").andExpect(status().isBadRequest());
+        }
+
+        verifyFrom("10.0.0.1", CODE)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details").value(ATTEMPTS_EXCEEDED));
+    }
+
+    @Test
+    void moreThanTwentyFailuresPerEmail_expireCode() throws Exception {
+        sendCode();
+        for (int i = 0; i < 20; i++) {
+            verifyFrom("10.0.1." + (i / 5), "000000")
                     .andExpect(jsonPath("$.details").value("올바르지 않은 인증코드입니다."));
         }
 
-        perform("verify-email", Map.of("email", email, "code", CODE))
+        verifyFrom("10.0.2.1", CODE)
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.details").value("인증 시도 횟수를 초과했습니다. 인증코드를 다시 요청해주세요."));
+                .andExpect(jsonPath("$.details").value(ATTEMPTS_EXCEEDED));
+        assertThat(verificationRepository.findByEmailAndCodeAndIsVerifiedFalse(email, CODE).orElseThrow().isExpired()).isTrue();
+    }
 
-        perform("signup", signupBody()).andExpect(status().isBadRequest());
-        assertThat(userRepository.existsByEmail(email)).isFalse();
+    private void sendCode() throws Exception {
+        given(emailService.isValidSangmyungEmail(email)).willReturn(true);
+        given(emailService.generateVerificationCode()).willReturn(CODE);
+        perform("send-verification", Map.of("email", email)).andExpect(status().isOk());
+    }
+
+    // 운영에서는 Nginx 가 X-Real-IP 를 접속 주소로 덮어써 넘긴다.
+    private ResultActions verifyFrom(String ip, String code) throws Exception {
+        return mockMvc.perform(post("/api/user/auth/verify-email").header("X-Real-IP", ip)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(Map.of("email", email, "code", code))));
     }
 
     @ParameterizedTest

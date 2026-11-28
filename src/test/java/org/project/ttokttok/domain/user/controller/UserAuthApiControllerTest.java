@@ -72,14 +72,14 @@ class UserAuthApiControllerTest {
     @WithMockUser
     @DisplayName("이메일 인증코드 검증 API를 호출하면 200을 반환한다")
     void verifyEmail() throws Exception {
-        given(emailVerificationService.verifyEmail(any(), any())).willReturn(true);
+        given(emailVerificationService.verifyEmail(any(), any(), any())).willReturn(true);
 
         mockMvc.perform(post("/api/user/auth/verify-email").with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"email\":\"" + EMAIL + "\",\"code\":\"123456\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("이메일 인증이 완료되었습니다."));
-        verify(emailVerificationService).verifyEmail(EMAIL, "123456");
+        verify(emailVerificationService).verifyEmail(EMAIL, "123456", "127.0.0.1");
     }
 
     @Test

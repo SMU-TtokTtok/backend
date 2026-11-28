@@ -23,7 +23,8 @@ import org.springframework.transaction.support.TransactionTemplate;
 @RequiredArgsConstructor
 public class EmailVerificationService {
     private static final long CODE_VALIDITY_MINUTES = 5;
-    private static final int MAX_VERIFY_ATTEMPTS = 5;
+    private static final int MAX_ATTEMPTS_PER_IP = 5;
+    private static final int MAX_ATTEMPTS_PER_EMAIL = 20;
 
     private final EmailVerificationRepository emailVerificationRepository;
     private final EmailService emailService;
@@ -38,16 +39,11 @@ public class EmailVerificationService {
         log.info("인증코드 발송 및 저장 완료 : {}", LogMasker.email(email));
     }
 
-    // 시도 초과로 코드를 만료시킨 뒤 예외를 던지므로 그 만료는 롤백하지 않는다.
+    // 전체 시도 초과로 코드를 만료시킨 뒤 예외를 던지므로 그 만료는 롤백하지 않는다.
     // 실패 경로에는 이 만료 말고 다른 쓰기가 없다.
     @Transactional(noRollbackFor = UserValidationException.class)
-    public boolean verifyEmail(String email, String code) {
-        // 횟수를 먼저 올려 동시 요청도 코드당 MAX_VERIFY_ATTEMPTS 번까지만 대조되게 한다.
-        long attempts = verificationAttemptRedisService.increment(email, Duration.ofMinutes(CODE_VALIDITY_MINUTES));
-        if (attempts > MAX_VERIFY_ATTEMPTS) {
-            emailVerificationRepository.expireAllPendingVerifications(email, LocalDateTime.now());
-            throw new UserValidationException(ErrorMessage.VERIFICATION_ATTEMPTS_EXCEEDED);
-        }
+    public boolean verifyEmail(String email, String code, String clientIp) {
+        checkAttempts(email, clientIp);
 
         EmailVerification verification = emailVerificationRepository
                 .findByEmailAndCodeAndIsVerifiedFalse(email, code)
@@ -61,6 +57,20 @@ public class EmailVerificationService {
         verificationAttemptRedisService.reset(email);
         log.info("이메일 인증 완료 : {}", LogMasker.email(email));
         return true;
+    }
+
+    // 횟수는 코드를 대조하기 전에 올려 동시 요청도 한도까지만 대조되게 한다.
+    // IP별 한도를 넘으면 그 IP만 막고, 다른 사람이 틀린 횟수로 내 코드가 무효가 되지는 않는다.
+    // 여러 IP로 나눠 대입하는 경우는 이메일 전체 한도에서 코드를 만료시켜 막는다.
+    private void checkAttempts(String email, String clientIp) {
+        Duration ttl = Duration.ofMinutes(CODE_VALIDITY_MINUTES);
+        if (verificationAttemptRedisService.incrementForIp(email, clientIp, ttl) > MAX_ATTEMPTS_PER_IP) {
+            throw new UserValidationException(ErrorMessage.VERIFICATION_ATTEMPTS_EXCEEDED);
+        }
+        if (verificationAttemptRedisService.incrementTotal(email, ttl) > MAX_ATTEMPTS_PER_EMAIL) {
+            emailVerificationRepository.expireAllPendingVerifications(email, LocalDateTime.now());
+            throw new UserValidationException(ErrorMessage.VERIFICATION_ATTEMPTS_EXCEEDED);
+        }
     }
 
     // 회원가입용. 인증된 코드를 소비하므로 호출한 트랜잭션이 롤백되면 코드도 되살아난다.

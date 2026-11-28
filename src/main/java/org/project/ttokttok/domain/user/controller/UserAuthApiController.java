@@ -3,6 +3,7 @@ package org.project.ttokttok.domain.user.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +31,8 @@ import java.util.Map;
 @RequestMapping("/api/user/auth")
 @RequiredArgsConstructor
 public class UserAuthApiController {
+
+    private static final String REAL_IP_HEADER = "X-Real-IP";
 
     private final UserAuthService userAuthService;
     private final EmailVerificationService emailVerificationService;
@@ -92,9 +95,10 @@ public class UserAuthApiController {
     @PostMapping("/verify-email")
     public ResponseEntity<ApiResponse<Void>> verifyEmail(
             @Parameter(description = "이메일 인증 검증 요청 (이메일 주소, 6자리 인증코드)")
-            @RequestBody @Valid VerifyEmailRequest request) {
+            @RequestBody @Valid VerifyEmailRequest request,
+            HttpServletRequest httpRequest) {
 
-        emailVerificationService.verifyEmail(request.email(), request.code());
+        emailVerificationService.verifyEmail(request.email(), request.code(), clientIp(httpRequest));
 
         return ResponseEntity.ok(
                 ApiResponse.success("이메일 인증이 완료되었습니다.")
@@ -371,5 +375,13 @@ public class UserAuthApiController {
 
         return ResponseEntity.ok()
                 .body(ApiResponse.success("로그아웃이 완료되었습니다."));
+    }
+
+    // Nginx(유일한 공개 지점)가 X-Real-IP 를 접속 주소($remote_addr)로 덮어써 넘기므로 클라이언트가 위조할 수 없다.
+    // 앱 포트는 127.0.0.1 에만 열려 있다. 헤더가 없으면(로컬 실행) 접속 주소를 쓴다.
+    // X-Forwarded-For 는 Nginx 가 클라이언트 값 뒤에 덧붙이기만 해서 쓰지 않는다.
+    private static String clientIp(HttpServletRequest request) {
+        String realIp = request.getHeader(REAL_IP_HEADER);
+        return realIp == null || realIp.isBlank() ? request.getRemoteAddr() : realIp;
     }
 }
