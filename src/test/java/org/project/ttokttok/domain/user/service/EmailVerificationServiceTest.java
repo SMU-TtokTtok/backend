@@ -14,6 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.project.ttokttok.domain.user.domain.EmailVerification;
 import org.project.ttokttok.domain.user.repository.EmailVerificationRepository;
 import org.project.ttokttok.infrastructure.email.service.EmailService;
+import org.project.ttokttok.infrastructure.redis.service.VerificationAttemptRedisService;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 import static org.assertj.core.api.Assertions.*;
@@ -29,12 +30,13 @@ class EmailVerificationServiceTest {
     private static final String CODE = "123456";
     @Mock private EmailVerificationRepository verificationRepository;
     @Mock private EmailService emailService;
+    @Mock private VerificationAttemptRedisService verificationAttemptRedisService;
     private EmailVerificationService service;
 
     @BeforeEach
     void setUp() {
         service = new EmailVerificationService(verificationRepository, emailService,
-                new TransactionTemplate(mock(PlatformTransactionManager.class)));
+                new TransactionTemplate(mock(PlatformTransactionManager.class)), verificationAttemptRedisService);
     }
 
     @Test

@@ -27,6 +27,7 @@ public enum ErrorMessage {
     VERIFICATION_CODE_EXPIRED("인증코드가 만료되었습니다.", HttpStatus.BAD_REQUEST),
     VERIFICATION_EMAIL_NOT_VERIFIED("이메일 인증이 완료되지 않았습니다.", HttpStatus.BAD_REQUEST),
     VERIFICATION_RECORD_NOT_FOUND("인증 코드 성공 여부가 존재하지 않습니다.", HttpStatus.BAD_REQUEST),
+    VERIFICATION_ATTEMPTS_EXCEEDED("인증 시도 횟수를 초과했습니다. 인증코드를 다시 요청해주세요.", HttpStatus.BAD_REQUEST),
     ADMIN_USERNAME_REQUIRED("관리자 명은 null이거나 비어있을 수 없습니다.", HttpStatus.BAD_REQUEST),
     ADMIN_USERNAME_LENGTH_INVALID("관리자 명은 8자 이상 20자 이하여야 합니다.", HttpStatus.BAD_REQUEST),
     ADMIN_USERNAME_CHARACTERS_INVALID("관리자 명은 영문, 숫자, 밑줄(_)만 사용할 수 있습니다.", HttpStatus.BAD_REQUEST),

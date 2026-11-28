@@ -319,6 +319,25 @@ class UserAuthApiControllerIntegrationTest {
         assertThat(passwordEncoder.matches(PASSWORD, userRepository.findByEmail(email).orElseThrow().getPassword())).isTrue();
     }
 
+    @Test
+    void tooManyWrongCodes_rejectsCorrectCodeAfterwards() throws Exception {
+        given(emailService.isValidSangmyungEmail(email)).willReturn(true);
+        given(emailService.generateVerificationCode()).willReturn(CODE);
+        perform("send-verification", Map.of("email", email)).andExpect(status().isOk());
+        for (int i = 0; i < 5; i++) {
+            perform("verify-email", Map.of("email", email, "code", "000000"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.details").value("올바르지 않은 인증코드입니다."));
+        }
+
+        perform("verify-email", Map.of("email", email, "code", CODE))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details").value("인증 시도 횟수를 초과했습니다. 인증코드를 다시 요청해주세요."));
+
+        perform("signup", signupBody()).andExpect(status().isBadRequest());
+        assertThat(userRepository.existsByEmail(email)).isFalse();
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {"send-reset-code", "reset-password"})
     void oauthAccount_isRejectedBeforeMailOrPasswordMutation(String endpoint) throws Exception {

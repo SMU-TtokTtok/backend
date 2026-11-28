@@ -4,6 +4,7 @@ import org.project.ttokttok.global.exception.ErrorMessage;
 
 import org.project.ttokttok.domain.user.exception.UserValidationException;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.function.BiConsumer;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.project.ttokttok.domain.user.domain.EmailVerification;
 import org.project.ttokttok.domain.user.repository.EmailVerificationRepository;
 import org.project.ttokttok.infrastructure.email.service.EmailService;
+import org.project.ttokttok.infrastructure.redis.service.VerificationAttemptRedisService;
 import org.project.ttokttok.global.util.LogMasker;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,10 +23,12 @@ import org.springframework.transaction.support.TransactionTemplate;
 @RequiredArgsConstructor
 public class EmailVerificationService {
     private static final long CODE_VALIDITY_MINUTES = 5;
+    private static final int MAX_VERIFY_ATTEMPTS = 5;
 
     private final EmailVerificationRepository emailVerificationRepository;
     private final EmailService emailService;
     private final TransactionTemplate transactionTemplate;
+    private final VerificationAttemptRedisService verificationAttemptRedisService;
 
     public void sendVerificationCode(String email) {
         if (!emailService.isValidSangmyungEmail(email)) {
@@ -34,8 +38,17 @@ public class EmailVerificationService {
         log.info("인증코드 발송 및 저장 완료 : {}", LogMasker.email(email));
     }
 
-    @Transactional
+    // 시도 초과로 코드를 만료시킨 뒤 예외를 던지므로 그 만료는 롤백하지 않는다.
+    // 실패 경로에는 이 만료 말고 다른 쓰기가 없다.
+    @Transactional(noRollbackFor = UserValidationException.class)
     public boolean verifyEmail(String email, String code) {
+        // 횟수를 먼저 올려 동시 요청도 코드당 MAX_VERIFY_ATTEMPTS 번까지만 대조되게 한다.
+        long attempts = verificationAttemptRedisService.increment(email, Duration.ofMinutes(CODE_VALIDITY_MINUTES));
+        if (attempts > MAX_VERIFY_ATTEMPTS) {
+            emailVerificationRepository.expireAllPendingVerifications(email, LocalDateTime.now());
+            throw new UserValidationException(ErrorMessage.VERIFICATION_ATTEMPTS_EXCEEDED);
+        }
+
         EmailVerification verification = emailVerificationRepository
                 .findByEmailAndCodeAndIsVerifiedFalse(email, code)
                 .orElseThrow(() -> new UserValidationException(ErrorMessage.VERIFICATION_CODE_INVALID));
@@ -45,6 +58,7 @@ public class EmailVerificationService {
         }
 
         verification.markAsVerified();
+        verificationAttemptRedisService.reset(email);
         log.info("이메일 인증 완료 : {}", LogMasker.email(email));
         return true;
     }
@@ -87,6 +101,7 @@ public class EmailVerificationService {
                     .expiresAt(LocalDateTime.now().plusMinutes(CODE_VALIDITY_MINUTES))
                     .build());
         });
+        verificationAttemptRedisService.reset(email);
         mailer.accept(email, code);
     }
 }

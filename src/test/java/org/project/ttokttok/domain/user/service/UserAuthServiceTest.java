@@ -18,6 +18,7 @@ import org.project.ttokttok.global.auth.jwt.dto.response.TokenResponse;
 import org.project.ttokttok.global.auth.jwt.service.TokenProvider;
 import org.project.ttokttok.infrastructure.email.service.EmailService;
 import org.project.ttokttok.infrastructure.redis.service.RefreshTokenRedisService;
+import org.project.ttokttok.infrastructure.redis.service.VerificationAttemptRedisService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -51,12 +52,15 @@ class UserAuthServiceTest {
     @Mock
     private RefreshTokenRedisService refreshTokenRedisService;
 
+    @Mock
+    private VerificationAttemptRedisService verificationAttemptRedisService;
+
     private UserAuthService userAuthService;
 
     @BeforeEach
     void setUp() {
         EmailVerificationService verificationService = new EmailVerificationService(emailVerificationRepository, emailService,
-                new TransactionTemplate(mock(PlatformTransactionManager.class)));
+                new TransactionTemplate(mock(PlatformTransactionManager.class)), verificationAttemptRedisService);
         userAuthService = new UserAuthService(userRepository, verificationService,
                 tokenProvider, passwordEncoder, refreshTokenRedisService);
     }

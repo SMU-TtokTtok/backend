@@ -18,6 +18,7 @@ import org.project.ttokttok.domain.user.repository.EmailVerificationRepository;
 import org.project.ttokttok.domain.user.repository.UserRepository;
 import org.project.ttokttok.domain.user.service.dto.request.ResetPasswordServiceRequest;
 import org.project.ttokttok.infrastructure.email.service.EmailService;
+import org.project.ttokttok.infrastructure.redis.service.VerificationAttemptRedisService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -36,13 +37,14 @@ class PasswordResetServiceTest {
     @Mock private EmailVerificationRepository verificationRepository;
     @Mock private EmailService emailService;
     @Mock private PasswordEncoder passwordEncoder;
+    @Mock private VerificationAttemptRedisService verificationAttemptRedisService;
     private PasswordResetService service;
 
     @BeforeEach
     void setUp() {
         service = new PasswordResetService(userRepository,
                 new EmailVerificationService(verificationRepository, emailService,
-                        new TransactionTemplate(mock(PlatformTransactionManager.class))), passwordEncoder);
+                        new TransactionTemplate(mock(PlatformTransactionManager.class)), verificationAttemptRedisService), passwordEncoder);
     }
 
     @Test
